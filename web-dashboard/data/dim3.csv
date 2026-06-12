@@ -1,0 +1,4 @@
+parameter,n_transitions,ks_stat_pre_vs_normal,ks_p_pre_vs_normal,pre_fault_in_normal_range_pct,pre_post_abs_change,pre_post_norm_by_std
+Voltage,592,0.0206,0.9977,79.2000,11.7300,0.2296
+Amperage,592,0.0182,0.9997,80.2000,1.3600,0.2206
+Temperature,592,0.0201,0.9984,79.9000,4.2200,0.2481

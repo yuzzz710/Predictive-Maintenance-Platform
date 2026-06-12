@@ -1,0 +1,40 @@
+# Environment & Secrets
+.env
+.env.*
+*.secret
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+*.egg
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Outputs (runtime-generated)
+agent-mcp架构/outputs_test/
+web-dashboard/data/decision_summary.json
+web-dashboard/data/maintenance_decision_report.csv
+web-dashboard/data/work_orders.json
+web-dashboard/data/health_state.json
+
+# Test cache
+.pytest_cache/

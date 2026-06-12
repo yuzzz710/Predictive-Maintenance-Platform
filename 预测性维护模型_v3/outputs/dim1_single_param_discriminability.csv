@@ -1,0 +1,5 @@
+parameter,cohens_d,cohens_d_interpretation,ks_statistic,ks_p_value,ks_significant,youden_j,youden_interpretation,normal_p99_range,fault_overlap_ratio,fault_in_normal_pct
+Voltage,0.1097,negligible,0.0774,0.0014,True,0.0749,no discriminability,"[101.0, 361.9]",0.9626,96.3%
+Amperage,0.0423,negligible,0.0596,0.0265,True,0.0573,no discriminability,"[13.5, 44.2]",0.9792,97.9%
+Temperature,0.0647,negligible,0.0708,0.0045,True,0.0671,no discriminability,"[46.8, 124.4]",0.9737,97.4%
+Rotor Speed,0.0022,negligible,0.0345,0.4582,False,0.0218,no discriminability,"[142.3, 539.9]",0.9802,98.0%

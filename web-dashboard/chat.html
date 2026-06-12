@@ -1,0 +1,1202 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工业智能运维助手 — AI Assistant</title>
+<script src="/shared/navbar.js?v=20260519"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN TOKENS — matches main dashboard theme
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  --bg-root: #080a0d;
+  --bg-surface: #0e1117;
+  --bg-card: #141820;
+  --bg-card-alt: #181d26;
+  --bg-input: #0c0f15;
+  --border: #1c2230;
+  --border-light: #242b38;
+  --border-accent: #2a3a50;
+  --text-primary: #e6ebf2;
+  --text-secondary: #8e9aab;
+  --text-muted: #5a6474;
+  --accent-cyan: #00c9a0;
+  --accent-amber: #f0a030;
+  --accent-red: #f04444;
+  --accent-blue: #4d94ff;
+  --accent-green: #3fb950;
+  --accent-purple: #a371f7;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.5);
+  --radius: 3px;
+  --radius-md: 6px;
+  --font-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+  --font-sans: 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', 'Segoe UI', system-ui, sans-serif;
+  --transition: 0.2s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg-root);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(0,201,160,0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(77,148,255,0.03) 0%, transparent 50%);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HEADER
+   ═══════════════════════════════════════════════════════════════ */
+.header {
+  position: sticky; top:0; z-index:100;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  flex-shrink: 0;
+}
+.header-inner {
+  max-width: 1200px; margin:0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 52px;
+}
+.logo {
+  display: flex; align-items: center; gap: 10px;
+  font-weight: 700; font-size: 15px; color: var(--text-primary);
+  font-family: var(--font-mono); letter-spacing: 1px;
+  text-decoration: none;
+}
+.logo-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent-cyan);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--accent-cyan); }
+  50% { opacity: 0.5; box-shadow: 0 0 2px var(--accent-cyan); }
+}
+.header-right {
+  display: flex; align-items: center; gap: 16px;
+  font-size: 12px; color: var(--text-secondary);
+}
+.status-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent-green);
+}
+.status-dot.offline { background: var(--accent-red); }
+.back-link {
+  color: var(--text-secondary); text-decoration: none;
+  font-size: 12px; transition: color var(--transition);
+}
+.back-link:hover { color: var(--accent-cyan); }
+
+/* ═══════════════════════════════════════════════════════════════
+   CHAT LAYOUT
+   ═══════════════════════════════════════════════════════════════ */
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 24px;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.messages::-webkit-scrollbar {
+  width: 4px;
+}
+.messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+.messages::-webkit-scrollbar-thumb {
+  background: var(--border-light);
+  border-radius: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   WELCOME SCREEN
+   ═══════════════════════════════════════════════════════════════ */
+.welcome {
+  text-align: center;
+  padding: 48px 24px;
+}
+.welcome-icon {
+  width: 64px; height: 64px;
+  margin: 0 auto 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+}
+.welcome h2 {
+  font-size: 20px; font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+.welcome p {
+  font-size: 13px; color: var(--text-secondary);
+  max-width: 400px; margin: 0 auto 24px;
+}
+.quick-questions {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  justify-content: center;
+}
+.quick-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px; cursor: pointer;
+  transition: all var(--transition);
+  font-family: var(--font-sans);
+}
+.quick-btn:hover {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  background: rgba(0,201,160,0.05);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MESSAGE BUBBLES
+   ═══════════════════════════════════════════════════════════════ */
+.message {
+  display: flex; gap: 12px;
+  max-width: 85%;
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn {
+  from { opacity:0; transform: translateY(8px); }
+  to { opacity:1; transform: translateY(0); }
+}
+.message.user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+.message.assistant {
+  align-self: flex-start;
+}
+
+.msg-avatar {
+  width: 32px; height: 32px; border-radius: 8px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700;
+}
+.message.assistant .msg-avatar {
+  background: rgba(0,201,160,0.1);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(0,201,160,0.2);
+}
+.message.user .msg-avatar {
+  background: rgba(77,148,255,0.1);
+  color: var(--accent-blue);
+  border: 1px solid rgba(77,148,255,0.2);
+}
+
+.msg-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  font-size: 14px; line-height: 1.7;
+  color: var(--text-primary);
+  min-width: 0;
+}
+.message.user .msg-content {
+  background: rgba(77,148,255,0.08);
+  border-color: rgba(77,148,255,0.15);
+}
+/* Base markdown elements */
+.msg-content p { margin-bottom: 8px; }
+.msg-content p:last-child { margin-bottom: 0; }
+.msg-content strong { color: var(--accent-cyan); }
+.msg-content code {
+  background: var(--bg-input);
+  padding: 2px 6px; border-radius: var(--radius);
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--accent-amber);
+}
+/* Markdown rendered by marked.js */
+.msg-content h1, .msg-content h2, .msg-content h3 {
+  font-size: 15px; font-weight: 700; margin: 12px 0 6px;
+  color: var(--text-primary);
+}
+.msg-content h2 { font-size: 14px; }
+.msg-content h3 { font-size: 13px; }
+.msg-content ul, .msg-content ol { padding-left: 20px; margin: 6px 0; }
+.msg-content li { margin-bottom: 3px; }
+.msg-content table {
+  width: 100%; border-collapse: collapse; margin: 8px 0;
+  font-size: 12px;
+}
+.msg-content th, .msg-content td {
+  border: 1px solid var(--border); padding: 6px 10px;
+  text-align: left;
+}
+.msg-content th {
+  background: var(--bg-card-alt); color: var(--accent-cyan);
+  font-weight: 600;
+}
+.msg-content td { color: var(--text-secondary); }
+.msg-content blockquote {
+  border-left: 3px solid var(--accent-cyan);
+  padding: 4px 12px; margin: 8px 0;
+  color: var(--text-secondary);
+  background: rgba(0,201,160,0.03);
+}
+.msg-content hr {
+  border: none; border-top: 1px solid var(--border);
+  margin: 12px 0;
+}
+.msg-content a { color: var(--accent-blue); }
+
+/* Tool call card */
+.tool-card {
+  background: rgba(240,160,48,0.05);
+  border: 1px solid rgba(240,160,48,0.2);
+  border-radius: var(--radius);
+  margin-top: 8px;
+  overflow: hidden;
+}
+.tool-card-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 12px; color: var(--accent-amber);
+  font-family: var(--font-mono);
+}
+.tool-card-header:hover { background: rgba(240,160,48,0.05); }
+.tool-card-icon { font-size: 14px; }
+.tool-card-body {
+  display: none;
+  padding: 8px 12px 12px;
+  font-size: 11px; color: var(--text-secondary);
+  border-top: 1px solid rgba(240,160,48,0.1);
+}
+.tool-card.open .tool-card-body { display: block; }
+.tool-card-body pre {
+  background: var(--bg-input);
+  padding: 8px; border-radius: var(--radius);
+  overflow: auto; max-height: 200px;
+  font-family: var(--font-mono); font-size: 11px;
+  white-space: pre-wrap; word-break: break-all;
+}
+
+/* Loading dots */
+.typing-dots {
+  display: flex; gap: 4px; padding: 4px 0;
+}
+.typing-dots span {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text-muted);
+  animation: typing 1.4s infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing {
+  0%, 60%, 100% { opacity:0.3; transform: translateY(0); }
+  30% { opacity:1; transform: translateY(-4px); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INPUT AREA
+   ═══════════════════════════════════════════════════════════════ */
+.input-area {
+  flex-shrink: 0;
+  padding: 16px 0 24px;
+}
+.input-wrapper {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex; align-items: flex-end;
+  padding: 8px;
+  transition: border-color var(--transition);
+}
+.input-wrapper:focus-within {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 2px rgba(0,201,160,0.1);
+}
+.input-wrapper textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px; line-height: 1.5;
+  resize: none; outline: none;
+  padding: 8px;
+  min-height: 24px; max-height: 120px;
+}
+.input-wrapper textarea::placeholder {
+  color: var(--text-muted);
+}
+.send-btn {
+  background: var(--accent-cyan);
+  border: none; border-radius: 8px;
+  width: 36px; height: 36px;
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+  color: #000;
+}
+.send-btn:hover { background: #00e6b5; }
+.send-btn:disabled {
+  background: var(--border-light);
+  cursor: not-allowed;
+  color: var(--text-muted);
+}
+.send-btn svg { width: 18px; height: 18px; }
+
+.input-hint {
+  text-align: center; font-size: 11px; color: var(--text-muted);
+  margin-top: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ERROR
+   ═══════════════════════════════════════════════════════════════ */
+.error-banner {
+  background: rgba(240,68,68,0.1);
+  border: 1px solid rgba(240,68,68,0.3);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  color: var(--accent-red);
+  font-size: 13px;
+  margin: 8px 0;
+}
+
+/* Chart container */
+.msg-chart {
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-card-alt);
+}
+.msg-chart-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px;
+  font-size: 12px; color: var(--accent-cyan);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+}
+.msg-chart-body {
+  width: 100%; height: 320px;
+}
+
+/* Report download card */
+.msg-report {
+  margin-top: 12px;
+  border: 1px solid rgba(0,201,160,0.2);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: rgba(0,201,160,0.04);
+}
+.msg-report-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  font-size: 12px; color: var(--accent-cyan);
+  border-bottom: 1px solid rgba(0,201,160,0.1);
+  font-family: var(--font-mono);
+}
+.msg-report-body {
+  padding: 14px;
+  display: flex; align-items: center; gap: 12px;
+}
+.msg-report-info {
+  flex: 1;
+  font-size: 12px; color: var(--text-secondary); line-height: 1.6;
+}
+.msg-report-dl {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 18px;
+  background: var(--accent-cyan);
+  color: #000; border-radius: 6px;
+  text-decoration: none; font-size: 12px; font-weight: 600;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.msg-report-dl:hover {
+  box-shadow: 0 0 16px rgba(0,201,160,0.4);
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     HEADER
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="header">
+  <div class="header-inner">
+    <a class="logo" href="/">
+      <span class="logo-dot"></span>
+      工业智能运维助手
+    </a>
+    <div class="header-right">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">就绪</span>
+      <a class="back-link" href="/">← 返回仪表盘</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CHAT AREA
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="chat-container">
+  <div class="messages" id="messages">
+    <div class="welcome" id="welcome">
+      <div class="welcome-icon">&#9881;</div>
+      <h2>工业智能运维助手</h2>
+      <p>我可以帮您查询设备状态、分析异常原因、生成维护建议。基于真实MCP工具和DeepSeek推理引擎。</p>
+      <div class="quick-questions">
+        <button class="quick-btn" data-question="CNC_036 最近24小时温度波动">CNC_036 最近24小时温度波动</button>
+        <button class="quick-btn" data-question="哪个设备风险最高？">哪个设备风险最高？</button>
+        <button class="quick-btn" data-question="为什么 CNC_042 风险高？">为什么 CNC_042 风险高？</button>
+        <button class="quick-btn" data-question="哪些设备存在 thermal drift？">哪些设备存在 thermal drift？</button>
+        <button class="quick-btn" data-question="当前最需要维护的设备有哪些？">当前最需要维护的设备有哪些？</button>
+        <button class="quick-btn" data-question="maintenance work order 是什么？">maintenance work order 是什么？</button>
+        <button class="quick-btn" data-question="系统的预测瓶颈是什么？">系统的预测瓶颈是什么？</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <div class="input-wrapper">
+      <textarea
+        id="chatInput"
+        placeholder="输入您的问题，例如：为什么 CNC_042 风险高？"
+        rows="1"
+        onkeydown="handleKeyDown(event)"
+      ></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="发送">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/>
+        </svg>
+      </button>
+    </div>
+    <div class="input-hint">基于 DeepSeek + MCP Tool Calling · 所有分析通过真实工业数据完成</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// MARKED.JS INIT
+// ═══════════════════════════════════════════════════════════════
+if (typeof marked !== 'undefined') {
+  marked.setOptions({ breaks: true, gfm: true });
+}
+
+console.log('[init] script loaded');
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+const CHAT_STORAGE_KEY = 'pred_maint_chat_history';
+const MAX_TURNS = 3;       // keep last 3 conversation turns
+const MAX_MSGS = MAX_TURNS * 2; // 3 user + 3 assistant = 6 messages
+
+let messages = [];          // conversation history for API
+let isStreaming = false;
+let currentAssistantMsg = null;
+let currentToolCards = [];
+
+// ═══════════════════════════════════════════════════════════════
+// LOCALSTORAGE — persist chat history across page navigation
+// ═══════════════════════════════════════════════════════════════
+
+function saveChatHistory() {
+  try {
+    const toSave = messages.slice(-MAX_MSGS);
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(toSave));
+  } catch (e) {
+    console.warn('[storage] Failed to save chat history:', e);
+  }
+}
+
+function loadChatHistory() {
+  try {
+    const raw = localStorage.getItem(CHAT_STORAGE_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      if (Array.isArray(saved) && saved.length > 0) {
+        return saved;
+      }
+    }
+  } catch (e) {
+    console.warn('[storage] Failed to load chat history:', e);
+  }
+  return [];
+}
+
+function restoreChatUI(savedMessages) {
+  if (!savedMessages || savedMessages.length === 0) return;
+  // Hide welcome screen
+  if (welcome) welcome.style.display = 'none';
+  // Restore each message into the chat UI
+  for (const msg of savedMessages) {
+    if (msg.role === 'user') {
+      addUserMessage(msg.content);
+    } else if (msg.role === 'assistant') {
+      const div = addAssistantPlaceholder();
+      // Remove typing dots and insert rendered text
+      const content = div.querySelector('.msg-content');
+      const dots = content.querySelector('.typing-dots');
+      if (dots) dots.remove();
+      const textEl = document.createElement('div');
+      textEl.className = 'assistant-text';
+      textEl.innerHTML = renderMarkdown(msg.content);
+      content.appendChild(textEl);
+    }
+  }
+  // Populate in-memory messages array
+  messages = savedMessages.slice();
+  scrollToBottom();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DOM refs
+// ═══════════════════════════════════════════════════════════════
+const msgContainer = document.getElementById('messages');
+const chatInput = document.getElementById('chatInput');
+const sendBtn = document.getElementById('sendBtn');
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
+const welcome = document.getElementById('welcome');
+
+console.log('[init] DOM refs:', {msgContainer: !!msgContainer, chatInput: !!chatInput, sendBtn: !!sendBtn});
+
+// Restore chat history from localStorage on page load
+const savedMessages = loadChatHistory();
+restoreChatUI(savedMessages);
+console.log('[init] restored', savedMessages.length, 'messages from localStorage');
+
+// Auto-resize textarea
+chatInput.addEventListener('input', () => {
+  chatInput.style.height = 'auto';
+  chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
+});
+
+function handleKeyDown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+console.log('[init] handleKeyDown defined');
+
+// ═══════════════════════════════════════════════════════════════
+// QUICK QUESTIONS
+// ═══════════════════════════════════════════════════════════════
+document.querySelectorAll('.quick-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const q = btn.getAttribute('data-question');
+    chatInput.value = q;
+    sendMessage();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════
+// SEND MESSAGE — SSE streaming with buffered markdown rendering
+// ═══════════════════════════════════════════════════════════════
+async function sendMessage() {
+  console.log('[sendMessage] triggered');
+  const text = chatInput.value.trim();
+  if (!text || isStreaming) return;
+
+  if (welcome) welcome.style.display = 'none';
+
+  addUserMessage(text);
+  messages.push({ role: 'user', content: text });
+  saveChatHistory();
+
+  chatInput.value = '';
+  chatInput.style.height = 'auto';
+
+  currentAssistantMsg = addAssistantPlaceholder();
+  currentToolCards = [];
+
+  isStreaming = true;
+  sendBtn.disabled = true;
+  chatInput.disabled = true;
+  setStatus('thinking', '思考中...');
+
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: messages.slice() }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || `HTTP ${response.status}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let lineBuffer = '';
+    let assistantText = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      lineBuffer += decoder.decode(value, { stream: true });
+      const lines = lineBuffer.split('\n');
+      lineBuffer = lines.pop(); // keep incomplete line
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const dataStr = line.slice(6).trim();
+        if (!dataStr) continue;
+
+        try {
+          const event = JSON.parse(dataStr);
+          handleSSEEvent(event, (t) => { assistantText += t; });
+        } catch (e) { /* ignore parse errors */ }
+      }
+    }
+
+    // Flush any pending render
+    flushRender(currentAssistantMsg);
+
+    if (assistantText.trim()) {
+      messages.push({ role: 'assistant', content: assistantText.trim() });
+      saveChatHistory();
+    }
+
+  } catch (err) {
+    setAssistantError(currentAssistantMsg, err.message);
+    setStatus('error', '连接失败');
+  } finally {
+    isStreaming = false;
+    sendBtn.disabled = false;
+    chatInput.disabled = false;
+    chatInput.focus();
+    if (statusText.textContent !== '连接失败') {
+      setStatus('ready', '就绪');
+    }
+  }
+}
+
+function handleSSEEvent(event, onText) {
+  switch (event.type) {
+    case 'text_delta':
+      appendTextToAssistant(currentAssistantMsg, event.text);
+      onText(event.text);
+      break;
+
+    case 'tool_call':
+      addToolCard(currentAssistantMsg, event.name, event.arguments);
+      break;
+
+    case 'tool_result':
+      updateLastToolCard(currentAssistantMsg, event.name, event.summary);
+      break;
+
+    case 'tool_result_text':
+      appendTextToAssistant(currentAssistantMsg, event.text);
+      onText(event.text);
+      break;
+
+    case 'chart':
+      console.log('[chart event]', event.name, event.chart_data);
+      renderChart(currentAssistantMsg, event.chart_data);
+      break;
+
+    case 'report':
+      console.log('[report event]', event.pdf_filename, event.pdf_url);
+      renderReport(currentAssistantMsg, event);
+      break;
+
+    case 'error':
+      setAssistantError(currentAssistantMsg, event.message);
+      setStatus('error', '错误');
+      break;
+
+    case 'done':
+      flushRender(currentAssistantMsg);
+      finalizeAssistantMsg(currentAssistantMsg);
+      setStatus('ready', '就绪');
+      break;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STREAMING MARKDOWN RENDER — buffered + RAF-throttled
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Append a text chunk to the assistant message buffer.
+ * Does NOT touch innerHTML — only accumulates into msgDiv._textBuffer.
+ * Schedules a render on the next animation frame (coalesced).
+ */
+function appendTextToAssistant(msgDiv, text) {
+  if (!msgDiv._textBuffer) msgDiv._textBuffer = '';
+  msgDiv._textBuffer += text;
+  scheduleRender(msgDiv);
+}
+
+/**
+ * Render the full text buffer through marked.parse() on next animation frame.
+ * Multiple calls within the same frame are coalesced into one render.
+ */
+function scheduleRender(msgDiv) {
+  if (msgDiv._renderPending) return;  // already scheduled
+  msgDiv._renderPending = true;
+
+  requestAnimationFrame(() => {
+    msgDiv._renderPending = false;
+
+    const content = msgDiv.querySelector('.msg-content');
+    // Remove typing dots
+    const dots = content.querySelector('.typing-dots');
+    if (dots) dots.remove();
+
+    // Get or create text element
+    let textEl = content.querySelector('.assistant-text');
+    if (!textEl) {
+      textEl = document.createElement('div');
+      textEl.className = 'assistant-text';
+      content.appendChild(textEl);
+    }
+
+    // Full render from complete buffer
+    textEl.innerHTML = renderMarkdown(msgDiv._textBuffer || '');
+    scrollToBottom();
+  });
+}
+
+/**
+ * Force an immediate render (called on 'done' event to flush the last frame).
+ */
+function flushRender(msgDiv) {
+  if (!msgDiv) return;
+  // Cancel pending RAF
+  if (msgDiv._renderPending) {
+    msgDiv._renderPending = false;
+  }
+
+  const content = msgDiv.querySelector('.msg-content');
+  const dots = content.querySelector('.typing-dots');
+  if (dots) dots.remove();
+
+  let textEl = content.querySelector('.assistant-text');
+  if (!textEl) {
+    textEl = document.createElement('div');
+    textEl.className = 'assistant-text';
+    content.appendChild(textEl);
+  }
+
+  const buf = msgDiv._textBuffer || '';
+  if (buf) {
+    textEl.innerHTML = renderMarkdown(buf);
+  }
+  scrollToBottom();
+}
+
+/**
+ * Render full markdown text using marked.js (with fallback).
+ * Unlike the old approach, this receives the ENTIRE accumulated text,
+ * so markdown structures (tables, lists, bold spans) parse correctly.
+ */
+function renderMarkdown(text) {
+  if (!text) return '';
+  if (typeof marked !== 'undefined') {
+    return marked.parse(text);
+  }
+  return formatMarkdownFallback(text);
+}
+
+function formatMarkdownFallback(text) {
+  let html = escapeHtml(text);
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  html = html.replace(/\n\n/g, '</p><p>');
+  html = html.replace(/\n/g, '<br>');
+  return '<p>' + html + '</p>';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════════
+
+function setStatus(state, text) {
+  statusText.textContent = text;
+  statusDot.className = 'status-dot' + (state === 'error' || state === 'offline' ? ' offline' : '');
+}
+
+function addUserMessage(text) {
+  const div = document.createElement('div');
+  div.className = 'message user';
+  div.innerHTML = `<div class="msg-avatar">U</div><div class="msg-content">${escapeHtml(text)}</div>`;
+  msgContainer.appendChild(div);
+  scrollToBottom();
+}
+
+function addAssistantPlaceholder() {
+  const div = document.createElement('div');
+  div.className = 'message assistant';
+  div.id = 'msg-' + Date.now();
+  // Streaming state on the DOM node
+  div._textBuffer = '';
+  div._renderPending = false;
+  div.innerHTML = `
+    <div class="msg-avatar">AI</div>
+    <div class="msg-content">
+      <div class="typing-dots"><span></span><span></span><span></span></div>
+    </div>`;
+  msgContainer.appendChild(div);
+  scrollToBottom();
+  return div;
+}
+
+function addToolCard(msgDiv, toolName, args) {
+  const content = msgDiv.querySelector('.msg-content');
+  const dots = content.querySelector('.typing-dots');
+  if (dots) dots.remove();
+
+  const card = document.createElement('div');
+  card.className = 'tool-card open';
+  card.id = 'tool-' + Date.now();
+  card.innerHTML = `
+    <div class="tool-card-header" onclick="this.parentElement.classList.toggle('open')">
+      <span class="tool-card-icon">&#9881;</span>
+      <span>调用工具：${escapeHtml(toolName)}</span>
+      <span style="margin-left:auto;font-size:10px;opacity:0.6;">&#9660;</span>
+    </div>
+    <div class="tool-card-body">
+      <div style="margin-bottom:4px;color:var(--text-muted);">参数：</div>
+      <pre>${escapeHtml(args)}</pre>
+      <div class="tool-result" style="margin-top:6px;color:var(--text-muted);">执行中...</div>
+    </div>`;
+  content.appendChild(card);
+  currentToolCards.push(card);
+  scrollToBottom();
+}
+
+function updateLastToolCard(msgDiv, toolName, summary) {
+  if (currentToolCards.length === 0) return;
+  const card = currentToolCards[currentToolCards.length - 1];
+  const resultEl = card.querySelector('.tool-result');
+  if (resultEl) {
+    resultEl.innerHTML = `<div style="margin-top:4px;color:var(--text-muted);">结果：</div>
+      <pre style="max-height:120px;">${escapeHtml(summary)}</pre>`;
+  }
+  scrollToBottom();
+}
+
+function finalizeAssistantMsg(msgDiv) {
+  const content = msgDiv.querySelector('.msg-content');
+  const dots = content.querySelector('.typing-dots');
+  if (dots) dots.remove();
+
+  const hasText = content.querySelector('.assistant-text');
+  const hasTools = content.querySelector('.tool-card');
+  if (!hasText && !hasTools) {
+    const fallback = document.createElement('div');
+    fallback.className = 'assistant-text';
+    fallback.textContent = '抱歉，未能获取有效回复。请稍后重试。';
+    content.appendChild(fallback);
+  }
+}
+
+function setAssistantError(msgDiv, errMsg) {
+  const content = msgDiv.querySelector('.msg-content');
+  const dots = content.querySelector('.typing-dots');
+  if (dots) dots.remove();
+
+  const banner = document.createElement('div');
+  banner.className = 'error-banner';
+  banner.textContent = '错误: ' + errMsg;
+  content.appendChild(banner);
+}
+
+function scrollToBottom() {
+  msgContainer.scrollTop = msgContainer.scrollHeight;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ECHARTS RENDERING — auto-render chart_data from tool results
+// ═══════════════════════════════════════════════════════════════
+
+function renderChart(msgDiv, chartData) {
+  console.log('[renderChart]', chartData);
+  if (!chartData || typeof echarts === 'undefined') { console.log('[renderChart] blocked - no data or no echarts'); return; }
+
+  try {
+    const content = msgDiv.querySelector('.msg-content');
+    if (!content) { console.log('[renderChart] no .msg-content'); return; }
+
+    // Build chart container
+    const chartId = 'chart-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+    const wrapper = document.createElement('div');
+    wrapper.className = 'msg-chart';
+
+    const header = document.createElement('div');
+    header.className = 'msg-chart-header';
+    header.innerHTML = '&#9776; ' + escapeHtml(chartData.title || '图表');
+
+    const body = document.createElement('div');
+    body.className = 'msg-chart-body';
+    body.id = chartId;
+
+    wrapper.appendChild(header);
+    wrapper.appendChild(body);
+    content.appendChild(wrapper);
+
+    // Build ECharts option from chart_data
+    const option = buildChartOption(chartData);
+    console.log('[renderChart] option built:', option);
+    if (!option) { console.log('[renderChart] buildChartOption returned null'); return; }
+
+    // Delay to let DOM layout settle
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const dom = document.getElementById(chartId);
+        if (!dom) { console.log('[renderChart] DOM not found:', chartId); return; }
+        console.log('[renderChart] init ECharts on', chartId);
+        const chart = echarts.init(dom, null, { renderer: 'canvas' });
+        chart.setOption(option);
+        // Track for cleanup
+        if (!msgDiv._charts) msgDiv._charts = [];
+        msgDiv._charts.push(chart);
+        // Resize handler
+        const ro = new ResizeObserver(() => chart.resize());
+        ro.observe(dom);
+      });
+    });
+
+    scrollToBottom();
+  } catch (e) {
+    console.error('[renderChart] ERROR:', e);
+  }
+}
+// ← renderChart() closing brace — MUST be here
+
+function renderReport(msgDiv, event) {
+  if (!msgDiv) return;
+  var content = msgDiv.querySelector('.msg-content');
+  if (!content) return;
+
+  var reportTypeLabels = {
+    weekly: '周度系统报告',
+    device: '设备健康报告',
+    risk: '高风险设备报告',
+    thermal: '热漂移分析报告'
+  };
+
+  var wrapper = document.createElement('div');
+  wrapper.className = 'msg-report';
+
+  var header = document.createElement('div');
+  header.className = 'msg-report-header';
+  header.innerHTML = '&#128196; ' + (reportTypeLabels[event.report_type] || 'Maintenance Report');
+
+  var body = document.createElement('div');
+  body.className = 'msg-report-body';
+
+  var info = document.createElement('div');
+  info.className = 'msg-report-info';
+  info.innerHTML =
+    '<strong>报告已就绪</strong><br>' +
+    'HTML: ' + (event.html_size_kb || '?') + ' KB' +
+    (event.pdf_url ? ' | PDF: ' + event.pdf_size_kb + ' KB' : ' | PDF unavailable');
+
+  var viewBtn = document.createElement('a');
+  viewBtn.className = 'msg-report-dl';
+  viewBtn.href = event.html_url;
+  viewBtn.target = '_blank';
+  viewBtn.rel = 'noopener';
+  viewBtn.innerHTML = '&#128065; View Report';
+
+  body.appendChild(info);
+  body.appendChild(viewBtn);
+
+  if (event.pdf_url) {
+    var pdfBtn = document.createElement('a');
+    pdfBtn.className = 'msg-report-dl';
+    pdfBtn.style.background = 'rgba(0,201,160,0.12)';
+    pdfBtn.style.color = '#00c9a0';
+    pdfBtn.style.border = '1px solid rgba(0,201,160,0.2)';
+    pdfBtn.href = event.pdf_url;
+    pdfBtn.target = '_blank';
+    pdfBtn.rel = 'noopener';
+    pdfBtn.innerHTML = '&#128229; Download PDF';
+    body.appendChild(pdfBtn);
+  }
+
+  wrapper.appendChild(header);
+  wrapper.appendChild(body);
+  content.appendChild(wrapper);
+
+  scrollToBottom();
+}
+
+function buildChartOption(cd) {
+  console.log('[buildChartOption]', cd);
+  if (!cd || !cd.series) { console.log('[buildChartOption] blocked - no cd or series'); return null; }
+
+  try {
+    const colors = ['#00c9a0', '#f0a030', '#f04444', '#4d94ff', '#a371f7', '#3fb950'];
+    const isDark = true;
+
+    const option = {
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: 'rgba(14,17,23,0.95)',
+        borderColor: '#1c2230',
+        textStyle: { color: '#e6ebf2', fontSize: 12 },
+      },
+      legend: {
+        bottom: 0,
+        textStyle: { color: '#8e9aab', fontSize: 11 },
+        icon: 'roundRect',
+      },
+      grid: { left: '3%', right: '4%', top: 40, bottom: 40 },
+      xAxis: {
+        type: 'category',
+        data: cd.x_axis || cd.xAxis || [],
+        axisLine: { lineStyle: { color: '#2a3a50' } },
+        axisTick: { show: false },
+        axisLabel: { color: '#5a6474', fontSize: 10, rotate: (cd.x_axis || cd.xAxis || []).length > 20 ? 45 : 0 },
+        splitLine: { show: false },
+      },
+      yAxis: {
+        type: 'value',
+        name: cd.yAxisName || '',
+        nameTextStyle: { color: '#8e9aab', fontSize: 11 },
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: { color: '#5a6474', fontSize: 10 },
+        splitLine: { lineStyle: { color: '#1c2230', type: 'dashed' } },
+      },
+    };
+
+    // Series
+    option.series = cd.series.map((s, i) => {
+      const base = {
+        name: s.name,
+        type: s.type || 'line',
+        data: s.data || [],
+        symbol: 'circle',
+        symbolSize: s.type === 'scatter' ? 6 : 3,
+        smooth: s.type !== 'scatter',
+      };
+
+      if (s.type === 'scatter') {
+        base.itemStyle = { color: s.color || colors[i] || '#f04444' };
+        base.markLine = s.markLine || undefined;
+      } else {
+        base.lineStyle = { width: 2, color: s.color || s.lineColor || colors[i % colors.length] };
+        base.itemStyle = { color: s.color || s.lineColor || colors[i % colors.length] };
+      }
+
+      // Area style for rolling average
+      if (s.name && s.name.indexOf('移动平均') >= 0) {
+        base.lineStyle = { width: 2.5, color: s.lineColor || '#f0a030' };
+        base.areaStyle = { color: 'rgba(240,160,48,0.08)' };
+        base.z = 10;
+      }
+
+      // Mark points for anomalies
+      if (cd.markPoints && cd.markPoints.length > 0) {
+        base.markPoint = {
+          data: cd.markPoints.map(p => ({
+            name: p.name || '',
+            coord: p.coord || [p.xAxis, p.value],
+            value: p.label || p.value,
+            itemStyle: { color: '#f04444' },
+            label: { color: '#e6ebf2', fontSize: 10, formatter: '{c}' },
+          })),
+        };
+      }
+
+      return base;
+    });
+
+    // Threshold lines — after option.series is assigned (outside map callback)
+    if (cd.thresholds) {
+      const markLines = [];
+      const threshColors = {
+        warning_upper: '#f0a030',
+        warning_lower: '#f0a030',
+        alarm_upper: '#f04444',
+        alarm_lower: '#f04444',
+      };
+      for (const [key, val] of Object.entries(cd.thresholds)) {
+        if (val != null) {
+          markLines.push({
+            name: key,
+            yAxis: val,
+            lineStyle: { color: threshColors[key] || '#f0a030', type: 'dashed', width: 1 },
+            label: { formatter: key + ' ({c})', color: '#8e9aab', fontSize: 10 },
+          });
+        }
+      }
+      if (markLines.length > 0) {
+        var mainSeries = option.series.find(function(s) { return s.type !== 'scatter'; }) || option.series[0];
+        if (mainSeries) {
+          mainSeries.markLine = { silent: true, symbol: 'none', data: markLines };
+        }
+      }
+    }
+
+    // Multi-line specific: add legend emphasis
+    if (cd.chart_type === 'multi_line') {
+      option.legend.bottom = 0;
+    }
+
+    console.log('[buildChartOption] success, option:', option);
+    return option;
+  } catch (e) {
+    console.error('[buildChartOption] ERROR:', e);
+    return null;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════════
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+console.log('[init] all functions defined, script loaded successfully');
+</script>
+</body>
+</html>

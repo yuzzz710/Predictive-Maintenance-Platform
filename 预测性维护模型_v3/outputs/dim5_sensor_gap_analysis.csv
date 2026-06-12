@@ -1,0 +1,7 @@
+sensor,expected_youden_j,expected_auc_gain,mechanism,cost_per_machine,feasibility
+Vibration (accelerometer),0.40-0.70,+0.20 to +0.35,"Detects bearing wear, imbalance, misalignment weeks before failure",$200-500,High
+Acoustic Emission,0.30-0.55,+0.15 to +0.28,Captures high-frequency stress waves from crack propagation,$300-800,Medium
+Current Signature Analysis (MCSA),0.35-0.60,+0.18 to +0.30,"FFT of current waveform reveals rotor bar faults, eccentricity",$100-300,High (software-only if sampling rate adequate)
+Thermal Imaging,0.25-0.50,+0.13 to +0.25,Spatial temperature distribution detects localized overheating,$500-1500,Medium
+Oil/Particle Analysis,0.35-0.65,+0.18 to +0.33,Wear particle count and composition indicate mechanical degradation,$50-150 (lab),High (periodic sampling)
+"Environmental (humidity, dust, temp)",0.10-0.25,+0.05 to +0.13,Environmental stress accelerates known degradation modes,$50-100,High

@@ -1,0 +1,60 @@
+{
+  "data_dir": "C:\\Users\\yuzzz\\Desktop\\\u82d7\u5703\u676f\\git5\\\u539f\u59cb\u6570\u636e\u96c6",
+  "prep_dir": "C:\\Users\\yuzzz\\Desktop\\\u82d7\u5703\u676f\\git5\\agent-mcp\u67b6\u6784\\outputs_test_mcp\\full_pipeline\\output_data_prep",
+  "output_dir": "C:\\Users\\yuzzz\\Desktop\\\u82d7\u5703\u676f\\git5\\agent-mcp\u67b6\u6784\\outputs_test_mcp\\full_pipeline\\output_decision",
+  "files": {
+    "decision_report": "maintenance_decision_report.csv",
+    "work_orders": "maintenance_work_orders.csv",
+    "text_report": "maintenance_report.txt",
+    "decision_summary": "decision_summary.json"
+  },
+  "summary": {
+    "n_machines_evaluated": 100,
+    "alert_distribution": {
+      "ALARM": 11,
+      "WARNING": 51,
+      "WATCH": 38,
+      "NORMAL": 0
+    },
+    "action_distribution": {
+      "immediate_shutdown": 2,
+      "preventive_repair": 5,
+      "schedule_inspection": 21,
+      "increase_monitoring": 36,
+      "routine_check": 36
+    },
+    "n_work_orders": 20,
+    "top_5_urgent": [
+      {
+        "machine_id": "CNC_036",
+        "urgency": 100,
+        "action": "preventive_repair",
+        "cost": 18080.000000000004
+      },
+      {
+        "machine_id": "CNC_025",
+        "urgency": 100,
+        "action": "preventive_repair",
+        "cost": 17043.0
+      },
+      {
+        "machine_id": "CNC_012",
+        "urgency": 100,
+        "action": "preventive_repair",
+        "cost": 16493.4
+      },
+      {
+        "machine_id": "CNC_067",
+        "urgency": 100,
+        "action": "immediate_shutdown",
+        "cost": 16401.0
+      },
+      {
+        "machine_id": "CNC_089",
+        "urgency": 100,
+        "action": "preventive_repair",
+        "cost": 15663.0
+      }
+    ]
+  }
+}

@@ -1,0 +1,2133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能设备预测性维护</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="/shared/navbar.js?v=20260519"></script>
+<style>
+/* ============================================================
+   DESIGN TOKENS — Industrial Precision
+   ============================================================ */
+:root {
+  --bg-root: #080a0d;
+  --bg-surface: #0e1117;
+  --bg-card: #141820;
+  --bg-card-alt: #181d26;
+  --bg-input: #0c0f15;
+  --border: #1c2230;
+  --border-light: #242b38;
+  --border-accent: #2a3a50;
+  --text-primary: #e6ebf2;
+  --text-secondary: #8e9aab;
+  --text-muted: #5a6474;
+  --accent-cyan: #00c9a0;
+  --accent-amber: #f0a030;
+  --accent-red: #f04444;
+  --accent-blue: #4d94ff;
+  --accent-green: #3fb950;
+  --accent-purple: #a371f7;
+  --accent-pink: #db61a2;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.5);
+  --radius: 3px;
+  --radius-md: 6px;
+  --font-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', 'Source Code Pro', monospace;
+  --font-sans: 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', 'WenQuanYi Micro Hei', 'Segoe UI', system-ui, sans-serif;
+  --transition: 0.2s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+/* ============================================================
+   BASE — Industrial atmosphere
+   ============================================================ */
+body {
+  background: var(--bg-root);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.003) 2px, rgba(255,255,255,0.003) 4px),
+    radial-gradient(ellipse at 20% 0%, rgba(0,201,160,0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(240,160,48,0.03) 0%, transparent 50%);
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.header {
+  position: sticky; top:0; z-index:100;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+}
+.header-inner {
+  max-width: 1680px; margin:0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 52px;
+}
+.logo {
+  display: flex; align-items: center; gap: 10px;
+  font-weight: 700; font-size: 15px; color: var(--text-primary);
+  font-family: var(--font-mono); letter-spacing: 1px;
+}
+.logo-indicator {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent-cyan);
+  box-shadow: 0 0 6px var(--accent-cyan), 0 0 20px rgba(0,201,160,0.3);
+  animation: indicator-pulse 2s infinite;
+}
+@keyframes indicator-pulse {
+  0%,100% { opacity:1; box-shadow: 0 0 6px var(--accent-cyan), 0 0 20px rgba(0,201,160,0.3); }
+  50% { opacity:0.5; box-shadow: 0 0 2px var(--accent-cyan), 0 0 6px rgba(0,201,160,0.1); }
+}
+.status-bar {
+  display: flex; align-items: center; gap: 18px;
+  font-size: 11px; color: var(--text-secondary); font-family: var(--font-mono);
+}
+.status-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent-green);
+  display: inline-block; margin-right: 5px;
+  box-shadow: 0 0 4px var(--accent-green);
+}
+.status-dot.warn { background: var(--accent-amber); box-shadow: 0 0 4px var(--accent-amber); }
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+.nav-bar {
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 52px; z-index: 99;
+}
+.nav-inner {
+  max-width: 1680px; margin:0 auto;
+  display: flex; gap: 0;
+}
+.nav-tab {
+  padding: 11px 24px;
+  font-size: 12.5px; font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: var(--transition);
+  white-space: nowrap;
+  user-select: none;
+  font-family: var(--font-sans);
+  position: relative;
+  letter-spacing: 0.3px;
+}
+.nav-tab:hover { color: var(--text-primary); background: rgba(255,255,255,0.015); }
+.nav-tab.active {
+  color: var(--accent-cyan);
+  border-bottom-color: var(--accent-cyan);
+}
+.nav-tab .tab-badge {
+  display: inline-block; margin-left: 6px;
+  font-size: 9px; padding: 1px 5px; border-radius: 2px;
+  background: rgba(0,201,160,0.12); color: var(--accent-cyan);
+  font-family: var(--font-mono);
+}
+
+/* ============================================================
+   MAIN LAYOUT
+   ============================================================ */
+.main { max-width:1680px; margin:0 auto; padding:20px 24px; position:relative; z-index:1; }
+.section { display:none; }
+.section.active { display:block; animation: sectionIn 0.4s ease; }
+@keyframes sectionIn { from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
+
+/* ============================================================
+   STATS CARDS
+   ============================================================ */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  transition: var(--transition);
+  position: relative;
+  overflow: visible;
+}
+.stat-card::after {
+  content: '';
+  position: absolute; top:0; left:0; width:3px; height:100%;
+  background: var(--border-light);
+  border-radius: var(--radius) 0 0 var(--radius);
+  transition: var(--transition);
+}
+.stat-card:hover { border-color: var(--border-accent); box-shadow: var(--shadow-card); }
+.stat-card:hover::after { background: var(--accent-cyan); }
+.stat-info {
+  position: relative;
+  display: inline-block;
+  cursor: help;
+  margin-left: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+  vertical-align: middle;
+  transition: var(--transition);
+}
+.stat-info:hover { color: var(--accent-cyan); }
+.stat-info .stat-tooltip {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  width: 280px;
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  z-index: 1000;
+  box-shadow: var(--shadow-lg);
+  pointer-events: none;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  text-align: left;
+}
+.stat-info .stat-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: var(--border-accent);
+}
+.stat-info:hover .stat-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+.stat-tooltip .tt-title {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 11.5px;
+  margin-bottom: 6px;
+}
+.stat-tooltip .tt-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 2px;
+}
+.stat-tooltip .tt-label { color: var(--text-muted); white-space: nowrap; }
+.stat-tooltip .tt-val { color: var(--text-secondary); text-align: right; }
+.stat-card .label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; font-weight:500; }
+.stat-card .value { font-size:26px; font-weight:700; color:var(--text-primary); margin-top:4px; font-family:var(--font-mono); }
+.stat-card .sub { font-size:10.5px; color:var(--text-secondary); margin-top:3px; }
+.stat-card.accent-cyan  .value { color: var(--accent-cyan); }
+.stat-card.accent-amber .value { color: var(--accent-amber); }
+.stat-card.accent-red   .value { color: var(--accent-red); }
+.stat-card.accent-blue  .value { color: var(--accent-blue); }
+.stat-card.accent-green .value { color: var(--accent-green); }
+
+/* ============================================================
+   CHART GRID
+   ============================================================ */
+.chart-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.chart-row.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.chart-row.cols-1 { grid-template-columns: 1fr; }
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  transition: var(--transition);
+}
+.chart-card:hover { border-color: var(--border-light); }
+.chart-card.full-width { grid-column: 1 / -1; }
+.chart-title {
+  font-size: 12px; font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-sans); letter-spacing: 0.3px;
+}
+.chart-title::before {
+  content: '';
+  width: 10px; height: 2px;
+  background: var(--accent-cyan);
+  border-radius: 1px;
+}
+.chart-box { width:100%; height:340px; }
+.chart-box.tall { height:460px; }
+.chart-box.short { height:280px; }
+.chart-box.mini { height:240px; }
+
+/* ============================================================
+   WORK ORDER CARDS
+   ============================================================ */
+.work-order-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.wo-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: var(--transition);
+  border-left: 3px solid var(--border);
+  position: relative;
+}
+.wo-card:hover { border-color: var(--border-accent); box-shadow: var(--shadow-card); transform: translateX(2px); }
+.wo-card.critical { border-left-color: var(--accent-red); }
+.wo-card.high { border-left-color: var(--accent-amber); }
+.wo-card.medium { border-left-color: var(--accent-blue); }
+.wo-card.low { border-left-color: var(--accent-cyan); }
+.wo-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px; gap:8px;
+}
+.wo-priority {
+  font-size: 10px; font-weight: 700; padding: 2px 7px;
+  border-radius: 2px; font-family: var(--font-mono); letter-spacing:0.5px;
+}
+.wo-priority.critical { background:rgba(240,68,68,0.15); color:var(--accent-red); }
+.wo-priority.high { background:rgba(240,160,48,0.15); color:var(--accent-amber); }
+.wo-priority.medium { background:rgba(77,148,255,0.15); color:var(--accent-blue); }
+.wo-priority.low { background:rgba(0,201,160,0.15); color:var(--accent-cyan); }
+.wo-machine { font-weight:600; font-size:14px; font-family:var(--font-mono); }
+.wo-action {
+  font-size: 10px; padding: 2px 7px; border-radius: 2px;
+  font-weight: 600; letter-spacing: 0.3px; white-space: nowrap;
+}
+.action-immediate_shutdown { background:rgba(240,68,68,0.2); color:var(--accent-red); }
+.action-preventive_repair { background:rgba(240,160,48,0.2); color:var(--accent-amber); }
+.action-schedule_inspection { background:rgba(77,148,255,0.2); color:var(--accent-blue); }
+.action-increase_monitoring { background:rgba(0,201,160,0.2); color:var(--accent-cyan); }
+.wo-metrics {
+  display: flex; gap: 16px; margin: 8px 0;
+  font-size: 11px; color: var(--text-secondary); flex-wrap:wrap;
+}
+.wo-metrics span { font-family: var(--font-mono); }
+.wo-suggestion {
+  font-size: 10.5px; color: var(--text-muted);
+  line-height: 1.5; margin-top: 8px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ============================================================
+   SENSOR CARDS
+   ============================================================ */
+.sensor-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.sensor-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  transition: var(--transition);
+}
+.sensor-card:hover { border-color: var(--border-light); }
+.sensor-name { font-weight:600; font-size:13px; margin-bottom:6px; font-family:var(--font-mono); }
+.sensor-meta { font-size:10.5px; color:var(--text-muted); display:flex; flex-direction:column; gap:3px; }
+.sensor-feasibility {
+  display: inline-block; padding: 2px 6px; border-radius: 2px;
+  font-size: 9.5px; font-weight: 600; margin-top: 6px; letter-spacing:0.3px;
+}
+.feas-High { background:rgba(63,185,80,0.18); color:var(--accent-green); }
+.feas-Medium { background:rgba(240,160,48,0.18); color:var(--accent-amber); }
+
+/* ============================================================
+   FILTER BAR
+   ============================================================ */
+.filter-bar {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px; flex-wrap: wrap;
+}
+.filter-bar select, .filter-bar input {
+  background: var(--bg-input); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 6px 10px; font-size: 11px; cursor: pointer;
+  font-family: var(--font-sans);
+  transition: var(--transition);
+}
+.filter-bar select:focus, .filter-bar input:focus { outline:none; border-color:var(--accent-cyan); }
+.filter-bar input[type="text"] { min-width: 160px; }
+.filter-bar input[type="number"] { width: 80px; }
+.filter-bar label { font-size: 11px; color: var(--text-muted); white-space: nowrap; font-family:var(--font-sans); }
+.filter-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; padding: 3px 8px; border-radius: 2px;
+  cursor: pointer; transition: var(--transition); user-select: none;
+  border: 1px solid var(--border); color: var(--text-secondary);
+  background: var(--bg-card);
+}
+.filter-chip:hover { border-color: var(--accent-cyan); }
+.filter-chip.active { background: rgba(0,201,160,0.12); color: var(--accent-cyan); border-color: var(--accent-cyan); }
+
+/* ============================================================
+   DATA TABLE
+   ============================================================ */
+.table-wrap {
+  max-height: 500px; overflow-y: auto; border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+.table-wrap.log-table { max-height: 560px; }
+.data-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 11px;
+}
+.data-table th {
+  text-align: left; padding: 8px 12px;
+  background: var(--bg-card-alt); color: var(--text-secondary);
+  font-weight: 600; border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 2;
+  cursor: pointer; user-select: none; white-space: nowrap;
+  font-size: 10.5px; letter-spacing: 0.3px; text-transform: uppercase;
+}
+.data-table th:hover { color: var(--text-primary); }
+.data-table th .sort-arrow { margin-left:4px; font-size:9px; color:var(--accent-cyan); }
+.data-table td {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--text-primary);
+}
+.data-table tr:hover td { background: rgba(255,255,255,0.02); }
+.data-table tr.row-fault td { background: rgba(240,68,68,0.04); }
+.data-table tr.row-fault:hover td { background: rgba(240,68,68,0.07); }
+.data-table tr.row-normal td { background: rgba(63,185,80,0.03); }
+.data-table tr.row-expanded td { background: var(--bg-card-alt); border-bottom:2px solid var(--accent-cyan); }
+.detail-panel {
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 14px 18px; margin: 4px 0 8px 0;
+  display: grid; grid-template-columns: repeat(4,1fr); gap:10px;
+  font-size: 11px;
+}
+.detail-panel .detail-item {}
+.detail-panel .detail-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing:0.5px; }
+.detail-panel .detail-val { font-family: var(--font-mono); color: var(--text-primary); font-weight:600; font-size:13px; }
+
+/* ============================================================
+   PAGINATION
+   ============================================================ */
+.pagination {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  margin-top: 14px;
+}
+.pagination button {
+  background: var(--bg-card); color: var(--text-secondary);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 5px 12px; font-size: 11px; cursor: pointer;
+  font-family: var(--font-mono); transition: var(--transition);
+}
+.pagination button:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+.pagination button.active { background: rgba(0,201,160,0.12); color: var(--accent-cyan); border-color: var(--accent-cyan); }
+.pagination button:disabled { opacity:0.3; cursor:default; }
+.pagination .page-info { font-size: 10.5px; color: var(--text-muted); margin: 0 8px; font-family:var(--font-mono); }
+
+/* ============================================================
+   IMAGE GALLERY
+   ============================================================ */
+.gallery-section {
+  margin-top: 18px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+.gallery-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; color: var(--accent-cyan);
+  cursor: pointer; padding: 6px 12px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg-card); transition: var(--transition);
+  user-select: none; font-family: var(--font-sans);
+}
+.gallery-toggle:hover { border-color: var(--accent-cyan); background: rgba(0,201,160,0.04); }
+.gallery-toggle .arrow { transition: var(--transition); font-size: 9px; display:inline-block; }
+.gallery-toggle.open .arrow { transform: rotate(90deg); }
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 14px;
+}
+.gallery-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.gallery-item:hover {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 4px 20px rgba(0,201,160,0.1);
+  transform: translateY(-2px);
+}
+.gallery-item img {
+  width: 100%;
+  height: 200px;
+  object-fit: contain;
+  background: var(--bg-root);
+  display: block;
+}
+.gallery-caption {
+  padding: 9px 12px;
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  border-top: 1px solid var(--border);
+  min-height: 44px;
+}
+.gallery-caption .fig-name {
+  font-weight: 600; font-size: 11px; color: var(--text-primary);
+  display: block; margin-bottom: 3px;
+}
+.gallery-caption .fig-desc {
+  color: var(--text-muted); font-size: 10px;
+}
+.gallery-subtitle {
+  font-size: 12px; font-weight: 600; color: var(--text-primary);
+  margin: 18px 0 8px 0; padding-left: 8px;
+  border-left: 2px solid var(--accent-cyan);
+  font-family: var(--font-sans);
+}
+
+/* ============================================================
+   LIGHTBOX — Enhanced
+   ============================================================ */
+.lightbox-overlay {
+  display: none; position: fixed; top:0; left:0; right:0; bottom:0;
+  background: rgba(0,0,0,.94); z-index: 1000;
+  align-items: center; justify-content: center; flex-direction: column;
+  cursor: zoom-out;
+}
+.lightbox-overlay.active { display: flex; }
+.lightbox-overlay.zoomed { cursor: grab; }
+.lightbox-overlay.zoomed:active { cursor: grabbing; }
+.lightbox-img-wrap {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  max-width: 90vw; max-height: 78vh;
+  overflow: hidden;
+}
+.lightbox-overlay img {
+  max-width: 90vw; max-height: 78vh;
+  object-fit: contain; border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.15s ease;
+  user-select: none;
+}
+.lightbox-info {
+  display: flex; align-items: center; gap: 16px;
+  margin-top: 12px; color: var(--text-muted); font-size: 11px;
+  font-family: var(--font-mono);
+}
+.lightbox-index { color: var(--accent-cyan); font-weight:600; }
+.lightbox-caption {
+  margin-top: 6px; max-width: 65vw; text-align: center;
+  font-size: 12px; color: var(--text-secondary); line-height: 1.5;
+}
+.lightbox-close {
+  position: absolute; top: 18px; right: 28px;
+  font-size: 28px; color: var(--text-muted); cursor: pointer;
+  transition: var(--transition); z-index: 1001;
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: rgba(255,255,255,0.04);
+}
+.lightbox-close:hover { color: var(--accent-red); background: rgba(240,68,68,0.1); }
+.lightbox-prev, .lightbox-next {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  font-size: 36px; color: var(--text-muted); cursor: pointer;
+  padding: 18px 14px; user-select: none; transition: var(--transition);
+  z-index: 1001;
+}
+.lightbox-prev:hover, .lightbox-next:hover { color: var(--accent-cyan); }
+.lightbox-prev { left: 8px; }
+.lightbox-next { right: 8px; }
+.lightbox-toolbar {
+  position: absolute; bottom: 28px; display: flex; gap: 4px; z-index: 1001;
+}
+.lightbox-toolbar button {
+  background: rgba(255,255,255,0.06); color: var(--text-muted);
+  border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius);
+  padding: 5px 12px; font-size: 14px; cursor: pointer; transition: var(--transition);
+}
+.lightbox-toolbar button:hover { color: var(--accent-cyan); border-color: var(--accent-cyan); background: rgba(0,201,160,0.1); }
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:var(--border-light); }
+
+/* ============================================================
+   ALARM DETAIL MODAL
+   ============================================================ */
+.modal-overlay {
+  display: none;
+  position: fixed; top:0; left:0; right:0; bottom:0;
+  background: rgba(0,0,0,0.75);
+  z-index: 10000;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.active { display: flex; }
+.modal-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-md);
+  width: min(1100px, 92vw);
+  max-height: 85vh;
+  display: flex; flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  animation: modalIn 0.25s ease;
+}
+@keyframes modalIn { from { opacity:0; transform: scale(0.96) translateY(8px); } to { opacity:1; transform: scale(1) translateY(0); } }
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.modal-header h3 { font-size: 15px; color: var(--text-primary); font-weight: 600; }
+.modal-header .modal-close {
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  background: none; border: 1px solid var(--border); border-radius: var(--radius);
+  color: var(--text-muted); font-size: 18px; cursor: pointer; transition: var(--transition);
+}
+.modal-header .modal-close:hover { color: var(--accent-red); border-color: var(--accent-red); }
+.modal-body {
+  padding: 16px 22px 22px;
+  overflow-y: auto;
+  flex: 1;
+}
+.modal-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 11px; font-family: var(--font-mono);
+}
+.modal-table thead { position: sticky; top: 0; z-index: 1; }
+.modal-table th {
+  background: var(--bg-card-alt);
+  color: var(--text-secondary);
+  font-weight: 600;
+  padding: 8px 6px;
+  text-align: left;
+  border-bottom: 2px solid var(--border-accent);
+  white-space: nowrap;
+}
+.modal-table td {
+  padding: 7px 6px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.modal-table tr:hover td { background: rgba(255,255,255,0.02); }
+.modal-table .alarm-row-critical { border-left: 3px solid var(--accent-red); }
+.modal-table .alarm-row-high { border-left: 3px solid var(--accent-amber); }
+.modal-table .alarm-row-medium { border-left: 3px solid var(--accent-blue); }
+.modal-table .alarm-row-low { border-left: 3px solid var(--accent-cyan); }
+.modal-table .row-action-shutdown { color: var(--accent-red); font-weight: 600; }
+.modal-table .row-action-repair { color: var(--accent-amber); }
+.modal-table .row-action-inspect { color: var(--accent-blue); }
+.modal-table .sugg-cell { max-width: 300px; font-size: 10px; color: var(--text-secondary); line-height: 1.5; }
+.stat-card.clickable { cursor: pointer; }
+.stat-card.clickable:hover { border-color: var(--accent-red); }
+.stat-card.clickable:hover::after { background: var(--accent-red); }
+.stat-card.clickable:active { transform: scale(0.98); }
+
+/* ============================================================
+   LOADING
+   ============================================================ */
+.loading {
+  display: flex; align-items: center; justify-content: center;
+  height: 180px; color: var(--text-muted); font-size: 13px;
+}
+.spinner {
+  width: 20px; height: 20px; border: 2px solid var(--border);
+  border-top-color: var(--accent-cyan); border-radius: 50%;
+  animation: spin 0.7s linear infinite; margin-right: 8px;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ============================================================
+   STAGGERED ENTRY ANIMATIONS
+   ============================================================ */
+@keyframes cardReveal {
+  from { opacity:0; transform:translateY(12px); }
+  to { opacity:1; transform:translateY(0); }
+}
+.stagger-in { animation: cardReveal 0.45s ease both; }
+.section.active .stat-card:nth-child(1), .section.active .chart-card:nth-child(1) { animation-delay: 0.02s; }
+.section.active .stat-card:nth-child(2), .section.active .chart-card:nth-child(2) { animation-delay: 0.07s; }
+.section.active .stat-card:nth-child(3), .section.active .chart-card:nth-child(3) { animation-delay: 0.12s; }
+.section.active .stat-card:nth-child(4), .section.active .chart-card:nth-child(4) { animation-delay: 0.17s; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width:1200px) {
+  .stats-row { grid-template-columns: repeat(2,1fr); }
+  .chart-row { grid-template-columns: 1fr; }
+  .chart-row.cols-3 { grid-template-columns: 1fr; }
+  .work-order-grid { grid-template-columns: 1fr; }
+  .sensor-grid { grid-template-columns: 1fr; }
+  .gallery-grid { grid-template-columns: repeat(2,1fr); }
+  .detail-panel { grid-template-columns: repeat(2,1fr); }
+}
+@media (max-width:768px) {
+  .nav-tab { padding:9px 14px; font-size:11px; }
+  .stats-row { grid-template-columns: 1fr; }
+  .gallery-grid { grid-template-columns: 1fr; }
+  .detail-panel { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-indicator"></div>
+      智能设备预测性维护
+    </div>
+    <div class="status-bar">
+      <span><span class="status-dot"></span>系统在线</span>
+      <span>|</span>
+      <span>100台设备监控中</span>
+      <span>|</span>
+      <span id="clock">--</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     NAVIGATION
+     ============================================================ -->
+<div class="nav-bar">
+  <div class="nav-inner">
+    <div class="nav-tab active" data-section="sec5">运行日志 <span class="tab-badge">NEW</span></div>
+    <div class="nav-tab" data-section="sec1">数据探索</div>
+    <div class="nav-tab" data-section="sec2">基线划定分析</div>
+    <div class="nav-tab" data-section="sec3">预测性维护模型</div>
+    <div class="nav-tab" data-section="sec4">预测性维护建议</div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MAIN CONTENT
+     ============================================================ -->
+<div class="main">
+
+  <!-- ============ SECTION 5: 运行日志 ============ -->
+  <div class="section active" id="sec5">
+    <div class="stats-row" id="s5-stats"></div>
+    <div class="filter-bar" id="log-filters">
+      <label>设备</label>
+      <select id="log-machine-filter"><option value="">全部设备 (100)</option></select>
+      <label>故障类型</label>
+      <div id="log-fault-chips" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
+      <label>搜索</label>
+      <input type="text" id="log-search" placeholder="设备ID搜索...">
+      <label>Voltage范围</label>
+      <input type="number" id="log-v-min" placeholder="Min" step="1"> -
+      <input type="number" id="log-v-max" placeholder="Max" step="1">
+    </div>
+    <div class="chart-row">
+      <div class="chart-card stagger-in"><div class="chart-title">参数时序 · 选定设备</div><div class="chart-box" id="chart-log-ts"></div></div>
+      <div class="chart-card stagger-in"><div class="chart-title">故障类型分布</div><div class="chart-box" id="chart-log-fault"></div></div>
+    </div>
+    <div class="chart-card stagger-in" style="margin-bottom:14px">
+      <div class="chart-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>运行日志数据表</span>
+        <span style="font-weight:400;font-size:11px;color:var(--text-muted);font-family:var(--font-mono);" id="log-table-count">共 0 条</span>
+      </div>
+      <div class="table-wrap log-table" id="log-table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th data-sort="Date" style="width:130px">时间 ▾</th>
+              <th data-sort="Equipment.Id" style="width:90px">设备ID</th>
+              <th data-sort="Failure.Equipment.Type" style="width:80px">故障类型</th>
+              <th data-sort="Op.Amperage" style="width:100px">Amperage</th>
+              <th data-sort="Op.Temperature" style="width:110px">Temperature</th>
+              <th data-sort="Op.Voltage" style="width:100px">Voltage</th>
+              <th data-sort="Rotor Speed" style="width:100px">Rotor Speed</th>
+            </tr>
+          </thead>
+          <tbody id="log-table-body"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="log-pagination"></div>
+    </div>
+  </div>
+
+<!-- ============ SECTION 1: 数据探索 ============ -->
+  <div class="section" id="sec1">
+    <div class="stats-row" id="s1-stats"></div>
+    <div class="chart-row">
+      <div class="chart-card stagger-in"><div class="chart-title">日产量排名 Top 20</div><div class="chart-box" id="chart-daily-output"></div></div>
+      <div class="chart-card stagger-in"><div class="chart-title">故障类型分布 · 100台设备</div><div class="chart-box" id="chart-fault-stack"></div></div>
+    </div>
+    <div class="chart-row">
+      <div class="chart-card stagger-in"><div class="chart-title">参数箱线图 · 正常 vs 故障</div><div class="chart-box tall" id="chart-boxplot"></div></div>
+      <div class="chart-card stagger-in"><div class="chart-title">设备故障负载散点图</div><div class="chart-box tall" id="chart-fault-scatter"></div></div>
+    </div>
+    <div class="gallery-section" id="gallery-sec1">
+      <div class="gallery-toggle" onclick="toggleGallery('sec1-gal')"><span class="arrow">▶</span> 展开数据探索分析图库 (20张)</div>
+      <div id="sec1-gal" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 2: 基线划定分析 ============ -->
+  <div class="section" id="sec2">
+    <div class="chart-row">
+      <div class="chart-card stagger-in"><div class="chart-title">方差分解 · 设备间 vs 设备内</div><div class="chart-box short" id="chart-variance"></div></div>
+      <div class="chart-card stagger-in"><div class="chart-title">告警等级分布</div><div class="chart-box short" id="chart-alert-pie"></div></div>
+    </div>
+    <div class="chart-row">
+      <div class="chart-card stagger-in"><div class="chart-title">故障类型参数签名雷达图</div><div class="chart-box tall" id="chart-radar"></div></div>
+      <div class="chart-card stagger-in"><div class="chart-title">成本风险矩阵气泡图</div><div class="chart-box tall" id="chart-bubble"></div></div>
+    </div>
+    <div class="chart-row cols-1">
+      <div class="chart-card stagger-in">
+        <div class="chart-title">z-score 时序 · 设备选择</div>
+        <div class="filter-bar">
+          <select id="machine-select"><option value="CNC_001">CNC_001</option></select>
+        </div>
+        <div class="chart-box tall" id="chart-zscore-ts"></div>
+      </div>
+    </div>
+    <div class="gallery-section" id="gallery-sec2">
+      <div class="gallery-toggle" onclick="toggleGallery('sec2-gal')"><span class="arrow">▶</span> 展开基线划定分析图库 (7张)</div>
+      <div id="sec2-gal" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 3: 预测性维护模型 ============ -->
+  <div class="section" id="sec3">
+    <div class="chart-row">
+      <div class="chart-card stagger-in"><div class="chart-title">XGBoost v1 评估指标 · 窗口大小对比</div><div class="chart-box" id="chart-eval-bar"></div></div>
+      <div class="chart-card stagger-in"><div class="chart-title">MTNN v2 · 变体对比</div><div class="chart-box" id="chart-variant"></div></div>
+    </div>
+    <div class="chart-row">
+      <div class="chart-card stagger-in"><div class="chart-title">Top 15 特征重要性 · XGBoost win=5</div><div class="chart-box tall" id="chart-feat-imp"></div></div>
+      <div class="chart-card stagger-in"><div class="chart-title">鲁棒性测试热力图</div><div class="chart-box tall" id="chart-robustness"></div></div>
+    </div>
+    <div class="chart-row cols-1">
+      <div class="chart-card stagger-in">
+        <div class="chart-title">模型性能天花板 · 理论极限分析</div>
+        <div class="chart-box short" id="chart-ceiling"></div>
+      </div>
+    </div>
+    <div class="gallery-section" id="gallery-sec3">
+      <div class="gallery-toggle" onclick="toggleGallery('sec3-gal')"><span class="arrow">▶</span> 展开预测性维护模型图库 (23张)</div>
+      <div id="sec3-gal" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 4: 预测性维护建议 ============ -->
+  <div class="section" id="sec4">
+    <div class="stats-row" id="s4-stats"></div>
+    <div class="chart-row">
+      <div class="chart-card stagger-in"><div class="chart-title">Youden's J · 单参数判别力</div><div class="chart-box short" id="chart-youdens"></div></div>
+      <div class="chart-card stagger-in"><div class="chart-title">异常模式分布</div><div class="chart-box short" id="chart-anomaly-donut"></div></div>
+    </div>
+    <div class="chart-row cols-1">
+      <div class="chart-card stagger-in">
+        <div class="chart-title">故障嵌入正常范围 · 传感器信息缺口证据</div>
+        <div class="chart-box short" id="chart-fault-overlap"></div>
+      </div>
+    </div>
+    <div class="chart-card stagger-in" style="margin-bottom:18px">
+      <div class="chart-title">维护工单看板 · Top 12 优先级</div>
+      <div class="work-order-grid" id="wo-grid"></div>
+    </div>
+    <div class="chart-row cols-1">
+      <div class="chart-card stagger-in">
+        <div class="chart-title">传感器升级建议</div>
+        <div class="sensor-grid" id="sensor-grid"></div>
+      </div>
+    </div>
+    <div class="chart-card stagger-in" style="margin-bottom:18px">
+      <div class="chart-title">维护优先级排名 · 方法论依据</div>
+      <div style="padding:8px 0;font-size:12px;line-height:1.9;color:var(--text-secondary);">
+        <div style="margin-bottom:14px;padding:10px 14px;background:var(--bg-card-alt);border-left:3px solid var(--accent-cyan);border-radius:0 var(--radius) var(--radius) 0;">
+          <div style="font-weight:600;color:var(--accent-cyan);margin-bottom:6px;">三层维护策略体系</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:11px;">
+            <div><span style="color:var(--text-primary);font-weight:600;">第一级 · 统计告警</span><br>基线1 Z-Score > 2.0<br>精确度 84% · FPR 20%<br>行动：安排巡检</div>
+            <div><span style="color:var(--text-primary);font-weight:600;">第二级 · 成本风险排序</span><br>基线2 Cost at Risk<br>故障率 × 单位成本 × 日产量<br>行动：资源优先分配</div>
+            <div><span style="color:var(--text-primary);font-weight:600;">第三级 · ML辅助参考</span><br>v2 故障密度回归<br>权重降低至 25%<br>行动：交叉验证</div>
+          </div>
+        </div>
+        <div style="margin-bottom:14px;padding:10px 14px;background:var(--bg-card-alt);border-left:3px solid var(--accent-purple);border-radius:0 var(--radius) var(--radius) 0;">
+          <div style="font-weight:600;color:var(--accent-purple);margin-bottom:8px;">四层决策引擎架构</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:11px;">
+            <div><span style="color:var(--text-primary);font-weight:600;">Layer 1 · 融合层</span><br>多信号加权融合<br>统计 40% + ML 25%<br>+ 成本风险 25% + 趋势 10%</div>
+            <div><span style="color:var(--text-primary);font-weight:600;">Layer 2 · 诊断层</span><br>异常模式识别<br>电压漂移 / 热累积<br>功率异常 / 综合退化</div>
+            <div><span style="color:var(--text-primary);font-weight:600;">Layer 3 · 决策层</span><br>告警等级 → 行动类型<br>ALARM ≥ 0.75<br>WARNING 0.55–0.75<br>WATCH 0.35–0.55</div>
+            <div><span style="color:var(--text-primary);font-weight:600;">Layer 4 · 输出层</span><br>维护工单排序<br>紧急度 × 风险成本<br>→ 预期节约优化</div>
+          </div>
+        </div>
+        <div style="padding:10px 14px;background:var(--bg-card-alt);border-left:3px solid var(--accent-amber);border-radius:0 var(--radius) var(--radius) 0;">
+          <div style="font-weight:600;color:var(--accent-amber);margin-bottom:6px;">排名核心公式</div>
+          <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-primary);margin-bottom:6px;">
+            风险分数 = <span style="color:var(--accent-purple);">0.40 × z_composite_score</span> + <span style="color:var(--accent-blue);">0.25 × ml_fault_density</span> + <span style="color:var(--accent-amber);">0.25 × (fault_rate × unit_cost × daily_output)</span> + <span style="color:var(--accent-green);">0.10 × trend_drift</span>
+          </div>
+          <div style="font-size:10px;color:var(--text-muted);">
+            权重依据：统计基线（z-score）为当前数据下最有区分力信号（P=84%, FPR=20%），获最高权重 40%；ML信号受限于4参数信息瓶颈（Youden's J < 0.08），权重降至 25%；成本风险稳定可靠，权重 25%；趋势信号最弱但保留用于捕捉长期渐变。
+          </div>
+          <div style="margin-top:8px;font-size:10px;color:var(--text-muted);">
+            资料来源：predictive_maintenance_system_design.md §6 "风险驱动维护决策引擎" · 项目：苗圃杯 · 2026
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="gallery-section" id="gallery-sec4">
+      <div class="gallery-toggle" onclick="toggleGallery('sec4-gal')"><span class="arrow">▶</span> 展开预测性维护建议图库 (7张)</div>
+      <div id="sec4-gal" style="display:none"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================
+     ALARM DETAIL MODAL
+     ============================================================ -->
+<div class="modal-overlay" id="alarm-modal" onclick="if(event.target===this)closeAlarmModal()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>ALARM 设备详细信息</h3>
+      <button class="modal-close" onclick="closeAlarmModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="alarm-modal-body"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     LIGHTBOX OVERLAY
+     ============================================================ -->
+<div class="lightbox-overlay" id="lightbox">
+  <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+  <span class="lightbox-prev" onclick="event.stopPropagation();navLightbox(-1)">&#10094;</span>
+  <span class="lightbox-next" onclick="event.stopPropagation();navLightbox(1)">&#10095;</span>
+  <div class="lightbox-img-wrap" id="lightbox-img-wrap">
+    <img id="lightbox-img" src="" alt="" draggable="false">
+  </div>
+  <div class="lightbox-info">
+    <span class="lightbox-index" id="lightbox-index">1 / 20</span>
+    <span style="color:var(--text-muted);">|</span>
+    <span>滚轮缩放 · 拖拽平移 · ← → 切换</span>
+  </div>
+  <div class="lightbox-caption" id="lightbox-cap"></div>
+  <div class="lightbox-toolbar">
+    <button onclick="event.stopPropagation();zoomLightbox(0.2)" title="放大">+</button>
+    <button onclick="event.stopPropagation();zoomLightbox(-0.2)" title="缩小">−</button>
+    <button onclick="event.stopPropagation();resetLightbox()" title="重置">1:1</button>
+  </div>
+</div>
+
+<div id="debug-status" style="position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#080a0d;color:#00c9a0;font-family:var(--font-mono);font-size:11px;padding:6px 16px;display:flex;gap:20px;overflow:hidden;pointer-events:none;border-top:1px solid #1c2230;line-height:1.4;max-height:28px;"></div>
+
+<script>
+// ============================================================
+// GLOBALS
+// ============================================================
+const DATA = {};
+const CHARTS = {};
+const _statusEl = document.getElementById('debug-status');
+function logStatus(msg, type) {
+  console.log('[DASH]', msg);
+  if (_statusEl) {
+    var color = type==='error'?'#f04444':type==='warn'?'#f0a030':'#00c9a0';
+    _statusEl.innerHTML = '<span style=color:' + color + '>' + (new Date()).toLocaleTimeString() + ' ' + msg +
+      '</span><span style=opacity:0.5;margin-left:4px>|</span> ' + _statusEl.innerHTML;
+  }
+}
+const S5 = { filteredData:[], page:1, pageSize:50, sortCol:null, sortAsc:true, selectedFaults:new Set() };
+const ALERT_COLORS = { 'Alarm':'#f04444','Warning':'#f0a030','Watch':'#4d94ff','Normal':'#3fb950' };
+const ACTION_COLORS = {
+  'immediate_shutdown':'#f04444','preventive_repair':'#f0a030',
+  'schedule_inspection':'#4d94ff','increase_monitoring':'#00c9a0',
+  'routine_check':'#8e9aab','no_action':'#5a6474'
+};
+
+// ============================================================
+// DATA LOADER
+// ============================================================
+async function loadCSV(path) {
+  const r = await fetch(path);
+  const t = await r.text();
+  return Papa.parse(t, { header:true, dynamicTyping:true, skipEmptyLines:true }).data;
+}
+async function loadJSON(path) {
+  const r = await fetch(path);
+  return r.json();
+}
+
+// ============================================================
+// NAVIGATION (lazy render, 5 sections)
+// ============================================================
+const _rendered = { sec5: true };
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', async () => {
+    document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    tab.classList.add('active');
+    const sid = tab.dataset.section;
+    document.getElementById(sid).classList.add('active');
+    if (!_rendered[sid]) {
+      try {
+        logStatus('Rendering ' + sid + '...');
+        if (sid === 'sec1') { await renderSection1(); renderGallery('sec1-gal', GALLERY.sec1); }
+        if (sid === 'sec2') { await renderSection2(); renderGallery('sec2-gal', GALLERY.sec2); }
+        if (sid === 'sec3') { await renderSection3(); renderGallery('sec3-gal', GALLERY.sec3); }
+        if (sid === 'sec4') { await renderSection4(); renderGallery('sec4-gal', GALLERY.sec4); }
+        _rendered[sid] = true;
+        logStatus(sid + ' rendered OK');
+      } catch(e) {
+        logStatus('FAILED to render ' + sid + ': ' + (e.message || e), 'error');
+        console.error('Failed to render ' + sid + ':', e);
+      }
+    }
+    setTimeout(resizeAllCharts, 120);
+  });
+});
+
+// ============================================================
+// CLOCK
+// ============================================================
+setInterval(() => {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleString('zh-CN', { hour12:false });
+}, 1000);
+
+// ============================================================
+// ECHARTS INIT
+// ============================================================
+function initChart(id) {
+  if (CHARTS[id]) CHARTS[id].dispose();
+  const dom = document.getElementById(id);
+  if (!dom) return null;
+  const c = echarts.init(dom, null, { renderer:'canvas' });
+  CHARTS[id] = c;
+  return c;
+}
+function resizeAllCharts() {
+  Object.values(CHARTS).forEach(c => { try { c.resize(); } catch(e){} });
+}
+window.addEventListener('resize', () => {
+  clearTimeout(window._resizeTimer);
+  window._resizeTimer = setTimeout(resizeAllCharts, 200);
+});
+
+// ============================================================
+// SECTION 1: 数据探索
+// ============================================================
+async function renderSection1() {
+  const summary = await loadCSV('data/summary.csv');
+  const nDevices = summary.length;
+  const avgOutput = (summary.reduce((s,r)=>s+(r['Units Produced Per day']||0),0) / nDevices).toFixed(0);
+  const avgCost = (summary.reduce((s,r)=>s+(r['Unit Cost of Production']||0),0) / nDevices).toFixed(2);
+  const types = new Set(summary.map(r=>r['Equipment.Type'])).size;
+
+  document.getElementById('s1-stats').innerHTML = `
+    <div class="stat-card accent-cyan"><div class="label">设备总数</div><div class="value">${nDevices}</div><div class="sub">CNC 加工设备</div></div>
+    <div class="stat-card accent-blue"><div class="label">设备类型</div><div class="value">${types}</div><div class="sub">统一型号系列</div></div>
+    <div class="stat-card accent-green"><div class="label">平均日产量</div><div class="value">${Number(avgOutput).toLocaleString()}</div><div class="sub">Units / Day</div></div>
+    <div class="stat-card accent-amber"><div class="label">平均单位成本 <span class="stat-info">ⓘ<span class="stat-tooltip"><div class="tt-title">数据来源 &amp; 计算方式</div><div class="tt-row"><span class="tt-label">数据来源</span><span class="tt-val">MACHINE_SUMMARY_DATA._2025.csv</span></div><div class="tt-row"><span class="tt-label">字段</span><span class="tt-val">Unit Cost of Production</span></div><div class="tt-row"><span class="tt-label">计算方式</span><span class="tt-val">100台设备算术平均值</span></div><div class="tt-row"><span class="tt-label">公式</span><span class="tt-val">Σ Unit Cost / 100</span></div></span></span></div><div class="value">${avgCost}</div><div class="sub">Unit Cost of Production</div></div>`;
+
+  const top20 = [...summary].sort((a,b)=>(b['Units Produced Per day']||0)-(a['Units Produced Per day']||0)).slice(0,20);
+  const c1 = initChart('chart-daily-output');
+  if (c1) c1.setOption({
+    tooltip:{trigger:'axis'},
+    grid:{left:80,right:24,top:16,bottom:40},
+    xAxis:{type:'category',data:top20.map(r=>r['Equipment.Id']),axisLabel:{rotate:45,fontSize:10,color:'#8e9aab'}},
+    yAxis:{type:'value',name:'Units/Day',nameTextStyle:{color:'#8e9aab'},axisLabel:{color:'#8e9aab'}},
+    series:[{type:'bar',data:top20.map(r=>r['Units Produced Per day']||0),
+      itemStyle:{color: new echarts.graphic.LinearGradient(0,0,0,1,[
+        {offset:0,color:'#4d94ff'},{offset:1,color:'#1a5dc2'}])},
+      barWidth:'60%'}] });
+
+  const fd = await loadCSV('data/fault_dist.csv');
+  const faultTypes = ['Type_0','Type_1','Type_2','Type_3','Type_4','Type_5','Type_6','Type_7','Type_8','Type_9'];
+  const colors = ['#1c2230','#4d94ff','#3fb950','#f0a030','#f04444','#a371f7','#db61a2','#00c9a0','#f0883e','#768390'];
+  const c2 = initChart('chart-fault-stack');
+  if (c2) c2.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{bottom:0,textStyle:{color:'#8e9aab',fontSize:10},data:faultTypes},
+    grid:{left:60,right:10,top:16,bottom:30},
+    xAxis:{type:'category',data:fd.map(r=>r.Equipment_Id),axisLabel:{fontSize:8,color:'#5a6474',rotate:90}},
+    yAxis:{type:'value',name:'Records',nameTextStyle:{color:'#8e9aab'},axisLabel:{color:'#8e9aab'}},
+    series:faultTypes.map((ft,i)=>({name:ft,type:'bar',stack:'total',data:fd.map(r=>r[ft]||0),
+      itemStyle:{color:colors[i]},emphasis:{focus:'series'}})) });
+
+  const log = await loadCSV('data/log.csv');
+  const normalData = log.filter(r=>r['Failure.Equipment.Type']===0);
+  const faultData = log.filter(r=>r['Failure.Equipment.Type']!==0);
+  const params = ['Op.Voltage','Op.Amperage','Op.Temperature','Rotor Speed'];
+
+  function boxData(arr, key) {
+    const vals = arr.map(r=>r[key]).filter(v=>v!=null).sort((a,b)=>a-b);
+    if(vals.length===0) return [0,0,0,0,0];
+    const q1=vals[Math.floor(vals.length*.25)], q3=vals[Math.floor(vals.length*.75)];
+    return [vals[0],q1,vals[Math.floor(vals.length*.5)],q3,vals[vals.length-1]];
+  }
+
+  const c3 = initChart('chart-boxplot');
+  if (c3) c3.setOption({
+    tooltip:{},
+    grid:{left:80,right:20,top:20,bottom:50},
+    xAxis:{type:'category',data:['V 正常','V 故障','A 正常','A 故障','T 正常','T 故障','RPM 正常','RPM 故障'],axisLabel:{fontSize:9,color:'#8e9aab',rotate:30}},
+    yAxis:{type:'value',axisLabel:{color:'#8e9aab'}},
+    series:[
+      {name:'正常',type:'boxplot',data:[
+        boxData(normalData,'Op.Voltage'),[0,0,0,0,0],
+        boxData(normalData,'Op.Amperage'),[0,0,0,0,0],
+        boxData(normalData,'Op.Temperature'),[0,0,0,0,0],
+        boxData(normalData,'Rotor Speed'),[0,0,0,0,0],
+      ],itemStyle:{color:'#3fb950',borderColor:'#3fb950'}},
+      {name:'故障',type:'boxplot',data:[
+        [0,0,0,0,0],boxData(faultData,'Op.Voltage'),
+        [0,0,0,0,0],boxData(faultData,'Op.Amperage'),
+        [0,0,0,0,0],boxData(faultData,'Op.Temperature'),
+        [0,0,0,0,0],boxData(faultData,'Rotor Speed'),
+      ],itemStyle:{color:'#f04444',borderColor:'#f04444'}},
+    ] });
+
+  const c4 = initChart('chart-fault-scatter');
+  if (c4) c4.setOption({
+    tooltip:{formatter:p=>`${p.name}<br/>Faults: ${p.value[0]}<br/>Normal: ${p.value[1]}<br/>Types: ${p.value[2]}`},
+    grid:{left:70,right:20,top:16,bottom:40},
+    xAxis:{type:'value',name:'Fault Count',nameTextStyle:{color:'#8e9aab'},axisLabel:{color:'#8e9aab'}},
+    yAxis:{type:'value',name:'Unique Fault Types',nameTextStyle:{color:'#8e9aab'},axisLabel:{color:'#8e9aab'}},
+    series:[{type:'scatter',data:fd.map(r=>[r.Fault_Count,r.Unique_Fault_Types,r.Normal_Count,r.Equipment_Id]),
+      symbolSize: v => Math.max(6, Math.min(30, v[2]/2)),
+      itemStyle:{color:'#4d94ff',opacity:0.7},
+      label:{show:true,formatter:p=>p.name,fontSize:8,color:'#8e9aab',position:'top'},
+      encode:{tooltip:[0,1,2],label:[3]},
+      name:''}] });
+
+  DATA.summary = summary; DATA.fd = fd; DATA.log = log;
+}
+
+// ============================================================
+// SECTION 2: 基线划定分析
+// ============================================================
+async function renderSection2() {
+  const vd = await loadCSV('data/variance_decomp.csv');
+  const c5 = initChart('chart-variance');
+  if (c5) c5.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['设备间方差','设备内方差'],textStyle:{color:'#8e9aab',fontSize:10},bottom:0},
+    grid:{left:60,right:20,top:16,bottom:40},
+    xAxis:{type:'category',data:vd.map(r=>r.parameter.split(' ')[0]),axisLabel:{color:'#8e9aab'}},
+    yAxis:{type:'value',name:'%',nameTextStyle:{color:'#8e9aab'},axisLabel:{color:'#8e9aab'},max:100},
+    series:[
+      {name:'设备间方差',type:'bar',stack:'total',data:vd.map(r=>parseFloat(r.inter_pct)||0),
+        itemStyle:{color:'#4d94ff'},barWidth:'50%',label:{show:true,formatter:'{c}%',fontSize:10,color:'#e6ebf2'}},
+      {name:'设备内方差',type:'bar',stack:'total',data:vd.map(r=>parseFloat(r.intra_pct)||0),
+        itemStyle:{color:'#1c2230'}},
+    ] });
+
+  const zs = await loadCSV('data/z_scores.csv');
+  const alertCount = {Normal:0,Watch:0,Warning:0,Alarm:0};
+  zs.forEach(r=>{ const l=r.alert_level; if(alertCount.hasOwnProperty(l)) alertCount[l]++; });
+  const alertPieColors = {Normal:'#3fb950',Watch:'#4d94ff',Warning:'#f0a030',Alarm:'#f04444'};
+  const c6 = initChart('chart-alert-pie');
+  if (c6) c6.setOption({
+    tooltip:{trigger:'item'},
+    legend:{orient:'vertical',right:20,top:'center',textStyle:{color:'#8e9aab',fontSize:11}},
+    series:[{type:'pie',radius:['45%','75%'],center:['40%','50%'],
+      data:Object.entries(alertCount).map(([k,v])=>({name:k,value:v,itemStyle:{color:alertPieColors[k]}})),
+      label:{formatter:'{b}\n{d}%',color:'#8e9aab',fontSize:10},
+      emphasis:{label:{fontSize:14,fontWeight:'bold'}}}] });
+
+  const fs = await loadCSV('data/failure_sig.csv');
+  const groups = [...new Set(fs.map(r=>r.failure_group))];
+  const radarColors = {'Normal':'#3fb950','Subtle':'#4d94ff','Thermal':'#f0a030','High-Voltage':'#f04444'};
+  const c7 = initChart('chart-radar');
+  if (c7) c7.setOption({
+    tooltip:{},
+    legend:{data:groups,textStyle:{color:'#8e9aab',fontSize:10},bottom:0},
+    radar:{center:['50%','50%'],radius:'60%',
+      indicator:[
+        {name:'Voltage Δ%',max:5},
+        {name:'Amperage Δ%',max:5},
+        {name:'Temperature Δ%',max:5},
+      ],
+      axisName:{color:'#8e9aab',fontSize:10} },
+    series: groups.map(g => ({
+      type:'radar',name:g,
+      data:[{value:[
+        fs.filter(r=>r.failure_group===g).reduce((s,r)=>s+(r['Op.Voltage_delta_pct']||0),0) / Math.max(1,fs.filter(r=>r.failure_group===g).length),
+        fs.filter(r=>r.failure_group===g).reduce((s,r)=>s+(r['Op.Amperage_delta_pct']||0),0) / Math.max(1,fs.filter(r=>r.failure_group===g).length),
+        fs.filter(r=>r.failure_group===g).reduce((s,r)=>s+(r['Op.Temperature_delta_pct']||0),0) / Math.max(1,fs.filter(r=>r.failure_group===g).length),
+      ],name:g}],
+      lineStyle:{color:radarColors[g]||'#4d94ff'},
+      areaStyle:{color:radarColors[g]||'#4d94ff',opacity:0.1},
+      itemStyle:{color:radarColors[g]||'#4d94ff'},
+    })) });
+
+  const cr = await loadCSV('data/cost_risk.csv');
+  const tiers = {'High':'#f04444','Medium':'#f0a030','Low':'#3fb950'};
+  const c8 = initChart('chart-bubble');
+  if (c8) c8.setOption({
+    tooltip:{formatter:p=>`${p.name}<br/>Failure Rate: ${p.value[0].toFixed(1)}%<br/>Cost at Risk: $${p.value[1].toFixed(0)}<br/>Tier: ${p.data.tier}`},
+    grid:{left:70,right:20,top:16,bottom:40},
+    xAxis:{type:'value',name:'Failure Rate (%)',nameTextStyle:{color:'#8e9aab'},axisLabel:{color:'#8e9aab',formatter:v=>v.toFixed(0)+'%'}},
+    yAxis:{type:'value',name:'Cost at Risk ($)',nameTextStyle:{color:'#8e9aab'},axisLabel:{color:'#8e9aab',formatter:v=>'$'+(v/1000).toFixed(0)+'k'}},
+    series:[{type:'scatter',
+      data:cr.map(r=>({
+        value:[r.failure_rate||0, r.cost_at_risk||0, (r['Unit Cost of Production']||100)/10],
+        name:r['Equipment.Id'],
+        itemStyle:{color:tiers[r.risk_tier]||'#4d94ff',opacity:0.7},
+        tier:r.risk_tier||'Low'
+      })),
+      symbolSize: v => Math.max(6, Math.min(40, v[2])),
+      label:{show:true,formatter:p=>p.name,fontSize:8,color:'#8e9aab',position:'top'},
+      name:''}] });
+
+  const machines = [...new Set(zs.map(r=>r['Equipment.Id']))].sort();
+  const sel = document.getElementById('machine-select');
+  sel.innerHTML = machines.map(m=>`<option value="${m}">${m}</option>`).join('');
+  function renderZScoreTS(mid) {
+    try {
+      const mData = zs.filter(r=>r['Equipment.Id']===mid).sort((a,b)=>new Date(a.Date)-new Date(b.Date));
+      const c9 = initChart('chart-zscore-ts');
+      if (c9) c9.setOption({
+        tooltip:{trigger:'axis'},
+        legend:{data:['z_Voltage','z_Amperage','z_Temperature','z_composite'],textStyle:{color:'#8e9aab',fontSize:10},bottom:0},
+        grid:{left:60,right:20,top:16,bottom:50},
+        xAxis:{type:'category',data:mData.map(r=>r.Date),axisLabel:{fontSize:9,color:'#5a6474',rotate:30,interval:Math.floor(mData.length/8)}},
+        yAxis:{type:'value',name:'z-score',nameTextStyle:{color:'#8e9aab'},axisLabel:{color:'#8e9aab'}},
+        series:[
+          {name:'z_Voltage',type:'line',data:mData.map(r=>r.z_Voltage),lineStyle:{color:'#4d94ff',width:1},symbol:'none',smooth:true},
+          {name:'z_Amperage',type:'line',data:mData.map(r=>r.z_Amperage),lineStyle:{color:'#f0a030',width:1},symbol:'none',smooth:true},
+          {name:'z_Temperature',type:'line',data:mData.map(r=>r.z_Temperature),lineStyle:{color:'#f04444',width:1},symbol:'none',smooth:true},
+          {name:'z_composite',type:'line',data:mData.map(r=>r.z_composite),lineStyle:{color:'#00c9a0',width:2},symbol:'none',smooth:true},
+        ],
+        visualMap:{show:false,pieces:[{gte:2.5,color:'#f04444'},{gte:2.0,color:'#f0a030'},{gte:1.5,color:'#4d94ff'},{lt:1.5,color:'#3fb950'}],
+          dimension:1,seriesIndex:3} });
+    } catch(e) { console.error('chart-zscore-ts error:', e); }
+  }
+  sel.addEventListener('change',()=>renderZScoreTS(sel.value));
+  renderZScoreTS('CNC_001');
+
+  DATA.zs = zs; DATA.cr = cr;
+}
+
+// ============================================================
+// SECTION 3: 预测性维护模型
+// ============================================================
+async function renderSection3() {
+  const em = await loadCSV('data/eval_metrics.csv');
+  const c10 = initChart('chart-eval-bar');
+  if (c10) c10.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['AUC','AP','F2@0.5'],textStyle:{color:'#8e9aab',fontSize:10},bottom:0},
+    grid:{left:60,right:20,top:16,bottom:40},
+    xAxis:{type:'category',data:em.map(r=>`${r.target}\nwin${r.window_size}`),axisLabel:{color:'#8e9aab',fontSize:9}},
+    yAxis:{type:'value',name:'Score',nameTextStyle:{color:'#8e9aab'},axisLabel:{color:'#8e9aab'},max:1},
+    series:[
+      {name:'AUC',type:'bar',data:em.map(r=>r.auc),itemStyle:{color:'#4d94ff'},barWidth:'35%'},
+      {name:'AP',type:'bar',data:em.map(r=>r.ap),itemStyle:{color:'#3fb950'},barWidth:'35%'},
+      {name:'F2@0.5',type:'bar',data:em.map(r=>r['f2_0.5']||0),itemStyle:{color:'#f0a030'},barWidth:'35%'},
+    ] });
+
+  const vc = await loadCSV('data/variant_comp.csv');
+  const c11 = initChart('chart-variant');
+  if (c11) c11.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['fault_r2','fault_binary_auc','fault_best_f2'],textStyle:{color:'#8e9aab',fontSize:10},bottom:0},
+    grid:{left:60,right:20,top:16,bottom:40},
+    xAxis:{type:'category',data:vc.map(r=>r.variant),axisLabel:{color:'#8e9aab',fontSize:10}},
+    yAxis:{type:'value',name:'Score',nameTextStyle:{color:'#8e9aab'},axisLabel:{color:'#8e9aab'},max:1},
+    series:[
+      {name:'fault_r2',type:'bar',data:vc.map(r=>Math.max(0,r.fault_r2)),itemStyle:{color:'#a371f7'},barWidth:'40%'},
+      {name:'fault_binary_auc',type:'bar',data:vc.map(r=>r.fault_binary_auc),itemStyle:{color:'#4d94ff'},barWidth:'40%'},
+      {name:'fault_best_f2',type:'bar',data:vc.map(r=>r.fault_best_f2),itemStyle:{color:'#00c9a0'},barWidth:'40%'},
+    ] });
+
+  const fi = await loadCSV('data/feature_imp.csv');
+  const top15 = fi.sort((a,b)=>(b.importance_avg||0)-(a.importance_avg||0)).slice(0,15);
+  const c12 = initChart('chart-feat-imp');
+  if (c12) c12.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['14min','28min'],textStyle:{color:'#8e9aab',fontSize:10},bottom:0},
+    grid:{left:140,right:20,top:16,bottom:40},
+    xAxis:{type:'value',name:'Importance',nameTextStyle:{color:'#8e9aab'},axisLabel:{color:'#8e9aab'}},
+    yAxis:{type:'category',data:top15.map(r=>r.feature).reverse(),axisLabel:{color:'#8e9aab',fontSize:9}},
+    series:[
+      {name:'14min',type:'bar',data:top15.map(r=>r.importance_14min).reverse(),itemStyle:{color:'#4d94ff'}},
+      {name:'28min',type:'bar',data:top15.map(r=>r.importance_28min).reverse(),itemStyle:{color:'#3fb950'}},
+    ] });
+
+  const rb = await loadCSV('data/robustness.csv');
+  const variants = [...new Set(rb.map(r=>r.variant))];
+  const conditions = [...new Set(rb.map(r=>r.condition))];
+  const hmData = rb.map(r=>[conditions.indexOf(r.condition), variants.indexOf(r.variant), r.auc_mean||0]);
+  const c13 = initChart('chart-robustness');
+  if (c13) c13.setOption({
+    tooltip:{formatter:p=>`${variants[p.value[1]]}<br/>${conditions[p.value[0]]}<br/>AUC: ${p.value[2].toFixed(4)}`},
+    grid:{left:100,right:20,top:16,bottom:40},
+    xAxis:{type:'category',data:conditions,axisLabel:{color:'#8e9aab',fontSize:9}},
+    yAxis:{type:'category',data:variants,axisLabel:{color:'#8e9aab',fontSize:10}},
+    visualMap:{min:0,max:0.6,calculable:true,orient:'horizontal',left:'center',bottom:0,
+      inRange:{color:['#141820','#0e4429','#006d32','#26a641','#39d353']},textStyle:{color:'#8e9aab'}},
+    series:[{type:'heatmap',data:hmData,label:{show:true,formatter:p=>p.value[2].toFixed(3),fontSize:9,color:'#e6ebf2'},
+      emphasis:{itemStyle:{shadowBlur:10,shadowColor:'rgba(0,0,0,0.5)'}}}] });
+
+  const dim1 = await loadCSV('data/dim1.csv');
+  const dim4 = await loadCSV('data/dim4.csv');
+  const c14 = initChart('chart-ceiling');
+  if (c14) c14.setOption({
+    tooltip:{trigger:'axis'},
+    grid:{left:60,right:80,top:20,bottom:40},
+    xAxis:{type:'category',data:["Youden's J\n(max)","AUC\n(XGBoost)","AUC\n(MTNN)","理论\n天花板"],axisLabel:{color:'#8e9aab',fontSize:10}},
+    yAxis:{type:'value',name:'Score',nameTextStyle:{color:'#8e9aab'},axisLabel:{color:'#8e9aab'},max:1},
+    series:[{type:'bar',data:[
+      {value:dim1.length>0?dim1[0].youden_j||0:0.075,itemStyle:{color:'#f04444'}},
+      {value:0.48,itemStyle:{color:'#f0a030'}},
+      {value:0.59,itemStyle:{color:'#4d94ff'}},
+      {value:0.60,itemStyle:{color:'#3fb950',borderColor:'#00c9a0',borderWidth:2,borderType:'dashed'}},
+    ],barWidth:'50%',label:{show:true,position:'top',formatter:'{c}',fontSize:12,color:'#e6ebf2'},
+    markLine:{silent:true,data:[{yAxis:0.30,name:'可判别阈值',label:{formatter:'可用信号下限 0.30',fontSize:10,color:'#f0a030'},
+      lineStyle:{color:'#f0a030',type:'dashed'}}]}}] });
+}
+
+// ============================================================
+// SECTION 4: 预测性维护建议
+// ============================================================
+async function renderSection4() {
+  const wo = await loadCSV('data/work_orders.csv');
+  const diag = await loadCSV('data/diagnosis.csv');
+  const totalCost = wo.reduce((s,r)=>s+(r.cost_at_risk||0),0);
+  const totalSavings = wo.reduce((s,r)=>s+(r.expected_savings||0),0);
+  const nAlarm = wo.filter(r=>r.alert_level==='ALARM').length;
+  const nCritical = wo.filter(r=>r.action_type==='immediate_shutdown').length;
+
+  document.getElementById('s4-stats').innerHTML = `
+    <div class="stat-card accent-red clickable" onclick="showAlarmModal()" title="点击查看 ALARM 设备详细信息"><div class="label">ALARM 设备</div><div class="value">${nAlarm}</div><div class="sub">需要立即关注 · 点击查看详情</div></div>
+    <div class="stat-card accent-amber clickable" onclick="showShutdownModal()" title="点击查看紧急停机设备详细信息"><div class="label">紧急停机</div><div class="value">${nCritical}</div><div class="sub">immediate shutdown · 点击查看详情</div></div>
+    <div class="stat-card accent-cyan"><div class="label">总风险成本</div><div class="value">$${(totalCost/1000).toFixed(0)}k</div><div class="sub">日暴露成本汇总</div></div>
+    <div class="stat-card accent-green"><div class="label">预期节约</div><div class="value">$${(totalSavings/1000).toFixed(0)}k</div><div class="sub">及时维修可避免损失</div></div>`;
+
+  const d1 = await loadCSV('data/dim1.csv');
+  const c15 = initChart('chart-youdens');
+  if (c15) c15.setOption({
+    tooltip:{trigger:'axis'},
+    grid:{left:60,right:20,top:16,bottom:40},
+    xAxis:{type:'category',data:d1.map(r=>r.parameter),axisLabel:{color:'#8e9aab',fontSize:10}},
+    yAxis:{type:'value',name:"Youden's J",nameTextStyle:{color:'#8e9aab'},axisLabel:{color:'#8e9aab'}},
+    series:[{type:'bar',data:d1.map(r=>r.youden_j),
+      itemStyle:{color: p => p.value<0.08?'#f04444':'#f0a030'},
+      barWidth:'50%',
+      label:{show:true,position:'top',formatter:'{c}',fontSize:11,color:'#e6ebf2'},
+    },
+    {type:'line',data:null,lineStyle:{color:'#f0a030',type:'dashed',width:2},
+      symbol:'none',name:'可用信号下限',
+      markLine:{silent:true,symbol:'none',label:{formatter:'可用下限 0.30',fontSize:10,color:'#f0a030'},
+        data:[{yAxis:0.30}],lineStyle:{color:'#f0a030',type:'dashed'}}}] });
+
+  const patterns = diag.map(r=>r.primary_pattern);
+  const pCount = {};
+  patterns.forEach(p=>{ pCount[p]=(pCount[p]||0)+1; });
+  const patternColors = {normal:'#3fb950',thermal_buildup:'#f0a030',combined_degradation:'#f04444',
+    voltage_drift:'#4d94ff',power_anomaly:'#a371f7'};
+  const c16 = initChart('chart-anomaly-donut');
+  if (c16) c16.setOption({
+    tooltip:{trigger:'item'},
+    legend:{orient:'vertical',right:10,top:'center',textStyle:{color:'#8e9aab',fontSize:10}},
+    series:[{type:'pie',radius:['40%','70%'],
+      data:Object.entries(pCount).map(([k,v])=>({name:k,value:v,itemStyle:{color:patternColors[k]||'#8e9aab'}})),
+      label:{formatter:'{b}\n{d}%',fontSize:9,color:'#8e9aab'}}] });
+
+  const woGrid = document.getElementById('wo-grid');
+  const top12 = wo.filter(r=>r.priority<=12).sort((a,b)=>a.priority-b.priority);
+  woGrid.innerHTML = top12.map(wo => {
+    const severity = wo.urgency_score>=90?'critical':wo.urgency_score>=70?'high':wo.urgency_score>=50?'medium':'low';
+    const actClass = wo.action_type? wo.action_type.replace(/_/g,'-') : '';
+    const actLabel = {immediate_shutdown:'立即停机',preventive_repair:'预防维修',schedule_inspection:'安排检查',increase_monitoring:'加密监控'}[wo.action_type]||wo.action_type;
+    return `<div class="wo-card ${severity}">
+      <div class="wo-header">
+        <span class="wo-priority ${severity}">#${wo.priority} ${severity.toUpperCase()}</span>
+        <span class="wo-machine">${wo.machine_id}</span>
+        <span class="wo-action action-${actClass}">${actLabel}</span>
+      </div>
+      <div class="wo-metrics">
+        <span>风险: $${(wo.cost_at_risk||0).toLocaleString()}</span>
+        <span>紧急度: ${(wo.urgency_score||0).toFixed(0)}/100</span>
+        <span>窗口: ${wo.window_days===0?'立即':wo.window_days+'天'}</span>
+        <span style="color:var(--accent-green)">节约: $${(wo.expected_savings||0).toLocaleString()}</span>
+      </div>
+      <div class="wo-suggestion">${(wo.suggestion||'').substring(0,150)}</div>
+    </div>`;
+  }).join('');
+
+  const d5 = await loadCSV('data/dim5.csv');
+  const sg = document.getElementById('sensor-grid');
+  sg.innerHTML = d5.map(s => `
+    <div class="sensor-card">
+      <div class="sensor-name">${s.sensor}</div>
+      <div class="sensor-meta">
+        <span>Youden J: ${s.expected_youden_j}</span>
+        <span>AUC Gain: ${s.expected_auc_gain}</span>
+        <span style="color:var(--text-secondary);margin-top:4px">${s.mechanism}</span>
+        <span>成本: ${s.cost_per_machine} / 台</span>
+      </div>
+      <span class="sensor-feasibility feas-${s.feasibility}">${s.feasibility}</span>
+    </div>`).join('');
+
+  const c17 = initChart('chart-fault-overlap');
+  if (c17) c17.setOption({
+    tooltip:{trigger:'axis'},
+    grid:{left:80,right:30,top:16,bottom:40},
+    xAxis:{type:'category',data:d1.map(r=>r.parameter),axisLabel:{color:'#8e9aab',fontSize:11}},
+    yAxis:{type:'value',name:'%',nameTextStyle:{color:'#8e9aab'},axisLabel:{color:'#8e9aab',formatter:'{value}%'},max:100},
+    series:[{
+      type:'bar',
+      data:d1.map(r=>{
+        const v = typeof r.fault_in_normal_pct === 'string'? parseFloat(r.fault_in_normal_pct): r.fault_in_normal_pct;
+        return v || 0;
+      }),
+      itemStyle:{color:'#f04444'},
+      barWidth:'50%',
+      label:{show:true,position:'top',formatter:'{c}%',fontSize:13,color:'#f04444',fontWeight:'bold'},
+      markLine:{silent:true,symbol:'none',
+        label:{formatter:'故障=正常',fontSize:10,color:'#f0a030'},
+        data:[{yAxis:50,name:'无法区分',label:{formatter:'→ 无法区分 ←',fontSize:10,color:'#f0a030'},
+          lineStyle:{color:'#f0a030',type:'dashed'}}]}
+    }]
+  });
+
+  DATA.wo = wo;
+}
+
+// ============================================================
+// SECTION 5: 运行日志
+// ============================================================
+async function renderSection5() {
+  const log = await loadCSV('data/log.csv');
+  const summary = await loadCSV('data/summary.csv');
+
+  // Build summary lookup
+  const summaryMap = {};
+  summary.forEach(r => { summaryMap[r['Equipment.Id']] = r; });
+
+  // Enrich log data
+  DATA.logEnriched = log.map(r => ({
+    ...r,
+    _units: summaryMap[r['Equipment.Id']] ? summaryMap[r['Equipment.Id']]['Units Produced Per day'] : null,
+    _cost: summaryMap[r['Equipment.Id']] ? summaryMap[r['Equipment.Id']]['Unit Cost of Production'] : null,
+    _mfg: summaryMap[r['Equipment.Id']] ? summaryMap[r['Equipment.Id']]['Month.of.Manufacture'] : null,
+    _nextSvc: summaryMap[r['Equipment.Id']] ? summaryMap[r['Equipment.Id']]['Next Service Date'] : null,
+  }));
+
+  // Stats
+  const totalRecords = DATA.logEnriched.length;
+  const machines = new Set(DATA.logEnriched.map(r=>r['Equipment.Id']));
+  const faultCount = DATA.logEnriched.filter(r=>r['Failure.Equipment.Type']!==0).length;
+  const faultRate = (faultCount / totalRecords * 100).toFixed(1);
+  const dates = DATA.logEnriched.map(r=>r.Date).sort();
+  const timeStart = dates[0]||'', timeEnd = dates[dates.length-1]||'';
+
+  document.getElementById('s5-stats').innerHTML = `
+    <div class="stat-card accent-cyan"><div class="label">总记录数</div><div class="value">${totalRecords.toLocaleString()}</div><div class="sub">MACHINE_LOG_DATA 2025</div></div>
+    <div class="stat-card accent-blue"><div class="label">监控设备</div><div class="value">${machines.size}</div><div class="sub">CNC_001 － CNC_100</div></div>
+    <div class="stat-card accent-amber"><div class="label">故障率</div><div class="value">${faultRate}%</div><div class="sub">${faultCount} 故障 / ${totalRecords-faultCount} 正常</div></div>
+    <div class="stat-card accent-green"><div class="label">时间跨度</div><div class="value">7h</div><div class="sub">${timeStart} － ${timeEnd}</div></div>`;
+
+  // Populate machine filter
+  const machineSelect = document.getElementById('log-machine-filter');
+  [...machines].sort().forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = m;
+    machineSelect.appendChild(opt);
+  });
+
+  // Fault type chips
+  const faultTypes = [0,1,2,3,4,5,6,7,8,9];
+  const faultLabels = {0:'Type 0 正常',1:'Type 1',2:'Type 2',3:'Type 3',4:'Type 4',5:'Type 5',6:'Type 6',7:'Type 7',8:'Type 8',9:'Type 9'};
+  S5.selectedFaults = new Set(faultTypes);
+  const chipsDiv = document.getElementById('log-fault-chips');
+  faultTypes.forEach(ft => {
+    const chip = document.createElement('span');
+    chip.className = 'filter-chip active';
+    chip.textContent = faultLabels[ft];
+    chip.dataset.ft = ft;
+    chip.addEventListener('click', () => {
+      if (S5.selectedFaults.has(ft)) {
+        if (S5.selectedFaults.size > 1) { S5.selectedFaults.delete(ft); chip.classList.remove('active'); }
+      } else {
+        S5.selectedFaults.add(ft); chip.classList.add('active');
+      }
+      applyLogFilters();
+    });
+    chipsDiv.appendChild(chip);
+  });
+
+  // Render charts
+  renderLogTSChart();
+  renderLogFaultChart();
+
+  // Apply filters initial render
+  applyLogFilters();
+
+  // Filter event listeners
+  machineSelect.addEventListener('change', applyLogFilters);
+  document.getElementById('log-search').addEventListener('input', debounce(applyLogFilters, 300));
+  document.getElementById('log-v-min').addEventListener('input', debounce(applyLogFilters, 500));
+  document.getElementById('log-v-max').addEventListener('input', debounce(applyLogFilters, 500));
+
+  // Sort column headers
+  document.querySelectorAll('#sec5 .data-table th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      if (S5.sortCol === col) { S5.sortAsc = !S5.sortAsc; }
+      else { S5.sortCol = col; S5.sortAsc = true; }
+      applyLogFilters();
+    });
+  });
+}
+
+function applyLogFilters() {
+  const machineFilter = document.getElementById('log-machine-filter')?.value || '';
+  const searchFilter = (document.getElementById('log-search')?.value || '').toUpperCase();
+  const vMin = parseFloat(document.getElementById('log-v-min')?.value) || null;
+  const vMax = parseFloat(document.getElementById('log-v-max')?.value) || null;
+
+  let data = DATA.logEnriched || [];
+  if (machineFilter) data = data.filter(r => r['Equipment.Id'] === machineFilter);
+  if (searchFilter) data = data.filter(r => r['Equipment.Id'].toUpperCase().includes(searchFilter));
+  data = data.filter(r => S5.selectedFaults.has(r['Failure.Equipment.Type']));
+  if (vMin !== null) data = data.filter(r => (r['Op.Voltage']||0) >= vMin);
+  if (vMax !== null) data = data.filter(r => (r['Op.Voltage']||0) <= vMax);
+  if (S5.sortCol) {
+    data.sort((a,b) => {
+      let va = a[S5.sortCol], vb = b[S5.sortCol];
+      if (typeof va === 'string') { va = va.localeCompare(vb); vb = 0; }
+      return S5.sortAsc ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+    });
+  }
+
+  S5.filteredData = data;
+  S5.page = 1;
+  renderLogTable();
+  renderLogTSChart();
+  renderLogFaultChart();
+}
+
+function renderLogTable() {
+  const data = S5.filteredData;
+  const totalPages = Math.ceil(data.length / S5.pageSize);
+  const start = (S5.page - 1) * S5.pageSize;
+  const page = data.slice(start, start + S5.pageSize);
+
+  document.getElementById('log-table-count').textContent = `共 ${data.length} 条`;
+
+  const tbody = document.getElementById('log-table-body');
+  const faultLabels = {0:'Normal',1:'Fault 1',2:'Fault 2',3:'Fault 3',4:'Fault 4',5:'Fault 5',6:'Fault 6',7:'Fault 7',8:'Fault 8',9:'Fault 9'};
+  tbody.innerHTML = page.map(r => {
+    const ft = r['Failure.Equipment.Type'];
+    const rowClass = ft === 0 ? 'row-normal' : 'row-fault';
+    return `<tr class="${rowClass}" data-mid="${r['Equipment.Id']}" onclick="toggleLogDetail(this, '${r['Equipment.Id']}')" style="cursor:pointer">
+      <td>${r.Date}</td>
+      <td>${r['Equipment.Id']}</td>
+      <td style="color:${ft===0?'var(--accent-green)':'var(--accent-red)'}">${faultLabels[ft]||'?'}</td>
+      <td>${(r['Op.Amperage']||0).toFixed(2)}</td>
+      <td>${(r['Op.Temperature']||0).toFixed(2)}</td>
+      <td>${(r['Op.Voltage']||0).toFixed(2)}</td>
+      <td>${(r['Rotor Speed']||0).toFixed(0)}</td>
+    </tr>`;
+  }).join('');
+
+  // Pagination
+  const pagDiv = document.getElementById('log-pagination');
+  let pagHTML = `<button ${S5.page<=1?'disabled':''} onclick="S5.page=1;renderLogTable();">««</button>`;
+  pagHTML += `<button ${S5.page<=1?'disabled':''} onclick="S5.page--;renderLogTable();">«</button>`;
+  const maxButtons = 7;
+  let pStart = Math.max(1, S5.page - Math.floor(maxButtons/2));
+  let pEnd = Math.min(totalPages, pStart + maxButtons - 1);
+  if (pEnd - pStart < maxButtons - 1) pStart = Math.max(1, pEnd - maxButtons + 1);
+  for (let i = pStart; i <= pEnd; i++) {
+    pagHTML += `<button class="${i===S5.page?'active':''}" onclick="S5.page=${i};renderLogTable();">${i}</button>`;
+  }
+  pagHTML += `<button ${S5.page>=totalPages?'disabled':''} onclick="S5.page++;renderLogTable();">»</button>`;
+  pagHTML += `<button ${S5.page>=totalPages?'disabled':''} onclick="S5.page=${totalPages};renderLogTable();">»»</button>`;
+  pagHTML += `<span class="page-info">第 ${S5.page}/${Math.max(1,totalPages)} 页 · ${S5.pageSize}条/页</span>`;
+  pagDiv.innerHTML = pagHTML;
+}
+
+function toggleLogDetail(tr, machineId) {
+  // Remove existing detail panels
+  const existing = document.querySelectorAll('.detail-panel');
+  existing.forEach(e => e.remove());
+  document.querySelectorAll('.data-table tr.row-expanded').forEach(r => r.classList.remove('row-expanded'));
+
+  if (tr.dataset.expanded === '1') {
+    tr.dataset.expanded = '0';
+    return;
+  }
+  tr.dataset.expanded = '1';
+  tr.classList.add('row-expanded');
+
+  // Use enriched data from log page, fallback to DATA.summary
+  let s = null;
+  if (DATA.logEnriched) {
+    const first = DATA.logEnriched.find(r => r['Equipment.Id'] === machineId);
+    if (first) s = { 'Equipment.Type': 'CNC Machine', 'Month.of.Manufacture': first._mfg,
+      'Last Service Date': 'see summary', 'Next Service Date': first._nextSvc,
+      'Last Repair Date': 'see summary', 'Units Produced Per day': first._units,
+      'Unit Cost of Production': first._cost };
+  }
+  if (!s && DATA.summary) {
+    DATA.summary.forEach(r => { if (r['Equipment.Id'] === machineId) s = r; });
+  }
+  if (!s) return;
+
+  const detailRow = document.createElement('tr');
+  detailRow.innerHTML = `<td colspan="7">
+    <div class="detail-panel">
+      <div class="detail-item"><div class="detail-label">设备型号</div><div class="detail-val">${s['Equipment.Type']||'-'}</div></div>
+      <div class="detail-item"><div class="detail-label">制造日期</div><div class="detail-val">${s['Month.of.Manufacture']||'-'}</div></div>
+      <div class="detail-item"><div class="detail-label">上次保养</div><div class="detail-val">${s['Last Service Date']||'-'}</div></div>
+      <div class="detail-item"><div class="detail-label">下次保养</div><div class="detail-val">${s['Next Service Date']||'-'}</div></div>
+      <div class="detail-item"><div class="detail-label">上次维修</div><div class="detail-val">${s['Last Repair Date']||'-'}</div></div>
+      <div class="detail-item"><div class="detail-label">日产量</div><div class="detail-val">${(s['Units Produced Per day']||0).toLocaleString()}</div></div>
+      <div class="detail-item"><div class="detail-label">单位成本</div><div class="detail-val">$${s['Unit Cost of Production']||'-'}</div></div>
+      <div class="detail-item"><div class="detail-label">设备ID</div><div class="detail-val" style="color:var(--accent-cyan)">${machineId}</div></div>
+    </div>
+  </td>`;
+  tr.insertAdjacentElement('afterend', detailRow);
+}
+
+function renderLogTSChart() {
+  const data = S5.filteredData || [];
+  // Group by date, average per parameter for selected machine or all
+  const machineFilter = document.getElementById('log-machine-filter')?.value || '';
+  const plotData = machineFilter ? data : DATA.logEnriched || [];
+
+  // Aggregate by timestamp
+  const tsMap = {};
+  plotData.forEach(r => {
+    const ts = r.Date;
+    if (!tsMap[ts]) tsMap[ts] = {V:[],A:[],T:[],R:[]};
+    tsMap[ts].V.push(r['Op.Voltage']||0);
+    tsMap[ts].A.push(r['Op.Amperage']||0);
+    tsMap[ts].T.push(r['Op.Temperature']||0);
+    tsMap[ts].R.push(r['Rotor Speed']||0);
+  });
+  const timestamps = Object.keys(tsMap).sort();
+  const avg = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
+
+  const c = initChart('chart-log-ts');
+  if (c) c.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['Voltage (V)','Amperage (A)','Temperature (°C)','Rotor Speed'],textStyle:{color:'#8e9aab',fontSize:10},bottom:0},
+    grid:{left:65,right:70,top:16,bottom:45},
+    xAxis:{type:'category',data:timestamps,axisLabel:{fontSize:9,color:'#5a6474',rotate:30,interval:Math.floor(timestamps.length/8)}},
+    yAxis:[
+      {type:'value',name:'V/A/°C',nameTextStyle:{color:'#8e9aab'},axisLabel:{color:'#8e9aab'}},
+      {type:'value',name:'RPM',nameTextStyle:{color:'#8e9aab'},axisLabel:{color:'#8e9aab'}},
+    ],
+    series:[
+      {name:'Voltage (V)',type:'line',data:timestamps.map(t=>avg(tsMap[t].V).toFixed(1)),
+        lineStyle:{color:'#4d94ff',width:1.5},symbol:'none',smooth:true},
+      {name:'Amperage (A)',type:'line',data:timestamps.map(t=>avg(tsMap[t].A).toFixed(2)),
+        lineStyle:{color:'#f0a030',width:1.5},symbol:'none',smooth:true},
+      {name:'Temperature (°C)',type:'line',data:timestamps.map(t=>avg(tsMap[t].T).toFixed(1)),
+        lineStyle:{color:'#f04444',width:1.5},symbol:'none',smooth:true},
+      {name:'Rotor Speed',type:'line',yAxisIndex:1,data:timestamps.map(t=>avg(tsMap[t].R).toFixed(0)),
+        lineStyle:{color:'#00c9a0',width:2},symbol:'none',smooth:true},
+    ] });
+}
+
+function renderLogFaultChart() {
+  const data = S5.filteredData || [];
+  const faultLabels = {0:'Type 0\n正常',1:'Type 1',2:'Type 2',3:'Type 3',4:'Type 4',5:'Type 5',6:'Type 6',7:'Type 7',8:'Type 8',9:'Type 9'};
+  const counts = {};
+  for (let i=0;i<=9;i++) counts[i]=0;
+  data.forEach(r => { const ft = r['Failure.Equipment.Type']; if (counts.hasOwnProperty(ft)) counts[ft]++; });
+  const barColors = ['#3fb950','#4d94ff','#4d94ff','#f0a030','#f04444','#a371f7','#db61a2','#00c9a0','#f0883e','#768390'];
+  const c = initChart('chart-log-fault');
+  if (c) c.setOption({
+    tooltip:{trigger:'axis'},
+    grid:{left:60,right:20,top:16,bottom:50},
+    xAxis:{type:'category',data:Object.values(faultLabels),axisLabel:{fontSize:10,color:'#8e9aab'}},
+    yAxis:{type:'value',name:'Records',nameTextStyle:{color:'#8e9aab'},axisLabel:{color:'#8e9aab'}},
+    series:[{type:'bar',data:Object.values(counts),
+      itemStyle:{color: p => barColors[p.dataIndex]},
+      barWidth:'60%',
+      label:{show:true,position:'top',formatter:'{c}',fontSize:10,color:'#8e9aab'}}] });
+}
+
+function debounce(fn, ms) {
+  let timer;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), ms);
+  };
+}
+
+// ============================================================
+// IMAGE GALLERIES
+// ============================================================
+const GALLERY = {
+  sec1: {
+    title:'数据探索分析图库',
+    groups: [
+      { subtitle:'参数分布与故障特征', items: [
+        {src:'images/eda/figure1_normal_operation.png', name:'图1 正常工况参数分布',
+         desc:'正常状态下4参数(Amperage/Temperature/Voltage/Rotor Speed)的直方图+KDE分布。Amperage近似正态；Temperature略微右偏；Voltage和Rotor Speed呈现高离散度。'},
+        {src:'images/eda/figure2_per_fault_type.png', name:'图2 各故障类型参数分布',
+         desc:'9种故障类型与正常状态的4参数分布对比。每个子图按故障类型分组，展示均值/中位数/标准差差异。'},
+        {src:'images/eda/figure3_all_faults.png', name:'图3 全故障合并分布',
+         desc:'将所有9种故障类型合并为Fault组，与Normal组对比。Voltage在故障时均值上升最大(+5.9V)；Rotor Speed几乎不变。'},
+        {src:'images/eda/figure4_summary_bars.png', name:'图4 参数统计汇总柱状图',
+         desc:'按故障类型汇总的4参数统计量柱状图，直观对比各故障类型的参数偏移方向和幅度。'},
+      ]},
+      { subtitle:'异常偏移分析', items: [
+        {src:'images/eda/figure5_boxplots.png', name:'图5 箱线图 — 故障类型参数分布',
+         desc:'各故障类型下4参数的箱线图。观察异常状态下参数的中位数偏移、四分位距和离群值分布。'},
+        {src:'images/eda/figure5_offset_boxplots.png', name:'图5b 偏移箱线图',
+         desc:'以正常工况中位数为零基线，展示各故障类型的参数偏移量。Voltage在所有故障类型中持续正偏移。'},
+        {src:'images/eda/figure6_violins.png', name:'图6 小提琴图',
+         desc:'展示各故障类型下4参数的完整分布形态。Rotor Speed和Voltage出现最多离群值。'},
+        {src:'images/eda/figure6_parameter_shift.png', name:'图6b 参数偏移显著性',
+         desc:'故障期间哪些参数显著变化？Voltage最敏感(+2.63%, Cohen\'s d=0.110)；Rotor Speed不显著(KS p=0.46)。'},
+      ]},
+      { subtitle:'阈值与安全范围', items: [
+        {src:'images/eda/figure7_extreme_values.png', name:'图7 历史极值分析',
+         desc:'正常vs故障状态的全局最小/最大值对比。Temperature在故障时上限扩展约13°C。'},
+        {src:'images/eda/figure8_safe_range.png', name:'图8 安全运行区间',
+         desc:'三种区间方法对比：Mean±3σ、99%分位数(推荐)、Tukey Fence。蓝色阴影区为推荐的安全运行范围。'},
+        {src:'images/eda/figure9_thresholds.png', name:'图9 关键阈值识别',
+         desc:"用Youden's J统计量识别最优单参数阈值。Voltage在251.26V处J=0.077最佳，但所有参数J<0.08——单参数阈值判别力不足。"},
+      ]},
+      { subtitle:'参数相关性', items: [
+        {src:'images/eda/figure10_normal_correlation.png', name:'图10 正常状态相关性矩阵',
+         desc:'4参数在正常状态下的Pearson相关系数矩阵。所有|r|<0.09，参数间几乎完全独立，无多重共线性。'},
+        {src:'images/eda/figure11_correlation_change.png', name:'图11 相关性变化三面板',
+         desc:'正常矩阵/故障矩阵/Δ变化三面板。Amperage-Voltage相关性变化最大(Δr=+0.098)，表明故障期间电耦合增强。'},
+      ]},
+      { subtitle:'衍生指标', items: [
+        {src:'images/eda/figure12_power_analysis.png', name:'图12 功率分析(V×I)',
+         desc:'四面板：(a)功率分布对比 (b)按故障类型箱线图 (c)V-I散点+等功率线 (d)均值±SD。故障功率上升+4.32%，由Voltage驱动。'},
+        {src:'images/eda/figure13_efficiency.png', name:'图13 效率指标(RPM/A)',
+         desc:"四面板效率分析。正常vs故障效率几乎相同(Cohen's d=0.018, 可忽略)，Rotor Speed/Amperage比不是有效故障指标。"},
+        {src:'images/eda/figure14_thermal_load.png', name:'图14 热负载(T/A)',
+         desc:'四面板热负载分析。三级风险阈值：Warning(>4.67 C/A)、Alert(>5.31)、Danger(>7.09)。含相对风险曲线和风险区散点图。'},
+      ]},
+      { subtitle:'设备级故障分析', items: [
+        {src:'images/eda/figure15_per_device_faults.png', name:'图15 逐设备故障类型堆叠图',
+         desc:'100台设备的故障类型比例堆叠柱状图+全局分布。全部100台设备均经历过正常和故障工况。'},
+        {src:'images/eda/figure16_device_fault_load.png', name:'图16 设备故障负载Top 20',
+         desc:'按总故障次数排名的Top 20设备。标识高故障负载设备，为重点维护对象筛选提供依据。'},
+        {src:'images/eda/figure17_fault_diversity.png', name:'图17 故障多样性分布',
+         desc:'各设备经历的故障类型数量分布。展示设备的故障模式多样性，辅助识别多模式故障设备。'},
+        {src:'images/eda/fault_type_analysis.png', name:'图A 故障类型综合分析',
+         desc:'故障类型的补充表征分析，包含各故障类型在4参数空间的分布特征和分类边界。'},
+      ]},
+    ]
+  },
+  sec2: {
+    title:'基线划定分析图库',
+    groups: [
+      { subtitle:'基线建立与验证', items: [
+        {src:'images/baseline/fig1_variance_decomposition.png', name:'图A 方差分解',
+         desc:'Voltage/Amperage/Temperature三参数的设备间vs设备内方差分解。设备间方差占61-73%，否决全局基线，强制逐设备基线策略。'},
+        {src:'images/baseline/fig2_machine_baseline_ranges.png', name:'图F 设备基线范围',
+         desc:'15台代表性设备的正常Voltage范围(μ±2σ)。Voltage设定点跨度>130V，证明任何全局阈值不可用。'},
+        {src:'images/baseline/fig3_zscore_thresholds.png', name:'图B z-score阈值性能曲线',
+         desc:'Precision/Recall/F1/FPR随z-score阈值变化的四线图。推荐操作点：z>2.0(Precision=83.9%, FPR=19.7%)。'},
+        {src:'images/baseline/fig4_machine_clusters.png', name:'图D 设备聚类(K=3)',
+         desc:'正常状态下Voltage-Temperature空间的K-Means聚类(K=3)。识别三种运行工况聚类。'},
+        {src:'images/baseline/fig5_failure_signatures.png', name:'图D 故障签名热力图',
+         desc:'9种故障类型的参数偏移签名热力图。识别三组故障群：High-Voltage(Type 4,5)、Thermal(Type 3,6,7,8,9)、Subtle(Type 1,2)。'},
+        {src:'images/baseline/fig6_cost_risk_bubble.png', name:'图E 成本风险气泡图',
+         desc:'100设备的故障率vs单位成本气泡图，气泡大小=综合成本风险。'},
+        {src:'images/baseline/fig7_zscore_distribution.png', name:'图C z-score分布密度图',
+         desc:'综合z-score在正常vs故障状态下的密度直方图，叠加三级阈值线。约22%故障在z<2.5区间与正常重叠。'},
+      ]},
+    ]
+  },
+  sec3: {
+    title:'预测性维护模型图库',
+    groups: [
+      { subtitle:'模型评估 — 窗口=5 (70分钟历史)', items: [
+        {src:'images/v1/threshold_14min_win5.png', name:'v1 win5 — 14min阈值分析', desc:'14分钟预测窗口的Precision/Recall/F1 vs概率阈值曲线。'},
+        {src:'images/v1/threshold_28min_win5.png', name:'v1 win5 — 28min阈值分析', desc:'28分钟预测窗口的阈值分析曲线。'},
+        {src:'images/v1/model_14min_win5_roc_pr.png', name:'v1 win5 — 14min ROC/PR曲线', desc:'14分钟XGBoost模型的ROC和Precision-Recall曲线(AUC≈0.48)。'},
+        {src:'images/v1/model_28min_win5_roc_pr.png', name:'v1 win5 — 28min ROC/PR曲线', desc:'28分钟XGBoost模型的ROC/PR曲线(AUC≈0.48)。'},
+        {src:'images/v1/feature_importance_win5.png', name:'v1 win5 — 特征重要性Top排名', desc:'XGBoost特征重要性排名。Z-Score特征位列Top 3。'},
+        {src:'images/v1/cost_stratified_win5.png', name:'v1 win5 — 成本分层评估', desc:'按cost_at_risk三分位分组的模型性能柱状图。'},
+      ]},
+      { subtitle:'模型评估 — 窗口=8 & 10', items: [
+        {src:'images/v1/threshold_14min_win8.png', name:'v1 win8 — 14min阈值分析', desc:'窗口=8的14min预测阈值分析。'},
+        {src:'images/v1/threshold_28min_win8.png', name:'v1 win8 — 28min阈值分析', desc:'窗口=8的28min预测阈值分析。'},
+        {src:'images/v1/model_14min_win8_roc_pr.png', name:'v1 win8 — 14min ROC/PR', desc:'win=8下14min模型的ROC/PR曲线。'},
+        {src:'images/v1/model_28min_win8_roc_pr.png', name:'v1 win8 — 28min ROC/PR', desc:'win=8下28min模型的ROC/PR曲线。'},
+        {src:'images/v1/threshold_14min_win10.png', name:'v1 win10 — 14min阈值分析', desc:'窗口=10的14min预测阈值分析。'},
+        {src:'images/v1/threshold_28min_win10.png', name:'v1 win10 — 28min阈值分析', desc:'窗口=10的28min预测阈值分析。'},
+      ]},
+      { subtitle:'特征重要性与成本分层 (win8/10)', items: [
+        {src:'images/v1/feature_importance_win8.png', name:'v1 win8 — 特征重要性', desc:'win=8窗口下的XGBoost特征重要性排名。'},
+        {src:'images/v1/cost_stratified_win8.png', name:'v1 win8 — 成本分层', desc:'win=8下的成本分层模型评估。'},
+        {src:'images/v1/model_14min_win10_roc_pr.png', name:'v1 win10 — 14min ROC/PR', desc:'win=10下14min模型的ROC/PR曲线。'},
+        {src:'images/v1/model_28min_win10_roc_pr.png', name:'v1 win10 — 28min ROC/PR', desc:'win=10下28min模型的ROC/PR曲线。'},
+        {src:'images/v1/feature_importance_win10.png', name:'v1 win10 — 特征重要性', desc:'win=10窗口下的XGBoost特征重要性排名。'},
+        {src:'images/v1/cost_stratified_win10.png', name:'v1 win10 — 成本分层', desc:'win=10下的成本分层模型评估。'},
+      ]},
+      { subtitle:'v2 Multi-Task Neural Network', items: [
+        {src:'images/v2/training_curves_15in_5pred.png', name:'v2 训练曲线 — 15in_5pred', desc:'变体"15步输入/5步预测"的训练/验证Loss曲线。MSE=0.0368, R²=0.0114, BinAUC=0.5469。'},
+        {src:'images/v2/training_curves_10in_10pred.png', name:'v2 训练曲线 — 10in_10pred', desc:'变体"10步输入/10步预测"的训练曲线。MSE=0.0204, R²=-0.1737。'},
+        {src:'images/v2/training_curves_10in_5pred.png', name:'v2 训练曲线 — 10in_5pred', desc:'最优变体的训练曲线。MSE=0.0361, R²=0.0188, BinAUC=0.5888。'},
+        {src:'images/v2/window_variant_comparison.png', name:'v2 变体对比柱状图', desc:'三种窗口变体的全部评估指标对比。'},
+        {src:'images/v2/robustness_heatmap.png', name:'v2 鲁棒性热力图', desc:'20种扰动条件下的模型鲁棒性测试。'},
+      ]},
+    ]
+  },
+  sec4: {
+    title:'预测性维护建议关键证据图库',
+    groups: [
+      { subtitle:'传感器瓶颈证据', items: [
+        {src:'images/baseline/fig7_zscore_distribution.png', name:'证据1 z-score分布重叠',
+         desc:'正常与故障状态的z-score密度分布对比。约22%故障样本的z-score落在正常范围(z<2.5)。'},
+        {src:'images/baseline/fig3_zscore_thresholds.png', name:'证据2 阈值性能权衡',
+         desc:'z-score各阈值下的Precision/Recall/FPR权衡。'},
+        {src:'images/baseline/fig5_failure_signatures.png', name:'证据3 故障类型参数签名',
+         desc:'9种故障类型在3参数维度的偏移热力图。'},
+        {src:'images/baseline/fig6_cost_risk_bubble.png', name:'证据4 成本风险矩阵',
+         desc:'100设备的故障率-成本气泡图。'},
+        {src:'images/eda/figure9_thresholds.png', name:"证据5 Youden's J阈值分析",
+         desc:"Youden's J统计量分析——所有参数J<0.08。"},
+        {src:'images/eda/figure11_correlation_change.png', name:'证据6 正常→故障相关性变化',
+         desc:'相关性矩阵在正常vs故障状态下的变化。'},
+        {src:'images/v2/window_variant_comparison.png', name:'证据7 模型收敛证据',
+         desc:'三种MTNN变体的性能对比——全部变体R²≈0、AUC≈0.5-0.59。'},
+      ]},
+    ]
+  }
+};
+
+// ============================================================
+// LIGHTBOX — Enhanced with zoom + drag
+// ============================================================
+const GALLERY_DATA = {};
+let lightboxGallery = [], lightboxIdx = 0;
+let lbZoom = 1, lbPanX = 0, lbPanY = 0, lbDragging = false, lbDragStart = {x:0,y:0}, lbPanStart = {x:0,y:0};
+
+function openLightbox(src, cap, containerId, idx) {
+  lightboxGallery = GALLERY_DATA[containerId] || [];
+  lightboxIdx = idx || 0;
+  updateLightboxImage();
+  document.getElementById('lightbox-cap').innerHTML = cap;
+  document.getElementById('lightbox').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  updateNavButtons();
+  resetLightbox();
+}
+
+function updateLightboxImage() {
+  if (lightboxGallery.length === 0) return;
+  const item = lightboxGallery[lightboxIdx];
+  document.getElementById('lightbox-img').src = item.src;
+  document.getElementById('lightbox-cap').innerHTML = `<b>${item.name}</b><br>${item.desc}`;
+  document.getElementById('lightbox-index').textContent = `${lightboxIdx+1} / ${lightboxGallery.length}`;
+}
+
+function closeLightbox(e) {
+  if (e && e.target !== e.currentTarget && e.target.classList && !e.target.classList.contains('lightbox-overlay')) return;
+  document.getElementById('lightbox').classList.remove('active', 'zoomed');
+  document.body.style.overflow = '';
+}
+
+function navLightbox(dir) {
+  if (lightboxGallery.length === 0) return;
+  lightboxIdx = (lightboxIdx + dir + lightboxGallery.length) % lightboxGallery.length;
+  updateLightboxImage();
+  resetLightbox();
+}
+
+function zoomLightbox(delta) {
+  lbZoom = Math.max(0.5, Math.min(4, lbZoom + delta));
+  applyLightboxTransform();
+  const overlay = document.getElementById('lightbox');
+  if (lbZoom > 1.05) overlay.classList.add('zoomed');
+  else overlay.classList.remove('zoomed');
+}
+
+function resetLightbox() {
+  lbZoom = 1; lbPanX = 0; lbPanY = 0;
+  applyLightboxTransform();
+  document.getElementById('lightbox').classList.remove('zoomed');
+}
+
+function applyLightboxTransform() {
+  const img = document.getElementById('lightbox-img');
+  img.style.transform = `scale(${lbZoom}) translate(${lbPanX}px, ${lbPanY}px)`;
+}
+
+function updateNavButtons() {
+  document.querySelector('.lightbox-prev').style.display = lightboxGallery.length>1?'block':'none';
+  document.querySelector('.lightbox-next').style.display = lightboxGallery.length>1?'block':'none';
+}
+
+// Lightbox mouse drag — DOM is ready since script is at end of body
+(function initLightbox() {
+  const overlay = document.getElementById('lightbox');
+
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeLightbox(e);
+  });
+
+  overlay.addEventListener('wheel', e => {
+    e.preventDefault();
+    zoomLightbox(e.deltaY < 0 ? 0.15 : -0.15);
+  });
+
+  overlay.addEventListener('mousedown', e => {
+    if (lbZoom <= 1.05 || e.target.tagName === 'BUTTON' || e.target.classList.contains('lightbox-close') ||
+        e.target.classList.contains('lightbox-prev') || e.target.classList.contains('lightbox-next')) return;
+    lbDragging = true;
+    lbDragStart = {x: e.clientX, y: e.clientY};
+    lbPanStart = {x: lbPanX, y: lbPanY};
+    overlay.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+
+  window.addEventListener('mousemove', e => {
+    if (!lbDragging) return;
+    const dx = (e.clientX - lbDragStart.x) / (lbZoom * 100);
+    const dy = (e.clientY - lbDragStart.y) / (lbZoom * 100);
+    lbPanX = lbPanStart.x + dx;
+    lbPanY = lbPanStart.y + dy;
+    applyLightboxTransform();
+  });
+
+  window.addEventListener('mouseup', () => {
+    lbDragging = false;
+    overlay.style.cursor = lbZoom > 1.05 ? 'grab' : 'zoom-out';
+  });
+})();
+
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('lightbox').classList.contains('active')) return;
+  if (e.key==='Escape') closeLightbox();
+  if (e.key==='ArrowLeft') navLightbox(-1);
+  if (e.key==='ArrowRight') navLightbox(1);
+  if (e.key==='+' || e.key==='=') { e.preventDefault(); zoomLightbox(0.2); }
+  if (e.key==='-') { e.preventDefault(); zoomLightbox(-0.2); }
+  if (e.key==='0') { e.preventDefault(); resetLightbox(); }
+});
+
+function toggleGallery(id) {
+  var el = document.getElementById(id);
+  if (!el) { logStatus('toggleGallery: element not found: ' + id, 'error'); return; }
+  var toggle = el.parentElement.querySelector('.gallery-toggle');
+  var computedDisplay = window.getComputedStyle(el).display;
+  var visible = computedDisplay !== 'none';
+  logStatus('toggle ' + id + ': display=' + computedDisplay + ' → ' + (visible ? 'hiding' : 'showing'));
+  if (visible) {
+    el.style.setProperty('display', 'none', 'important');
+    if (toggle) toggle.classList.remove('open');
+  } else {
+    el.style.setProperty('display', 'block', 'important');
+    if (toggle) toggle.classList.add('open');
+  }
+}
+
+function renderGallery(containerId, data) {
+  var container = document.getElementById(containerId);
+  if (!container) { logStatus('renderGallery: container not found: ' + containerId, 'error'); return; }
+  var itemCount = 0;
+  data.groups.forEach(function(group) { itemCount += group.items.length; });
+  logStatus('renderGallery: ' + containerId + ' with ' + data.groups.length + ' groups, ' + itemCount + ' items');
+  var html = '';
+  var allItems = [];
+  data.groups.forEach(function(group) {
+    html += '<div class=\"gallery-subtitle\">' + group.subtitle + '</div><div class=\"gallery-grid\">';
+    group.items.forEach(function(item) {
+      var idx = allItems.length;
+      allItems.push(item);
+      html += '<div class=\"gallery-item\" data-lightbox=\"' + containerId + '\" data-idx=\"' + idx + '\">' +
+        '<img src=\"' + item.src + '\" alt=\"' + item.name + '\">' +
+        '<div class=\"gallery-caption\">' +
+          '<span class=\"fig-name\">' + item.name + '</span>' +
+          '<span class=\"fig-desc\">' + item.desc + '</span>' +
+        '</div></div>';
+    });
+    html += '</div>';
+  });
+  container.innerHTML = html;
+  GALLERY_DATA[containerId] = allItems;
+
+  // Attach click handlers via event delegation on the gallery grid
+  var grids = container.querySelectorAll('.gallery-grid');
+  grids.forEach(function(grid) {
+    grid.addEventListener('click', function(e) {
+      var item = e.target.closest('.gallery-item');
+      if (!item) return;
+      var cid = item.dataset.lightbox;
+      var idx = parseInt(item.dataset.idx);
+      var gallery = GALLERY_DATA[cid] || [];
+      if (gallery.length === 0) return;
+      var entry = gallery[idx];
+      openLightbox(entry.src, '<b>' + entry.name + '</b><br>' + entry.desc, cid, idx);
+    });
+  });
+}
+
+// ============================================================
+// ALARM DETAIL MODAL
+// ============================================================
+function showAlarmModal() {
+  const wo = DATA.wo;
+  if (!wo || wo.length === 0) return;
+  const alarms = wo.filter(r => r.alert_level === 'ALARM').sort((a, b) => a.priority - b.priority);
+  if (alarms.length === 0) return;
+
+  const actLabel = {
+    immediate_shutdown: '立即停机',
+    preventive_repair: '预防维修',
+    schedule_inspection: '安排检查',
+    increase_monitoring: '加密监控'
+  };
+  const severityColors = { critical: 'var(--accent-red)', high: 'var(--accent-amber)', medium: 'var(--accent-blue)', low: 'var(--accent-cyan)' };
+
+  const rows = alarms.map((r, i) => {
+    const severity = r.urgency_score >= 90 ? 'critical' : r.urgency_score >= 70 ? 'high' : r.urgency_score >= 50 ? 'medium' : 'low';
+    const severityLabel = { critical: 'CRITICAL', high: 'HIGH', medium: 'MEDIUM', low: 'LOW' }[severity];
+    const rowClass = 'alarm-row-' + severity;
+    const actionLabel = actLabel[r.action_type] || r.action_type;
+    const actionClass = r.action_type === 'immediate_shutdown' ? 'row-action-shutdown' :
+                        r.action_type === 'preventive_repair' ? 'row-action-repair' :
+                        r.action_type === 'schedule_inspection' ? 'row-action-inspect' : '';
+    const windowText = r.window_days === 0 ? '立即' : r.window_days + ' 天';
+    return '<tr class="' + rowClass + '">' +
+      '<td>' + r.priority + '</td>' +
+      '<td style="color:var(--accent-cyan);font-weight:600">' + r.machine_id + '</td>' +
+      '<td style="color:' + severityColors[severity] + ';font-weight:600">' + severityLabel + '</td>' +
+      '<td class="' + actionClass + '">' + actionLabel + '</td>' +
+      '<td>$' + (r.cost_at_risk || 0).toLocaleString() + '</td>' +
+      '<td>' + (r.urgency_score || 0).toFixed(0) + '</td>' +
+      '<td>' + windowText + '</td>' +
+      '<td style="color:var(--accent-green)">$' + (r.expected_savings || 0).toLocaleString() + '</td>' +
+      '<td class="sugg-cell">' + (r.suggestion || '').substring(0, 200) + '</td>' +
+      '</tr>';
+  }).join('');
+
+  document.getElementById('alarm-modal').querySelector('.modal-header h3').textContent = 'ALARM 设备详细信息';
+  document.getElementById('alarm-modal-body').innerHTML =
+    '<table class="modal-table">' +
+    '<thead><tr>' +
+    '<th>优先级</th><th>设备 ID</th><th>严重级别</th><th>动作类型</th><th>风险成本</th><th>紧急度</th><th>处理窗口</th><th>预期节约</th><th>建议</th>' +
+    '</tr></thead>' +
+    '<tbody>' + rows + '</tbody>' +
+    '</table>';
+
+  document.getElementById('alarm-modal').classList.add('active');
+}
+
+function showShutdownModal() {
+  const wo = DATA.wo;
+  if (!wo || wo.length === 0) return;
+  const shutdowns = wo.filter(r => r.action_type === 'immediate_shutdown').sort((a, b) => a.priority - b.priority);
+  if (shutdowns.length === 0) return;
+
+  const severityColors = { critical: 'var(--accent-red)', high: 'var(--accent-amber)', medium: 'var(--accent-blue)', low: 'var(--accent-cyan)' };
+
+  const rows = shutdowns.map((r, i) => {
+    const severity = r.urgency_score >= 90 ? 'critical' : r.urgency_score >= 70 ? 'high' : r.urgency_score >= 50 ? 'medium' : 'low';
+    const severityLabel = { critical: 'CRITICAL', high: 'HIGH', medium: 'MEDIUM', low: 'LOW' }[severity];
+    const rowClass = 'alarm-row-' + severity;
+    const windowText = r.window_days === 0 ? '立即' : r.window_days + ' 天';
+    return '<tr class="' + rowClass + '">' +
+      '<td>' + r.priority + '</td>' +
+      '<td style="color:var(--accent-cyan);font-weight:600">' + r.machine_id + '</td>' +
+      '<td style="color:' + severityColors[severity] + ';font-weight:600">' + severityLabel + '</td>' +
+      '<td class="row-action-shutdown">立即停机</td>' +
+      '<td>$' + (r.cost_at_risk || 0).toLocaleString() + '</td>' +
+      '<td>' + (r.urgency_score || 0).toFixed(0) + '</td>' +
+      '<td>' + windowText + '</td>' +
+      '<td style="color:var(--accent-green)">$' + (r.expected_savings || 0).toLocaleString() + '</td>' +
+      '<td class="sugg-cell">' + (r.suggestion || '').substring(0, 200) + '</td>' +
+      '</tr>';
+  }).join('');
+
+  document.getElementById('alarm-modal').querySelector('.modal-header h3').textContent = '紧急停机设备详细信息';
+  document.getElementById('alarm-modal-body').innerHTML =
+    '<table class="modal-table">' +
+    '<thead><tr>' +
+    '<th>优先级</th><th>设备 ID</th><th>严重级别</th><th>动作类型</th><th>风险成本</th><th>紧急度</th><th>处理窗口</th><th>预期节约</th><th>建议</th>' +
+    '</tr></thead>' +
+    '<tbody>' + rows + '</tbody>' +
+    '</table>';
+
+  document.getElementById('alarm-modal').classList.add('active');
+}
+
+function closeAlarmModal() {
+  document.getElementById('alarm-modal').classList.remove('active');
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var modal = document.getElementById('alarm-modal');
+    if (modal && modal.classList.contains('active')) {
+      closeAlarmModal();
+    }
+  }
+});
+
+// ============================================================
+// INIT
+// ============================================================
+async function init() {
+  logStatus('Starting init...');
+  document.getElementById('clock').textContent = new Date().toLocaleString('zh-CN',{hour12:false});
+  try {
+    await renderSection5();
+    resizeAllCharts();
+    logStatus('Init complete — sec5 ready');
+  } catch(e) {
+    logStatus('Init FAILED: ' + (e.message || e), 'error');
+  }
+}
+
+init().catch(function(e) { logStatus('Init FATAL: ' + (e.message || e), 'error'); console.error(e); });
+</script>
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>设备健康报告 — {{ report.root_cause.machine_id if report.root_cause.machine_id else report.device_details[0].machine_id if report.device_details else 'Unknown' }}</title>
+<style>
+  @page {
+    size: A4;
+    margin: 16mm 14mm 18mm 14mm;
+    @top-center {
+      content: "Industrial AI Copilot — 设备健康报告";
+      font-size: 8px; color: #5a6474;
+      font-family: "Cascadia Code", "Fira Code", monospace;
+    }
+    @bottom-center {
+      content: "第 " counter(page) " 页 / 共 " counter(pages) " 页";
+      font-size: 7px; color: #5a6474;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", system-ui, sans-serif;
+    font-size: 10px; color: #e6ebf2; background: #080a0d; line-height: 1.6;
+  }
+
+  .cover {
+    page-break-after: always;
+    display: flex; flex-direction: column; justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(160deg, #080a0d 0%, #0e1117 40%, #141820 100%);
+    text-align: center; padding: 40px;
+  }
+  .cover-dot {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #00c9a0; margin: 0 auto 24px;
+    box-shadow: 0 0 20px rgba(0,201,160,0.4), 0 0 40px rgba(0,201,160,0.15);
+  }
+  .cover h1 {
+    font-family: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    font-size: 26px; font-weight: 700; color: #00c9a0;
+    letter-spacing: 2px; margin-bottom: 8px;
+  }
+  .cover h2 {
+    font-size: 16px; font-weight: 400; color: #8e9aab; margin-bottom: 40px;
+  }
+  .cover-line { width: 120px; height: 2px; background: #1c2230; margin: 0 auto 32px; }
+  .cover-meta { font-size: 11px; color: #5a6474; line-height: 2; }
+  .cover-meta span { color: #8e9aab; }
+
+  .section {
+    page-break-inside: avoid;
+    margin-bottom: 20px; padding: 18px;
+    background: #0e1117; border: 1px solid #1c2230; border-radius: 6px;
+  }
+  .section-title {
+    font-family: "Cascadia Code", "Fira Code", monospace;
+    font-size: 13px; font-weight: 700; color: #00c9a0;
+    border-bottom: 1px solid #1c2230;
+    padding-bottom: 8px; margin-bottom: 14px;
+  }
+
+  .metrics { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+  .metric-card {
+    flex: 1; min-width: 100px;
+    padding: 10px 14px; background: #141820; border: 1px solid #1c2230;
+    border-radius: 6px; text-align: center;
+  }
+  .metric-value {
+    font-family: "Cascadia Code", "Fira Code", monospace;
+    font-size: 20px; font-weight: 700; color: #00c9a0;
+  }
+  .metric-value.danger { color: #f04040; }
+  .metric-value.warning { color: #f0a030; }
+  .metric-value.ok { color: #3fb950; }
+  .metric-label { font-size: 8px; color: #5a6474; margin-top: 4px; }
+
+  table {
+    width: 100%; border-collapse: collapse; font-size: 9px; margin: 8px 0 14px;
+  }
+  th {
+    background: #141820; color: #8e9aab; font-weight: 600;
+    padding: 6px 8px; text-align: left; border-bottom: 2px solid #1c2230;
+  }
+  td { padding: 6px 8px; border-bottom: 1px solid rgba(28,34,48,0.5); }
+
+  .badge {
+    display: inline-block; padding: 2px 7px; border-radius: 3px;
+    font-size: 8px; font-weight: 600;
+  }
+  .badge-alarm { background: rgba(240,64,64,0.15); color: #f04040; }
+  .badge-warning { background: rgba(240,160,48,0.15); color: #f0a030; }
+  .badge-ok { background: rgba(63,185,80,0.15); color: #3fb950; }
+
+  .chart-container { margin: 14px 0; text-align: center; }
+  .chart-container img { max-width: 100%; height: auto; border-radius: 4px; }
+  .chart-caption { font-size: 8px; color: #5a6474; margin-top: 4px; }
+
+  .alert-box {
+    padding: 10px 14px; border-radius: 4px; border-left: 3px solid;
+    margin: 10px 0; font-size: 9px;
+  }
+  .alert-critical { background: rgba(240,64,64,0.08); border-color: #f04040; color: #f0a0a0; }
+  .alert-warning-box { background: rgba(240,160,48,0.08); border-color: #f0a030; color: #f0c060; }
+  .alert-info { background: rgba(0,201,160,0.05); border-color: #00c9a0; color: #80d8c8; }
+
+  .cause-card {
+    padding: 10px 12px; margin: 6px 0;
+    background: #141820; border: 1px solid #1c2230; border-radius: 4px;
+  }
+  .cause-title { font-size: 11px; font-weight: 600; color: #f0a030; }
+  .cause-evidence { font-size: 9px; color: #8e9aab; margin-top: 3px; }
+
+  .report-footer {
+    margin-top: 28px; padding: 14px 0;
+    border-top: 1px solid #1c2230;
+    font-size: 7px; color: #3a4454; text-align: center;
+  }
+</style>
+</head>
+<body>
+
+{% set device = report.device_details[0] if report.device_details else {} %}
+{% set machine_id = report.root_cause.machine_id or device.machine_id or 'Unknown' %}
+{% set wo = device.work_order or {} %}
+{% set zs = device.z_scores or {} %}
+{% set diag = device.diagnosis or {} %}
+
+<!-- 封面 -->
+<div class="cover">
+  <div class="cover-dot"></div>
+  <h1>设备健康报告</h1>
+  <h2>{{ machine_id }} — 综合诊断评估</h2>
+  <div class="cover-line"></div>
+  <div class="cover-meta">
+    <div>由 <span>Industrial AI Copilot v2.0</span> 生成</div>
+    <div>生成时间：<span>{{ generated_at }}</span></div>
+    <div>分析深度：<span>完整 — Z-Score + 诊断 + 趋势 + 根因 + 成本风险</span></div>
+  </div>
+</div>
+
+<!-- 1. 设备状态 -->
+<div class="section">
+  <div class="section-title">1 — 设备状态概览</div>
+
+  <div class="metrics">
+    <div class="metric-card">
+      {% set lvl = wo.alert_level if wo.alert_level else (zs.alert_level if zs.alert_level else 'N/A') %}
+      <div class="metric-value {{ 'danger' if lvl == 'ALARM' else 'warning' if lvl == 'WARNING' else 'ok' }}">
+        {{ lvl }}
+      </div>
+      <div class="metric-label">告警级别</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">{{ wo.urgency_score | r0 if wo.urgency_score else '-' }}/100</div>
+      <div class="metric-label">紧急度评分</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">{{ wo.cost_at_risk | money if wo.cost_at_risk else '$0' }}</div>
+      <div class="metric-label">风险成本</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">{{ wo.action_type | replace('_', ' ') | title if wo.action_type else 'N/A' }}</div>
+      <div class="metric-label">建议措施</div>
+    </div>
+  </div>
+
+  {% if wo.suggestion %}
+  <div class="alert-box {{ 'alert-critical' if wo.alert_level == 'ALARM' else 'alert-warning-box' if wo.alert_level == 'WARNING' else 'alert-info' }}">
+    <strong>AI 建议：</strong> {{ wo.suggestion[:400] }}
+  </div>
+  {% endif %}
+</div>
+
+<!-- 2. Z-Score 分析 -->
+<div class="section">
+  <div class="section-title">2 — Z-Score 分析（单设备基线）</div>
+
+  {% if zs %}
+  <div class="metrics">
+    <div class="metric-card">
+      <div class="metric-value {{ 'danger' if zs.z_Voltage | abs > 2 else 'warning' if zs.z_Voltage | abs > 1 else 'ok' }}">
+        {{ zs.z_Voltage | r1 }}
+      </div>
+      <div class="metric-label">Z-电压</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value {{ 'danger' if zs.z_Amperage | abs > 2 else 'warning' if zs.z_Amperage | abs > 1 else 'ok' }}">
+        {{ zs.z_Amperage | r1 }}
+      </div>
+      <div class="metric-label">Z-电流</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value {{ 'danger' if zs.z_Temperature | abs > 2 else 'warning' if zs.z_Temperature | abs > 1 else 'ok' }}">
+        {{ zs.z_Temperature | r1 }}
+      </div>
+      <div class="metric-label">Z-温度</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value {{ 'danger' if zs.z_composite | abs > 2 else 'warning' if zs.z_composite | abs > 1 else 'ok' }}">
+        {{ zs.z_composite | r1 }}
+      </div>
+      <div class="metric-label">Z-综合评分</div>
+    </div>
+  </div>
+
+  {% if zs.alert_history %}
+  <table>
+    <thead><tr><th>告警历史</th><th>次数</th></tr></thead>
+    <tbody>
+      {% for level, count in zs.alert_history.items() %}
+      <tr>
+        <td>{{ level }}</td>
+        <td><span class="badge {{ 'badge-alarm' if level == 'ALARM' else 'badge-warning' }}">{{ count }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% else %}
+  <p style="color: #5a6474;">该设备暂无 Z-Score 数据。</p>
+  {% endif %}
+</div>
+
+<!-- 3. 传感器趋势 -->
+<div class="section">
+  <div class="section-title">3 — 传感器趋势分析</div>
+
+  {% if report.sensor_charts %}
+    {% for sc in report.sensor_charts[:4] %}
+    {% set chart_key = "sensor_trend_" ~ loop.index0 %}
+    {% if charts[chart_key] %}
+    <div class="chart-container">
+      <img src="data:image/png;base64,{{ charts[chart_key] }}" alt="{{ sc.machine_id }} {{ sc.sensor_label }}">
+      <div class="chart-caption">
+        图 3.{{ loop.index }} — {{ sc.machine_id }} {{ sc.sensor_label }} |
+        趋势：{{ sc.trend_direction | upper }} | 风险：{{ sc.risk_level | upper }}
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  {% else %}
+    <p style="color: #5a6474;">暂无传感器趋势数据。</p>
+  {% endif %}
+</div>
+
+<!-- 4. 诊断分析 -->
+<div class="section">
+  <div class="section-title">4 — 诊断与模式分析</div>
+
+  {% if diag %}
+  <table>
+    <thead><tr><th>诊断参数</th><th>数值</th></tr></thead>
+    <tbody>
+      <tr><td>主要异常模式</td><td style="color: #f0a030; font-weight: 600;">{{ diag.primary_pattern }}</td></tr>
+      <tr><td>检测到的模式</td><td>{{ diag.patterns_detected | replace('|', ', ') }}</td></tr>
+      <tr><td>诊断置信度</td><td>{{ diag.diagnosis_confidence | pct }}</td></tr>
+      <tr><td>电压漂移证据</td><td>{{ diag.evidence_voltage_drift | pct }}</td></tr>
+      <tr><td>热积聚证据</td><td>{{ diag.evidence_thermal_buildup | pct }}</td></tr>
+      <tr><td>功率异常证据</td><td>{{ diag.evidence_power_anomaly | pct }}</td></tr>
+      <tr><td>综合退化证据</td><td>{{ diag.evidence_combined_degradation | pct }}</td></tr>
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color: #5a6474;">暂无诊断数据。</p>
+  {% endif %}
+</div>
+
+<!-- 5. 根因分析 -->
+<div class="section">
+  <div class="section-title">5 — 根因分析</div>
+
+  {% for cause in report.root_cause.root_causes %}
+  <div class="cause-card">
+    <div class="cause-title">{{ cause.cause }}（置信度：{{ cause.confidence | pct }}）</div>
+    {% for e in cause.evidence %}
+    <div class="cause-evidence">- {{ e }}</div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+
+  {% if report.root_cause.cascade_chains %}
+  <div class="alert-box alert-warning-box">
+    <strong>级联故障预警：</strong><br>
+    {% for chain in report.root_cause.cascade_chains %}
+    {{ chain }}<br>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- 6. 成本与效益 -->
+<div class="section">
+  <div class="section-title">6 — 成本风险与预测性维护效益</div>
+
+  {% if charts.cost_breakdown %}
+  <div class="chart-container">
+    <img src="data:image/png;base64,{{ charts.cost_breakdown }}" alt="成本分析">
+    <div class="chart-caption">图 6.1 — 按措施类型划分的成本风险</div>
+  </div>
+  {% endif %}
+
+  <div class="metrics">
+    <div class="metric-card">
+      <div class="metric-value">{{ wo.cost_at_risk | money if wo.cost_at_risk else '$0' }}</div>
+      <div class="metric-label">风险成本</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">{{ wo.expected_savings | money if wo.expected_savings else '$0' }}</div>
+      <div class="metric-label">预期节省</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">{{ wo.window_days if wo.window_days else '-' }} 天</div>
+      <div class="metric-label">维护窗口</div>
+    </div>
+  </div>
+</div>
+
+<div class="report-footer">
+  由 Industrial AI Copilot v2.0 生成 | {{ generated_at }} |
+  决策融合引擎 (v3) | MCP 工具调用架构 |
+  本报告包含基于统计基线和诊断数据的 AI 分析。
+</div>
+
+</body>
+</html>

@@ -1,0 +1,4 @@
+variant,true_mean_density,pred_mean_density,mean_deviation,r2,binary_auc,mse,is_essentially_mean_predictor
+15in_5pred,0.7336,0.7431,0.0095,0.0114,0.5469,0.0368,True
+10in_10pred,0.7468,0.7247,0.0221,-0.1737,0.2166,0.0204,True
+10in_5pred,0.7494,0.7210,0.0284,0.0188,0.5888,0.0361,True

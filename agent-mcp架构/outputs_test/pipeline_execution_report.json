@@ -1,0 +1,64 @@
+{
+  "pipeline_status": "complete",
+  "step_statuses": {
+    "data_prep": "success",
+    "stat_inference": "success",
+    "decision": "success"
+  },
+  "step_durations_seconds": {
+    "data_prep": 3.2,
+    "stat_inference": 1.9,
+    "decision": 0.6
+  },
+  "total_duration_seconds": 5.7,
+  "work_orders_count": 20,
+  "decision_summary": {
+    "n_machines_evaluated": 100,
+    "alert_distribution": {
+      "ALARM": 11,
+      "WARNING": 51,
+      "WATCH": 38,
+      "NORMAL": 0
+    },
+    "action_distribution": {
+      "immediate_shutdown": 2,
+      "preventive_repair": 5,
+      "schedule_inspection": 21,
+      "increase_monitoring": 36,
+      "routine_check": 36
+    },
+    "n_work_orders": 20,
+    "top_5_urgent": [
+      {
+        "machine_id": "CNC_036",
+        "urgency": 100,
+        "action": "preventive_repair",
+        "cost": 18080.000000000004
+      },
+      {
+        "machine_id": "CNC_025",
+        "urgency": 100,
+        "action": "preventive_repair",
+        "cost": 17043.0
+      },
+      {
+        "machine_id": "CNC_012",
+        "urgency": 100,
+        "action": "preventive_repair",
+        "cost": 16493.4
+      },
+      {
+        "machine_id": "CNC_067",
+        "urgency": 100,
+        "action": "immediate_shutdown",
+        "cost": 16401.0
+      },
+      {
+        "machine_id": "CNC_089",
+        "urgency": 100,
+        "action": "preventive_repair",
+        "cost": 15663.0
+      }
+    ]
+  }
+}

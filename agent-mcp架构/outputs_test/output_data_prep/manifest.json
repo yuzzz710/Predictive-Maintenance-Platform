@@ -1,0 +1,18 @@
+{
+  "data_dir": "C:\\Users\\yuzzz\\Desktop\\\u82d7\u5703\u676f\\git5\\\u539f\u59cb\u6570\u636e\u96c6",
+  "output_dir": "C:\\Users\\yuzzz\\Desktop\\\u82d7\u5703\u676f\\git5\\agent-mcp\u67b6\u6784\\outputs_test\\output_data_prep",
+  "files": {
+    "z_scores": "z_scores.csv",
+    "cost_risk_matrix": "cost_risk_matrix.csv",
+    "failure_signatures": "failure_signatures.csv",
+    "variance_decomposition": "variance_decomposition.csv",
+    "hotelling_t2": "hotelling_t2.csv",
+    "machine_clusters": "machine_clusters.csv",
+    "baseline_stats": "baseline_stats.csv",
+    "z_eval_summary": "z_eval_summary.json",
+    "summary_report": "summary_report.txt"
+  },
+  "n_machines": 100,
+  "n_stable_baselines": 90,
+  "n_sparse_baselines": 10
+}

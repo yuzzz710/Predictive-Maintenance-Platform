@@ -1,0 +1,20 @@
+PREDICTABILITY LIMITATION ¡ª EXECUTIVE SUMMARY
+==================================================
+
+After systematic analysis across 5 evidence dimensions, we conclude:
+
+The 4 monitoring parameters (Voltage, Amperage, Temperature, Rotor Speed)
+DO NOT contain sufficient information to support effective predictive maintenance.
+
+EVIDENCE:
+  1. Single-param max Youden's J = 0.075 (threshold for 'usable' = 0.30)
+  2. 70% of fault samples fall within normal parameter ranges
+  3. Parameter correlations unchanged between normal and fault states
+  4. All ML/DL models converge to trivial mean predictor (R2 ~ 0)
+  5. Missing vibration/acoustic/current-signature sensors that carry 80%+ of diagnostic info
+
+RECOMMENDATION:
+  - Deploy risk-driven maintenance (cost + statistical baseline)
+  - Add vibration sensors (single highest-impact improvement)
+  - Extend monitoring period to capture long-term degradation
+  - Until sensor suite is upgraded, use z-score baseline (P=84%, FPR=20%)

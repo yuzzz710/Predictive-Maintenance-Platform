@@ -1,0 +1,8 @@
+{
+  "model_version": "v1",
+  "data_dir": "C:\\Users\\yuzzz\\Desktop\\\u82d7\u5703\u676f\\git5\\\u539f\u59cb\u6570\u636e\u96c6",
+  "prep_dir": "C:\\Users\\yuzzz\\Desktop\\\u82d7\u5703\u676f\\git5\\agent-mcp\u67b6\u6784\\outputs_test_mcp\\full_pipeline\\output_data_prep",
+  "output_dir": "C:\\Users\\yuzzz\\Desktop\\\u82d7\u5703\u676f\\git5\\agent-mcp\u67b6\u6784\\outputs_test_mcp\\full_pipeline\\output_ml_inference",
+  "prediction_report": "prediction_report.csv",
+  "model_file": null
+}
