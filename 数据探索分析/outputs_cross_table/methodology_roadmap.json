@@ -1,0 +1,137 @@
+{
+  "nodes": [
+    {
+      "id": "1",
+      "name": "原始数据采集",
+      "desc": "4张原始表：LOG(2999条)\nSUMMARY(100台台账)\nASSEMBLY(135件)\nTESTS(540条)",
+      "x": 60,
+      "y": 220,
+      "category": "input"
+    },
+    {
+      "id": "2",
+      "name": "单表统计描述",
+      "desc": "日产量分布\n故障类型频次\n参数箱线图\n故障负载散点",
+      "x": 220,
+      "y": 80,
+      "category": "eda"
+    },
+    {
+      "id": "3",
+      "name": "参数异常分析",
+      "desc": "z-score标准化\n安全区间划定\nper-machine CV\n异常阈值标定",
+      "x": 220,
+      "y": 350,
+      "category": "eda"
+    },
+    {
+      "id": "4",
+      "name": "四表联合挖掘",
+      "desc": "跨表指标计算\nSpearman相关矩阵\nR1-R4两两检验\n故障组×保养热力图",
+      "x": 400,
+      "y": 220,
+      "category": "cross"
+    },
+    {
+      "id": "5",
+      "name": "关联传导链分析",
+      "desc": "条件概率链+Wilson CI\nBootstrap中介+BCa\n物理驱动交叉特征\n路径效应量化",
+      "x": 580,
+      "y": 220,
+      "category": "cross"
+    },
+    {
+      "id": "6",
+      "name": "统计推断与基线",
+      "desc": "per-machine基线\nHotelling T²控制图\n故障签名识别\n设备健康评分",
+      "x": 760,
+      "y": 130,
+      "category": "stat"
+    },
+    {
+      "id": "7",
+      "name": "ML预测建模",
+      "desc": "XGBoost v1\nMulti-Task NN v2\n鲁棒性测试\nYouden's J评估",
+      "x": 760,
+      "y": 310,
+      "category": "ml"
+    },
+    {
+      "id": "8",
+      "name": "决策与维护输出",
+      "desc": "维护工单生成\n技术员调度\n备件计划\n停机优化",
+      "x": 940,
+      "y": 180,
+      "category": "decision"
+    },
+    {
+      "id": "9",
+      "name": "传感器升级路线",
+      "desc": "3阶段升级规划\n振动→电流谱→热成像\nROI三情景估算\n落地折损建模",
+      "x": 940,
+      "y": 300,
+      "category": "decision"
+    }
+  ],
+  "edges": [
+    {
+      "source": "1",
+      "target": "2"
+    },
+    {
+      "source": "1",
+      "target": "3"
+    },
+    {
+      "source": "2",
+      "target": "4"
+    },
+    {
+      "source": "3",
+      "target": "4"
+    },
+    {
+      "source": "4",
+      "target": "5"
+    },
+    {
+      "source": "5",
+      "target": "6"
+    },
+    {
+      "source": "5",
+      "target": "7"
+    },
+    {
+      "source": "6",
+      "target": "8"
+    },
+    {
+      "source": "7",
+      "target": "8"
+    },
+    {
+      "source": "6",
+      "target": "9"
+    }
+  ],
+  "data_coverage": {
+    "LOG+SUMMARY": "100台全量 (2999条传感器记录 + 100台台账)",
+    "ASSEMBLY+TESTS": "15台子集 (135件产品 × 4次测试 = 540条规格测量)"
+  },
+  "method_stack": [
+    "描述统计",
+    "箱线图诊断",
+    "z-score标准化",
+    "per-machine基线",
+    "Spearman相关矩阵",
+    "条件概率+Wilson CI",
+    "Bootstrap中介+BCa",
+    "物理交叉特征",
+    "Hotelling T²",
+    "XGBoost",
+    "Multi-Task NN",
+    "决策规则引擎",
+    "ROI三情景估算"
+  ]
+}

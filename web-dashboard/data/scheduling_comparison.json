@@ -1,0 +1,9 @@
+{
+  "n_total": 30,
+  "optimized_ontime": 30,
+  "rule_ontime": 30,
+  "optimized_tardiness_hours": 0.0,
+  "rule_tardiness_hours": 0.0,
+  "on_time_improvement_pct": 0.0,
+  "tardiness_reduction_pct": 0
+}

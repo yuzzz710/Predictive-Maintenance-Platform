@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工作流任务管理 — 工业智能运维</title>
+<script src="/shared/role-check.js"></script>
+<script src="/shared/theme-init.js"></script>
+<style>
+:root {
+  --bg: #080a0d; --bg-surface: #0e1117; --bg-card: #141820; --bg-card-alt: #181d26;
+  --bg-input: #0c0f15; --border: #1c2230; --border-light: #242b38;
+  --text: #e6ebf2; --text-secondary: #8e9aab; --text-muted: #5a6474;
+  --cyan: #00c9a0; --amber: #f0a030; --red: #f04444; --blue: #4d94ff; --green: #3fb950;
+  --radius: 3px; --radius-md: 6px;
+  --font-mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --font-sans: 'PingFang SC','Microsoft YaHei','Hiragino Sans GB','Segoe UI',system-ui,sans-serif;
+}
+[data-theme="light"] {
+  --bg: #f5f7fa; --bg-surface: #fff; --bg-card: #fff; --bg-card-alt: #f8f9fb;
+  --bg-input: #f0f2f5; --border: #e2e6ed; --border-light: #eef0f4;
+  --text: #1a1d26; --text-secondary: #4a5568; --text-muted: #8a94a6;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5;}
+body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(0,201,160,0.04),transparent),radial-gradient(ellipse 60% 40% at 80% 80%,rgba(77,148,255,0.03),transparent);}
+
+.header{background:var(--bg-surface);border-bottom:1px solid var(--border);padding:16px 24px;}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.header-title{font-size:18px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
+.header-title .dot{color:var(--cyan);}
+
+.content{max-width:1200px;margin:0 auto;padding:20px 24px;}
+
+/* Job Cards */
+.job-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;margin-bottom:24px;}
+.job-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:18px 20px;transition:all 0.2s;}
+.job-card:hover{border-color:var(--cyan);}
+.job-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.job-card-name{font-size:15px;font-weight:600;color:var(--text);}
+.job-card-schedule{font-size:11px;color:var(--text-muted);background:rgba(255,255,255,0.03);padding:3px 8px;border-radius:10px;}
+.job-card-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.job-stat{font-size:11px;}
+.job-stat-label{color:var(--text-muted);}
+.job-stat-value{font-family:var(--font-mono);font-size:14px;font-weight:600;margin-top:1px;}
+.job-card .btn{display:inline-block;padding:6px 14px;border-radius:var(--radius);font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);transition:all 0.2s;font-family:var(--font-sans);}
+.job-card .btn:hover{color:var(--text);border-color:var(--cyan);background:rgba(0,201,160,0.08);}
+.job-card .btn.primary{background:rgba(0,201,160,0.1);border-color:rgba(0,201,160,0.25);color:var(--cyan);}
+.job-card .btn:disabled{opacity:0.4;cursor:not-allowed;}
+.job-status{display:inline-block;padding:3px 8px;border-radius:8px;font-size:10px;font-weight:600;}
+.job-status.ok{background:rgba(63,185,80,0.1);color:var(--green);}
+.job-status.fail{background:rgba(240,68,68,0.1);color:var(--red);}
+.job-status.running{background:rgba(240,160,48,0.1);color:var(--amber);animation:pulse 1.5s ease-in-out infinite;}
+.job-status.never{background:rgba(90,100,116,0.08);color:var(--text-muted);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+
+/* Config section */
+.config-section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:18px 20px;margin-bottom:24px;}
+.config-section h3{font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px;}
+.config-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;}
+.config-item{font-size:12px;}
+.config-item label{display:block;color:var(--text-muted);margin-bottom:4px;}
+.config-item span{color:var(--text);font-weight:500;}
+
+/* History table */
+.history-section h3{font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px;}
+.filter-row{margin-bottom:12px;display:flex;gap:10px;flex-wrap:wrap;}
+.filter-row select,.filter-row input{background:var(--bg-input);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:var(--radius);font-size:12px;outline:none;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{text-align:left;padding:8px 10px;color:var(--text-muted);font-weight:500;border-bottom:1px solid var(--border);background:var(--bg-surface);}
+td{padding:8px 10px;border-bottom:1px solid var(--border-light);color:var(--text-secondary);}
+tr:hover td{background:rgba(255,255,255,0.01);}
+.loading{text-align:center;padding:40px;color:var(--text-muted);}
+.error-banner{background:rgba(240,68,68,0.08);border:1px solid rgba(240,68,68,0.2);border-radius:var(--radius);padding:12px 16px;color:var(--red);font-size:12px;margin-bottom:16px;display:none;}
+
+@media(max-width:768px){.job-cards{grid-template-columns:1fr;}.config-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-title"><span class="dot">◆</span> 工作流任务管理</div>
+    <div style="font-size:12px;color:var(--text-muted);" id="clock"></div>
+  </div>
+</div>
+
+<div class="content">
+  <div class="error-banner" id="error-banner"></div>
+
+  <!-- Job Status Cards -->
+  <div class="job-cards" id="job-cards"><div class="loading">加载中...</div></div>
+
+  <!-- Config -->
+  <div class="config-section">
+    <h3>⚙ 任务配置</h3>
+    <div class="config-grid" id="config-grid"><div class="loading">加载中...</div></div>
+  </div>
+
+  <!-- History -->
+  <div class="history-section">
+    <h3>📋 执行历史</h3>
+    <div class="filter-row">
+      <select id="filter-job" onchange="loadHistory()">
+        <option value="">全部任务</option>
+        <option value="wo_timeout_check">工单超时检测</option>
+        <option value="daily_health_check">每日健康巡检</option>
+        <option value="weekly_report">周报生成</option>
+      </select>
+      <button class="btn" onclick="loadHistory()" style="padding:6px 14px;border-radius:var(--radius);font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);">刷新</button>
+    </div>
+    <div id="history-table"><div class="loading">加载中...</div></div>
+  </div>
+</div>
+
+<script src="/shared/navbar.js"></script>
+<script>
+var JOBS_DATA = [];
+var runningJobs = {};
+
+function updateClock() {
+  var now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleString('zh-CN');
+}
+setInterval(updateClock, 1000); updateClock();
+
+async function loadStatus() {
+  try {
+    var r = await fetch('/api/workflows/status');
+    var data = await r.json();
+    JOBS_DATA = data.jobs || [];
+    renderJobCards();
+  } catch(e) { showError('无法加载任务状态'); }
+}
+
+async function loadConfig() {
+  try {
+    var r = await fetch('/api/workflows/config');
+    var data = await r.json();
+    var grid = document.getElementById('config-grid');
+    grid.innerHTML =
+      '<div class="config-item"><label>当前策略</label><span>' + (data.strategy_label || data.strategy) + '</span></div>' +
+      '<div class="config-item"><label>每日巡检时间</label><span>' + data.daily_health_time + '</span></div>' +
+      '<div class="config-item"><label>周报生成时间</label><span>' + data.weekly_report_time + '</span></div>' +
+      '<div class="config-item"><label>高危设备阈值</label><span>健康分 &lt; ' + data.health_threshold + '</span></div>' +
+      '<div class="config-item"><label>超时升级阈值</label><span>' + data.timeout_hours + 'h</span></div>' +
+      '<div class="config-item"><label>SMTP邮件</label><span style="color:' + (data.smtp_configured ? 'var(--green)' : 'var(--red)') + ';">' + (data.smtp_configured ? '已配置' : '未配置') + '</span></div>';
+  } catch(e) {}
+}
+
+function renderJobCards() {
+  var html = '';
+  JOBS_DATA.forEach(function(j) {
+    var last = j.last_run;
+    var statusClass = 'never', statusLabel = '从未运行';
+    if (last) {
+      if (last.status === 'completed') { statusClass = 'ok'; statusLabel = '成功'; }
+      else if (last.status === 'completed_with_errors') { statusClass = 'ok'; statusLabel = '部分成功'; }
+      else if (last.status === 'failed') { statusClass = 'fail'; statusLabel = '失败'; }
+      else if (last.status === 'running') { statusClass = 'running'; statusLabel = '运行中'; }
+    }
+
+    var isRunning = runningJobs[j.job_id] || false;
+    html += '<div class="job-card">';
+    html += '<div class="job-card-header">';
+    html += '<span class="job-card-name">' + j.job_name + '</span>';
+    html += '<span class="job-schedule">' + j.schedule + '</span>';
+    html += '</div>';
+    html += '<div class="job-card-stats">';
+    html += '<div class="job-stat"><div class="job-stat-label">上次状态</div><div class="job-stat-value"><span class="job-status ' + (isRunning ? 'running' : statusClass) + '">' + (isRunning ? '运行中...' : statusLabel) + '</span></div></div>';
+    html += '<div class="job-stat"><div class="job-stat-label">耗时</div><div class="job-stat-value">' + (last && last.duration_seconds ? last.duration_seconds.toFixed(1) + 's' : '—') + '</div></div>';
+    html += '<div class="job-stat"><div class="job-stat-label">上次执行</div><div class="job-stat-value" style="font-size:10px;">' + (last && last.started_at ? last.started_at.substring(0,16).replace('T',' ') : '—') + '</div></div>';
+    html += '<div class="job-stat"><div class="job-stat-label">结果</div><div class="job-stat-value" style="font-size:10px;">' + (last && last.result_summary ? last.result_summary.substring(0,40) : '—') + '</div></div>';
+    html += '</div>';
+    html += '<button class="btn primary" ' + (isRunning ? 'disabled' : '') + ' onclick="triggerJob(\'' + j.job_id + '\')">' + (isRunning ? '运行中...' : '▶ 手动触发') + '</button>';
+    html += '</div>';
+  });
+  document.getElementById('job-cards').innerHTML = html;
+}
+
+async function triggerJob(jobId) {
+  runningJobs[jobId] = true;
+  renderJobCards();
+  try {
+    var r = await fetch('/api/workflows/trigger/' + jobId, {method:'POST'});
+    var data = await r.json();
+    if (data.success) {
+      // Wait a moment then refresh
+      setTimeout(async function() {
+        runningJobs[jobId] = false;
+        await loadStatus();
+        await loadHistory();
+      }, 3000);
+    } else {
+      runningJobs[jobId] = false;
+      showError('触发失败: ' + (data.detail || 'unknown'));
+    }
+  } catch(e) {
+    runningJobs[jobId] = false;
+    showError('网络错误');
+    renderJobCards();
+  }
+}
+
+async function loadHistory() {
+  var jobId = document.getElementById('filter-job').value;
+  try {
+    var url = '/api/workflows/history?limit=50';
+    if (jobId) url += '&job_id=' + jobId;
+    var r = await fetch(url);
+    var data = await r.json();
+    var items = data.history || [];
+    if (items.length === 0) {
+      document.getElementById('history-table').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">暂无执行记录</div>';
+      return;
+    }
+    var html = '<table><tr><th>时间</th><th>任务</th><th>状态</th><th>耗时</th><th>结果</th></tr>';
+    items.forEach(function(h) {
+      var sc = h.status === 'completed' ? 'ok' : h.status === 'failed' ? 'fail' : 'running';
+      var sl = h.status === 'completed' ? '成功' : h.status === 'failed' ? '失败' : h.status === 'completed_with_errors' ? '部分成功' : h.status;
+      html += '<tr>';
+      html += '<td>' + (h.started_at||'').substring(0,19).replace('T',' ') + '</td>';
+      html += '<td>' + h.job_name + '</td>';
+      html += '<td><span class="job-status ' + sc + '">' + sl + '</span></td>';
+      html += '<td>' + (h.duration_seconds ? h.duration_seconds.toFixed(1)+'s' : '—') + '</td>';
+      html += '<td style="font-size:10px;">' + (h.result_summary || h.error_message || '—').substring(0,60) + '</td>';
+      html += '</tr>';
+    });
+    html += '</table>';
+    document.getElementById('history-table').innerHTML = html;
+  } catch(e) { document.getElementById('history-table').innerHTML = '<div class="loading">加载失败</div>'; }
+}
+
+function showError(msg) {
+  var el = document.getElementById('error-banner');
+  el.style.display = 'block';
+  el.textContent = msg;
+  setTimeout(function(){el.style.display='none';}, 5000);
+}
+
+async function init() {
+  await Promise.all([loadStatus(), loadConfig(), loadHistory()]);
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

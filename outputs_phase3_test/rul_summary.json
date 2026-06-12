@@ -1,0 +1,20 @@
+{
+  "total_machines": 100,
+  "rul_available": 71,
+  "rul_unavailable_no_degradation": 29,
+  "rul_unavailable_insufficient_data": 0,
+  "coverage_rate": 0.71,
+  "avg_rul_hours": 3.0,
+  "median_rul_hours": 1.4,
+  "avg_rul_days": 0.1,
+  "median_rul_days": 0.1,
+  "rul_lt_7_days": 71,
+  "rul_lt_1_day": 71,
+  "avg_degradation_rate_per_day": 43.1664,
+  "model_type_linear": 55,
+  "model_type_exponential": 16,
+  "avg_r_squared": 0.306,
+  "n_critical_health": 22,
+  "critical_threshold": 40,
+  "step_minutes": 14
+}

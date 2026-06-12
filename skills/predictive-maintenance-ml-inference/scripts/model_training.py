@@ -1028,6 +1028,10 @@ def generate_prediction_report(
         rows.append(row)
 
     pred_df = pd.DataFrame(rows)
+    # Drop constant features (e.g. has_quality_data=1 for all machines)
+    constant_cols = [c for c in pred_df.columns if c in model.feature_names and pred_df[c].nunique() <= 1]
+    if constant_cols:
+        print(f"  ℹ Dropping constant features: {constant_cols}")
     # Ensure all required features are present (fill missing with 0)
     for fname in model.feature_names:
         if fname not in pred_df.columns:

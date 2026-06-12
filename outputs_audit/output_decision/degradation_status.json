@@ -1,0 +1,9 @@
+{
+  "mode": "EMERGENCY",
+  "label": "应急模式 (基础告警)",
+  "components": {
+    "ml_available": false,
+    "stat_available": false,
+    "rule_available": true
+  }
+}

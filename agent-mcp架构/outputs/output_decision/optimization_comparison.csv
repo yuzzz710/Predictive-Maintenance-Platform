@@ -1,0 +1,12 @@
+metric,value
+strategy,production_efficiency
+budget_limit,120000.0
+greedy_n_orders,20
+greedy_risk_reduction,66676.74
+greedy_cost,52512.59
+optimized_n_orders,20
+optimized_risk_reduction,66676.74
+optimized_cost,52512.59
+risk_improvement_pct,0.0
+budget_utilization_pct,43.8
+deferred_by_or,0

@@ -1346,6 +1346,10 @@ def main():
         machine_ids_pred.append(mid)
 
     pred_df = pd.DataFrame(rows).fillna(0.0)
+    # Drop constant features (e.g. has_quality_data=1 for all machines when fully deployed)
+    constant_cols = [c for c in pred_df.columns if c in best_info["feature_names"] and pred_df[c].nunique() <= 1]
+    if constant_cols:
+        print(f"  ℹ Dropping constant features: {constant_cols}")
     # Align with training feature names
     for fname in best_info["feature_names"]:
         if fname not in pred_df.columns:

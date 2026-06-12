@@ -1,0 +1,4 @@
+strategy,n_alarms,n_warnings,n_watch,n_normal,n_work_orders,avg_risk_score,total_estimated_cost,avg_sla_hours,alarm_threshold,warning_threshold,max_orders,merge_downtime
+cost_efficiency,4,8,0,0,12,0.7804,57433.13,80.0,0.8,0.6,12,True
+production_efficiency,17,3,0,0,20,0.7521,85518.75,17.4,0.7,0.5,20,False
+quality_first,30,0,0,0,30,0.7195,169257.68,8.0,0.6,0.4,30,False

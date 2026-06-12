@@ -1,0 +1,426 @@
+{
+  "_description": "工业传感器知识库 — 用于AI投资顾问的领域知识注入。所有数值基于已有分析数据（dim5_sensor_gap_analysis.csv, sensor_upgrade_plan.csv, sensor_roi_analysis.csv, sensor_phase_summary.csv）。",
+  "_data_sources": {
+    "sensor_capability": "dim5_sensor_gap_analysis.csv (预测性维护模型_v3/outputs/)",
+    "cost_and_roi": "sensor_upgrade_plan.csv + sensor_roi_analysis.csv + sensor_phase_summary.csv (web-dashboard/data/)",
+    "current_bottleneck": "dim1_single_param_discriminability.csv (预测性维护模型_v3/outputs/)"
+  },
+  "current_state": {
+    "num_machines": 100,
+    "current_params": ["Voltage", "Amperage", "Temperature", "Rotor Speed"],
+    "max_youden_j": 0.075,
+    "fault_overlap_in_normal_pct": "96-98%",
+    "auc_ceiling": 0.537,
+    "excluded_param": "Rotor Speed (Cohen's d=-0.002, KS p=0.458, no diagnostic value)",
+    "health_score_distribution": {
+      "critical_lt_40": 10,
+      "degrading_40_60": 88,
+      "healthy_gte_60": 2
+    },
+    "top_cost_risk_machines": [
+      {"id": "CNC_085", "cost_risk": 6441, "failure_rate_pct": 86.7, "unit_cost": 4, "daily_output": 1858},
+      {"id": "CNC_034", "cost_risk": 6261, "failure_rate_pct": 76.7, "unit_cost": 3, "daily_output": 2722},
+      {"id": "CNC_087", "cost_risk": 6218, "failure_rate_pct": 80.0, "unit_cost": 4, "daily_output": 1943},
+      {"id": "CNC_064", "cost_risk": 6103, "failure_rate_pct": 76.7, "unit_cost": 4, "daily_output": 1990},
+      {"id": "CNC_036", "cost_risk": 6027, "failure_rate_pct": 83.3, "unit_cost": 32, "daily_output": 226}
+    ],
+    "annual_baseline": {
+      "failures_per_year": 85,
+      "downtime_hours_per_year": 420,
+      "avg_downtime_cost_per_hour": 5000,
+      "avg_failure_cost_per_incident": 15000
+    }
+  },
+  "sensors": [
+    {
+      "id": "vibration_accelerometer",
+      "name": "振动加速度计 (IEPE Accelerometer)",
+      "category": "机械故障检测",
+      "phase": 1,
+      "detects": [
+        "轴承磨损/疲劳 (bearing wear/fatigue)",
+        "转子不平衡 (rotor imbalance)",
+        "轴不对中 (shaft misalignment)",
+        "齿轮啮合退化 (gear mesh degradation)",
+        "机械松动 (mechanical looseness)"
+      ],
+      "youden_j_range": "0.40-0.70",
+      "auc_gain": "+0.20 to +0.35",
+      "cumulative_youden_j_with_current": 0.525,
+      "cost": {
+        "unit_cost_usd": 350,
+        "installation_cost_usd": 120,
+        "total_per_machine_usd": 470,
+        "total_capex_100_machines_usd": 47000,
+        "annual_opex_100_machines_usd": 4500
+      },
+      "deployment": {
+        "complexity": "low",
+        "complexity_score": 1,
+        "duration_months": 3,
+        "requires_production_stop": false,
+        "scada_compatible": true
+      },
+      "maintenance": {
+        "calibration_cycle_months": 6,
+        "expected_lifetime_years": 8,
+        "failure_modes": ["cable break", "connector corrosion", "sensitivity drift"]
+      },
+      "technical_specs": {
+        "sampling_rate": "5-10 kHz",
+        "frequency_range": "0.5 Hz - 5 kHz",
+        "sensitivity": "100 mV/g typical",
+        "output_type": "IEPE (ICP) analog",
+        "data_volume_per_machine_per_day_mb": 43
+      },
+      "roi": {
+        "conservative_annual_saving": 447000, "conservative_payback_months": 11, "conservative_5yr_roi_pct": 457,
+        "expected_annual_saving": 879000, "expected_payback_months": 6, "expected_5yr_roi_pct": 994,
+        "optimistic_annual_saving": 1235000, "optimistic_payback_months": 4, "optimistic_5yr_roi_pct": 1438
+      },
+      "complementary_sensors": ["current_spectrum_mcsa", "acoustic_emission"],
+      "covers_fault_types": ["Bearing", "Imbalance", "Misalignment", "Gear", "Looseness"]
+    },
+    {
+      "id": "vibration_fft_analyzer",
+      "name": "振动数据采集器 + FFT频谱分析仪",
+      "category": "机械故障检测（频域分析）",
+      "phase": 1,
+      "detects": [
+        "频域异常检测 (frequency-domain anomaly detection)",
+        "共振识别 (resonance identification)",
+        "旋转设备谐波分析 (harmonic analysis)"
+      ],
+      "youden_j_range": "同振动传感器配套使用",
+      "auc_gain": "+0.10 (附加增益)",
+      "cumulative_youden_j_with_current": 0.525,
+      "cost": {
+        "unit_cost_usd": 2800,
+        "installation_cost_usd": 500,
+        "total_per_machine_usd": 3300,
+        "total_capex_100_machines_usd": 330000,
+        "annual_opex_100_machines_usd": 20000
+      },
+      "deployment": {
+        "complexity": "low",
+        "complexity_score": 1,
+        "duration_months": 3,
+        "requires_production_stop": false,
+        "scada_compatible": true
+      },
+      "maintenance": {
+        "calibration_cycle_months": 12,
+        "expected_lifetime_years": 6,
+        "notes": "软件许可年费包含在OPEX中"
+      },
+      "technical_specs": {
+        "sampling_rate": "up to 51.2 kHz",
+        "fft_lines": "6400 lines typical",
+        "analysis_types": ["FFT spectrum", "envelope analysis", "cepstrum", "order tracking"],
+        "data_volume_per_machine_per_day_mb": 120
+      },
+      "roi": {
+        "note": "与振动传感器共享Phase 1 ROI数据"
+      },
+      "complementary_sensors": ["vibration_accelerometer"],
+      "covers_fault_types": ["Resonance", "Harmonic distortion", "Bearing defect frequency"]
+    },
+    {
+      "id": "current_spectrum_mcsa",
+      "name": "电流频谱传感器 (Hall-effect + Rogowski Coil)",
+      "category": "电气故障检测",
+      "phase": 2,
+      "detects": [
+        "电机绕组退化 (motor winding degradation)",
+        "转子导条缺陷 (rotor bar defects)",
+        "电气供电不平衡 (electrical supply imbalance)",
+        "电能质量异常 (power quality anomalies)",
+        "过载检测 (overload detection)"
+      ],
+      "youden_j_range": "0.35-0.60",
+      "auc_gain": "+0.18 to +0.30",
+      "cumulative_youden_j_with_current_and_phase1": 0.805,
+      "cost": {
+        "unit_cost_usd": 480,
+        "installation_cost_usd": 180,
+        "total_per_machine_usd": 660,
+        "total_capex_100_machines_usd": 66000,
+        "annual_opex_100_machines_usd": 6000
+      },
+      "deployment": {
+        "complexity": "medium",
+        "complexity_score": 3,
+        "duration_months": 4,
+        "requires_production_stop": true,
+        "scada_compatible": true,
+        "notes": "需要短暂停电安装钳式传感器，每台约30分钟"
+      },
+      "maintenance": {
+        "calibration_cycle_months": 12,
+        "expected_lifetime_years": 10,
+        "notes": "非接触式传感器，维护需求低"
+      },
+      "technical_specs": {
+        "sampling_rate": "1-10 kHz",
+        "frequency_range": "DC - 5 kHz",
+        "accuracy": "±0.5% of reading",
+        "output_type": "4-20mA / Modbus RTU",
+        "data_volume_per_machine_per_day_mb": 28
+      },
+      "roi": {
+        "conservative_annual_saving": 298000, "conservative_payback_months": 10, "conservative_5yr_roi_pct": 528,
+        "expected_annual_saving": 586000, "expected_payback_months": 5, "expected_5yr_roi_pct": 1136,
+        "optimistic_annual_saving": 823000, "optimistic_payback_months": 4, "optimistic_5yr_roi_pct": 1636
+      },
+      "complementary_sensors": ["vibration_accelerometer", "harmonic_analysis_module"],
+      "covers_fault_types": ["Motor winding", "Rotor bar", "Power quality", "Overload"]
+    },
+    {
+      "id": "harmonic_analysis_module",
+      "name": "谐波分析模块 (Power Quality Analyzer)",
+      "category": "电气故障检测（电能质量）",
+      "phase": 2,
+      "detects": [
+        "总谐波失真监测 (THD monitoring)",
+        "瞬态浪涌检测 (transient surge detection)",
+        "功率因数退化 (power factor degradation)"
+      ],
+      "youden_j_range": "+0.08 (附加增益)",
+      "auc_gain": "+0.05 to +0.10",
+      "cumulative_youden_j_with_current_and_phase1": 0.805,
+      "cost": {
+        "unit_cost_usd": 1200,
+        "installation_cost_usd": 300,
+        "total_per_machine_usd": 1500,
+        "total_capex_100_machines_usd": 150000,
+        "annual_opex_100_machines_usd": 15000
+      },
+      "deployment": {
+        "complexity": "medium",
+        "complexity_score": 3,
+        "duration_months": 4,
+        "requires_production_stop": true,
+        "scada_compatible": true
+      },
+      "maintenance": {
+        "calibration_cycle_months": 12,
+        "expected_lifetime_years": 8,
+        "notes": "固件升级年费包含在OPEX中"
+      },
+      "technical_specs": {
+        "sampling_rate": "256 samples/cycle",
+        "harmonics_measured": "up to 63rd order",
+        "standards": "IEC 61000-4-30 Class A",
+        "data_volume_per_machine_per_day_mb": 8
+      },
+      "roi": {
+        "note": "与电流频谱传感器共享Phase 2 ROI数据"
+      },
+      "complementary_sensors": ["current_spectrum_mcsa"],
+      "covers_fault_types": ["Harmonic distortion", "Power factor", "Transient surge"]
+    },
+    {
+      "id": "thermal_imaging_camera",
+      "name": "固定式红外热成像仪 (Fixed-mount IR Camera)",
+      "category": "热控故障检测",
+      "phase": 3,
+      "detects": [
+        "过热预警-热失控前兆 (overheating prediction)",
+        "绝缘退化 (insulation degradation)",
+        "电气连接热点 (electrical connection hot spots)",
+        "冷却系统效率损失 (cooling system efficiency loss)",
+        "关键部件失效预警 (critical failure early warning)"
+      ],
+      "youden_j_range": "0.25-0.50",
+      "auc_gain": "+0.13 to +0.25",
+      "cumulative_youden_j_with_all_previous": 0.90,
+      "cost": {
+        "unit_cost_usd": 2200,
+        "installation_cost_usd": 350,
+        "total_per_machine_usd": 2550,
+        "total_capex_100_machines_usd": 255000,
+        "annual_opex_100_machines_usd": 18000
+      },
+      "deployment": {
+        "complexity": "high",
+        "complexity_score": 5,
+        "duration_months": 6,
+        "requires_production_stop": false,
+        "scada_compatible": false,
+        "notes": "需要专用以太网布线 + 每台设备视角标定。安装时设备可不停机，但标定需停机10分钟/台"
+      },
+      "maintenance": {
+        "calibration_cycle_months": 6,
+        "expected_lifetime_years": 5,
+        "notes": "镜头需定期清洁，高温环境加速老化。备件成本较高"
+      },
+      "technical_specs": {
+        "resolution": "640×480 pixels",
+        "thermal_sensitivity": "<50 mK (NETD)",
+        "temperature_range": "-20°C to +650°C",
+        "data_volume_per_machine_per_day_mb": 580
+      },
+      "roi": {
+        "conservative_annual_saving": 373000, "conservative_payback_months": 15, "conservative_5yr_roi_pct": 319,
+        "expected_annual_saving": 647000, "expected_payback_months": 8, "expected_5yr_roi_pct": 723,
+        "optimistic_annual_saving": 908000, "optimistic_payback_months": 6, "optimistic_5yr_roi_pct": 1056
+      },
+      "complementary_sensors": ["thermal_trend_software"],
+      "covers_fault_types": ["Overheating", "Insulation", "Hot spots", "Cooling loss"]
+    },
+    {
+      "id": "thermal_trend_software",
+      "name": "热趋势分析软件 (Thermal Trend Analysis)",
+      "category": "热控故障检测（软件分析）",
+      "phase": 3,
+      "detects": [
+        "多点热趋势建模 (multi-point thermal trend modeling)",
+        "预测性过热告警 (predictive overheating alerts)",
+        "热特征模式识别 (thermal signature pattern recognition)"
+      ],
+      "youden_j_range": "+0.12 (附加增益)",
+      "auc_gain": "+0.05 to +0.10",
+      "cumulative_youden_j_with_all_previous": 0.90,
+      "cost": {
+        "unit_cost_usd": 800,
+        "installation_cost_usd": 100,
+        "total_per_machine_usd": 900,
+        "total_capex_100_machines_usd": 90000,
+        "annual_opex_100_machines_usd": 30000
+      },
+      "deployment": {
+        "complexity": "medium",
+        "complexity_score": 3,
+        "duration_months": 6,
+        "requires_production_stop": false,
+        "scada_compatible": false,
+        "notes": "纯软件方案，需配合热成像仪使用"
+      },
+      "maintenance": {
+        "calibration_cycle_months": 0,
+        "expected_lifetime_years": 0,
+        "notes": "SaaS订阅模式，年费包含在OPEX中。无需硬件维护"
+      },
+      "technical_specs": {
+        "ml_model": "CNN-based thermal anomaly detector",
+        "update_frequency": "per batch (on-premise inference)",
+        "data_volume_per_machine_per_day_mb": 15
+      },
+      "roi": {
+        "note": "与热成像仪共享Phase 3 ROI数据"
+      },
+      "complementary_sensors": ["thermal_imaging_camera"],
+      "covers_fault_types": ["Thermal trend anomaly", "Overheating prediction"]
+    },
+    {
+      "id": "acoustic_emission",
+      "name": "声发射传感器 (Acoustic Emission Sensor)",
+      "category": "机械故障检测（高频应力波）",
+      "phase": "future",
+      "detects": [
+        "裂纹扩展高频应力波 (crack propagation stress waves)",
+        "早期轴承剥落 (early bearing spalling)",
+        "摩擦异常 (abnormal friction)",
+        "润滑失效 (lubrication failure)"
+      ],
+      "youden_j_range": "0.30-0.55",
+      "auc_gain": "+0.15 to +0.28",
+      "cumulative_youden_j_with_current": null,
+      "cost": {
+        "unit_cost_usd": 500,
+        "installation_cost_usd": 200,
+        "total_per_machine_usd": 700,
+        "total_capex_100_machines_usd": 70000,
+        "annual_opex_100_machines_usd": 8000
+      },
+      "deployment": {
+        "complexity": "medium",
+        "complexity_score": 3,
+        "duration_months": 5,
+        "requires_production_stop": true,
+        "scada_compatible": false,
+        "notes": "目前未在已有机型上验证。建议先在5台高风险设备上试点。高采样率对数据基础设施要求高"
+      },
+      "maintenance": {
+        "calibration_cycle_months": 3,
+        "expected_lifetime_years": 5,
+        "notes": "压电陶瓷元件对温度和湿度敏感，需要稳定环境"
+      },
+      "technical_specs": {
+        "sampling_rate": "100 kHz - 1 MHz",
+        "frequency_range": "20 kHz - 1 MHz",
+        "sensitivity": "60-70 dB ref 1V/(m/s)",
+        "output_type": "analog ±10V",
+        "data_volume_per_machine_per_day_mb": 860,
+        "infrastructure_note": "⚠ 高数据量，需升级车间网络和数据存储"
+      },
+      "roi": {
+        "note": "不在当前三阶段计划中。如需纳入，需先完成5台试点验证后建模估算"
+      },
+      "complementary_sensors": ["vibration_accelerometer"],
+      "covers_fault_types": ["Crack propagation", "Early spalling", "Lubrication failure"],
+      "status": "未纳入当前路线图。如需评估，建议先试点5台高风险设备（CNC_085/034/087/064/036），成本约$3,500"
+    }
+  ],
+  "roi_model": {
+    "name": "Probabilistic Industrial ROI Model v2.0",
+    "effective_coverage_formula": "有效覆盖率 = 理论覆盖率 × 部署成熟度系数 × 人员执行系数 × 运维质量系数",
+    "scenarios": {
+      "conservative": {
+        "label": "保守场景",
+        "deployment_factor": 0.70, "adoption_factor": 0.60, "maintenance_quality_factor": 0.70,
+        "effective_multiplier": 0.294,
+        "description": "低部署成熟度、缓慢人员采纳、基础运维水平。适用于数字化经验有限的工厂"
+      },
+      "expected": {
+        "label": "预期场景",
+        "deployment_factor": 0.85, "adoption_factor": 0.80, "maintenance_quality_factor": 0.85,
+        "effective_multiplier": 0.578,
+        "description": "标准工业部署、中等操作采纳、良好运维实践。适用于有一定状态监测经验的工厂"
+      },
+      "optimistic": {
+        "label": "乐观场景",
+        "deployment_factor": 0.95, "adoption_factor": 0.90, "maintenance_quality_factor": 0.95,
+        "effective_multiplier": 0.812,
+        "description": "优秀部署执行、充分团队采纳、最佳实践运维文化。适用于数字化成熟度高的工厂"
+      }
+    },
+    "roi_formula": "5年ROI% = ((年化节约 × 5) - 总投资) / 总投资 × 100",
+    "disclaimer": "以上ROI数值为工程估算范围，非保证财务结果。保守与乐观场景差异可超过±50%。用于CAPEX规划和阶段排序，不用于损益表记账。建议实际采购前进行试点部署（5-10台设备）以验证本地化折损系数。"
+  },
+  "investment_strategies": [
+    {
+      "name": "方案A：最小化投资（仅振动）",
+      "phases": [1],
+      "total_investment": 402000,
+      "expected_annual_saving": 879000,
+      "cumulative_youden_j": 0.525,
+      "fault_coverage_pct": 55,
+      "pros": "最低投资、最快回本(6月)、部署简单、不停机安装",
+      "cons": "仅覆盖机械故障，电气和热控故障仍需靠当前4参数",
+      "recommended_for": "预算有限、机械故障占比高的工厂"
+    },
+    {
+      "name": "方案B：平衡投资（振动+电流谱）",
+      "phases": [1, 2],
+      "total_investment": 639000,
+      "expected_annual_saving": 1465000,
+      "cumulative_youden_j": 0.805,
+      "fault_coverage_pct": 70,
+      "pros": "覆盖机械+电气故障、Youden's J突破0.60(可用ML阈值)、综合ROI最高",
+      "cons": "Phase 2需要短暂停电安装",
+      "recommended_for": "大多数工厂的推荐方案"
+    },
+    {
+      "name": "方案C：全覆盖投资（三阶段全上）",
+      "phases": [1, 2, 3],
+      "total_investment": 1032000,
+      "expected_annual_saving": 2112000,
+      "cumulative_youden_j": 0.90,
+      "fault_coverage_pct": 90,
+      "pros": "近乎完整的故障覆盖、Youden's J接近1.0、具备真正预测性维护能力",
+      "cons": "投资最大、Phase 3部署复杂度高(6月)、热成像数据量大",
+      "recommended_for": "数字化程度高、预算充足的工厂"
+    }
+  ]
+}

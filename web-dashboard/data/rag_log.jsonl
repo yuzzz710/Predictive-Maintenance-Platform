@@ -1,0 +1,122 @@
+{"timestamp": "2026-06-03T23:30:45.343245", "query": "健康分 计算", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 27.6}
+{"timestamp": "2026-06-03T23:30:45.356503", "query": "健康分 计算", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 10.8}
+{"timestamp": "2026-06-03T23:30:45.373021", "query": "健康分 计算", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 15.5}
+{"timestamp": "2026-06-03T23:30:45.397431", "query": "维护策略 切换", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 21.4}
+{"timestamp": "2026-06-03T23:30:45.408267", "query": "维护策略 切换", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 10.8}
+{"timestamp": "2026-06-03T23:30:45.422100", "query": "维护策略 切换", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 10.8}
+{"timestamp": "2026-06-03T23:30:45.435850", "query": "Z-Score 阈值", "collection": "sys_docs", "n_results": 0, "elapsed_ms": 12.7}
+{"timestamp": "2026-06-03T23:30:45.444956", "query": "Z-Score 阈值", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 8.1}
+{"timestamp": "2026-06-03T23:30:45.457584", "query": "Z-Score 阈值", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 11.6}
+{"timestamp": "2026-06-03T23:36:01.212985", "query": "健康分计算公式", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 28.5}
+{"timestamp": "2026-06-03T23:36:01.222833", "query": "健康分计算公式", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 8.8}
+{"timestamp": "2026-06-03T23:36:01.234443", "query": "健康分计算公式", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 9.6}
+{"timestamp": "2026-06-03T23:36:01.244931", "query": "如何切换维护策略", "collection": "sys_docs", "n_results": 1, "elapsed_ms": 10.5}
+{"timestamp": "2026-06-03T23:36:01.253930", "query": "如何切换维护策略", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 7.0}
+{"timestamp": "2026-06-03T23:36:01.264078", "query": "如何切换维护策略", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 10.1}
+{"timestamp": "2026-06-03T23:36:01.277412", "query": "CNC轴承更换步骤", "collection": "sys_docs", "n_results": 0, "elapsed_ms": 11.9}
+{"timestamp": "2026-06-03T23:36:01.285448", "query": "CNC轴承更换步骤", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 7.0}
+{"timestamp": "2026-06-03T23:36:01.296777", "query": "CNC轴承更换步骤", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 10.3}
+{"timestamp": "2026-06-03T23:36:01.307672", "query": "Type 4故障处理", "collection": "sys_docs", "n_results": 0, "elapsed_ms": 9.9}
+{"timestamp": "2026-06-03T23:36:01.318451", "query": "Type 4故障处理", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 9.4}
+{"timestamp": "2026-06-03T23:36:01.330512", "query": "Type 4故障处理", "collection": "fault_cases", "n_results": 2, "elapsed_ms": 10.1}
+{"timestamp": "2026-06-03T23:36:01.340651", "query": "three maintenance strategies difference", "collection": "sys_docs", "n_results": 0, "elapsed_ms": 9.1}
+{"timestamp": "2026-06-03T23:36:01.348652", "query": "three maintenance strategies difference", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 8.0}
+{"timestamp": "2026-06-03T23:36:01.360005", "query": "three maintenance strategies difference", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 9.4}
+{"timestamp": "2026-06-03T23:36:01.373066", "query": "健康分计算公式", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 9.1}
+{"timestamp": "2026-06-03T23:36:01.381065", "query": "CNC轴承更换", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 8.0}
+{"timestamp": "2026-06-03T23:36:01.394132", "query": "Type 4 fault", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 11.3}
+{"timestamp": "2026-06-03T23:38:48.376817", "query": "健康分计算公式", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 29.6}
+{"timestamp": "2026-06-03T23:38:48.386280", "query": "健康分计算公式", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 9.5}
+{"timestamp": "2026-06-03T23:38:48.400774", "query": "健康分计算公式", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 12.5}
+{"timestamp": "2026-06-03T23:38:48.412275", "query": "维护策略切换方法", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 11.5}
+{"timestamp": "2026-06-03T23:38:48.423262", "query": "维护策略切换方法", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 9.0}
+{"timestamp": "2026-06-03T23:38:48.432817", "query": "维护策略切换方法", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 9.6}
+{"timestamp": "2026-06-03T23:38:48.444248", "query": "Type 4故障处理", "collection": "sys_docs", "n_results": 1, "elapsed_ms": 10.4}
+{"timestamp": "2026-06-03T23:38:48.453541", "query": "Type 4故障处理", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 7.0}
+{"timestamp": "2026-06-03T23:38:48.464905", "query": "Type 4故障处理", "collection": "fault_cases", "n_results": 2, "elapsed_ms": 10.4}
+{"timestamp": "2026-06-03T23:38:48.473905", "query": "Z-Score阈值设定", "collection": "sys_docs", "n_results": 0, "elapsed_ms": 8.0}
+{"timestamp": "2026-06-03T23:38:48.483510", "query": "Z-Score阈值设定", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 9.6}
+{"timestamp": "2026-06-03T23:38:48.495277", "query": "Z-Score阈值设定", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 10.8}
+{"timestamp": "2026-06-03T23:38:48.508987", "query": "健康分计算公式", "collection": "sys_docs", "n_results": 3, "elapsed_ms": 10.7}
+{"timestamp": "2026-06-03T23:38:48.522120", "query": "Type 4故障", "collection": "fault_cases", "n_results": 5, "elapsed_ms": 11.9}
+{"timestamp": "2026-06-03T23:38:48.532123", "query": "健康分计算", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 10.0}
+{"timestamp": "2026-06-03T23:38:48.543390", "query": "健康分计算公式", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 9.3}
+{"timestamp": "2026-06-03T23:38:48.552387", "query": "健康分计算公式", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 9.0}
+{"timestamp": "2026-06-03T23:38:48.565260", "query": "健康分计算公式", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 11.4}
+{"timestamp": "2026-06-03T23:41:38.050043", "query": "健康分计算公式", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 28.1}
+{"timestamp": "2026-06-03T23:41:38.059474", "query": "健康分计算公式", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 8.4}
+{"timestamp": "2026-06-03T23:41:38.070752", "query": "健康分计算公式", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 11.3}
+{"timestamp": "2026-06-03T23:41:38.084001", "query": "维护策略切换方法", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 11.2}
+{"timestamp": "2026-06-03T23:41:38.093383", "query": "维护策略切换方法", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 8.4}
+{"timestamp": "2026-06-03T23:41:38.105763", "query": "维护策略切换方法", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 10.4}
+{"timestamp": "2026-06-03T23:41:38.118108", "query": "Type 4故障处理经验", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 11.3}
+{"timestamp": "2026-06-03T23:41:38.127108", "query": "Type 4故障处理经验", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 8.0}
+{"timestamp": "2026-06-03T23:41:38.138109", "query": "Type 4故障处理经验", "collection": "fault_cases", "n_results": 2, "elapsed_ms": 10.0}
+{"timestamp": "2026-06-03T23:41:38.151093", "query": "健康分计算", "collection": "sys_docs", "n_results": 3, "elapsed_ms": 10.0}
+{"timestamp": "2026-06-03T23:41:38.162166", "query": "Type 4故障", "collection": "fault_cases", "n_results": 5, "elapsed_ms": 9.8}
+{"timestamp": "2026-06-03T23:41:38.174153", "query": "维护策略", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 11.0}
+{"timestamp": "2026-06-03T23:41:38.186490", "query": "健康分计算公式", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 10.3}
+{"timestamp": "2026-06-03T23:41:38.196780", "query": "健康分计算公式", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 9.3}
+{"timestamp": "2026-06-03T23:41:38.209530", "query": "健康分计算公式", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 11.7}
+{"timestamp": "2026-06-04T00:00:11.209981", "query": "健康分 计算 公式", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 125.2}
+{"timestamp": "2026-06-04T00:00:11.224933", "query": "健康分 计算 公式", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 13.9}
+{"timestamp": "2026-06-04T00:00:11.239374", "query": "健康分 计算 公式", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 13.4}
+{"timestamp": "2026-06-04T00:20:51.188784", "query": "CNC轴承更换步骤", "collection": "sys_docs", "n_results": 0, "elapsed_ms": 17.6}
+{"timestamp": "2026-06-04T00:20:51.202464", "query": "CNC轴承更换步骤", "collection": "maint_kb", "n_results": 1, "elapsed_ms": 11.7}
+{"timestamp": "2026-06-04T00:20:51.215635", "query": "CNC轴承更换步骤", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 12.2}
+{"timestamp": "2026-06-04T00:20:51.235364", "query": "紧急停机流程", "collection": "sys_docs", "n_results": 0, "elapsed_ms": 14.7}
+{"timestamp": "2026-06-04T00:20:51.247928", "query": "紧急停机流程", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 10.3}
+{"timestamp": "2026-06-04T00:20:51.262137", "query": "紧急停机流程", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 14.2}
+{"timestamp": "2026-06-04T00:20:51.278491", "query": "LOTO断电挂牌", "collection": "sys_docs", "n_results": 0, "elapsed_ms": 14.1}
+{"timestamp": "2026-06-04T00:20:51.292798", "query": "LOTO断电挂牌", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 13.0}
+{"timestamp": "2026-06-04T00:20:51.307060", "query": "LOTO断电挂牌", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 13.3}
+{"timestamp": "2026-06-04T00:20:51.321899", "query": "主轴过热排查", "collection": "sys_docs", "n_results": 0, "elapsed_ms": 13.6}
+{"timestamp": "2026-06-04T00:20:51.338112", "query": "主轴过热排查", "collection": "maint_kb", "n_results": 1, "elapsed_ms": 15.2}
+{"timestamp": "2026-06-04T00:20:51.353405", "query": "主轴过热排查", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 13.3}
+{"timestamp": "2026-06-04T00:20:51.367071", "query": "电压漂移排查", "collection": "sys_docs", "n_results": 0, "elapsed_ms": 13.7}
+{"timestamp": "2026-06-04T00:20:51.378964", "query": "电压漂移排查", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 10.7}
+{"timestamp": "2026-06-04T00:20:51.391524", "query": "电压漂移排查", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 10.4}
+{"timestamp": "2026-06-04T00:20:51.403175", "query": "健康分8维度", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 11.7}
+{"timestamp": "2026-06-04T00:20:51.416610", "query": "健康分8维度", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 12.4}
+{"timestamp": "2026-06-04T00:20:51.430466", "query": "健康分8维度", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 11.8}
+{"timestamp": "2026-06-04T00:20:51.441808", "query": "Z-Score阈值选择", "collection": "sys_docs", "n_results": 0, "elapsed_ms": 10.3}
+{"timestamp": "2026-06-04T00:20:51.454323", "query": "Z-Score阈值选择", "collection": "maint_kb", "n_results": 1, "elapsed_ms": 12.5}
+{"timestamp": "2026-06-04T00:20:51.466746", "query": "Z-Score阈值选择", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 11.4}
+{"timestamp": "2026-06-04T00:25:38.347966", "query": "CNC轴承更换步骤", "collection": "sys_docs", "n_results": 0, "elapsed_ms": 27.6}
+{"timestamp": "2026-06-04T00:25:38.359241", "query": "CNC轴承更换步骤", "collection": "maint_kb", "n_results": 1, "elapsed_ms": 10.3}
+{"timestamp": "2026-06-04T00:25:38.370243", "query": "CNC轴承更换步骤", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 10.0}
+{"timestamp": "2026-06-04T00:25:38.381797", "query": "紧急停机流程", "collection": "sys_docs", "n_results": 0, "elapsed_ms": 10.6}
+{"timestamp": "2026-06-04T00:25:38.393513", "query": "紧急停机流程", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 10.3}
+{"timestamp": "2026-06-04T00:25:38.405604", "query": "紧急停机流程", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 10.1}
+{"timestamp": "2026-06-04T00:25:38.416107", "query": "健康分计算", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 10.5}
+{"timestamp": "2026-06-04T00:25:38.427622", "query": "健康分计算", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 9.5}
+{"timestamp": "2026-06-04T00:25:38.437098", "query": "健康分计算", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 8.5}
+{"timestamp": "2026-06-04T00:25:38.448614", "query": "健康分", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 10.5}
+{"timestamp": "2026-06-04T00:25:38.459585", "query": "轴承更换", "collection": "maint_kb", "n_results": 1, "elapsed_ms": 11.0}
+{"timestamp": "2026-06-04T00:37:27.048596", "query": "健康分是怎么计算的？8个维度分别是什么？", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 31.5}
+{"timestamp": "2026-06-04T00:37:27.060053", "query": "健康分是怎么计算的？8个维度分别是什么？", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 10.5}
+{"timestamp": "2026-06-04T00:37:27.070127", "query": "健康分是怎么计算的？8个维度分别是什么？", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 9.1}
+{"timestamp": "2026-06-04T00:37:28.913861", "query": "健康分计算公式 8个维度", "collection": "sys_docs", "n_results": 5, "elapsed_ms": 13.5}
+{"timestamp": "2026-06-04T11:34:40.641722", "query": "Z-Score怎么算", "collection": "sys_docs", "n_results": 0, "elapsed_ms": 127.7}
+{"timestamp": "2026-06-04T11:34:40.651727", "query": "Z-Score怎么算", "collection": "maint_kb", "n_results": 1, "elapsed_ms": 10.0}
+{"timestamp": "2026-06-04T11:34:40.661727", "query": "Z-Score怎么算", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 10.0}
+{"timestamp": "2026-06-04T11:35:50.390216", "query": "三个维护策略是什么", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 12.7}
+{"timestamp": "2026-06-04T11:35:50.398980", "query": "三个维护策略是什么", "collection": "maint_kb", "n_results": 1, "elapsed_ms": 8.8}
+{"timestamp": "2026-06-04T11:35:50.408652", "query": "三个维护策略是什么", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 8.3}
+{"timestamp": "2026-06-04T17:50:32.611132", "query": "健康分怎么计算", "collection": "sys_docs", "n_results": 1, "elapsed_ms": 411.3}
+{"timestamp": "2026-06-04T17:50:32.628018", "query": "健康分怎么计算", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 14.8}
+{"timestamp": "2026-06-04T17:50:32.651240", "query": "健康分怎么计算", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 23.2}
+{"timestamp": "2026-06-04T18:47:25.541939", "query": "健康分是怎么计算的？", "collection": "sys_docs", "n_results": 1, "elapsed_ms": 175.6}
+{"timestamp": "2026-06-04T18:47:25.554807", "query": "健康分是怎么计算的？", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 12.2}
+{"timestamp": "2026-06-04T18:47:25.567985", "query": "健康分是怎么计算的？", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 13.2}
+{"timestamp": "2026-06-04T18:47:25.579512", "query": "健康分是怎么计算的？", "collection": "sys_docs", "n_results": 1, "elapsed_ms": 10.5}
+{"timestamp": "2026-06-04T18:47:25.591580", "query": "健康分是怎么计算的？", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 10.1}
+{"timestamp": "2026-06-04T18:47:25.603228", "query": "健康分是怎么计算的？", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 10.3}
+{"timestamp": "2026-06-04T18:47:28.723109", "query": "健康分计算公式", "collection": "sys_docs", "n_results": 3, "elapsed_ms": 19.3}
+{"timestamp": "2026-06-04T18:47:30.534848", "query": "健康评分8维度加权", "collection": "sys_docs", "n_results": 3, "elapsed_ms": 14.5}
+{"timestamp": "2026-06-04T23:01:43.713010", "query": "健康分怎么计算", "collection": "sys_docs", "n_results": 1, "elapsed_ms": 205.8}
+{"timestamp": "2026-06-04T23:01:43.722952", "query": "健康分怎么计算", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 9.4}
+{"timestamp": "2026-06-04T23:01:43.732502", "query": "健康分怎么计算", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 8.5}
+{"timestamp": "2026-06-05T00:20:12.806843", "query": "健康分怎么计算", "collection": "sys_docs", "n_results": 1, "elapsed_ms": 266.2}
+{"timestamp": "2026-06-05T00:20:12.818108", "query": "健康分怎么计算", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 10.3}
+{"timestamp": "2026-06-05T00:20:12.832173", "query": "健康分怎么计算", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 13.6}

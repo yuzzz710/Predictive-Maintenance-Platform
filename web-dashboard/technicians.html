@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>员工管理 — 工业智能运维</title>
+<script src="/shared/role-check.js"></script><script src="/shared/theme-init.js"></script>
+<style>
+:root{--bg:#080a0d;--bg-surface:#0e1117;--bg-card:#141820;--bg-card-alt:#181d26;--bg-input:#0c0f15;--border:#1c2230;--border-light:#242b38;--text:#e6ebf2;--text-secondary:#8e9aab;--text-muted:#5a6474;--cyan:#00c9a0;--amber:#f0a030;--red:#f04444;--blue:#4d94ff;--green:#3fb950;--purple:#a371f7;--radius:3px;--radius-md:6px;--font-mono:'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;--font-sans:'PingFang SC','Microsoft YaHei','Hiragino Sans GB','Segoe UI',system-ui,sans-serif}
+[data-theme="light"]{--bg:#f5f7fa;--bg-surface:#fff;--bg-card:#fff;--bg-card-alt:#f8f9fb;--bg-input:#f0f2f5;--border:#e2e6ed;--border-light:#eef0f4;--text:#1a1d26;--text-secondary:#4a5568;--text-muted:#8a94a6}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
+body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(0,201,160,0.04),transparent),radial-gradient(ellipse 60% 40% at 80% 80%,rgba(77,148,255,0.03),transparent)}
+.header{background:var(--bg-surface);border-bottom:1px solid var(--border);padding:16px 24px}
+.header-inner{max-width:1300px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.header-title{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px}
+.header-title .dot{color:var(--cyan)}
+.content{max-width:1300px;margin:0 auto;padding:20px 24px}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:20px}
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 16px;text-align:center}
+.stat-card .v{font-size:22px;font-weight:700;font-family:var(--font-mono)}
+.stat-card .l{font-size:11px;color:var(--text-muted);margin-top:2px}
+.section{margin-bottom:24px}
+.section h3{font-size:14px;font-weight:600;margin-bottom:12px}
+.section-bar{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.section-bar select{padding:8px 16px;border-radius:var(--radius);font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);font-family:var(--font-sans);transition:all 0.2s;outline:none;appearance:none;-webkit-appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238e9aab' d='M6 8L1 3h10z'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
+.section-bar select:hover{color:var(--text);border-color:var(--cyan);background-color:rgba(0,201,160,0.08)}
+.btn{padding:8px 16px;border-radius:var(--radius);font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);font-family:var(--font-sans);transition:all 0.2s}
+.btn:hover{color:var(--text);border-color:var(--cyan);background:rgba(0,201,160,0.08)}
+.btn.primary{background:rgba(0,201,160,0.1);border-color:rgba(0,201,160,0.25);color:var(--cyan)}
+.btn.danger{color:var(--red);border-color:rgba(240,68,68,0.25)}
+.btn.small{padding:4px 10px;font-size:11px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:8px 10px;color:var(--text-muted);font-weight:500;border-bottom:1px solid var(--border);background:var(--bg-surface)}
+td{padding:8px 10px;border-bottom:1px solid var(--border-light);color:var(--text-secondary)}
+tr:hover td{background:rgba(255,255,255,0.015)}
+.badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:600}
+.badge.available{background:rgba(63,185,80,0.1);color:var(--green)}
+.badge.busy{background:rgba(240,160,48,0.1);color:var(--amber)}
+.badge.off_duty{background:rgba(90,100,116,0.08);color:var(--text-muted)}
+
+/* Workload section */
+.workload-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.tech-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;transition:all 0.2s}
+.tech-card:hover{border-color:var(--cyan)}
+.tech-card-header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.tech-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:#fff;flex-shrink:0}
+.av-available{background:var(--green)}.av-busy{background:var(--amber)}.av-off{background:var(--text-muted)}
+.tech-info{flex:1}
+.tech-name{font-size:15px;font-weight:600;color:var(--text)}
+.tech-type{font-size:11px;color:var(--text-muted)}
+.tech-contact{font-size:10px;color:var(--text-muted);margin-top:2px}
+.workload-bar{height:6px;background:var(--border);border-radius:3px;margin:8px 0;overflow:hidden}
+.workload-fill{height:100%;border-radius:3px;transition:width 0.3s}
+.wl-ok{background:var(--green)}.wl-warn{background:var(--amber)}.wl-full{background:var(--red)}
+.tech-machines{font-size:11px;color:var(--text-muted);margin-top:4px}
+.tech-machines span{display:inline-block;background:rgba(255,255,255,0.03);padding:1px 6px;border-radius:3px;margin:2px;font-family:var(--font-mono);font-size:10px}
+.tech-actions{margin-top:10px;display:flex;gap:6px}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:2000;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:24px;width:480px;max-width:94vw;max-height:80vh;overflow-y:auto;box-shadow:0 16px 48px rgba(0,0,0,0.5)}
+.modal h3{font-size:16px;color:var(--text);margin-bottom:16px}
+.modal .form-group{margin-bottom:12px}
+.modal label{display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px}
+.modal input,.modal select{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-input);color:var(--text);font-size:13px;outline:none}
+.modal input:focus,.modal select:focus{border-color:var(--cyan)}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+.loading{text-align:center;padding:40px;color:var(--text-muted)}
+@media(max-width:768px){.workload-grid{grid-template-columns:1fr}}
+html[data-role="operator"] .role-manager:not(.role-operator){display:none!important}
+</style>
+</head>
+<body>
+
+<div class="header role-manager">
+  <div class="header-inner">
+    <div class="header-title"><span class="dot">◆</span> 员工管理</div>
+  </div>
+</div>
+
+<div class="content role-manager">
+
+  <!-- Stats -->
+  <div class="stats-row" id="stats-row"><div class="loading">加载中...</div></div>
+
+  <!-- Roster Table -->
+  <div class="section">
+    <h3>📋 员工花名册</h3>
+    <div class="section-bar">
+      <select id="filter-type" onchange="loadAll()"><option value="">全部类型</option><option value="electrical_specialist">电气专家</option><option value="thermal_specialist">热控专家</option><option value="senior_technician">高级技师</option><option value="junior_technician">初级技师</option><option value="mechanical_specialist">机械专家</option></select>
+      <select id="filter-status" onchange="loadAll()"><option value="">全部状态</option><option value="available">在岗</option><option value="busy">忙碌</option><option value="off_duty">休假</option></select>
+      <button class="btn primary" onclick="loadAll()">⟳ 刷新</button>
+      <button class="btn primary" onclick="openAddModal()">+ 新增员工</button>
+    </div>
+    <div id="roster-table"><div class="loading">加载中...</div></div>
+  </div>
+
+  <!-- Workload Dashboard -->
+  <div class="section">
+    <h3>📊 工作量看板</h3>
+    <div class="workload-grid" id="workload-grid"><div class="loading">加载中...</div></div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal">
+    <h3 id="modal-title">新增员工</h3>
+    <div class="form-group"><label>姓名 *</label><input id="f-name" placeholder="如：张伟"></div>
+    <div class="form-group"><label>技师类型 *</label><select id="f-type"><option value="electrical_specialist">电气专家</option><option value="thermal_specialist">热控专家</option><option value="senior_technician">高级技师</option><option value="junior_technician">初级技师</option><option value="mechanical_specialist">机械专家</option></select></div>
+    <div class="form-group"><label>邮箱</label><input id="f-email" placeholder="zhang@factory.com"></div>
+    <div class="form-group"><label>电话</label><input id="f-phone" placeholder="13800000000"></div>
+    <div class="form-group"><label>最大负载</label><input id="f-max" type="number" value="3" min="1" max="10"></div>
+    <div class="form-group"><label>技能标签</label><input id="f-skills" placeholder="如：高电压,电路诊断"></div>
+    <div class="form-group"><label>状态</label><select id="f-status"><option value="available">在岗</option><option value="busy">忙碌</option><option value="off_duty">休假</option></select></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn primary" id="modal-save-btn" onclick="saveTechnician()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script src="/shared/navbar.js"></script>
+<script>
+var TYPE_CN={electrical_specialist:'电气专家',thermal_specialist:'热控专家',senior_technician:'高级技师',junior_technician:'初级技师',mechanical_specialist:'机械专家'};
+var STATUS_CN={available:'在岗',busy:'忙碌',off_duty:'休假'};
+var editingId=null;
+
+function tcn(t){return TYPE_CN[t]||t}
+
+async function loadAll(){await Promise.all([loadStats(),loadRoster(),loadWorkload()])}
+
+async function loadStats(){
+  try{
+    var r=await fetch('/api/technicians/workloads/summary'),d=await r.json();
+    document.getElementById('stats-row').innerHTML=
+      '<div class="stat-card"><div class="v">'+d.total+'</div><div class="l">员工总数</div></div>'+
+      '<div class="stat-card"><div class="v" style="color:var(--green)">'+d.available+'</div><div class="l">在岗</div></div>'+
+      '<div class="stat-card"><div class="v" style="color:var(--amber)">'+d.busy+'</div><div class="l">忙碌</div></div>'+
+      '<div class="stat-card"><div class="v">'+d.total_assignments+'</div><div class="l">当前工单总数</div></div>'
+  }catch(e){}
+}
+
+async function loadRoster(){
+  var tp=document.getElementById('filter-type').value;
+  var st=document.getElementById('filter-status').value;
+  var qs=new URLSearchParams();if(tp)qs.set('tech_type',tp);if(st)qs.set('status',st);
+  try{
+    var r=await fetch('/api/technicians?'+qs.toString()),d=await r.json(),techs=d.technicians||[];
+    var h='<table><tr><th>ID</th><th>姓名</th><th>类型</th><th>邮箱</th><th>电话</th><th>状态</th><th>工单负载</th><th>操作</th></tr>';
+    techs.forEach(function(t){
+      var sc=t.status==='available'?'available':t.status==='busy'?'busy':'off_duty';
+      var wlPct=t.max_concurrent>0?Math.round(t.current_workload/t.max_concurrent*100):0;
+      var wlColor=wlPct>=100?'var(--red)':wlPct>=70?'var(--amber)':'var(--green)';
+      h+='<tr>';
+      h+='<td>'+t.id+'</td>';
+      h+='<td><b>'+t.name+'</b></td>';
+      h+='<td>'+tcn(t.technician_type)+'</td>';
+      h+='<td style="font-size:11px">'+t.email+'</td>';
+      h+='<td style="font-size:11px">'+t.phone+'</td>';
+      h+='<td><span class="badge '+sc+'">'+STATUS_CN[t.status]+'</span></td>';
+      h+='<td><span style="color:'+wlColor+';font-weight:600;">'+t.current_workload+'/'+t.max_concurrent+'</span></td>';
+      h+='<td style="white-space:nowrap">';
+      h+='<button class="btn small" onclick="openEditModal('+t.id+',\''+t.name+'\',\''+t.technician_type+'\',\''+(t.email||'')+'\',\''+(t.phone||'')+'\','+t.max_concurrent+',\''+(t.skills||'')+'\',\''+t.status+'\')">编辑</button> ';
+      h+='<button class="btn small" onclick="toggleStatus('+t.id+',\''+t.status+'\')">'+((t.status==='off_duty')?'设为在岗':'设为休假')+'</button> ';
+      h+='<button class="btn small danger" onclick="deleteTech('+t.id+')">删除</button>';
+      h+='</td></tr>';
+    });
+    h+='</table>';document.getElementById('roster-table').innerHTML=h
+  }catch(e){document.getElementById('roster-table').innerHTML='<div class="loading">加载失败</div>'}
+}
+
+async function loadWorkload(){
+  try{
+    var r=await fetch('/api/technicians'),d=await r.json(),techs=d.technicians||[];
+    var h='';
+    techs.forEach(function(t){
+      var wlPct=t.max_concurrent>0?Math.round(t.current_workload/t.max_concurrent*100):0;
+      var barCls=wlPct>=100?'wl-full':wlPct>=70?'wl-warn':'wl-ok';
+      var avCls=t.status==='available'?'av-available':t.status==='busy'?'av-busy':'av-off';
+      var initial=t.name.charAt(0);
+      h+='<div class="tech-card">';
+      h+='<div class="tech-card-header">';
+      h+='<div class="tech-avatar '+avCls+'">'+initial+'</div>';
+      h+='<div class="tech-info">';
+      h+='<div class="tech-name">'+t.name+'</div>';
+      h+='<div class="tech-type">'+tcn(t.technician_type)+' · '+STATUS_CN[t.status]+'</div>';
+      h+='<div class="tech-contact">'+t.email+' | '+t.phone+'</div>';
+      h+='</div></div>';
+      h+='<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-bottom:4px"><span>负载</span><span>'+t.current_workload+'/'+t.max_concurrent+'</span></div>';
+      h+='<div class="workload-bar"><div class="workload-fill '+barCls+'" style="width:'+wlPct+'%"></div></div>';
+      h+='<div class="tech-machines">';
+      (t.assigned_machines||[]).forEach(function(m){
+        h+='<span>'+m.machine_id+'</span>';
+      });
+      if(!(t.assigned_machines||[]).length)h+='<span style="color:var(--text-muted)">暂无工单</span>';
+      h+='</div>';
+      h+='</div>';
+    });
+    document.getElementById('workload-grid').innerHTML=h
+  }catch(e){document.getElementById('workload-grid').innerHTML='<div class="loading">加载失败</div>'}
+}
+
+function openAddModal(){editingId=null;document.getElementById('modal-title').textContent='新增员工';document.getElementById('modal-save-btn').textContent='创建';['f-name','f-email','f-phone','f-skills'].forEach(function(id){document.getElementById(id).value=''});document.getElementById('f-type').value='senior_technician';document.getElementById('f-max').value=3;document.getElementById('f-status').value='available';document.getElementById('modal-overlay').classList.add('open')}
+function openEditModal(id,name,type,email,phone,max,skills,status){editingId=id;document.getElementById('modal-title').textContent='编辑员工 #'+id;document.getElementById('modal-save-btn').textContent='保存';document.getElementById('f-name').value=name;document.getElementById('f-type').value=type;document.getElementById('f-email').value=email;document.getElementById('f-phone').value=phone;document.getElementById('f-max').value=max;document.getElementById('f-skills').value=skills;document.getElementById('f-status').value=status;document.getElementById('modal-overlay').classList.add('open')}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open')}
+
+async function saveTechnician(){
+  var data={name:document.getElementById('f-name').value,email:document.getElementById('f-email').value,phone:document.getElementById('f-phone').value,technician_type:document.getElementById('f-type').value,max_concurrent:parseInt(document.getElementById('f-max').value)||3,skills:document.getElementById('f-skills').value,status:document.getElementById('f-status').value};
+  if(!data.name){alert('请输入姓名');return}
+  var url=editingId?'/api/technicians/'+editingId:'/api/technicians';
+  var method=editingId?'PUT':'POST';
+  try{
+    var r=await fetch(url,{method:method,headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    if(r.ok){closeModal();await loadAll()}else{var d=await r.json();alert('保存失败: '+(d.detail||'error'))}
+  }catch(e){alert('网络错误')}
+}
+
+async function toggleStatus(id,currentStatus){
+  var ns=currentStatus==='off_duty'?'available':'off_duty';
+  try{
+    await fetch('/api/technicians/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:ns})});
+    await loadAll()
+  }catch(e){alert('操作失败')}
+}
+
+async function deleteTech(id){
+  if(!confirm('确认删除该员工？只有无活跃工单的员工才能删除。'))return;
+  try{
+    var r=await fetch('/api/technicians/'+id,{method:'DELETE'});
+    if(r.ok){await loadAll()}else{var d=await r.json();alert('删除失败: '+(d.detail||'该员工有活跃工单'))}
+  }catch(e){alert('网络错误')}
+}
+
+document.addEventListener('DOMContentLoaded',loadAll)
+</script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+Equipment.Id,rul_steps,rul_hours,rul_ci_lower_steps,rul_ci_upper_steps,rul_ci_lower_hours,rul_ci_upper_hours,degradation_rate,degradation_rate_per_day,health_score_current,health_score_projected_7d,health_score_projected_14d,model_type,r_squared,trend,status,status_reason,warnings
+CNC_005,0.0,0.0,0.0,0.0,0.0,0.0,0.096077,9.8822,35.0,0.0,0.0,linear,0.0156,Degrading,ok,,"Degradation signal weak (R2=0.02), CI widened accordingly"
+CNC_009,0.0,0.0,0.0,0.0,0.0,0.0,0.174,17.8971,38.6,0.0,0.0,linear,0.0607,Degrading,ok,,"Degradation signal weak (R2=0.06), CI widened accordingly"
+CNC_012,0.0,0.0,0.0,0.0,0.0,0.0,0.756538,77.8153,34.8,0.0,0.0,linear,0.3765,Degrading,ok,,
+CNC_017,0.0,0.0,0.0,0.0,0.0,0.0,0.706308,72.6488,31.8,0.0,0.0,linear,0.5586,Degrading,ok,,
+CNC_025,0.0,0.0,0.0,0.0,0.0,0.0,0.225154,23.1587,22.1,0.0,0.0,linear,0.0358,Degrading,ok,,"Degradation signal weak (R2=0.04), CI widened accordingly"
+CNC_028,0.0,0.0,0.0,0.0,0.0,0.0,0.111538,11.4725,39.1,0.0,0.0,linear,0.017,Degrading,ok,,"Degradation signal weak (R2=0.02), CI widened accordingly"
+CNC_035,0.0,0.0,0.0,0.0,0.0,0.0,0.792615,81.5261,34.5,0.0,0.0,linear,0.3729,Degrading,ok,,
+CNC_036,0.0,0.0,0.0,0.0,0.0,0.0,0.335183,34.476,28.9,0.0,0.0,exponential,0.3605,Degrading,ok,,
+CNC_043,0.0,0.0,0.0,0.0,0.0,0.0,0.529899,54.5039,38.4,0.0,0.0,exponential,0.3527,Degrading,ok,,
+CNC_056,0.0,0.0,0.0,0.0,0.0,0.0,1.115077,114.6936,37.3,0.0,0.0,linear,0.5775,Degrading,ok,,
+CNC_063,0.0,0.0,0.0,0.0,0.0,0.0,0.493846,50.7956,39.8,0.0,0.0,linear,0.2851,Degrading,ok,,"Degradation signal weak (R2=0.29), CI widened accordingly"
+CNC_054,0.0,0.0,0.0,0.0,0.0,0.0,0.397621,40.8982,39.8,0.0,0.0,exponential,0.2768,Degrading,ok,,"Degradation signal weak (R2=0.28), CI widened accordingly"
+CNC_047,0.0,0.0,0.0,0.0,0.0,0.0,0.295462,30.3904,37.1,0.0,0.0,linear,0.1405,Degrading,ok,,"Degradation signal weak (R2=0.14), CI widened accordingly"
+CNC_068,0.0,0.0,0.0,0.0,0.0,0.0,0.356462,36.6647,39.9,0.0,0.0,linear,0.2263,Degrading,ok,,"Degradation signal weak (R2=0.23), CI widened accordingly"
+CNC_067,0.0,0.0,0.0,0.0,0.0,0.0,0.787154,80.9644,32.4,0.0,0.0,linear,0.7088,Degrading,ok,,
+CNC_065,0.0,0.0,0.0,0.0,0.0,0.0,0.369308,37.986,32.4,0.0,0.0,linear,0.2069,Degrading,ok,,"Degradation signal weak (R2=0.21), CI widened accordingly"
+CNC_086,0.0,0.0,0.0,0.0,0.0,0.0,1.206692,124.1169,33.1,0.0,0.0,linear,0.7997,Degrading,ok,,
+CNC_093,0.0,0.0,0.0,0.0,0.0,0.0,0.718231,73.8752,33.8,0.0,0.0,linear,0.6841,Degrading,ok,,
+CNC_092,0.0,0.0,0.0,0.0,0.0,0.0,1.265231,130.138,36.8,0.0,0.0,linear,0.6995,Degrading,ok,,
+CNC_089,0.0,0.0,0.0,0.0,0.0,0.0,0.157077,16.1565,26.8,0.0,0.0,linear,0.0271,Degrading,ok,,"Degradation signal weak (R2=0.03), CI widened accordingly"
+CNC_072,0.0,0.0,0.0,0.0,0.0,0.0,0.471077,48.4536,30.1,0.0,0.0,linear,0.1351,Degrading,ok,,"Degradation signal weak (R2=0.14), CI widened accordingly"
+CNC_073,0.7,0.2,0.4,0.8,0.09333333333333334,0.18666666666666668,0.607583,62.4943,40.4,0.0,0.0,exponential,0.6877,Degrading,ok,,
+CNC_034,0.8,0.2,0.5,1.4,0.11666666666666667,0.3266666666666666,0.25104,25.8213,40.2,0.0,0.0,exponential,0.4017,Degrading,ok,,
+CNC_019,1.1,0.2,0.7,2.9,0.1633333333333333,0.6766666666666666,0.562154,57.8216,40.6,0.0,0.0,linear,0.2798,Degrading,ok,,"Degradation signal weak (R2=0.28), CI widened accordingly"
+CNC_053,1.6,0.4,1.2,1.9,0.28,0.4433333333333333,0.559143,57.5119,40.9,0.0,0.0,exponential,0.8168,Degrading,ok,,
+CNC_078,1.8,0.4,1.4,2.8,0.3266666666666666,0.6533333333333332,0.961846,98.9327,41.7,0.0,0.0,linear,0.6247,Degrading,ok,,
+CNC_081,2.0,0.5,1.5,3.5,0.35,0.8166666666666667,0.600231,61.738,41.2,0.0,0.0,linear,0.513,Degrading,ok,,
+CNC_096,2.2,0.5,1.7,3.6,0.39666666666666667,0.84,0.492,50.6057,41.1,0.0,0.0,linear,0.5485,Degrading,ok,,
+CNC_069,2.5,0.6,2.1,3.8,0.49000000000000005,0.8866666666666666,0.673538,69.2782,41.7,0.0,0.0,linear,0.6535,Degrading,ok,,
+CNC_016,3.4,0.8,2.1,9.8,0.49000000000000005,2.286666666666667,0.582,59.8629,42.0,0.0,0.0,linear,0.2453,Degrading,ok,,"Degradation signal weak (R2=0.25), CI widened accordingly"
+CNC_026,3.8,0.9,0.3,20.1,0.07,4.69,0.026385,2.7139,40.1,21.1,2.1,linear,0.0016,Degrading,ok,,"Degradation signal weak (R2=0.00), CI widened accordingly"
+CNC_059,4.8,1.1,3.8,7.9,0.8866666666666666,1.8433333333333335,0.974,100.1829,44.7,0.0,0.0,linear,0.6027,Degrading,ok,,
+CNC_002,5.8,1.3,4.7,8.7,1.0966666666666667,2.03,0.745538,76.6839,44.3,0.0,0.0,linear,0.6596,Degrading,ok,,
+CNC_007,5.8,1.4,3.7,8.0,0.8633333333333334,1.8666666666666667,0.723598,74.4272,44.2,0.0,0.0,exponential,0.6204,Degrading,ok,,
+CNC_044,5.9,1.4,5.2,7.9,1.2133333333333334,1.8433333333333335,0.690846,71.0584,44.1,0.0,0.0,linear,0.8498,Degrading,ok,,
+CNC_001,6.1,1.4,4.8,9.9,1.12,2.31,1.016154,104.5187,46.2,0.0,0.0,linear,0.5973,Degrading,ok,,
+CNC_052,7.4,1.7,4.4,29.0,1.0266666666666668,6.766666666666667,0.474538,48.8096,43.5,0.0,0.0,linear,0.2045,Degrading,ok,,"Degradation signal weak (R2=0.20), CI widened accordingly"
+CNC_013,9.2,2.1,5.1,22.7,1.19,5.296666666666667,0.382229,39.315,43.5,0.0,0.0,exponential,0.2718,Degrading,ok,,"Degradation signal weak (R2=0.27), CI widened accordingly"
+CNC_027,11.7,2.7,9.2,18.8,2.1466666666666665,4.386666666666667,0.743,76.4229,48.7,0.0,0.0,linear,0.5569,Degrading,ok,,
+CNC_041,13.3,3.1,8.0,30.0,1.8666666666666667,7.0,0.362154,37.2501,44.8,0.0,0.0,linear,0.2046,Degrading,ok,,"Degradation signal weak (R2=0.20), CI widened accordingly"
+CNC_049,15.0,3.5,9.0,30.0,2.1,7.0,0.252951,26.0178,43.8,0.0,0.0,exponential,0.2993,Degrading,ok,,"Degradation signal weak (R2=0.30), CI widened accordingly"
+CNC_048,15.1,3.5,10.7,29.1,2.4966666666666666,6.790000000000001,0.265231,27.2809,44.0,0.0,0.0,linear,0.4056,Degrading,ok,,
+CNC_037,15.9,3.7,9.3,30.0,2.1700000000000004,7.0,0.257538,26.4896,44.1,0.0,0.0,linear,0.1814,Degrading,ok,,"Degradation signal weak (R2=0.18), CI widened accordingly"
+CNC_061,16.3,3.8,12.3,28.0,2.87,6.533333333333333,0.459231,47.2352,47.5,0.0,0.0,linear,0.489,Degrading,ok,,
+CNC_051,17.5,4.1,12.3,30.0,2.87,7.0,0.434769,44.7191,47.6,0.0,0.0,linear,0.3672,Degrading,ok,,
+CNC_040,18.6,4.3,12.8,27.6,2.986666666666667,6.44,0.402376,41.3872,47.5,0.0,0.0,exponential,0.5576,Degrading,ok,,
+CNC_084,22.3,5.2,15.2,28.9,3.5466666666666664,6.743333333333333,0.636283,65.4463,54.2,0.0,0.0,exponential,0.6709,Degrading,ok,,
+CNC_057,23.5,5.5,12.5,30.0,2.9166666666666665,7.0,0.335466,34.5051,47.9,0.0,0.0,exponential,0.2231,Degrading,ok,,"Degradation signal weak (R2=0.22), CI widened accordingly"
+CNC_074,25.0,5.8,14.7,30.0,3.4299999999999997,7.0,0.239769,24.662,46.0,0.0,0.0,linear,0.1957,Degrading,ok,,"Degradation signal weak (R2=0.20), CI widened accordingly"
+CNC_066,30.0,7.0,11.5,30.0,2.683333333333333,7.0,0.098615,10.1433,44.2,0.0,0.0,linear,0.0209,Degrading,ok,,"Degradation signal weak (R2=0.02), CI widened accordingly"
+CNC_008,30.0,7.0,20.8,30.0,4.8533333333333335,7.0,0.424926,43.7067,53.0,0.0,0.0,exponential,0.5216,Degrading,ok,,
+CNC_003,30.0,7.0,30.0,30.0,7.0,7.0,0.123,12.6514,57.7,0.0,0.0,linear,0.036,Degrading,ok,,"Degradation signal weak (R2=0.04), CI widened accordingly"
+CNC_062,30.0,7.0,13.0,30.0,3.033333333333333,7.0,0.225077,23.1508,48.0,0.0,0.0,linear,0.0428,Degrading,ok,,"Degradation signal weak (R2=0.04), CI widened accordingly"
+CNC_042,30.0,7.0,14.5,30.0,3.3833333333333333,7.0,0.134692,13.854,45.0,0.0,0.0,linear,0.0502,Degrading,ok,,"Degradation signal weak (R2=0.05), CI widened accordingly"
+CNC_060,30.0,7.0,18.8,30.0,4.386666666666667,7.0,0.358538,36.8782,52.4,0.0,0.0,linear,0.1358,Degrading,ok,,"Degradation signal weak (R2=0.14), CI widened accordingly"
+CNC_030,30.0,7.0,19.9,30.0,4.643333333333333,7.0,0.22284,22.9207,47.7,0.0,0.0,exponential,0.2388,Degrading,ok,,"Degradation signal weak (R2=0.24), CI widened accordingly"
+CNC_024,30.0,7.0,20.3,30.0,4.736666666666666,7.0,0.241077,24.7965,48.4,0.0,0.0,linear,0.1963,Degrading,ok,,"Degradation signal weak (R2=0.20), CI widened accordingly"
+CNC_022,30.0,7.0,12.8,30.0,2.986666666666667,7.0,0.145846,15.0013,45.0,0.0,0.0,linear,0.0433,Degrading,ok,,"Degradation signal weak (R2=0.04), CI widened accordingly"
+CNC_006,30.0,7.0,30.0,30.0,7.0,7.0,0.239154,24.5987,52.8,0.0,0.0,linear,0.3162,Degrading,ok,,
+CNC_020,30.0,7.0,8.0,30.0,1.8666666666666667,7.0,0.062615,6.4404,42.7,0.0,0.0,linear,0.008,Degrading,ok,,"Degradation signal weak (R2=0.01), CI widened accordingly"
+CNC_031,30.0,7.0,20.6,30.0,4.8066666666666675,7.0,0.119231,12.2638,47.5,0.0,0.0,linear,0.0346,Degrading,ok,,"Degradation signal weak (R2=0.03), CI widened accordingly"
+CNC_032,30.0,7.0,30.0,30.0,7.0,7.0,0.141462,14.5504,55.8,0.0,0.0,linear,0.0488,Degrading,ok,,"Degradation signal weak (R2=0.05), CI widened accordingly"
+CNC_083,30.0,7.0,29.3,30.0,6.836666666666667,7.0,0.086462,8.8932,49.5,0.0,0.0,linear,0.0206,Degrading,ok,,"Degradation signal weak (R2=0.02), CI widened accordingly"
+CNC_091,30.0,7.0,23.8,30.0,5.553333333333333,7.0,0.026077,2.6822,46.5,27.7,8.9,linear,0.0019,Degrading,ok,,"Degradation signal weak (R2=0.00), CI widened accordingly"
+CNC_100,30.0,7.0,27.9,30.0,6.51,7.0,0.150217,15.4509,52.6,0.0,0.0,linear,0.0418,Degrading,ok,,"Degradation signal weak (R2=0.04), CI widened accordingly"
+CNC_080,30.0,7.0,18.7,30.0,4.363333333333333,7.0,0.312923,32.1864,52.8,0.0,0.0,linear,0.0905,Degrading,ok,,"Degradation signal weak (R2=0.09), CI widened accordingly"
+CNC_088,30.0,7.0,30.0,30.0,7.0,7.0,0.143615,14.7718,67.7,0.0,0.0,linear,0.0448,Degrading,ok,,"Degradation signal weak (R2=0.04), CI widened accordingly"
+CNC_082,30.0,7.0,5.8,30.0,1.3533333333333333,7.0,0.083538,8.5925,42.7,0.0,0.0,linear,0.0088,Degrading,ok,,"Degradation signal weak (R2=0.01), CI widened accordingly"
+CNC_071,30.0,7.0,17.2,30.0,4.013333333333333,7.0,0.161197,16.5803,47.1,0.0,0.0,exponential,0.0831,Degrading,ok,,"Degradation signal weak (R2=0.08), CI widened accordingly"
+CNC_097,30.0,7.0,30.0,30.0,7.0,7.0,0.096615,9.9375,50.9,0.0,0.0,linear,0.028,Degrading,ok,,"Degradation signal weak (R2=0.03), CI widened accordingly"
+CNC_098,30.0,7.0,30.0,30.0,7.0,7.0,0.12692,13.0546,49.5,0.0,0.0,exponential,0.0946,Degrading,ok,,"Degradation signal weak (R2=0.09), CI widened accordingly"
+CNC_058,,,0.0,0.0,0.0,0.0,0.0,0.0,45.2,,,exponential,0.2167,Improving,no_degradation,Health score improving (slope=0.4304 > 0),Health score improving — RUL unavailable
+CNC_064,,,0.0,0.0,0.0,0.0,0.007923,0.8149,45.0,39.3,33.6,linear,0.0001,Stable,no_degradation,"No degradation signal detected (slope=-0.0079, near zero)",Health score trajectory is stable — RUL unavailable
+CNC_014,,,0.0,0.0,0.0,0.0,0.0,0.0,51.4,,,linear,0.0284,Improving,no_degradation,Health score improving (slope=0.1249 > 0),Health score improving — RUL unavailable
+CNC_010,,,0.0,0.0,0.0,0.0,0.0,0.0,48.7,,,exponential,0.4616,Improving,no_degradation,Health score improving (slope=0.7594 > 0),Health score improving — RUL unavailable
+CNC_011,,,0.0,0.0,0.0,0.0,0.0,0.0,45.0,,,linear,0.2256,Improving,no_degradation,Health score improving (slope=0.4165 > 0),Health score improving — RUL unavailable
+CNC_023,,,0.0,0.0,0.0,0.0,0.0,0.0,41.2,,,linear,0.0182,Improving,no_degradation,Health score improving (slope=0.1168 > 0),Health score improving — RUL unavailable
+CNC_021,,,0.0,0.0,0.0,0.0,0.0,0.0,72.6,,,exponential,0.6874,Improving,no_degradation,Health score improving (slope=0.8057 > 0),Health score improving — RUL unavailable
+CNC_018,,,0.0,0.0,0.0,0.0,0.0,0.0,52.5,,,linear,0.5544,Improving,no_degradation,Health score improving (slope=0.5610 > 0),Health score improving — RUL unavailable
+CNC_029,,,0.0,0.0,0.0,0.0,0.0,0.0,61.8,,,linear,0.015,Improving,no_degradation,Health score improving (slope=0.0682 > 0),Health score improving — RUL unavailable
+CNC_015,,,0.0,0.0,0.0,0.0,0.0,0.0,61.1,,,linear,0.0506,Improving,no_degradation,Health score improving (slope=0.1654 > 0),Health score improving — RUL unavailable
+CNC_004,,,0.0,0.0,0.0,0.0,0.0,0.0,52.7,,,exponential,0.2833,Improving,no_degradation,Health score improving (slope=0.4380 > 0),Health score improving — RUL unavailable
+CNC_050,,,0.0,0.0,0.0,0.0,0.0,0.0,63.1,,,linear,0.2694,Improving,no_degradation,Health score improving (slope=0.4738 > 0),Health score improving — RUL unavailable
+CNC_055,,,0.0,0.0,0.0,0.0,0.0,0.0,39.6,,,linear,0.0,Stable,no_degradation,"No degradation signal detected (slope=0.0054, near zero)",Health score trajectory is stable — RUL unavailable
+CNC_039,,,0.0,0.0,0.0,0.0,0.0,0.0,46.0,,,exponential,0.1755,Improving,no_degradation,Health score improving (slope=0.3384 > 0),Health score improving — RUL unavailable
+CNC_038,,,0.0,0.0,0.0,0.0,0.0,0.0,58.0,,,exponential,0.0553,Improving,no_degradation,Health score improving (slope=0.0993 > 0),Health score improving — RUL unavailable
+CNC_046,,,0.0,0.0,0.0,0.0,0.0,0.0,42.1,,,linear,0.0473,Improving,no_degradation,Health score improving (slope=0.1404 > 0),Health score improving — RUL unavailable
+CNC_045,,,0.0,0.0,0.0,0.0,0.0,0.0,47.0,,,linear,0.021,Improving,no_degradation,Health score improving (slope=0.1183 > 0),Health score improving — RUL unavailable
+CNC_033,,,0.0,0.0,0.0,0.0,0.0,0.0,40.9,,,exponential,0.1654,Improving,no_degradation,Health score improving (slope=0.2547 > 0),Health score improving — RUL unavailable
+CNC_079,,,0.0,0.0,0.0,0.0,0.0,0.0,53.4,,,linear,0.1314,Improving,no_degradation,Health score improving (slope=0.1849 > 0),Health score improving — RUL unavailable
+CNC_075,,,0.0,0.0,0.0,0.0,0.0,0.0,52.1,,,exponential,0.5114,Improving,no_degradation,Health score improving (slope=0.6103 > 0),Health score improving — RUL unavailable
+CNC_085,,,0.0,0.0,0.0,0.0,0.0,0.0,54.7,,,linear,0.0147,Improving,no_degradation,Health score improving (slope=0.0678 > 0),Health score improving — RUL unavailable
+CNC_087,,,0.0,0.0,0.0,0.0,0.009385,0.9653,43.4,36.6,29.9,linear,0.0006,Stable,no_degradation,"No degradation signal detected (slope=-0.0094, near zero)",Health score trajectory is stable — RUL unavailable
+CNC_077,,,0.0,0.0,0.0,0.0,0.0,0.0,52.9,,,linear,0.0304,Improving,no_degradation,Health score improving (slope=0.0996 > 0),Health score improving — RUL unavailable
+CNC_070,,,0.0,0.0,0.0,0.0,0.0,0.0,46.5,,,linear,0.1881,Improving,no_degradation,Health score improving (slope=0.3897 > 0),Health score improving — RUL unavailable
+CNC_076,,,0.0,0.0,0.0,0.0,0.0,0.0,52.5,,,linear,0.0446,Improving,no_degradation,Health score improving (slope=0.1304 > 0),Health score improving — RUL unavailable
+CNC_095,,,0.0,0.0,0.0,0.0,0.0,0.0,47.3,,,linear,0.242,Improving,no_degradation,Health score improving (slope=0.1952 > 0),Health score improving — RUL unavailable
+CNC_094,,,0.0,0.0,0.0,0.0,0.0,0.0,47.0,,,linear,0.0004,Improving,no_degradation,Health score improving (slope=0.0133 > 0),Health score improving — RUL unavailable
+CNC_090,,,0.0,0.0,0.0,0.0,0.0,0.0,53.5,,,linear,0.0055,Improving,no_degradation,Health score improving (slope=0.0303 > 0),Health score improving — RUL unavailable
+CNC_099,,,0.0,0.0,0.0,0.0,0.0,0.0,64.9,,,linear,0.2799,Improving,no_degradation,Health score improving (slope=0.5028 > 0),Health score improving — RUL unavailable

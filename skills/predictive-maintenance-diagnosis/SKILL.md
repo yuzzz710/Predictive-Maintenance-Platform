@@ -26,8 +26,24 @@ what the current sensor suite can and cannot detect.
 scripts/
 ├── maintenance_decision_engine.py  # Diagnostic rules (diagnose method)
 ├── predictability_analysis.py      # 5-dimension root cause analysis
+├── shap_explainer.py               # RiskDecomposer + StatLayerSHAP
+├── local_explainer.py              # Industrial explanation text + root cause categories
+├── shap_visualizer.py              # Dashboard JSON export + work order merge
+├── shap_postprocess.py             # Post-process entry point (called by orchestrator)
 └── run.py                          # Entry point
 ```
+
+## SHAP-Based Alert Attribution (New)
+
+After the decision engine generates work orders, the SHAP post-process layer:
+1. Decomposes each machine's `final_risk_score` into stat/cost/trend/ML contributions
+2. Applies TreeSHAP to the statistical anomaly sub-layer for per-parameter attribution
+3. Maps mathematical features to industrial root cause categories (electrical/thermal/mechanical/maintenance/process_quality)
+4. Generates natural-language Chinese explanations for each alert
+5. Exports `shap_dashboard.json` for the web dashboard
+6. Merges SHAP columns into `industrial_maintenance_plan.csv`
+
+The orchestrator triggers this via `--shap` flag. Not a standalone skill — it runs as a direct Python import after decision completes.
 
 ## Prerequisites
 

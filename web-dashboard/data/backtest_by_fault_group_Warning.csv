@@ -1,0 +1,4 @@
+fault_group,fault_types,total_events,detected_events,missed_events_count,avg_lead_time_steps,avg_lead_time_minutes,median_lead_time_minutes,miss_rate,detection_rate,alert_threshold
+High-Voltage,"[4, 5]",164,47,117,3.06,42.9,42.0,0.7134,0.2866,Warning
+Thermal,"[3, 6, 7, 8, 9]",184,61,123,2.61,36.5,42.0,0.6685,0.3315,Warning
+Subtle,"[1, 2]",164,47,117,2.77,38.7,42.0,0.7134,0.2866,Warning

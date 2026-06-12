@@ -1,0 +1,159 @@
+{
+  "catalog": [
+    {
+      "fault_type": "thermal_buildup",
+      "parts": [
+        {
+          "name": "cooling_fan_assembly",
+          "part_number": "CF-200-01",
+          "unit_cost": 180.0,
+          "lead_time_days": 2,
+          "replacement_priority": 1,
+          "quantity_per_machine": 1
+        },
+        {
+          "name": "thermal_paste",
+          "part_number": "TP-50G",
+          "unit_cost": 25.0,
+          "lead_time_days": 1,
+          "replacement_priority": 2,
+          "quantity_per_machine": 1
+        },
+        {
+          "name": "temperature_sensor_pt100",
+          "part_number": "TS-PT100",
+          "unit_cost": 95.0,
+          "lead_time_days": 3,
+          "replacement_priority": 3,
+          "quantity_per_machine": 1
+        },
+        {
+          "name": "heat_sink_assembly",
+          "part_number": "HS-300",
+          "unit_cost": 320.0,
+          "lead_time_days": 5,
+          "replacement_priority": 4,
+          "quantity_per_machine": 1
+        }
+      ]
+    },
+    {
+      "fault_type": "voltage_drift",
+      "parts": [
+        {
+          "name": "power_supply_module",
+          "part_number": "PSM-24V-500W",
+          "unit_cost": 450.0,
+          "lead_time_days": 3,
+          "replacement_priority": 1,
+          "quantity_per_machine": 1
+        },
+        {
+          "name": "voltage_regulator_ic",
+          "part_number": "VR-LM317",
+          "unit_cost": 12.0,
+          "lead_time_days": 1,
+          "replacement_priority": 2,
+          "quantity_per_machine": 2
+        },
+        {
+          "name": "capacitor_bank",
+          "part_number": "CAP-4700UF-63V",
+          "unit_cost": 65.0,
+          "lead_time_days": 2,
+          "replacement_priority": 3,
+          "quantity_per_machine": 1
+        }
+      ]
+    },
+    {
+      "fault_type": "power_anomaly",
+      "parts": [
+        {
+          "name": "motor_driver_module",
+          "part_number": "MD-750W-V3",
+          "unit_cost": 680.0,
+          "lead_time_days": 5,
+          "replacement_priority": 1,
+          "quantity_per_machine": 1
+        },
+        {
+          "name": "current_sensor_hall",
+          "part_number": "CS-H50A",
+          "unit_cost": 75.0,
+          "lead_time_days": 2,
+          "replacement_priority": 2,
+          "quantity_per_machine": 1
+        },
+        {
+          "name": "power_cable_set",
+          "part_number": "PC-3P-4MM",
+          "unit_cost": 40.0,
+          "lead_time_days": 1,
+          "replacement_priority": 3,
+          "quantity_per_machine": 1
+        }
+      ]
+    },
+    {
+      "fault_type": "combined_degradation",
+      "parts": [
+        {
+          "name": "rotor_assembly",
+          "part_number": "RA-CNC-100",
+          "unit_cost": 2800.0,
+          "lead_time_days": 7,
+          "replacement_priority": 1,
+          "quantity_per_machine": 1
+        },
+        {
+          "name": "bearing_kit",
+          "part_number": "BK-6205-2RS",
+          "unit_cost": 85.0,
+          "lead_time_days": 2,
+          "replacement_priority": 2,
+          "quantity_per_machine": 2
+        },
+        {
+          "name": "seal_kit",
+          "part_number": "SK-CNC-STD",
+          "unit_cost": 45.0,
+          "lead_time_days": 1,
+          "replacement_priority": 3,
+          "quantity_per_machine": 1
+        },
+        {
+          "name": "lubrication_kit",
+          "part_number": "LK-SYNTH-1L",
+          "unit_cost": 30.0,
+          "lead_time_days": 1,
+          "replacement_priority": 4,
+          "quantity_per_machine": 1
+        }
+      ]
+    }
+  ],
+  "common_parts": [
+    {
+      "name": "o-ring_set",
+      "part_number": "OR-CNC-STD",
+      "unit_cost": 8.0,
+      "lead_time_days": 1,
+      "quantity_per_machine": 1
+    },
+    {
+      "name": "fastener_kit",
+      "part_number": "FK-M6-M10",
+      "unit_cost": 15.0,
+      "lead_time_days": 1,
+      "quantity_per_machine": 1
+    },
+    {
+      "name": "cleaning_kit",
+      "part_number": "CK-IND",
+      "unit_cost": 22.0,
+      "lead_time_days": 1,
+      "quantity_per_machine": 1
+    }
+  ]
+}

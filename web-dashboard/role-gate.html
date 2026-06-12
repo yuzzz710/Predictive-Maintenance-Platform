@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工业智能运维平台 — 角色选择</title>
+<script src="/shared/theme-init.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   DESIGN TOKENS — Industrial Control Room
+   ═══════════════════════════════════════════════════════════════════ */
+:root {
+  --bg-root: #060a10;
+  --bg-card: #0d131f;
+  --bg-card-alt: #111827;
+  --border: #1a2332;
+  --border-accent: #243044;
+  --text-primary: #e8ecf2;
+  --text-secondary: #8899b4;
+  --text-muted: #4e5d73;
+  --cyan: #00c9a0;
+  --amber: #f0a030;
+  --purple: #a371f7;
+  --cyan-dim: rgba(0, 201, 160, 0.08);
+  --amber-dim: rgba(240, 160, 48, 0.08);
+  --purple-dim: rgba(163, 113, 247, 0.08);
+  --font-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', 'Source Code Pro', monospace;
+  --font-sans: 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', 'Segoe UI', system-ui, sans-serif;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LIGHT THEME — Clean Industrial
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="light"] {
+  --bg-root: #f4f6f9;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-alt: #f0f2f5;
+  --bg-input: #ffffff;
+  --border: #dde1e7;
+  --border-light: #e4e8ef;
+  --border-accent: #c4cdd9;
+  --text-primary: #1a1d26;
+  --text-secondary: #4a5568;
+  --text-muted: #7a8498;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.10);
+}
+[data-theme="light"] body::before {
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.006) 2px, rgba(0,0,0,0.006) 4px),
+    radial-gradient(ellipse at 20% 0%, rgba(0,156,130,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(200,130,30,0.04) 0%, transparent 50%);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-root);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Atmospheric Background ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    /* Subtle grid */
+    repeating-linear-gradient(
+      0deg, transparent, transparent 2px, rgba(255,255,255,0.008) 2px, rgba(255,255,255,0.008) 4px
+    ),
+    repeating-linear-gradient(
+      90deg, transparent, transparent 2px, rgba(255,255,255,0.008) 2px, rgba(255,255,255,0.008) 4px
+    ),
+    /* Ambient glows */
+    radial-gradient(ellipse 600px 400px at 15% 20%, rgba(0,201,160,0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 500px 350px at 85% 80%, rgba(240,160,48,0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 400px 300px at 50% 50%, rgba(163,113,247,0.03) 0%, transparent 70%);
+}
+
+/* ── Scanline overlay (subtle CRT feel) ── */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 3px, rgba(0,0,0,0.015) 3px, rgba(0,0,0,0.015) 4px
+  );
+  opacity: 0.4;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Main Container
+   ═══════════════════════════════════════════════════════════════════ */
+.gate-container {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 1100px;
+  padding: 40px 32px 48px;
+}
+
+/* ── Header ── */
+.gate-header {
+  text-align: center; margin-bottom: 48px;
+}
+
+.gate-brand {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.gate-brand-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 10px rgba(0,201,160,0.5), 0 0 24px rgba(0,201,160,0.15);
+  animation: brandPulse 3s ease-in-out infinite;
+}
+@keyframes brandPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(0,201,160,0.5), 0 0 24px rgba(0,201,160,0.15); }
+  50% { box-shadow: 0 0 16px rgba(0,201,160,0.7), 0 0 36px rgba(0,201,160,0.25); }
+}
+
+.gate-title {
+  font-size: 28px; font-weight: 700; letter-spacing: 1px;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.gate-subtitle {
+  font-size: 14px; color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+/* ── Divider ── */
+.gate-divider {
+  width: 60px; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--border-accent), transparent);
+  margin: 0 auto 48px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Role Cards Grid
+   ═══════════════════════════════════════════════════════════════════ */
+.role-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-width: 1000px; margin: 0 auto;
+}
+
+/* ── Card Base ── */
+.role-card {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 36px 28px 32px;
+  cursor: pointer;
+  transition: transform 0.35s var(--ease-out-expo),
+              border-color 0.35s var(--ease-out-expo),
+              box-shadow 0.35s var(--ease-out-expo);
+  text-align: center;
+  overflow: hidden;
+  /* Staggered entrance */
+  opacity: 0;
+  animation: cardEnter 0.7s var(--ease-out-back) forwards;
+}
+.role-card:nth-child(1) { animation-delay: 0.05s; }
+.role-card:nth-child(2) { animation-delay: 0.15s; }
+.role-card:nth-child(3) { animation-delay: 0.25s; }
+
+@keyframes cardEnter {
+  from { opacity: 0; transform: translateY(32px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Card hover lift ── */
+.role-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+}
+.role-card:active {
+  transform: translateY(-2px) scale(0.985);
+  transition: transform 0.1s ease;
+}
+
+/* ── Card top accent line ── */
+.role-card::before {
+  content: '';
+  position: absolute; top: 0; left: 24px; right: 24px;
+  height: 2px; border-radius: 0 0 2px 2px;
+  transition: left 0.35s var(--ease-out-expo), right 0.35s var(--ease-out-expo);
+}
+.role-card:hover::before {
+  left: 0; right: 0;
+}
+
+/* ── Card inner glow on hover ── */
+.role-card::after {
+  content: '';
+  position: absolute; inset: 0; border-radius: 12px;
+  opacity: 0; transition: opacity 0.4s ease;
+  pointer-events: none; z-index: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Card Variants — Operator (Cyan)
+   ═══════════════════════════════════════════════════════════════════ */
+.role-card.card-operator { --accent: var(--cyan); --accent-dim: var(--cyan-dim); }
+.role-card.card-operator::before { background: var(--cyan); }
+.role-card.card-operator::after {
+  background: radial-gradient(ellipse at 50% 0%, rgba(0,201,160,0.06) 0%, transparent 70%);
+}
+.role-card.card-operator:hover {
+  border-color: rgba(0,201,160,0.35);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 40px rgba(0,201,160,0.08);
+}
+.role-card.card-operator:hover::after { opacity: 1; }
+
+/* ── Manager (Amber) ── */
+.role-card.card-manager { --accent: var(--amber); --accent-dim: var(--amber-dim); }
+.role-card.card-manager::before { background: var(--amber); }
+.role-card.card-manager::after {
+  background: radial-gradient(ellipse at 50% 0%, rgba(240,160,48,0.06) 0%, transparent 70%);
+}
+.role-card.card-manager:hover {
+  border-color: rgba(240,160,48,0.35);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 40px rgba(240,160,48,0.08);
+}
+.role-card.card-manager:hover::after { opacity: 1; }
+
+/* ── Developer (Purple) ── */
+.role-card.card-developer { --accent: var(--purple); --accent-dim: var(--purple-dim); }
+.role-card.card-developer::before { background: var(--purple); }
+.role-card.card-developer::after {
+  background: radial-gradient(ellipse at 50% 0%, rgba(163,113,247,0.06) 0%, transparent 70%);
+}
+.role-card.card-developer:hover {
+  border-color: rgba(163,113,247,0.35);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 40px rgba(163,113,247,0.08);
+}
+.role-card.card-developer:hover::after { opacity: 1; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   Card Content
+   ═══════════════════════════════════════════════════════════════════ */
+/* Icon wrapper */
+.card-icon-wrap {
+  position: relative; z-index: 1;
+  width: 64px; height: 64px; margin: 0 auto 20px;
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  background: var(--accent-dim);
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  transition: transform 0.35s var(--ease-out-expo),
+              box-shadow 0.35s var(--ease-out-expo);
+}
+.role-card:hover .card-icon-wrap {
+  transform: scale(1.08);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+/* Title */
+.card-title {
+  position: relative; z-index: 1;
+  font-size: 18px; font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+.card-role-sub {
+  position: relative; z-index: 1;
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 600; letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+/* Feature list */
+.card-features {
+  position: relative; z-index: 1;
+  list-style: none; text-align: left;
+  padding: 0 4px; margin-bottom: 24px;
+}
+.card-features li {
+  font-size: 13px; color: var(--text-secondary);
+  padding: 5px 0; padding-left: 18px;
+  position: relative;
+  line-height: 1.5;
+}
+.card-features li::before {
+  content: '';
+  position: absolute; left: 0; top: 11px;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.6;
+}
+
+/* CTA button */
+.card-cta {
+  position: relative; z-index: 1;
+  display: inline-block;
+  padding: 10px 28px; border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+  transition: all 0.3s ease;
+}
+.role-card:hover .card-cta {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Footer hint
+   ═══════════════════════════════════════════════════════════════════ */
+.gate-footer {
+  text-align: center; margin-top: 44px;
+  font-size: 12px; color: var(--text-muted);
+  letter-spacing: 0.3px;
+}
+.gate-footer span {
+  color: var(--text-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Responsive
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 860px) {
+  .role-cards {
+    grid-template-columns: 1fr;
+    max-width: 400px; gap: 16px;
+  }
+  .gate-title { font-size: 22px; }
+  .gate-container { padding: 28px 20px 36px; }
+  .role-card { padding: 28px 24px 24px; }
+}
+@media (max-width: 480px) {
+  .gate-title { font-size: 19px; }
+  .gate-container { padding: 20px 14px 28px; }
+  .role-card { padding: 24px 18px 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="gate-container">
+  <!-- Header -->
+  <div class="gate-header">
+    <div class="gate-brand">
+      <span class="gate-brand-dot"></span>
+      Industrial Intelligent O&amp;M
+    </div>
+    <h1 class="gate-title">工业智能运维平台</h1>
+    <p class="gate-subtitle">请选择您的角色，进入专属工作视图 &mdash; 同一系统，不同视角</p>
+  </div>
+
+  <div class="gate-divider"></div>
+
+  <!-- Role Cards -->
+  <div class="role-cards">
+
+    <!-- Operator -->
+    <div class="role-card card-operator" onclick="selectRole('operator')">
+      <div class="card-icon-wrap">&#9881;</div>
+      <div class="card-title">运维工程师</div>
+      <div class="card-role-sub">Operator &middot; 执行层</div>
+      <ul class="card-features">
+        <li>设备健康状态实时监控</li>
+        <li>异常告警优先级排序</li>
+        <li>故障根因归因分析</li>
+        <li>维护工单生成与执行跟踪</li>
+      </ul>
+      <span class="card-cta">进入运维视图 &rarr;</span>
+    </div>
+
+    <!-- Manager -->
+    <div class="role-card card-manager" onclick="selectRole('manager')">
+      <div class="card-icon-wrap">&#128202;</div>
+      <div class="card-title">生产管理负责人</div>
+      <div class="card-role-sub">Manager &middot; 决策层</div>
+      <ul class="card-features">
+        <li>运维业务关键指标总览</li>
+        <li>成本效益分析与预算管控</li>
+        <li>三种维护策略对比选择</li>
+        <li>传感器升级投资 ROI 分析</li>
+      </ul>
+      <span class="card-cta">进入管理视图 &rarr;</span>
+    </div>
+
+    <!-- Developer -->
+    <div class="role-card card-developer" onclick="selectRole('developer')">
+      <div class="card-icon-wrap">&#128295;</div>
+      <div class="card-title">平台开发人员</div>
+      <div class="card-role-sub">Developer &middot; 全量视图</div>
+      <ul class="card-features">
+        <li>完整数据探索与技术分析</li>
+        <li>预测模型评估与对比</li>
+        <li>系统架构与 Pipeline 文档</li>
+        <li>全部页面与技术细节可见</li>
+      </ul>
+      <span class="card-cta">进入全量视图 &rarr;</span>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <p class="gate-footer">
+    &#128161; 提示：您可以在任意页面的顶部导航栏<span>切换角色</span>，无需重新选择
+  </p>
+</div>
+
+<script>
+/**
+ * Select a role and navigate to the intended destination.
+ * Reads ?redirect= param from URL to go back to the page the user originally requested.
+ */
+function selectRole(role) {
+  sessionStorage.setItem('user_role', role);
+
+  // Parse redirect target from URL
+  var params = new URLSearchParams(window.location.search);
+  var redirect = params.get('redirect');
+  var target = '/';
+
+  if (redirect) {
+    try {
+      target = decodeURIComponent(redirect);
+      // Safety: only allow relative paths
+      if (!target.startsWith('/')) { target = '/'; }
+    } catch (e) {
+      target = '/';
+    }
+  }
+
+  // If target is root, send operator/manager to their default views
+  // developer sees the home grid (current behavior)
+  if (target === '/') {
+    if (role === 'manager') {
+      target = '/dashboard';
+    }
+    // operator and developer stay on / (home.html)
+  }
+
+  window.location.href = target;
+}
+</script>
+
+</body>
+</html>

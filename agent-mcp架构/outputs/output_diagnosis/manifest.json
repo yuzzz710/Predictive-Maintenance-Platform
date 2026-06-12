@@ -1,0 +1,14 @@
+{
+  "data_dir": "C:\\Users\\yuzzz\\Desktop\\\u82d7\u5703\u676f\\\u534a\u51b3\u8d5bv1\\\u539f\u59cb\u6570\u636e\u96c6",
+  "prep_dir": "C:\\Users\\yuzzz\\Desktop\\\u82d7\u5703\u676f\\\u534a\u51b3\u8d5bv1\\agent-mcp\u67b6\u6784\\outputs\\output_data_prep",
+  "output_dir": "C:\\Users\\yuzzz\\Desktop\\\u82d7\u5703\u676f\\\u534a\u51b3\u8d5bv1\\agent-mcp\u67b6\u6784\\outputs\\output_diagnosis",
+  "files": {
+    "diagnosis_report": "diagnosis_report.csv"
+  },
+  "pattern_distribution": {
+    "normal": 78,
+    "combined_degradation": 10,
+    "thermal_buildup": 10,
+    "power_anomaly": 2
+  }
+}

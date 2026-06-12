@@ -1,0 +1,9 @@
+{
+  "mode": "STAT_ONLY",
+  "label": "统计降级模式 (统计+规则)",
+  "components": {
+    "ml_available": false,
+    "stat_available": true,
+    "rule_available": true
+  }
+}

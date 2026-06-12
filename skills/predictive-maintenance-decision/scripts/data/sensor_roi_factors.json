@@ -1,0 +1,46 @@
+{
+  "model": "Probabilistic Industrial ROI Model v2.0",
+  "description": "Multi-factor, three-scenario ROI estimation for sensor upgrade planning. Replaces the deterministic single-point ROI model with risk-adjusted ranges.",
+
+  "scenarios": {
+    "conservative": {
+      "label": "Conservative",
+      "description": "Low deployment maturity, slow team adoption, minimal maintenance quality improvement. Typical of organizations with limited digitalization experience."
+    },
+    "expected": {
+      "label": "Expected",
+      "description": "Standard industrial deployment, moderate operator adoption, good maintenance practices. Typical of organizations with some condition-monitoring experience."
+    },
+    "optimistic": {
+      "label": "Optimistic",
+      "description": "Excellent deployment execution, full team buy-in, best-practice maintenance culture. Typical of digitally-mature organizations with strong CBM programs."
+    }
+  },
+
+  "reduction_factors": {
+    "deployment_factor": {
+      "description": "Real-world deployment maturity discount. Theoretical sensor coverage is never 100% achieved due to: installation variability, sensor placement compromises, environmental noise, calibration drift, data acquisition gaps.",
+      "conservative": 0.70,
+      "expected": 0.85,
+      "optimistic": 0.95
+    },
+    "adoption_factor": {
+      "description": "Personnel execution rate. New alerts and insights are only effective if operators and maintenance teams act on them consistently and correctly. Accounts for: training gaps, alert fatigue, workflow integration friction, shift-handover discontinuity.",
+      "conservative": 0.60,
+      "expected": 0.80,
+      "optimistic": 0.90
+    },
+    "maintenance_quality_factor": {
+      "description": "Ongoing operational quality. Sensor health, data pipeline uptime, calibration schedule adherence, response protocol compliance, spare parts availability.",
+      "conservative": 0.70,
+      "expected": 0.85,
+      "optimistic": 0.95
+    }
+  },
+
+  "effective_multiplier_formula": "effective_reduction_pct = theoretical_failure_reduction_pct × deployment_factor × adoption_factor × maintenance_quality_factor",
+
+  "roi_formula": "roi_5yr = ((annual_saving × 5) - total_investment) / total_investment × 100",
+
+  "disclaimer": "ROI values are engineering estimation ranges, not guaranteed financial outcomes. Actual results depend on deployment quality, maintenance execution, operational maturity, and market conditions. Use for CAPEX planning and phase sequencing, not for P&L booking. Variance between conservative and optimistic scenarios can exceed ±50%."
+}

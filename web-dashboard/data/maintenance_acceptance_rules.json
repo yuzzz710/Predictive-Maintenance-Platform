@@ -1,0 +1,123 @@
+{
+  "rules": [
+    {
+      "fault_type": "thermal_buildup",
+      "acceptance_criteria": [
+        {
+          "id": "TH-01",
+          "description": "温度恢复至正常运行区间",
+          "metric": "Op.Temperature",
+          "condition": "30分钟滚动平均值落在设备基线 [μ-1σ, μ+1σ] 范围内",
+          "threshold": "z_score < 1.5 持续30分钟",
+          "measurement_method": "PT100传感器连续温度监测",
+          "verification_duration_minutes": 30
+        },
+        {
+          "id": "TH-02",
+          "description": "冷却系统功能测试通过",
+          "metric": "Cooling efficiency (ΔT under load)",
+          "condition": "满载运行10分钟，ΔT ≤ 15°C",
+          "threshold": "ΔT ≤ 15°C",
+          "measurement_method": "维修前后热成像仪扫描对比"
+        },
+        {
+          "id": "TH-03",
+          "description": "维修后无异常温升趋势",
+          "metric": "temp_trend_slope",
+          "condition": "维修后连续10个数据点的温度趋势斜率 < 0.05",
+          "threshold": "|斜率| < 0.05（连续10个观测点）",
+          "measurement_method": "维修后24小时趋势分析"
+        }
+      ]
+    },
+    {
+      "fault_type": "voltage_drift",
+      "acceptance_criteria": [
+        {
+          "id": "VD-01",
+          "description": "电压稳定在规格范围内",
+          "metric": "Op.Voltage",
+          "condition": "电压在 [V_nominal-5%, V_nominal+5%] 范围内持续20分钟",
+          "threshold": "|ΔV/V_nominal| < 5% 持续20分钟",
+          "measurement_method": "数字万用表 + SCADA日志记录"
+        },
+        {
+          "id": "VD-02",
+          "description": "电压波动率降低20%以上",
+          "metric": "voltage_CV",
+          "condition": "维修后CV ≤ 维修前CV × 0.8",
+          "threshold": "CV降低幅度 ≥ 20%",
+          "measurement_method": "维修后30分钟CV计算"
+        }
+      ]
+    },
+    {
+      "fault_type": "power_anomaly",
+      "acceptance_criteria": [
+        {
+          "id": "PA-01",
+          "description": "电流稳定在规格范围内",
+          "metric": "Op.Amperage",
+          "condition": "电流在 [I_nominal-10%, I_nominal+10%] 范围内",
+          "threshold": "|ΔI/I_nominal| < 10% 持续15分钟",
+          "measurement_method": "钳形表 + SCADA"
+        },
+        {
+          "id": "PA-02",
+          "description": "电机驱动器输出波形纯净",
+          "metric": "Current THD",
+          "condition": "电机驱动器输出端THD < 5%",
+          "threshold": "THD < 5%",
+          "measurement_method": "示波器测量驱动器输出端子"
+        }
+      ]
+    },
+    {
+      "fault_type": "combined_degradation",
+      "acceptance_criteria": [
+        {
+          "id": "CD-01",
+          "description": "全部参数恢复至基线水平",
+          "metric": "z_composite",
+          "condition": "4项参数综合z-score < 2.0 持续1小时",
+          "threshold": "z_composite < 2.0 持续60分钟",
+          "measurement_method": "4通道传感器同步监测"
+        },
+        {
+          "id": "CD-02",
+          "description": "转子转速稳定性恢复",
+          "metric": "Op.Rotor Speed",
+          "condition": "30分钟内RPM方差 < 额定值1%",
+          "threshold": "CV(RPM) < 1% 持续30分钟",
+          "measurement_method": "转速表 + SCADA"
+        },
+        {
+          "id": "CD-03",
+          "description": "振动基线已建立",
+          "metric": "Vibration RMS",
+          "condition": "振动RMS在可接受范围内（需安装振动传感器）",
+          "threshold": "振动RMS ≤ 2.0 mm/s（ISO 10816-3 A区）",
+          "measurement_method": "便携式振动分析仪（临时，待永久传感器安装）"
+        }
+      ]
+    }
+  ],
+  "universal_criteria": [
+    {
+      "id": "UC-01",
+      "description": "维修后24小时内无告警复现",
+      "metric": "All",
+      "condition": "维修完成后24小时内alert_level无变化",
+      "threshold": "维修后alert_level = NORMAL 持续24小时",
+      "measurement_method": "SCADA连续监测"
+    },
+    {
+      "id": "UC-02",
+      "description": "生产质量抽样合格",
+      "metric": "FAILED_TESTS",
+      "condition": "首件合格率 ≥ 基线水平",
+      "threshold": "FAILED_TESTS / 总检测数 < 维修前周均值",
+      "measurement_method": "质检抽样检查"
+    }
+  ]
+}

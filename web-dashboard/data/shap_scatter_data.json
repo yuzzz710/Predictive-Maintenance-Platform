@@ -1,0 +1,3552 @@
+{
+  "meta": {
+    "total_machines": 100,
+    "features": [
+      {
+        "feature_id": "cost_at_risk",
+        "display_name": "成本风险",
+        "unit": "$k/天",
+        "description": "设备故障将造成的每日经济损失预估"
+      },
+      {
+        "feature_id": "ml_fault_density",
+        "display_name": "ML故障密度",
+        "unit": "%",
+        "description": "机器学习模型预测的故障发生密度（百分比）"
+      },
+      {
+        "feature_id": "hotelling_t2",
+        "display_name": "多参数联合异常(T²)",
+        "unit": "σ",
+        "description": "Hotelling T² 多变量统计量，综合评估多参数联合偏离程度"
+      },
+      {
+        "feature_id": "voltage_trend",
+        "display_name": "电压不稳定性",
+        "unit": "%",
+        "description": "电压相对于设备基线的波动幅度"
+      },
+      {
+        "feature_id": "temp_trend",
+        "display_name": "温度变化趋势",
+        "unit": "斜率",
+        "description": "温度随时间的线性变化速率（正值=持续升温）"
+      },
+      {
+        "feature_id": "z_temperature",
+        "display_name": "温度异常(Z-score)",
+        "unit": "σ",
+        "description": "当前温度偏离设备正常基线的标准差倍数"
+      },
+      {
+        "feature_id": "amperage_trend",
+        "display_name": "电流变化趋势",
+        "unit": "Z/天",
+        "description": "电流 Z-Score 随时间的线性变化斜率（正值=持续恶化）"
+      }
+    ],
+    "generated_at": "2026-06-04T16:20:09.003907"
+  },
+  "machines": {
+    "CNC_001": {
+      "health_score": 39.6,
+      "health_level": "Critical",
+      "risk_score": 0.6234,
+      "features": {
+        "cost_at_risk": {
+          "value": 2862.0,
+          "contribution": 0.0596
+        },
+        "ml_fault_density": {
+          "value": 66.67,
+          "contribution": 0.1667
+        },
+        "hotelling_t2": {
+          "value": 1.7122,
+          "contribution": 0.0743
+        },
+        "voltage_trend": {
+          "value": 60.8,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 0.9905,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 1.2123,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0787,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_002": {
+      "health_score": 37.7,
+      "health_level": "Critical",
+      "risk_score": 0.5394,
+      "features": {
+        "cost_at_risk": {
+          "value": 2794.0,
+          "contribution": 0.0582
+        },
+        "ml_fault_density": {
+          "value": 66.67,
+          "contribution": 0.1667
+        },
+        "hotelling_t2": {
+          "value": 2.9232,
+          "contribution": 0.0536
+        },
+        "voltage_trend": {
+          "value": 38.3,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -2.263,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.7382,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0847,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_003": {
+      "health_score": 55.7,
+      "health_level": "Degrading",
+      "risk_score": 0.5589,
+      "features": {
+        "cost_at_risk": {
+          "value": 3402.0,
+          "contribution": 0.0709
+        },
+        "ml_fault_density": {
+          "value": 90.0,
+          "contribution": 0.225
+        },
+        "hotelling_t2": {
+          "value": 2.0296,
+          "contribution": 0.05
+        },
+        "voltage_trend": {
+          "value": 70.4,
+          "contribution": 0.0
+        },
+        "temp_trend": {
+          "value": -0.0253,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.1328,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0355,
+          "contribution": 0.025
+        }
+      }
+    },
+    "CNC_004": {
+      "health_score": 46.1,
+      "health_level": "Degrading",
+      "risk_score": 0.4994,
+      "features": {
+        "cost_at_risk": {
+          "value": 3788.0,
+          "contribution": 0.1157
+        },
+        "ml_fault_density": {
+          "value": 66.67,
+          "contribution": 0.1667
+        },
+        "hotelling_t2": {
+          "value": 1.7335,
+          "contribution": 0.0293
+        },
+        "voltage_trend": {
+          "value": 65.5,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 0.6674,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 1.3858,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0306,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_005": {
+      "health_score": 32.3,
+      "health_level": "Critical",
+      "risk_score": 0.8009,
+      "features": {
+        "cost_at_risk": {
+          "value": 3609.67,
+          "contribution": 0.1009
+        },
+        "ml_fault_density": {
+          "value": 86.67,
+          "contribution": 0.2167
+        },
+        "hotelling_t2": {
+          "value": 3.1792,
+          "contribution": 0.0958
+        },
+        "voltage_trend": {
+          "value": 49.3,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 4.9131,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 2.9057,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.1286,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_006": {
+      "health_score": 46.2,
+      "health_level": "Degrading",
+      "risk_score": 0.4898,
+      "features": {
+        "cost_at_risk": {
+          "value": 2196.0,
+          "contribution": 0.0458
+        },
+        "ml_fault_density": {
+          "value": 66.67,
+          "contribution": 0.1667
+        },
+        "hotelling_t2": {
+          "value": 1.804,
+          "contribution": 0.0443
+        },
+        "voltage_trend": {
+          "value": 69.6,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -3.129,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.2521,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0933,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_007": {
+      "health_score": 39.6,
+      "health_level": "Critical",
+      "risk_score": 0.5447,
+      "features": {
+        "cost_at_risk": {
+          "value": 3396.33,
+          "contribution": 0.0708
+        },
+        "ml_fault_density": {
+          "value": 76.67,
+          "contribution": 0.1917
+        },
+        "hotelling_t2": {
+          "value": 2.2261,
+          "contribution": 0.0456
+        },
+        "voltage_trend": {
+          "value": 50.4,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 0.9144,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.985,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.063,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_008": {
+      "health_score": 49.7,
+      "health_level": "Degrading",
+      "risk_score": 0.5316,
+      "features": {
+        "cost_at_risk": {
+          "value": 2530.0,
+          "contribution": 0.0527
+        },
+        "ml_fault_density": {
+          "value": 83.33,
+          "contribution": 0.2083
+        },
+        "hotelling_t2": {
+          "value": 1.7727,
+          "contribution": 0.0426
+        },
+        "voltage_trend": {
+          "value": 21.0,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.1414,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.9821,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0853,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_009": {
+      "health_score": 34.0,
+      "health_level": "Critical",
+      "risk_score": 0.7345,
+      "features": {
+        "cost_at_risk": {
+          "value": 4357.73,
+          "contribution": 0.1627
+        },
+        "ml_fault_density": {
+          "value": 76.67,
+          "contribution": 0.1917
+        },
+        "hotelling_t2": {
+          "value": 2.7127,
+          "contribution": 0.07
+        },
+        "voltage_trend": {
+          "value": 59.7,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 3.0211,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 2.3345,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0727,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_010": {
+      "health_score": 44.7,
+      "health_level": "Degrading",
+      "risk_score": 0.5184,
+      "features": {
+        "cost_at_risk": {
+          "value": 2400.0,
+          "contribution": 0.05
+        },
+        "ml_fault_density": {
+          "value": 80.0,
+          "contribution": 0.2
+        },
+        "hotelling_t2": {
+          "value": 1.6936,
+          "contribution": 0.0421
+        },
+        "voltage_trend": {
+          "value": 61.9,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 0.2656,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 1.0401,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0075,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_011": {
+      "health_score": 39.0,
+      "health_level": "Critical",
+      "risk_score": 0.4566,
+      "features": {
+        "cost_at_risk": {
+          "value": 2029.3,
+          "contribution": 0.0423
+        },
+        "ml_fault_density": {
+          "value": 70.0,
+          "contribution": 0.175
+        },
+        "hotelling_t2": {
+          "value": 1.8377,
+          "contribution": 0.0348
+        },
+        "voltage_trend": {
+          "value": 64.2,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.8282,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.347,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0823,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_012": {
+      "health_score": 28.8,
+      "health_level": "Critical",
+      "risk_score": 0.8231,
+      "features": {
+        "cost_at_risk": {
+          "value": 5497.8,
+          "contribution": 0.2375
+        },
+        "ml_fault_density": {
+          "value": 70.0,
+          "contribution": 0.175
+        },
+        "hotelling_t2": {
+          "value": 2.9925,
+          "contribution": 0.0776
+        },
+        "voltage_trend": {
+          "value": 45.9,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 1.0196,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -2.4221,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0054,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_013": {
+      "health_score": 38.9,
+      "health_level": "Critical",
+      "risk_score": 0.6966,
+      "features": {
+        "cost_at_risk": {
+          "value": 5409.6,
+          "contribution": 0.2375
+        },
+        "ml_fault_density": {
+          "value": 76.67,
+          "contribution": 0.1917
+        },
+        "hotelling_t2": {
+          "value": 2.5852,
+          "contribution": 0.0419
+        },
+        "voltage_trend": {
+          "value": 69.0,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.7391,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 1.8381,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0218,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_014": {
+      "health_score": 42.2,
+      "health_level": "Degrading",
+      "risk_score": 0.521,
+      "features": {
+        "cost_at_risk": {
+          "value": 2139.73,
+          "contribution": 0.0446
+        },
+        "ml_fault_density": {
+          "value": 53.33,
+          "contribution": 0.1333
+        },
+        "hotelling_t2": {
+          "value": 2.7587,
+          "contribution": 0.0625
+        },
+        "voltage_trend": {
+          "value": 63.4,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -2.2048,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.5661,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0922,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_015": {
+      "health_score": 55.9,
+      "health_level": "Degrading",
+      "risk_score": 0.5321,
+      "features": {
+        "cost_at_risk": {
+          "value": 1317.07,
+          "contribution": 0.0274
+        },
+        "ml_fault_density": {
+          "value": 73.33,
+          "contribution": 0.1833
+        },
+        "hotelling_t2": {
+          "value": 3.3724,
+          "contribution": 0.0553
+        },
+        "voltage_trend": {
+          "value": 56.7,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.0802,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.6271,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.1303,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_016": {
+      "health_score": 37.4,
+      "health_level": "Critical",
+      "risk_score": 0.633,
+      "features": {
+        "cost_at_risk": {
+          "value": 3714.5,
+          "contribution": 0.1096
+        },
+        "ml_fault_density": {
+          "value": 76.67,
+          "contribution": 0.1917
+        },
+        "hotelling_t2": {
+          "value": 2.7487,
+          "contribution": 0.0579
+        },
+        "voltage_trend": {
+          "value": 65.1,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -1.2682,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.7454,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.1002,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_017": {
+      "health_score": 29.2,
+      "health_level": "Critical",
+      "risk_score": 0.6604,
+      "features": {
+        "cost_at_risk": {
+          "value": 4721.6,
+          "contribution": 0.1916
+        },
+        "ml_fault_density": {
+          "value": 86.67,
+          "contribution": 0.2167
+        },
+        "hotelling_t2": {
+          "value": 2.5229,
+          "contribution": 0.0443
+        },
+        "voltage_trend": {
+          "value": 0.0,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -1.8367,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.591,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.025,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_018": {
+      "health_score": 45.2,
+      "health_level": "Degrading",
+      "risk_score": 0.3891,
+      "features": {
+        "cost_at_risk": {
+          "value": 1839.2,
+          "contribution": 0.0383
+        },
+        "ml_fault_density": {
+          "value": 63.33,
+          "contribution": 0.1583
+        },
+        "hotelling_t2": {
+          "value": 1.1571,
+          "contribution": 0.0272
+        },
+        "voltage_trend": {
+          "value": 84.5,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -1.0953,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.1073,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0258,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_019": {
+      "health_score": 33.3,
+      "health_level": "Critical",
+      "risk_score": 0.7792,
+      "features": {
+        "cost_at_risk": {
+          "value": 4693.0,
+          "contribution": 0.1894
+        },
+        "ml_fault_density": {
+          "value": 63.33,
+          "contribution": 0.1583
+        },
+        "hotelling_t2": {
+          "value": 4.5275,
+          "contribution": 0.0829
+        },
+        "voltage_trend": {
+          "value": 8.1,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 0.1593,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 2.9071,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0767,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_020": {
+      "health_score": 36.1,
+      "health_level": "Critical",
+      "risk_score": 0.4688,
+      "features": {
+        "cost_at_risk": {
+          "value": 1962.0,
+          "contribution": 0.0409
+        },
+        "ml_fault_density": {
+          "value": 66.67,
+          "contribution": 0.1667
+        },
+        "hotelling_t2": {
+          "value": 1.9283,
+          "contribution": 0.0403
+        },
+        "voltage_trend": {
+          "value": 53.3,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 0.987,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.5218,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.105,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_021": {
+      "health_score": 66.0,
+      "health_level": "Warning",
+      "risk_score": 0.35,
+      "features": {
+        "cost_at_risk": {
+          "value": 1380.0,
+          "contribution": 0.0288
+        },
+        "ml_fault_density": {
+          "value": 66.67,
+          "contribution": 0.1667
+        },
+        "hotelling_t2": {
+          "value": 0.7444,
+          "contribution": 0.0
+        },
+        "voltage_trend": {
+          "value": 48.5,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 0.0737,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.6449,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.075,
+          "contribution": 0.0164
+        }
+      }
+    },
+    "CNC_022": {
+      "health_score": 37.7,
+      "health_level": "Critical",
+      "risk_score": 0.5512,
+      "features": {
+        "cost_at_risk": {
+          "value": 2582.73,
+          "contribution": 0.0538
+        },
+        "ml_fault_density": {
+          "value": 63.33,
+          "contribution": 0.1583
+        },
+        "hotelling_t2": {
+          "value": 3.5413,
+          "contribution": 0.0598
+        },
+        "voltage_trend": {
+          "value": 43.0,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.9975,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.2854,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0923,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_023": {
+      "health_score": 35.2,
+      "health_level": "Critical",
+      "risk_score": 0.5695,
+      "features": {
+        "cost_at_risk": {
+          "value": 3836.0,
+          "contribution": 0.1196
+        },
+        "ml_fault_density": {
+          "value": 70.0,
+          "contribution": 0.175
+        },
+        "hotelling_t2": {
+          "value": 1.9119,
+          "contribution": 0.0437
+        },
+        "voltage_trend": {
+          "value": 24.3,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -1.4559,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.7055,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0151,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_024": {
+      "health_score": 41.8,
+      "health_level": "Degrading",
+      "risk_score": 0.5392,
+      "features": {
+        "cost_at_risk": {
+          "value": 3150.0,
+          "contribution": 0.0656
+        },
+        "ml_fault_density": {
+          "value": 66.67,
+          "contribution": 0.1667
+        },
+        "hotelling_t2": {
+          "value": 1.9917,
+          "contribution": 0.0517
+        },
+        "voltage_trend": {
+          "value": 72.6,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 2.8028,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.2086,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0482,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_025": {
+      "health_score": 17.5,
+      "health_level": "Critical",
+      "risk_score": 0.8292,
+      "features": {
+        "cost_at_risk": {
+          "value": 5681.0,
+          "contribution": 0.2375
+        },
+        "ml_fault_density": {
+          "value": 76.67,
+          "contribution": 0.1917
+        },
+        "hotelling_t2": {
+          "value": 7.903,
+          "contribution": 0.075
+        },
+        "voltage_trend": {
+          "value": 49.5,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.6762,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 1.0675,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.2603,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_026": {
+      "health_score": 33.5,
+      "health_level": "Critical",
+      "risk_score": 0.5081,
+      "features": {
+        "cost_at_risk": {
+          "value": 3318.0,
+          "contribution": 0.0691
+        },
+        "ml_fault_density": {
+          "value": 66.67,
+          "contribution": 0.1667
+        },
+        "hotelling_t2": {
+          "value": 2.4672,
+          "contribution": 0.0431
+        },
+        "voltage_trend": {
+          "value": 65.8,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.9892,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.0403,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0397,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_027": {
+      "health_score": 44.1,
+      "health_level": "Degrading",
+      "risk_score": 0.5334,
+      "features": {
+        "cost_at_risk": {
+          "value": 1636.07,
+          "contribution": 0.0341
+        },
+        "ml_fault_density": {
+          "value": 76.67,
+          "contribution": 0.1917
+        },
+        "hotelling_t2": {
+          "value": 2.0924,
+          "contribution": 0.0519
+        },
+        "voltage_trend": {
+          "value": 61.2,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.604,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.6811,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0868,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_028": {
+      "health_score": 33.2,
+      "health_level": "Critical",
+      "risk_score": 0.5506,
+      "features": {
+        "cost_at_risk": {
+          "value": 3831.8,
+          "contribution": 0.1193
+        },
+        "ml_fault_density": {
+          "value": 70.0,
+          "contribution": 0.175
+        },
+        "hotelling_t2": {
+          "value": 2.1091,
+          "contribution": 0.0391
+        },
+        "voltage_trend": {
+          "value": 0.0,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 1.462,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.34,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0824,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_029": {
+      "health_score": 54.6,
+      "health_level": "Degrading",
+      "risk_score": 0.4397,
+      "features": {
+        "cost_at_risk": {
+          "value": 1626.4,
+          "contribution": 0.0339
+        },
+        "ml_fault_density": {
+          "value": 63.33,
+          "contribution": 0.1583
+        },
+        "hotelling_t2": {
+          "value": 1.4336,
+          "contribution": 0.0398
+        },
+        "voltage_trend": {
+          "value": 44.6,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 0.202,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.0113,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0962,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_030": {
+      "health_score": 41.7,
+      "health_level": "Degrading",
+      "risk_score": 0.4059,
+      "features": {
+        "cost_at_risk": {
+          "value": 1635.9,
+          "contribution": 0.0341
+        },
+        "ml_fault_density": {
+          "value": 70.0,
+          "contribution": 0.175
+        },
+        "hotelling_t2": {
+          "value": 1.8727,
+          "contribution": 0.0358
+        },
+        "voltage_trend": {
+          "value": 13.7,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.8196,
+          "contribution": 0.011
+        },
+        "z_temperature": {
+          "value": -0.7055,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0577,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_031": {
+      "health_score": 42.9,
+      "health_level": "Degrading",
+      "risk_score": 0.5546,
+      "features": {
+        "cost_at_risk": {
+          "value": 1556.33,
+          "contribution": 0.0324
+        },
+        "ml_fault_density": {
+          "value": 76.67,
+          "contribution": 0.1917
+        },
+        "hotelling_t2": {
+          "value": 3.4231,
+          "contribution": 0.0576
+        },
+        "voltage_trend": {
+          "value": 59.3,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 2.0871,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.2827,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0837,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_032": {
+      "health_score": 45.9,
+      "health_level": "Degrading",
+      "risk_score": 0.4396,
+      "features": {
+        "cost_at_risk": {
+          "value": 3248.0,
+          "contribution": 0.0677
+        },
+        "ml_fault_density": {
+          "value": 50.0,
+          "contribution": 0.125
+        },
+        "hotelling_t2": {
+          "value": 2.3558,
+          "contribution": 0.0367
+        },
+        "voltage_trend": {
+          "value": 65.3,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 1.5496,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 1.2173,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0805,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_033": {
+      "health_score": 37.0,
+      "health_level": "Critical",
+      "risk_score": 0.7227,
+      "features": {
+        "cost_at_risk": {
+          "value": 5561.6,
+          "contribution": 0.2375
+        },
+        "ml_fault_density": {
+          "value": 80.0,
+          "contribution": 0.2
+        },
+        "hotelling_t2": {
+          "value": 2.8971,
+          "contribution": 0.0463
+        },
+        "voltage_trend": {
+          "value": 64.1,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -1.4261,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.9734,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0894,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_034": {
+      "health_score": 35.6,
+      "health_level": "Critical",
+      "risk_score": 0.7061,
+      "features": {
+        "cost_at_risk": {
+          "value": 6260.6,
+          "contribution": 0.2375
+        },
+        "ml_fault_density": {
+          "value": 76.67,
+          "contribution": 0.1917
+        },
+        "hotelling_t2": {
+          "value": 1.679,
+          "contribution": 0.0442
+        },
+        "voltage_trend": {
+          "value": 57.9,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -2.7681,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.6007,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0252,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_035": {
+      "health_score": 30.6,
+      "health_level": "Critical",
+      "risk_score": 0.6769,
+      "features": {
+        "cost_at_risk": {
+          "value": 2979.2,
+          "contribution": 0.0621
+        },
+        "ml_fault_density": {
+          "value": 80.0,
+          "contribution": 0.2
+        },
+        "hotelling_t2": {
+          "value": 2.0974,
+          "contribution": 0.0787
+        },
+        "voltage_trend": {
+          "value": 20.9,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -1.2259,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.2306,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0035,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_036": {
+      "health_score": 25.6,
+      "health_level": "Critical",
+      "risk_score": 0.7205,
+      "features": {
+        "cost_at_risk": {
+          "value": 6026.67,
+          "contribution": 0.2375
+        },
+        "ml_fault_density": {
+          "value": 83.33,
+          "contribution": 0.2083
+        },
+        "hotelling_t2": {
+          "value": 2.4186,
+          "contribution": 0.0456
+        },
+        "voltage_trend": {
+          "value": 58.8,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 1.6966,
+          "contribution": 0.0273
+        },
+        "z_temperature": {
+          "value": 1.9191,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0382,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_037": {
+      "health_score": 36.8,
+      "health_level": "Critical",
+      "risk_score": 0.6188,
+      "features": {
+        "cost_at_risk": {
+          "value": 3885.5,
+          "contribution": 0.1237
+        },
+        "ml_fault_density": {
+          "value": 63.33,
+          "contribution": 0.1583
+        },
+        "hotelling_t2": {
+          "value": 2.6925,
+          "contribution": 0.0607
+        },
+        "voltage_trend": {
+          "value": 57.2,
+          "contribution": 0.0342
+        },
+        "temp_trend": {
+          "value": 1.2079,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.9657,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0944,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_038": {
+      "health_score": 51.4,
+      "health_level": "Degrading",
+      "risk_score": 0.5243,
+      "features": {
+        "cost_at_risk": {
+          "value": 2562.0,
+          "contribution": 0.0534
+        },
+        "ml_fault_density": {
+          "value": 66.67,
+          "contribution": 0.1667
+        },
+        "hotelling_t2": {
+          "value": 1.8686,
+          "contribution": 0.0511
+        },
+        "voltage_trend": {
+          "value": 64.4,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.2122,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.8463,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0964,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_039": {
+      "health_score": 40.7,
+      "health_level": "Degrading",
+      "risk_score": 0.6035,
+      "features": {
+        "cost_at_risk": {
+          "value": 4708.0,
+          "contribution": 0.1905
+        },
+        "ml_fault_density": {
+          "value": 73.33,
+          "contribution": 0.1833
+        },
+        "hotelling_t2": {
+          "value": 1.9319,
+          "contribution": 0.0324
+        },
+        "voltage_trend": {
+          "value": 52.7,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -2.1324,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.7036,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0329,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_040": {
+      "health_score": 43.6,
+      "health_level": "Degrading",
+      "risk_score": 0.4576,
+      "features": {
+        "cost_at_risk": {
+          "value": 2036.8,
+          "contribution": 0.0424
+        },
+        "ml_fault_density": {
+          "value": 80.0,
+          "contribution": 0.2
+        },
+        "hotelling_t2": {
+          "value": 1.753,
+          "contribution": 0.0288
+        },
+        "voltage_trend": {
+          "value": 13.6,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.6282,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.2797,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0377,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_041": {
+      "health_score": 42.8,
+      "health_level": "Degrading",
+      "risk_score": 0.4978,
+      "features": {
+        "cost_at_risk": {
+          "value": 2216.7,
+          "contribution": 0.0462
+        },
+        "ml_fault_density": {
+          "value": 90.0,
+          "contribution": 0.225
+        },
+        "hotelling_t2": {
+          "value": 1.8717,
+          "contribution": 0.0317
+        },
+        "voltage_trend": {
+          "value": 18.1,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 1.2594,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.8142,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.038,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_042": {
+      "health_score": 40.4,
+      "health_level": "Degrading",
+      "risk_score": 0.6577,
+      "features": {
+        "cost_at_risk": {
+          "value": 5132.83,
+          "contribution": 0.2231
+        },
+        "ml_fault_density": {
+          "value": 76.67,
+          "contribution": 0.1917
+        },
+        "hotelling_t2": {
+          "value": 2.3334,
+          "contribution": 0.0357
+        },
+        "voltage_trend": {
+          "value": 62.7,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 0.6418,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.7154,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0847,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_043": {
+      "health_score": 33.1,
+      "health_level": "Critical",
+      "risk_score": 0.7969,
+      "features": {
+        "cost_at_risk": {
+          "value": 4056.8,
+          "contribution": 0.1379
+        },
+        "ml_fault_density": {
+          "value": 73.33,
+          "contribution": 0.1833
+        },
+        "hotelling_t2": {
+          "value": 4.7608,
+          "contribution": 0.0939
+        },
+        "voltage_trend": {
+          "value": 63.0,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -2.3517,
+          "contribution": 0.0
+        },
+        "z_temperature": {
+          "value": -4.2551,
+          "contribution": 0.0373
+        },
+        "amperage_trend": {
+          "value": -0.0629,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_044": {
+      "health_score": 38.1,
+      "health_level": "Critical",
+      "risk_score": 0.5859,
+      "features": {
+        "cost_at_risk": {
+          "value": 3714.2,
+          "contribution": 0.1096
+        },
+        "ml_fault_density": {
+          "value": 70.0,
+          "contribution": 0.175
+        },
+        "hotelling_t2": {
+          "value": 2.6059,
+          "contribution": 0.0503
+        },
+        "voltage_trend": {
+          "value": 54.4,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -1.729,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.6796,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0581,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_045": {
+      "health_score": 40.4,
+      "health_level": "Degrading",
+      "risk_score": 0.4832,
+      "features": {
+        "cost_at_risk": {
+          "value": 2696.0,
+          "contribution": 0.0562
+        },
+        "ml_fault_density": {
+          "value": 66.67,
+          "contribution": 0.1667
+        },
+        "hotelling_t2": {
+          "value": 1.6519,
+          "contribution": 0.0401
+        },
+        "voltage_trend": {
+          "value": 32.0,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.6124,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.4621,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0577,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_046": {
+      "health_score": 34.8,
+      "health_level": "Critical",
+      "risk_score": 0.5017,
+      "features": {
+        "cost_at_risk": {
+          "value": 3040.0,
+          "contribution": 0.0633
+        },
+        "ml_fault_density": {
+          "value": 63.33,
+          "contribution": 0.1583
+        },
+        "hotelling_t2": {
+          "value": 2.7292,
+          "contribution": 0.045
+        },
+        "voltage_trend": {
+          "value": 4.6,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 2.2397,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 1.5017,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0233,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_047": {
+      "health_score": 32.5,
+      "health_level": "Critical",
+      "risk_score": 0.6623,
+      "features": {
+        "cost_at_risk": {
+          "value": 3727.53,
+          "contribution": 0.1107
+        },
+        "ml_fault_density": {
+          "value": 76.67,
+          "contribution": 0.1917
+        },
+        "hotelling_t2": {
+          "value": 2.8998,
+          "contribution": 0.065
+        },
+        "voltage_trend": {
+          "value": 34.1,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.8474,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 2.7471,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0401,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_048": {
+      "health_score": 38.7,
+      "health_level": "Critical",
+      "risk_score": 0.646,
+      "features": {
+        "cost_at_risk": {
+          "value": 4829.0,
+          "contribution": 0.1998
+        },
+        "ml_fault_density": {
+          "value": 73.33,
+          "contribution": 0.1833
+        },
+        "hotelling_t2": {
+          "value": 1.3725,
+          "contribution": 0.0407
+        },
+        "voltage_trend": {
+          "value": 61.4,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 3.0099,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 1.2802,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0681,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_049": {
+      "health_score": 38.6,
+      "health_level": "Critical",
+      "risk_score": 0.5827,
+      "features": {
+        "cost_at_risk": {
+          "value": 4213.73,
+          "contribution": 0.1508
+        },
+        "ml_fault_density": {
+          "value": 73.33,
+          "contribution": 0.1833
+        },
+        "hotelling_t2": {
+          "value": 1.8561,
+          "contribution": 0.0371
+        },
+        "voltage_trend": {
+          "value": 41.9,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.9084,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.1757,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0595,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_050": {
+      "health_score": 57.8,
+      "health_level": "Degrading",
+      "risk_score": 0.4436,
+      "features": {
+        "cost_at_risk": {
+          "value": 1512.13,
+          "contribution": 0.0315
+        },
+        "ml_fault_density": {
+          "value": 73.33,
+          "contribution": 0.1833
+        },
+        "hotelling_t2": {
+          "value": 1.1225,
+          "contribution": 0.0322
+        },
+        "voltage_trend": {
+          "value": 62.5,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 0.261,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.6911,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0153,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_051": {
+      "health_score": 39.7,
+      "health_level": "Critical",
+      "risk_score": 0.5098,
+      "features": {
+        "cost_at_risk": {
+          "value": 2500.8,
+          "contribution": 0.0521
+        },
+        "ml_fault_density": {
+          "value": 60.0,
+          "contribution": 0.15
+        },
+        "hotelling_t2": {
+          "value": 3.0107,
+          "contribution": 0.0583
+        },
+        "voltage_trend": {
+          "value": 57.3,
+          "contribution": 0.0
+        },
+        "temp_trend": {
+          "value": -2.1037,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.8127,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0677,
+          "contribution": 0.025
+        }
+      }
+    },
+    "CNC_052": {
+      "health_score": 39.5,
+      "health_level": "Critical",
+      "risk_score": 0.6449,
+      "features": {
+        "cost_at_risk": {
+          "value": 2057.6,
+          "contribution": 0.0429
+        },
+        "ml_fault_density": {
+          "value": 80.0,
+          "contribution": 0.2
+        },
+        "hotelling_t2": {
+          "value": 6.0966,
+          "contribution": 0.08
+        },
+        "voltage_trend": {
+          "value": 67.3,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.58,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -2.8203,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.1961,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_053": {
+      "health_score": 36.3,
+      "health_level": "Critical",
+      "risk_score": 0.6436,
+      "features": {
+        "cost_at_risk": {
+          "value": 3009.17,
+          "contribution": 0.0627
+        },
+        "ml_fault_density": {
+          "value": 76.67,
+          "contribution": 0.1917
+        },
+        "hotelling_t2": {
+          "value": 2.7527,
+          "contribution": 0.0723
+        },
+        "voltage_trend": {
+          "value": 52.7,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 1.5978,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 1.0425,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0933,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_054": {
+      "health_score": 35.2,
+      "health_level": "Critical",
+      "risk_score": 0.6827,
+      "features": {
+        "cost_at_risk": {
+          "value": 5309.17,
+          "contribution": 0.2367
+        },
+        "ml_fault_density": {
+          "value": 76.67,
+          "contribution": 0.1917
+        },
+        "hotelling_t2": {
+          "value": 1.6591,
+          "contribution": 0.0386
+        },
+        "voltage_trend": {
+          "value": 41.0,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 3.655,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.5883,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0462,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_055": {
+      "health_score": 35.0,
+      "health_level": "Critical",
+      "risk_score": 0.7332,
+      "features": {
+        "cost_at_risk": {
+          "value": 3858.63,
+          "contribution": 0.1215
+        },
+        "ml_fault_density": {
+          "value": 76.67,
+          "contribution": 0.1917
+        },
+        "hotelling_t2": {
+          "value": 5.8521,
+          "contribution": 0.08
+        },
+        "voltage_trend": {
+          "value": 71.6,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -3.2972,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -2.3033,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.1703,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_056": {
+      "health_score": 32.0,
+      "health_level": "Critical",
+      "risk_score": 0.7062,
+      "features": {
+        "cost_at_risk": {
+          "value": 3958.53,
+          "contribution": 0.1298
+        },
+        "ml_fault_density": {
+          "value": 73.33,
+          "contribution": 0.1833
+        },
+        "hotelling_t2": {
+          "value": 4.1131,
+          "contribution": 0.0818
+        },
+        "voltage_trend": {
+          "value": 53.8,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -1.1723,
+          "contribution": 0.0
+        },
+        "z_temperature": {
+          "value": -2.0891,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0921,
+          "contribution": 0.0203
+        }
+      }
+    },
+    "CNC_057": {
+      "health_score": 41.3,
+      "health_level": "Degrading",
+      "risk_score": 0.5928,
+      "features": {
+        "cost_at_risk": {
+          "value": 3841.33,
+          "contribution": 0.1201
+        },
+        "ml_fault_density": {
+          "value": 66.67,
+          "contribution": 0.1667
+        },
+        "hotelling_t2": {
+          "value": 2.3913,
+          "contribution": 0.0515
+        },
+        "voltage_trend": {
+          "value": 81.7,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -1.3608,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.9204,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0823,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_058": {
+      "health_score": 38.6,
+      "health_level": "Critical",
+      "risk_score": 0.6257,
+      "features": {
+        "cost_at_risk": {
+          "value": 4952.0,
+          "contribution": 0.2093
+        },
+        "ml_fault_density": {
+          "value": 66.67,
+          "contribution": 0.1667
+        },
+        "hotelling_t2": {
+          "value": 1.9806,
+          "contribution": 0.0374
+        },
+        "voltage_trend": {
+          "value": 55.6,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -2.3007,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.0398,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0303,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_059": {
+      "health_score": 38.8,
+      "health_level": "Critical",
+      "risk_score": 0.5819,
+      "features": {
+        "cost_at_risk": {
+          "value": 2782.5,
+          "contribution": 0.058
+        },
+        "ml_fault_density": {
+          "value": 70.0,
+          "contribution": 0.175
+        },
+        "hotelling_t2": {
+          "value": 3.044,
+          "contribution": 0.0638
+        },
+        "voltage_trend": {
+          "value": 69.8,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -2.1399,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.5086,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.102,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_060": {
+      "health_score": 45.8,
+      "health_level": "Degrading",
+      "risk_score": 0.4794,
+      "features": {
+        "cost_at_risk": {
+          "value": 2581.33,
+          "contribution": 0.0538
+        },
+        "ml_fault_density": {
+          "value": 66.67,
+          "contribution": 0.1667
+        },
+        "hotelling_t2": {
+          "value": 1.182,
+          "contribution": 0.0397
+        },
+        "voltage_trend": {
+          "value": 61.9,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -2.1917,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.4326,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0788,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_061": {
+      "health_score": 40.9,
+      "health_level": "Degrading",
+      "risk_score": 0.5027,
+      "features": {
+        "cost_at_risk": {
+          "value": 2260.0,
+          "contribution": 0.0471
+        },
+        "ml_fault_density": {
+          "value": 66.67,
+          "contribution": 0.1667
+        },
+        "hotelling_t2": {
+          "value": 2.128,
+          "contribution": 0.0472
+        },
+        "voltage_trend": {
+          "value": 37.3,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -1.5493,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.524,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0033,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_062": {
+      "health_score": 40.7,
+      "health_level": "Degrading",
+      "risk_score": 0.4935,
+      "features": {
+        "cost_at_risk": {
+          "value": 3563.13,
+          "contribution": 0.0742
+        },
+        "ml_fault_density": {
+          "value": 63.33,
+          "contribution": 0.1583
+        },
+        "hotelling_t2": {
+          "value": 1.8872,
+          "contribution": 0.0402
+        },
+        "voltage_trend": {
+          "value": 47.6,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.6885,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.7087,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0242,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_063": {
+      "health_score": 35.8,
+      "health_level": "Critical",
+      "risk_score": 0.7897,
+      "features": {
+        "cost_at_risk": {
+          "value": 3958.4,
+          "contribution": 0.1297
+        },
+        "ml_fault_density": {
+          "value": 80.0,
+          "contribution": 0.2
+        },
+        "hotelling_t2": {
+          "value": 8.3767,
+          "contribution": 0.09
+        },
+        "voltage_trend": {
+          "value": 34.7,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 0.2769,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -5.4176,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0222,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_064": {
+      "health_score": 40.4,
+      "health_level": "Degrading",
+      "risk_score": 0.6645,
+      "features": {
+        "cost_at_risk": {
+          "value": 6102.67,
+          "contribution": 0.2375
+        },
+        "ml_fault_density": {
+          "value": 76.67,
+          "contribution": 0.1917
+        },
+        "hotelling_t2": {
+          "value": 1.8031,
+          "contribution": 0.0338
+        },
+        "voltage_trend": {
+          "value": 67.3,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -3.3909,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.7066,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0222,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_065": {
+      "health_score": 28.4,
+      "health_level": "Critical",
+      "risk_score": 0.7371,
+      "features": {
+        "cost_at_risk": {
+          "value": 4800.0,
+          "contribution": 0.1976
+        },
+        "ml_fault_density": {
+          "value": 80.0,
+          "contribution": 0.2
+        },
+        "hotelling_t2": {
+          "value": 2.8863,
+          "contribution": 0.0599
+        },
+        "voltage_trend": {
+          "value": 26.1,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 0.6766,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 1.8998,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0955,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_066": {
+      "health_score": 36.2,
+      "health_level": "Critical",
+      "risk_score": 0.6033,
+      "features": {
+        "cost_at_risk": {
+          "value": 4402.8,
+          "contribution": 0.1664
+        },
+        "ml_fault_density": {
+          "value": 60.0,
+          "contribution": 0.15
+        },
+        "hotelling_t2": {
+          "value": 1.5017,
+          "contribution": 0.0486
+        },
+        "voltage_trend": {
+          "value": 49.9,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.7853,
+          "contribution": 0.0274
+        },
+        "z_temperature": {
+          "value": -1.2517,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.1022,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_067": {
+      "health_score": 27.1,
+      "health_level": "Critical",
+      "risk_score": 0.8608,
+      "features": {
+        "cost_at_risk": {
+          "value": 5467.0,
+          "contribution": 0.2375
+        },
+        "ml_fault_density": {
+          "value": 73.33,
+          "contribution": 0.1833
+        },
+        "hotelling_t2": {
+          "value": 8.5362,
+          "contribution": 0.085
+        },
+        "voltage_trend": {
+          "value": 46.9,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -3.0589,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -2.8258,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.3641,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_068": {
+      "health_score": 34.6,
+      "health_level": "Critical",
+      "risk_score": 0.7267,
+      "features": {
+        "cost_at_risk": {
+          "value": 3946.8,
+          "contribution": 0.1288
+        },
+        "ml_fault_density": {
+          "value": 73.33,
+          "contribution": 0.1833
+        },
+        "hotelling_t2": {
+          "value": 2.5141,
+          "contribution": 0.0786
+        },
+        "voltage_trend": {
+          "value": 70.9,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 0.6348,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 2.1451,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0719,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_069": {
+      "health_score": 37.7,
+      "health_level": "Critical",
+      "risk_score": 0.7058,
+      "features": {
+        "cost_at_risk": {
+          "value": 1840.0,
+          "contribution": 0.0383
+        },
+        "ml_fault_density": {
+          "value": 80.0,
+          "contribution": 0.2
+        },
+        "hotelling_t2": {
+          "value": 4.3008,
+          "contribution": 0.0919
+        },
+        "voltage_trend": {
+          "value": 51.3,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -2.3118,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -3.9987,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0266,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_070": {
+      "health_score": 41.2,
+      "health_level": "Degrading",
+      "risk_score": 0.5771,
+      "features": {
+        "cost_at_risk": {
+          "value": 4029.67,
+          "contribution": 0.1356
+        },
+        "ml_fault_density": {
+          "value": 73.33,
+          "contribution": 0.1833
+        },
+        "hotelling_t2": {
+          "value": 2.1885,
+          "contribution": 0.0395
+        },
+        "voltage_trend": {
+          "value": 55.9,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 0.7044,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.3461,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0115,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_071": {
+      "health_score": 40.5,
+      "health_level": "Degrading",
+      "risk_score": 0.6107,
+      "features": {
+        "cost_at_risk": {
+          "value": 4658.67,
+          "contribution": 0.1868
+        },
+        "ml_fault_density": {
+          "value": 66.67,
+          "contribution": 0.1667
+        },
+        "hotelling_t2": {
+          "value": 1.7604,
+          "contribution": 0.0393
+        },
+        "voltage_trend": {
+          "value": 68.0,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -2.1647,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.8819,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0822,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_072": {
+      "health_score": 25.5,
+      "health_level": "Critical",
+      "risk_score": 0.7116,
+      "features": {
+        "cost_at_risk": {
+          "value": 4843.8,
+          "contribution": 0.201
+        },
+        "ml_fault_density": {
+          "value": 76.67,
+          "contribution": 0.1917
+        },
+        "hotelling_t2": {
+          "value": 2.2658,
+          "contribution": 0.0547
+        },
+        "voltage_trend": {
+          "value": 1.3,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.6409,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.4716,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.1045,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_073": {
+      "health_score": 34.5,
+      "health_level": "Critical",
+      "risk_score": 0.6416,
+      "features": {
+        "cost_at_risk": {
+          "value": 4676.0,
+          "contribution": 0.1881
+        },
+        "ml_fault_density": {
+          "value": 70.0,
+          "contribution": 0.175
+        },
+        "hotelling_t2": {
+          "value": 1.7868,
+          "contribution": 0.0446
+        },
+        "voltage_trend": {
+          "value": 34.8,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 2.1579,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.1401,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0774,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_074": {
+      "health_score": 40.7,
+      "health_level": "Degrading",
+      "risk_score": 0.5921,
+      "features": {
+        "cost_at_risk": {
+          "value": 2134.73,
+          "contribution": 0.0445
+        },
+        "ml_fault_density": {
+          "value": 73.33,
+          "contribution": 0.1833
+        },
+        "hotelling_t2": {
+          "value": 2.8047,
+          "contribution": 0.0683
+        },
+        "voltage_trend": {
+          "value": 46.9,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 2.1768,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 2.6659,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0264,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_075": {
+      "health_score": 48.1,
+      "health_level": "Degrading",
+      "risk_score": 0.4549,
+      "features": {
+        "cost_at_risk": {
+          "value": 2873.6,
+          "contribution": 0.0599
+        },
+        "ml_fault_density": {
+          "value": 80.0,
+          "contribution": 0.2
+        },
+        "hotelling_t2": {
+          "value": 1.2432,
+          "contribution": 0.0311
+        },
+        "voltage_trend": {
+          "value": 67.0,
+          "contribution": 0.0
+        },
+        "temp_trend": {
+          "value": -0.9442,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.9334,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.1,
+          "contribution": 0.025
+        }
+      }
+    },
+    "CNC_076": {
+      "health_score": 47.9,
+      "health_level": "Degrading",
+      "risk_score": 0.469,
+      "features": {
+        "cost_at_risk": {
+          "value": 2311.5,
+          "contribution": 0.0482
+        },
+        "ml_fault_density": {
+          "value": 76.67,
+          "contribution": 0.1917
+        },
+        "hotelling_t2": {
+          "value": 0.9265,
+          "contribution": 0.0323
+        },
+        "voltage_trend": {
+          "value": 55.2,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.5405,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.0596,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0053,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_077": {
+      "health_score": 47.0,
+      "health_level": "Degrading",
+      "risk_score": 0.601,
+      "features": {
+        "cost_at_risk": {
+          "value": 3880.8,
+          "contribution": 0.1233
+        },
+        "ml_fault_density": {
+          "value": 70.0,
+          "contribution": 0.175
+        },
+        "hotelling_t2": {
+          "value": 1.3874,
+          "contribution": 0.0531
+        },
+        "voltage_trend": {
+          "value": 62.7,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 0.217,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.0457,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.009,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_078": {
+      "health_score": 35.7,
+      "health_level": "Critical",
+      "risk_score": 0.6224,
+      "features": {
+        "cost_at_risk": {
+          "value": 3691.8,
+          "contribution": 0.1077
+        },
+        "ml_fault_density": {
+          "value": 70.0,
+          "contribution": 0.175
+        },
+        "hotelling_t2": {
+          "value": 2.4028,
+          "contribution": 0.0599
+        },
+        "voltage_trend": {
+          "value": 57.4,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 1.2159,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.9549,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0365,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_079": {
+      "health_score": 48.1,
+      "health_level": "Degrading",
+      "risk_score": 0.4953,
+      "features": {
+        "cost_at_risk": {
+          "value": 4281.2,
+          "contribution": 0.1564
+        },
+        "ml_fault_density": {
+          "value": 73.33,
+          "contribution": 0.1833
+        },
+        "hotelling_t2": {
+          "value": 0.7707,
+          "contribution": 0.0
+        },
+        "voltage_trend": {
+          "value": 60.0,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.9729,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.6989,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0393,
+          "contribution": 0.025
+        }
+      }
+    },
+    "CNC_080": {
+      "health_score": 44.9,
+      "health_level": "Degrading",
+      "risk_score": 0.5096,
+      "features": {
+        "cost_at_risk": {
+          "value": 2235.6,
+          "contribution": 0.0466
+        },
+        "ml_fault_density": {
+          "value": 60.0,
+          "contribution": 0.15
+        },
+        "hotelling_t2": {
+          "value": 2.7745,
+          "contribution": 0.0533
+        },
+        "voltage_trend": {
+          "value": 64.1,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 1.8898,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 2.5582,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0289,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_081": {
+      "health_score": 33.9,
+      "health_level": "Critical",
+      "risk_score": 0.7414,
+      "features": {
+        "cost_at_risk": {
+          "value": 4258.53,
+          "contribution": 0.1545
+        },
+        "ml_fault_density": {
+          "value": 63.33,
+          "contribution": 0.1583
+        },
+        "hotelling_t2": {
+          "value": 4.8613,
+          "contribution": 0.0821
+        },
+        "voltage_trend": {
+          "value": 66.5,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 2.658,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 4.5775,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0109,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_082": {
+      "health_score": 36.1,
+      "health_level": "Critical",
+      "risk_score": 0.5455,
+      "features": {
+        "cost_at_risk": {
+          "value": 3586.67,
+          "contribution": 0.0747
+        },
+        "ml_fault_density": {
+          "value": 66.67,
+          "contribution": 0.1667
+        },
+        "hotelling_t2": {
+          "value": 2.6291,
+          "contribution": 0.051
+        },
+        "voltage_trend": {
+          "value": 39.9,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -1.2738,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.9645,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0785,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_083": {
+      "health_score": 44.2,
+      "health_level": "Degrading",
+      "risk_score": 0.5905,
+      "features": {
+        "cost_at_risk": {
+          "value": 4963.2,
+          "contribution": 0.2101
+        },
+        "ml_fault_density": {
+          "value": 73.33,
+          "contribution": 0.1833
+        },
+        "hotelling_t2": {
+          "value": 1.5232,
+          "contribution": 0.0
+        },
+        "voltage_trend": {
+          "value": 65.2,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 0.5288,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.5964,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0596,
+          "contribution": 0.025
+        }
+      }
+    },
+    "CNC_084": {
+      "health_score": 48.3,
+      "health_level": "Degrading",
+      "risk_score": 0.538,
+      "features": {
+        "cost_at_risk": {
+          "value": 1957.2,
+          "contribution": 0.0408
+        },
+        "ml_fault_density": {
+          "value": 70.0,
+          "contribution": 0.175
+        },
+        "hotelling_t2": {
+          "value": 3.0476,
+          "contribution": 0.0647
+        },
+        "voltage_trend": {
+          "value": 69.9,
+          "contribution": 0.0
+        },
+        "temp_trend": {
+          "value": 0.2551,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.7196,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.1151,
+          "contribution": 0.025
+        }
+      }
+    },
+    "CNC_085": {
+      "health_score": 52.0,
+      "health_level": "Degrading",
+      "risk_score": 0.6687,
+      "features": {
+        "cost_at_risk": {
+          "value": 6441.07,
+          "contribution": 0.2375
+        },
+        "ml_fault_density": {
+          "value": 86.67,
+          "contribution": 0.2167
+        },
+        "hotelling_t2": {
+          "value": 1.4103,
+          "contribution": 0.0286
+        },
+        "voltage_trend": {
+          "value": 61.4,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.1237,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 1.3277,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0459,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_086": {
+      "health_score": 29.8,
+      "health_level": "Critical",
+      "risk_score": 0.5936,
+      "features": {
+        "cost_at_risk": {
+          "value": 3190.0,
+          "contribution": 0.0665
+        },
+        "ml_fault_density": {
+          "value": 83.33,
+          "contribution": 0.2083
+        },
+        "hotelling_t2": {
+          "value": 2.5233,
+          "contribution": 0.0547
+        },
+        "voltage_trend": {
+          "value": 0.0,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 2.3986,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.4156,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0496,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_087": {
+      "health_score": 39.4,
+      "health_level": "Critical",
+      "risk_score": 0.7646,
+      "features": {
+        "cost_at_risk": {
+          "value": 6217.6,
+          "contribution": 0.2375
+        },
+        "ml_fault_density": {
+          "value": 80.0,
+          "contribution": 0.2
+        },
+        "hotelling_t2": {
+          "value": 1.7405,
+          "contribution": 0.0568
+        },
+        "voltage_trend": {
+          "value": 0.0,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 0.0281,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.8664,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0846,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_088": {
+      "health_score": 61.1,
+      "health_level": "Warning",
+      "risk_score": 0.4698,
+      "features": {
+        "cost_at_risk": {
+          "value": 2656.0,
+          "contribution": 0.0553
+        },
+        "ml_fault_density": {
+          "value": 66.67,
+          "contribution": 0.1667
+        },
+        "hotelling_t2": {
+          "value": 2.0352,
+          "contribution": 0.0369
+        },
+        "voltage_trend": {
+          "value": 65.2,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 0.0259,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.0019,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0447,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_089": {
+      "health_score": 22.2,
+      "health_level": "Critical",
+      "risk_score": 0.8216,
+      "features": {
+        "cost_at_risk": {
+          "value": 5221.0,
+          "contribution": 0.2299
+        },
+        "ml_fault_density": {
+          "value": 76.67,
+          "contribution": 0.1917
+        },
+        "hotelling_t2": {
+          "value": 4.4717,
+          "contribution": 0.075
+        },
+        "voltage_trend": {
+          "value": 12.4,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -1.5995,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.4338,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.1295,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_090": {
+      "health_score": 50.9,
+      "health_level": "Degrading",
+      "risk_score": 0.4716,
+      "features": {
+        "cost_at_risk": {
+          "value": 1893.67,
+          "contribution": 0.0395
+        },
+        "ml_fault_density": {
+          "value": 86.67,
+          "contribution": 0.2167
+        },
+        "hotelling_t2": {
+          "value": 1.2117,
+          "contribution": 0.0345
+        },
+        "voltage_trend": {
+          "value": 73.1,
+          "contribution": 0.0
+        },
+        "temp_trend": {
+          "value": -0.8141,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.0132,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0494,
+          "contribution": 0.025
+        }
+      }
+    },
+    "CNC_091": {
+      "health_score": 43.2,
+      "health_level": "Degrading",
+      "risk_score": 0.6184,
+      "features": {
+        "cost_at_risk": {
+          "value": 5215.0,
+          "contribution": 0.2294
+        },
+        "ml_fault_density": {
+          "value": 83.33,
+          "contribution": 0.2083
+        },
+        "hotelling_t2": {
+          "value": 0.6982,
+          "contribution": 0.0
+        },
+        "voltage_trend": {
+          "value": 55.9,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -1.0359,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.0828,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0169,
+          "contribution": 0.025
+        }
+      }
+    },
+    "CNC_092": {
+      "health_score": 31.5,
+      "health_level": "Critical",
+      "risk_score": 0.6367,
+      "features": {
+        "cost_at_risk": {
+          "value": 1600.13,
+          "contribution": 0.0333
+        },
+        "ml_fault_density": {
+          "value": 73.33,
+          "contribution": 0.1833
+        },
+        "hotelling_t2": {
+          "value": 5.4237,
+          "contribution": 0.08
+        },
+        "voltage_trend": {
+          "value": 9.7,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 0.6551,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 1.2907,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.1348,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_093": {
+      "health_score": 29.1,
+      "health_level": "Critical",
+      "risk_score": 0.7624,
+      "features": {
+        "cost_at_risk": {
+          "value": 4454.33,
+          "contribution": 0.1707
+        },
+        "ml_fault_density": {
+          "value": 76.67,
+          "contribution": 0.1917
+        },
+        "hotelling_t2": {
+          "value": 5.9019,
+          "contribution": 0.075
+        },
+        "voltage_trend": {
+          "value": 44.1,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -1.656,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.0993,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.1221,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_094": {
+      "health_score": 38.4,
+      "health_level": "Critical",
+      "risk_score": 0.4337,
+      "features": {
+        "cost_at_risk": {
+          "value": 1022.27,
+          "contribution": 0.0
+        },
+        "ml_fault_density": {
+          "value": 56.67,
+          "contribution": 0.1417
+        },
+        "hotelling_t2": {
+          "value": 2.4073,
+          "contribution": 0.0427
+        },
+        "voltage_trend": {
+          "value": 3.2,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.8956,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.1507,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0048,
+          "contribution": 0.025
+        }
+      }
+    },
+    "CNC_095": {
+      "health_score": 40.7,
+      "health_level": "Degrading",
+      "risk_score": 0.5755,
+      "features": {
+        "cost_at_risk": {
+          "value": 4180.0,
+          "contribution": 0.148
+        },
+        "ml_fault_density": {
+          "value": 66.67,
+          "contribution": 0.1667
+        },
+        "hotelling_t2": {
+          "value": 1.8951,
+          "contribution": 0.0402
+        },
+        "voltage_trend": {
+          "value": 62.6,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -1.8936,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.9242,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0967,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_096": {
+      "health_score": 34.5,
+      "health_level": "Critical",
+      "risk_score": 0.7368,
+      "features": {
+        "cost_at_risk": {
+          "value": 4318.0,
+          "contribution": 0.1594
+        },
+        "ml_fault_density": {
+          "value": 66.67,
+          "contribution": 0.1667
+        },
+        "hotelling_t2": {
+          "value": 3.8388,
+          "contribution": 0.0777
+        },
+        "voltage_trend": {
+          "value": 71.4,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 1.031,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 3.372,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0213,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_097": {
+      "health_score": 46.3,
+      "health_level": "Degrading",
+      "risk_score": 0.6599,
+      "features": {
+        "cost_at_risk": {
+          "value": 5234.8,
+          "contribution": 0.2309
+        },
+        "ml_fault_density": {
+          "value": 76.67,
+          "contribution": 0.1917
+        },
+        "hotelling_t2": {
+          "value": 1.2661,
+          "contribution": 0.0343
+        },
+        "voltage_trend": {
+          "value": 52.4,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": 0.2458,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": 0.4802,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.0155,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_098": {
+      "health_score": 44.9,
+      "health_level": "Degrading",
+      "risk_score": 0.5078,
+      "features": {
+        "cost_at_risk": {
+          "value": 2077.67,
+          "contribution": 0.0433
+        },
+        "ml_fault_density": {
+          "value": 76.67,
+          "contribution": 0.1917
+        },
+        "hotelling_t2": {
+          "value": 1.9116,
+          "contribution": 0.0477
+        },
+        "voltage_trend": {
+          "value": 63.0,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -1.4706,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.0454,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": -0.054,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_099": {
+      "health_score": 56.3,
+      "health_level": "Degrading",
+      "risk_score": 0.4493,
+      "features": {
+        "cost_at_risk": {
+          "value": 3189.2,
+          "contribution": 0.0665
+        },
+        "ml_fault_density": {
+          "value": 56.67,
+          "contribution": 0.1417
+        },
+        "hotelling_t2": {
+          "value": 1.8752,
+          "contribution": 0.0353
+        },
+        "voltage_trend": {
+          "value": 47.7,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -0.0854,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -0.9368,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.079,
+          "contribution": 0.0
+        }
+      }
+    },
+    "CNC_100": {
+      "health_score": 45.8,
+      "health_level": "Degrading",
+      "risk_score": 0.4489,
+      "features": {
+        "cost_at_risk": {
+          "value": 2466.07,
+          "contribution": 0.0514
+        },
+        "ml_fault_density": {
+          "value": 65.52,
+          "contribution": 0.1638
+        },
+        "hotelling_t2": {
+          "value": 1.6024,
+          "contribution": 0.0334
+        },
+        "voltage_trend": {
+          "value": 49.2,
+          "contribution": 0.04
+        },
+        "temp_trend": {
+          "value": -2.9021,
+          "contribution": 0.035
+        },
+        "z_temperature": {
+          "value": -1.3175,
+          "contribution": 0.0
+        },
+        "amperage_trend": {
+          "value": 0.0392,
+          "contribution": 0.0
+        }
+      }
+    }
+  }
+}

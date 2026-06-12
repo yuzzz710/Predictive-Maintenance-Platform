@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工单全流程跟踪看板 — 工业智能运维</title>
+
+<script src="/shared/role-check.js"></script>
+<script src="/shared/theme-init.js"></script>
+
+<style>
+/* ═══════════════════════════════════════════════
+   Design Tokens (matching home.html style)
+   ═══════════════════════════════════════════════ */
+:root {
+  --bg: #080a0d;
+  --bg-surface: #0e1117;
+  --bg-card: #141820;
+  --bg-card-alt: #181d26;
+  --bg-input: #0c0f15;
+  --border: #1c2230;
+  --border-light: #242b38;
+  --text: #e6ebf2;
+  --text-secondary: #8e9aab;
+  --text-muted: #5a6474;
+  --cyan: #00c9a0;
+  --amber: #f0a030;
+  --red: #f04444;
+  --blue: #4d94ff;
+  --green: #3fb950;
+  --purple: #a371f7;
+  --radius: 3px;
+  --radius-md: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.5);
+  --font-mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --font-sans: 'PingFang SC','Microsoft YaHei','Hiragino Sans GB','Segoe UI',system-ui,sans-serif;
+  --transition: 0.2s cubic-bezier(0.33, 1, 0.68, 1);
+}
+[data-theme="light"] {
+  --bg: #f5f7fa;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-alt: #f8f9fb;
+  --bg-input: #f0f2f5;
+  --border: #e2e6ed;
+  --border-light: #eef0f4;
+  --text: #1a1d26;
+  --text-secondary: #4a5568;
+  --text-muted: #8a94a6;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0,201,160,0.04), transparent),
+              radial-gradient(ellipse 60% 40% at 80% 80%, rgba(77,148,255,0.03), transparent);
+}
+
+/* ═══════════════════════════════════════════════
+   Header
+   ═══════════════════════════════════════════════ */
+.header {
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px;
+}
+.header-inner {
+  max-width: 1500px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.header-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.header-title .dot {
+  color: var(--cyan);
+}
+
+/* ═══════════════════════════════════════════════
+   Stats Bar
+   ═══════════════════════════════════════════════ */
+.stats-row {
+  max-width: 1500px;
+  margin: 16px auto 0;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  text-align: center;
+}
+.stat-card .stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+.stat-card .stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.stat-card.pending .stat-value { color: var(--text-muted); }
+.stat-card.assigned .stat-value { color: var(--blue); }
+.stat-card.in-progress .stat-value { color: var(--amber); }
+.stat-card.acceptance .stat-value { color: var(--purple); }
+.stat-card.completed .stat-value { color: var(--green); }
+.stat-card.escalated .stat-value { color: var(--red); }
+
+/* ═══════════════════════════════════════════════
+   Strategy Tabs
+   ═══════════════════════════════════════════════ */
+.strategy-tabs{max-width:1500px;margin:12px auto 0;padding:0 24px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.strategy-tab{padding:8px 16px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);font-family:var(--font-sans);transition:all 0.2s;white-space:nowrap}
+.strategy-tab:hover{color:var(--text);border-color:var(--cyan)}
+.strategy-tab.active{background:rgba(0,201,160,0.1);border-color:rgba(0,201,160,0.3);color:var(--cyan);font-weight:600}
+
+/* ═══════════════════════════════════════════════
+   Filter Bar
+   ═══════════════════════════════════════════════ */
+.filter-bar {
+  max-width: 1500px;
+  margin: 12px auto 0;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.filter-bar select,
+.filter-bar input {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-family: var(--font-sans);
+  outline: none;
+  transition: border-color var(--transition);
+}
+.filter-bar select:focus,
+.filter-bar input:focus {
+  border-color: var(--cyan);
+}
+.filter-bar input { width: 180px; }
+.filter-bar .btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: var(--font-sans);
+}
+.filter-bar .btn:hover {
+  color: var(--text);
+  border-color: var(--cyan);
+  background: rgba(0,201,160,0.05);
+}
+.filter-bar .btn-primary {
+  background: rgba(0,201,160,0.1);
+  border-color: rgba(0,201,160,0.25);
+  color: var(--cyan);
+}
+.filter-bar .btn-primary:hover {
+  background: rgba(0,201,160,0.18);
+}
+.auto-refresh-indicator {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.auto-refresh-indicator .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity:1; } 50% { opacity:0.3; }
+}
+
+/* ═══════════════════════════════════════════════
+   Kanban Board
+   ═══════════════════════════════════════════════ */
+.kanban-board {
+  max-width: 1500px;
+  margin: 16px auto 24px;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  min-height: 400px;
+}
+@media (max-width: 1200px) {
+  .kanban-board { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+  .kanban-board { grid-template-columns: repeat(2, 1fr); }
+}
+
+.kanban-column {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  min-height: 300px;
+}
+.kanban-column.drag-over {
+  border-color: var(--cyan);
+  box-shadow: 0 0 12px rgba(0,201,160,0.15);
+}
+.kanban-col-header {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.kanban-col-header .col-count {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+}
+.kanban-col-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.kanban-col-body:empty::after {
+  content: '拖拽工单到此处';
+  display: block;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 11px;
+  padding: 20px 8px;
+}
+
+/* Column color accents */
+.kanban-column.col-pending .kanban-col-header { color: var(--text-muted); }
+.kanban-column.col-assigned .kanban-col-header { color: var(--blue); }
+.kanban-column.col-escalated .kanban-col-header { color: var(--red); }
+.kanban-column.col-in_progress .kanban-col-header { color: var(--amber); }
+.kanban-column.col-pending_acceptance .kanban-col-header { color: var(--purple); }
+.kanban-column.col-completed .kanban-col-header { color: var(--green); }
+.kanban-column.col-rejected .kanban-col-header { color: var(--red); }
+.kanban-column.col-archived .kanban-col-header { color: var(--text-muted); }
+
+/* ═══════════════════════════════════════════════
+   Kanban Card
+   ═══════════════════════════════════════════════ */
+.wo-card {
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+}
+.wo-card:hover {
+  border-color: var(--cyan);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+.wo-delete-btn{width:18px;height:18px;border-radius:50%;border:1px solid transparent;background:transparent;color:var(--text-muted);cursor:pointer;font-size:14px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0}
+.wo-delete-btn:hover{color:var(--red);border-color:rgba(240,68,68,0.3);background:rgba(240,68,68,0.08)}
+.wo-card.escalated-card {
+  border-color: rgba(240,68,68,0.3);
+  animation: escalatePulse 3s ease-in-out infinite;
+}
+@keyframes escalatePulse {
+  0%,100% { box-shadow: 0 0 0 rgba(240,68,68,0); }
+  50% { box-shadow: 0 0 12px rgba(240,68,68,0.25); }
+}
+.wo-card .wo-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.wo-card .wo-machine-id {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+.wo-card .wo-priority {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 3px;
+  color: #fff;
+}
+.wo-card .wo-priority.p1 { background: var(--red); }
+.wo-card .wo-priority.p2 { background: var(--amber); }
+.wo-card .wo-priority.p3 { background: var(--blue); }
+.wo-card .wo-detail {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.wo-card .wo-detail span {
+  display: inline-block;
+}
+.wo-card .wo-detail .sep {
+  color: var(--text-muted);
+  margin: 0 4px;
+}
+.wo-card .wo-escalation-badge {
+  display: inline-block;
+  font-size: 10px;
+  color: var(--red);
+  background: rgba(240,68,68,0.1);
+  padding: 1px 6px;
+  border-radius: 8px;
+  margin-top: 4px;
+}
+
+/* ═══════════════════════════════════════════════
+   Detail Panel (slide from right)
+   ═══════════════════════════════════════════════ */
+.panel-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+  z-index: 1100; display: none;
+}
+.panel-overlay.open { display: block; }
+.detail-panel {
+  position: fixed; top: 0; right: 0; width: 460px; max-width: 92vw;
+  height: 100vh; z-index: 1101;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+  padding: 20px 24px;
+}
+.detail-panel.open { transform: translateX(0); }
+.detail-panel .dp-close {
+  position: absolute; top: 12px; right: 16px;
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+}
+.detail-panel .dp-close:hover {
+  color: var(--text);
+  border-color: var(--red);
+}
+.dp-section {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.dp-section:last-child { border-bottom: none; }
+.dp-section h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.dp-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  font-size: 12px;
+}
+.dp-row .dp-label { color: var(--text-muted); }
+.dp-row .dp-value { color: var(--text); font-weight: 500; }
+.dp-status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Timeline */
+.dp-timeline {
+  position: relative;
+  padding-left: 20px;
+}
+.dp-timeline::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 4px;
+  bottom: 4px;
+  width: 1px;
+  background: var(--border);
+}
+.dp-timeline-item {
+  position: relative;
+  padding: 6px 0 6px 14px;
+  font-size: 11px;
+}
+.dp-timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -16px;
+  top: 10px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border-light);
+  border: 1px solid var(--border);
+}
+.dp-timeline-item.current::before {
+  background: var(--cyan);
+  border-color: var(--cyan);
+  box-shadow: 0 0 6px rgba(0,201,160,0.3);
+}
+.dp-timeline-item .tl-time {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+.dp-timeline-item .tl-action {
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* Action buttons */
+.dp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.dp-actions .action-btn {
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  transition: all var(--transition);
+  font-family: var(--font-sans);
+}
+.dp-actions .action-btn:hover {
+  color: var(--text);
+  border-color: var(--cyan);
+  background: rgba(0,201,160,0.08);
+}
+.dp-actions .action-btn.primary {
+  background: rgba(0,201,160,0.1);
+  border-color: rgba(0,201,160,0.25);
+  color: var(--cyan);
+}
+.dp-actions .action-btn.danger {
+  border-color: rgba(240,68,68,0.25);
+  color: var(--red);
+}
+.dp-actions .action-btn.danger:hover {
+  background: rgba(240,68,68,0.08);
+}
+
+/* Loading & error states */
+.loading-spinner {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-muted);
+}
+.error-banner {
+  background: rgba(240,68,68,0.08);
+  border: 1px solid rgba(240,68,68,0.2);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  color: var(--red);
+  font-size: 12px;
+  margin: 12px 24px;
+}
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  grid-column: 1 / -1;
+}
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state .empty-text { font-size: 14px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header-inner { flex-direction: column; align-items: flex-start; }
+  .stats-row { grid-template-columns: repeat(3, 1fr); }
+  .filter-bar { flex-direction: column; align-items: stretch; }
+  .filter-bar input { width: 100%; }
+  .detail-panel { width: 100vw; }
+}
+
+/* Tech Selection Modal */
+.tech-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:3000;display:none;align-items:center;justify-content:center}
+.tech-modal-overlay.open{display:flex}
+.tech-modal{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:24px;width:520px;max-width:94vw;max-height:80vh;overflow-y:auto;position:relative}
+.tech-modal-close{position:absolute;top:12px;right:16px;width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.tech-select-card{background:var(--bg-card);border:2px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:12px}
+.tech-select-card:hover{border-color:var(--cyan)}
+.tech-select-card.selected{border-color:var(--cyan);background:rgba(0,201,160,0.06)}
+.tech-select-card.full{border-color:rgba(240,68,68,0.2);opacity:0.7}
+.tech-select-card .ts-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;flex-shrink:0;background:var(--text-muted)}
+.tech-select-card .ts-info{flex:1}
+.tech-select-card .ts-name{font-size:14px;font-weight:600;color:var(--text)}
+.tech-select-card .ts-meta{font-size:11px;color:var(--text-muted)}
+.tech-select-card .ts-workload{font-size:11px;font-weight:600}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-inner">
+    <div class="header-title">
+      <span class="dot">◆</span> 工单全流程跟踪看板
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);">
+      自动刷新 <span id="countdown">30</span>s
+    </div>
+  </div>
+</div>
+
+<!-- Stats Row -->
+<div class="stats-row" id="stats-row">
+  <div class="stat-card pending"><div class="stat-value" id="stat-pending">-</div><div class="stat-label">待分配</div></div>
+  <div class="stat-card assigned"><div class="stat-value" id="stat-assigned">-</div><div class="stat-label">已分配</div></div>
+  <div class="stat-card in-progress"><div class="stat-value" id="stat-in_progress">-</div><div class="stat-label">执行中</div></div>
+  <div class="stat-card acceptance"><div class="stat-value" id="stat-pending_acceptance">-</div><div class="stat-label">待验收</div></div>
+  <div class="stat-card completed"><div class="stat-value" id="stat-completed">-</div><div class="stat-label">已完成</div></div>
+  <div class="stat-card escalated"><div class="stat-value" id="stat-escalated">-</div><div class="stat-label">已升级</div></div>
+</div>
+
+<!-- Error Banner -->
+<div id="error-banner" class="error-banner" style="display:none;"></div>
+
+<!-- Strategy Tabs -->
+<div class="strategy-tabs" id="strategy-tabs">
+  <button class="strategy-tab active" data-strategy="" onclick="switchStrategyTab('')">全部 (<span id="strat-total">0</span>)</button>
+  <button class="strategy-tab" data-strategy="cost_efficiency" onclick="switchStrategyTab('cost_efficiency')">💰 成本效率 (<span id="strat-cost">0</span>)</button>
+  <button class="strategy-tab" data-strategy="production_efficiency" onclick="switchStrategyTab('production_efficiency')">⚖ 生产效率 (<span id="strat-prod">0</span>)</button>
+  <button class="strategy-tab" data-strategy="quality_first" onclick="switchStrategyTab('quality_first')">🎯 质量优先 (<span id="strat-qual">0</span>)</button>
+  <button class="btn" style="margin-left:auto;padding:8px 18px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid rgba(240,68,68,0.2);background:rgba(240,68,68,0.05);color:var(--red);font-family:var(--font-sans);transition:all 0.2s;white-space:nowrap" onmouseover="this.style.background='rgba(240,68,68,0.12)'" onmouseout="this.style.background='rgba(240,68,68,0.05)'" onclick="clearAllOrders()">🗑 清空全部</button>
+</div>
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+  <select id="filter-status" onchange="applyFilters()">
+    <option value="">全部状态</option>
+    <option value="pending">待分配</option>
+    <option value="assigned">已分配</option>
+    <option value="escalated">已升级</option>
+    <option value="in_progress">执行中</option>
+    <option value="pending_acceptance">待验收</option>
+    <option value="rejected">验收不通过</option>
+    <option value="completed">已完成</option>
+    <option value="archived">已归档</option>
+  </select>
+  <select id="filter-technician" onchange="applyFilters()">
+    <option value="">全部技师</option>
+  </select>
+  <input type="text" id="filter-search" placeholder="搜索设备ID，如 CNC_025" oninput="applyFiltersDebounced()">
+  <button class="btn btn-primary" onclick="refreshData()">⟳ 刷新</button>
+  <div class="auto-refresh-indicator">
+    <span class="dot"></span> 自动刷新中
+  </div>
+</div>
+
+<!-- Kanban Board -->
+<div class="kanban-board" id="kanban-board">
+  <div class="empty-state">
+    <div class="empty-icon">📋</div>
+    <div class="empty-text">加载工单数据中...</div>
+  </div>
+</div>
+
+<!-- Detail Panel Overlay -->
+<div class="panel-overlay" id="panel-overlay" onclick="closePanel()"></div>
+
+<!-- Detail Panel -->
+<div class="detail-panel" id="detail-panel">
+  <button class="dp-close" onclick="closePanel()">&times;</button>
+  <div id="detail-content"></div>
+</div>
+
+<!-- Technician Selection Modal -->
+<div class="tech-modal-overlay" id="tech-modal-overlay" onclick="closeTechSelector()">
+  <div class="tech-modal" onclick="event.stopPropagation()">
+    <button class="tech-modal-close" onclick="closeTechSelector()">&times;</button>
+    <h3 id="tech-modal-title">🔧 分配技师</h3>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;" id="tech-modal-info"></div>
+    <div id="tech-list"><div class="loading">加载技师列表...</div></div>
+    <div style="margin-top:12px;font-size:12px;color:var(--text-muted);" id="tech-selected-count">已选: 0人</div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeTechSelector()">取消</button>
+      <button class="btn primary" id="tech-confirm-btn" onclick="confirmTechAssignment()">确认分配</button>
+    </div>
+  </div>
+</div>
+
+<script src="/shared/navbar.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════
+   Data & State
+   ═══════════════════════════════════════════════ */
+var DATA = { work_orders: [], statistics: {}, technicians: [] };
+var currentDetail = null;
+var autoRefreshTimer = null;
+var countdownTimer = null;
+var refreshCountdown = 30;
+var currentStrategy = sessionStorage.getItem('current_strategy') || '';
+
+var STRATEGY_COLORS = {cost_efficiency:'#3fb950',production_efficiency:'#4d94ff',quality_first:'#f04444'};
+var STRATEGY_LABELS = {cost_efficiency:'成本效率',production_efficiency:'生产效率',quality_first:'质量优先'};
+
+// Chinese label maps
+var STATUS_LABELS = {
+  'pending': '待分配', 'assigned': '已分配', 'escalated': '已升级',
+  'in_progress': '执行中', 'pending_acceptance': '待验收', 'rejected': '验收不通过',
+  'completed': '已完成', 'archived': '已归档'
+};
+var PATTERN_LABELS = {
+  'voltage_drift': '电压漂移', 'thermal_buildup': '热积聚',
+  'power_anomaly': '功率异常', 'combined_degradation': '复合退化', 'normal': '正常'
+};
+var ACTION_LABELS = {
+  'immediate_shutdown': '紧急停机', 'preventive_repair': '预防维修',
+  'schedule_inspection': '计划检查', 'increase_monitoring': '加强监控',
+  'routine_check': '常规检查', 'no_action': '无需操作'
+};
+var WINDOW_LABELS = {
+  'immediate': '立即', 'night': '夜间', 'weekend': '周末',
+  'next_gap': '下个间隙', 'scheduled': '计划窗口'
+};
+var TECH_LABELS = {
+  'junior_technician': '初级技师', 'senior_technician': '高级技师',
+  'electrical_specialist': '电气专家', 'thermal_specialist': '热控专家',
+  'mechanical_specialist': '机械专家'
+};
+
+// Columns to display
+var COLUMNS = ['pending', 'assigned', 'in_progress', 'pending_acceptance', 'completed', 'archived'];
+
+function t(raw, map) {
+  if (!raw) return '?';
+  return map[raw] || raw.replace(/_/g, ' ');
+}
+
+/* ═══════════════════════════════════════════════
+   Data Loading
+   ═══════════════════════════════════════════════ */
+async function loadData(params) {
+  var qs = new URLSearchParams();
+  if (params) {
+    if (params.status) qs.set('status', params.status);
+    if (params.technician) qs.set('technician', params.technician);
+    if (params.search) qs.set('search', params.search);
+    if (params.strategy) qs.set('strategy', params.strategy);
+  }
+  var url = '/api/work-order-tracking/list' + (qs.toString() ? '?' + qs.toString() : '');
+
+  try {
+    var resp = await fetch(url);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    return await resp.json();
+  } catch (e) {
+    console.error('[tracking] Failed to load data:', e);
+    return null;
+  }
+}
+
+async function loadDetail(machineId) {
+  try {
+    var resp = await fetch('/api/work-order-tracking/detail/' + machineId);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    return await resp.json();
+  } catch (e) {
+    console.error('[tracking] Failed to load detail:', e);
+    return null;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   Rendering
+   ═══════════════════════════════════════════════ */
+function renderStats(stats) {
+  var byStatus = stats.by_status || {};
+  COLUMNS.forEach(function(col) {
+    var el = document.getElementById('stat-' + col);
+    if (el) el.textContent = byStatus[col] || 0;
+  });
+  // Escalated
+  var escEl = document.getElementById('stat-escalated');
+  if (escEl) escEl.textContent = stats.escalated || 0;
+}
+
+function renderKanban(workOrders) {
+  var board = document.getElementById('kanban-board');
+  if (!workOrders || workOrders.length === 0) {
+    board.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">暂无工单数据</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px;">请先运行流水线生成工单：python agent_orchestrator.py --data-dir 原始数据集</div></div>';
+    return;
+  }
+
+  // Group by status
+  var groups = {};
+  COLUMNS.forEach(function(col) { groups[col] = []; });
+  workOrders.forEach(function(wo) {
+    var s = wo.status || 'pending';
+    if (!groups[s]) groups[s] = [];
+    groups[s].push(wo);
+  });
+
+  var html = '';
+  COLUMNS.forEach(function(col) {
+    var items = groups[col] || [];
+    var label = STATUS_LABELS[col] || col;
+    html += '<div class="kanban-column col-' + col + '">';
+    html += '<div class="kanban-col-header">' + label + '<span class="col-count">' + items.length + '</span></div>';
+    html += '<div class="kanban-col-body">';
+    items.forEach(function(wo) {
+      var plan = wo.plan_summary || {};
+      var priority = plan.maintenance_priority || 'P2';
+      var pClass = priority.toLowerCase();
+      var pattern = t(plan.primary_pattern, PATTERN_LABELS);
+      var action = t(plan.recommended_action, ACTION_LABELS);
+      var windowLabel = t(plan.downtime_window, WINDOW_LABELS);
+      var escalated = wo.escalated;
+      var escCount = wo.escalation_count || 0;
+
+      html += '<div class="wo-card' + (escalated ? ' escalated-card' : '') + '" ';
+      html += 'onclick="openPanel(\'' + wo.machine_id + '\')" ';
+      html += 'data-machine-id="' + wo.machine_id + '">';
+
+      // Header
+      html += '<div class="wo-card-header">';
+      html += '<span class="wo-machine-id">' + wo.machine_id + '</span>';
+      html += '<span style="display:flex;align-items:center;gap:6px;">';
+      html += '<span class="wo-priority ' + pClass + '">' + priority + '</span>';
+      html += '<button class="wo-delete-btn" onclick="event.stopPropagation();deleteWorkOrder(\'' + wo.machine_id + '\')" title="删除此工单">&times;</button>';
+      html += '</span></div>';
+
+      // Details
+      html += '<div class="wo-detail">';
+      html += '<span>' + action + '</span><span class="sep">|</span>';
+      html += '<span>' + pattern + '</span><span class="sep">|</span>';
+      html += '<span>' + windowLabel + '</span>';
+      html += '</div>';
+
+      // Health score line
+      if (plan.health_score) {
+        var hs = parseFloat(plan.health_score);
+        var hsColor = hs >= 80 ? 'var(--green)' : hs >= 60 ? 'var(--amber)' : hs >= 40 ? '#f0883e' : 'var(--red)';
+        html += '<div class="wo-detail" style="margin-top:3px;font-size:10px;">';
+        html += '健康分: <span style="color:' + hsColor + ';font-weight:600;">' + plan.health_score + '</span>';
+        if (plan.cost_at_risk) {
+          html += ' | 风险: <span style="color:var(--red);">$' + Number(plan.cost_at_risk).toFixed(0) + '</span>';
+        }
+        html += '</div>';
+      }
+
+      // Strategy badge
+      var strat = wo.maintenance_strategy || '';
+      if (strat) {
+        var sc = STRATEGY_COLORS[strat] || '#5a6474';
+        var sl = STRATEGY_LABELS[strat] || strat;
+        html += '<div style="margin-top:4px;"><span style="display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;color:'+sc+';border:1px solid '+sc+';opacity:0.8;">'+sl+'</span></div>';
+      }
+
+      // Escalation badge
+      if (escalated) {
+        html += '<div class="wo-escalation-badge">⚠ 超时升级' + (escCount > 1 ? ' (' + escCount + '次)' : '') + '</div>';
+      }
+
+      html += '</div>';
+    });
+    html += '</div>'; // col-body
+    html += '</div>'; // column
+  });
+
+  board.innerHTML = html;
+}
+
+function updateTechnicianFilter(techs) {
+  var sel = document.getElementById('filter-technician');
+  var currentVal = sel.value;
+  sel.innerHTML = '<option value="">全部技师</option>';
+  (techs || []).forEach(function(t) {
+    var label = TECH_LABELS[t] || t;
+    sel.innerHTML += '<option value="' + t + '">' + label + '</option>';
+  });
+  sel.value = currentVal; // restore
+}
+
+/* ═══════════════════════════════════════════════
+   Detail Panel
+   ═══════════════════════════════════════════════ */
+async function openPanel(machineId) {
+  var overlay = document.getElementById('panel-overlay');
+  var panel = document.getElementById('detail-panel');
+  var content = document.getElementById('detail-content');
+
+  overlay.classList.add('open');
+  panel.classList.add('open');
+  content.innerHTML = '<div class="loading-spinner">加载中...</div>';
+
+  var detail = await loadDetail(machineId);
+  if (!detail) {
+    content.innerHTML = '<div style="color:var(--red);padding:20px;">加载失败</div>';
+    return;
+  }
+  currentDetail = detail;
+
+  var plan = detail.plan_data || {};
+  var statusKey = detail.status || 'pending';
+  var statusLabel = STATUS_LABELS[statusKey] || statusKey;
+  var priority = plan.maintenance_priority || plan.priority || 'P2';
+  var pColor = { 'P1': 'var(--red)', 'P2': 'var(--amber)', 'P3': 'var(--blue)' }[priority] || 'var(--blue)';
+
+  var html = '';
+
+  // Status Header
+  html += '<div class="dp-section">';
+  html += '<h3>📋 ' + machineId + '</h3>';
+  html += '<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">';
+  html += '<span class="dp-status-badge" style="background:rgba(0,201,160,0.1);color:var(--cyan);">' + statusLabel + '</span>';
+  html += '<span class="dp-status-badge" style="background:rgba(240,160,48,0.1);color:' + pColor + ';">' + priority + '</span>';
+  if (detail.escalated) {
+    html += '<span class="dp-status-badge" style="background:rgba(240,68,68,0.1);color:var(--red);">⚠ 已升级</span>';
+  }
+  html += '</div>';
+
+  // Key Metrics
+  html += '<div class="dp-row"><span class="dp-label">故障模式</span><span class="dp-value">' + t(plan.primary_pattern, PATTERN_LABELS) + '</span></div>';
+  html += '<div class="dp-row"><span class="dp-label">维护动作</span><span class="dp-value">' + t(plan.recommended_action || plan.action_type, ACTION_LABELS) + '</span></div>';
+  // Fetch real assigned technicians
+  var assignedTechs = [];
+  try {
+    var techResp = await fetch('/api/technicians');
+    var techData = await techResp.json();
+    var allTechs = techData.technicians || [];
+    assignedTechs = allTechs.filter(function(t) {
+      return (t.assigned_machines || []).some(function(m) { return m.machine_id === machineId; });
+    });
+  } catch(e) {}
+  var techDisplay = '';
+  if (assignedTechs.length > 0) {
+    var techNames = assignedTechs.map(function(t) { return t.name + ' (' + tcn(t.technician_type) + ')'; });
+    techDisplay = techNames.join(', ') + ' × ' + assignedTechs.length + '人';
+  } else {
+    techDisplay = t(plan.technician_type || detail.technician_type, TECH_LABELS) + ' × ' + (plan.technician_count || detail.technician_count || 1) + '人';
+  }
+  html += '<div class="dp-row"><span class="dp-label">技师</span><span class="dp-value">' + techDisplay + '</span></div>';
+  html += '<div class="dp-row"><span class="dp-label">停机窗口</span><span class="dp-value">' + t(plan.downtime_window, WINDOW_LABELS) + '</span></div>';
+  html += '<div class="dp-row"><span class="dp-label">健康评分</span><span class="dp-value">' + (plan.health_score || '?') + '</span></div>';
+  html += '<div class="dp-row"><span class="dp-label">成本风险</span><span class="dp-value" style="color:var(--red);">$' + (plan.cost_at_risk || '?') + '</span></div>';
+  if (plan.estimated_cost) {
+    html += '<div class="dp-row"><span class="dp-label">预估成本</span><span class="dp-value">$' + plan.estimated_cost + '</span></div>';
+  }
+  if (plan.expected_savings) {
+    html += '<div class="dp-row"><span class="dp-label">预期节约</span><span class="dp-value" style="color:var(--green);">$' + plan.expected_savings + '</span></div>';
+  }
+  if (plan.sla_target_hours) {
+    html += '<div class="dp-row"><span class="dp-label">SLA目标</span><span class="dp-value">' + plan.sla_target_hours + 'h</span></div>';
+  }
+  html += '</div>'; // dp-section
+
+  // Spare Parts
+  var spareParts = plan.spare_parts || '[]';
+  try {
+    var partsArr = typeof spareParts === 'string' ? JSON.parse(spareParts) : spareParts;
+    if (Array.isArray(partsArr) && partsArr.length > 0) {
+      html += '<div class="dp-section">';
+      html += '<h3>🔧 备件清单</h3>';
+      partsArr.forEach(function(p) { html += '<div style="font-size:11px;padding:2px 0;color:var(--text-secondary);">• ' + p + '</div>'; });
+      html += '</div>';
+    }
+  } catch(e) {}
+
+  // Acceptance Criteria
+  if (plan.acceptance_standard) {
+    html += '<div class="dp-section">';
+    html += '<h3>✅ 验收标准</h3>';
+    html += '<div style="font-size:11px;color:var(--text-secondary);line-height:1.6;">' + plan.acceptance_standard + '</div>';
+    html += '</div>';
+  }
+
+  // Root Cause
+  if (plan.reasoning) {
+    html += '<div class="dp-section">';
+    html += '<h3>🔍 根因分析</h3>';
+    html += '<div style="font-size:11px;color:var(--text-secondary);line-height:1.6;">' + plan.reasoning.substring(0, 300) + '</div>';
+    html += '</div>';
+  }
+
+  // State Timeline
+  var history = detail.state_history || [];
+  if (history.length > 0) {
+    html += '<div class="dp-section">';
+    html += '<h3>📅 状态时间线</h3>';
+    html += '<div class="dp-timeline">';
+    history.forEach(function(h, idx) {
+      var isLast = idx === history.length - 1;
+      var fromLabel = STATUS_LABELS[h.from_status] || h.from_status || '—';
+      var toLabel = STATUS_LABELS[h.to_status] || h.to_status;
+      var time = (h.created_at || '').substring(0, 19);
+      var by = h.triggered_by || 'system';
+      html += '<div class="dp-timeline-item' + (isLast ? ' current' : '') + '">';
+      html += '<div class="tl-time">' + time + '</div>';
+      html += '<div class="tl-action">' + fromLabel + ' → ' + toLabel + ' (' + by + ')</div>';
+      if (h.notes) html += '<div style="font-size:10px;color:var(--text-muted);">' + h.notes + '</div>';
+      html += '</div>';
+    });
+    html += '</div></div>';
+  }
+
+  // Action Buttons
+  html += '<div class="dp-section">';
+  html += '<h3>⚡ 操作</h3>';
+  html += '<div class="dp-actions" id="dp-actions">';
+  html += buildActionButtons(statusKey, machineId);
+  html += '</div></div>';
+
+  content.innerHTML = html;
+}
+
+function buildActionButtons(statusKey, machineId) {
+  var transitions = {
+    'pending':            [{ to: 'assign_tech', label: '分配技师', cls: 'primary' }],
+    'assigned':           [{ to: 'in_progress', label: '开始维修', cls: 'primary' }],
+    'escalated':          [{ to: 'assign_tech', label: '重新分配', cls: 'primary' }],
+    'in_progress':        [{ to: 'pending_acceptance', label: '维修完成·提交验收', cls: 'primary' }],
+    'pending_acceptance': [
+      { to: 'completed', label: '✓ 验收通过', cls: 'primary' },
+      { to: 'rejected', label: '✗ 验收不通过', cls: 'danger' }
+    ],
+    'rejected':           [{ to: 'in_progress', label: '重新维修', cls: 'primary' }],
+    'completed':          [{ to: 'archived', label: '📦 归档', cls: '' }],
+    'archived':           [],
+  };
+
+  var btns = transitions[statusKey] || [];
+  if (btns.length === 0) return '<span style="font-size:11px;color:var(--text-muted);">无可执行操作（已归档）</span>';
+
+  var html = '';
+  btns.forEach(function(b) {
+    if (b.to === 'assign_tech') {
+      html += '<button class="action-btn ' + b.cls + '" onclick="openTechSelector(\'' + machineId + '\')">' + b.label + '</button>';
+    } else {
+      html += '<button class="action-btn ' + b.cls + '" onclick="doTransition(\'' + machineId + '\', \'' + b.to + '\')">' + b.label + '</button>';
+    }
+  });
+  return html;
+}
+
+/* ═══════════════════════════════════════════════
+   Technician Selector
+   ═══════════════════════════════════════════════ */
+var selectedTechIds = [];
+var currentMachineForAssign = null;
+
+async function openTechSelector(machineId) {
+  currentMachineForAssign = machineId;
+  selectedTechIds = [];
+  document.getElementById('tech-modal-overlay').classList.add('open');
+
+  // Get WO detail to know required technician type
+  var detail = await loadDetail(machineId);
+  if (!detail) { closeTechSelector(); return; }
+  var plan = detail.plan_data || {};
+  var requiredType = plan.technician_type || '';
+  var requiredCount = parseInt(plan.technician_count) || 1;
+
+  document.getElementById('tech-modal-title').textContent = '分配技师 — ' + machineId;
+  document.getElementById('tech-modal-info').innerHTML =
+    '故障模式: <b>' + t(plan.primary_pattern, PATTERN_LABELS) + '</b> | ' +
+    '需要: <b>' + t(requiredType, TECH_LABELS) + ' x ' + requiredCount + '人</b>';
+
+  // Load matching technicians
+  try {
+    var r = await fetch('/api/technicians?tech_type=' + requiredType + '&status=available');
+    var d = await r.json();
+    var techs = d.technicians || [];
+    // If no available of that type, get all of that type
+    if (techs.length === 0) {
+      r = await fetch('/api/technicians?tech_type=' + requiredType);
+      d = await r.json();
+      techs = d.technicians || [];
+    }
+
+    renderTechCards(techs, requiredCount);
+  } catch(e) {
+    document.getElementById('tech-list').innerHTML = '<div style="color:var(--red);padding:12px;">加载失败</div>';
+  }
+}
+
+function renderTechCards(techs, requiredCount) {
+  var html = '';
+  techs.forEach(function(t) {
+    var workload = t.current_workload || 0;
+    var maxLoad = t.max_concurrent || 3;
+    var isFull = workload >= maxLoad;
+    var isSel = selectedTechIds.includes(t.id);
+    var wlPct = maxLoad > 0 ? Math.round(workload / maxLoad * 100) : 0;
+    var wlColor = wlPct >= 100 ? 'var(--red)' : wlPct >= 70 ? 'var(--amber)' : 'var(--green)';
+    html += '<div class="tech-select-card' + (isSel ? ' selected' : '') + (isFull ? ' full' : '') + '" onclick="toggleTechSelect(' + t.id + ',' + requiredCount + ')" id="tech-card-' + t.id + '">';
+    html += '<div class="ts-avatar" style="background:' + (isFull ? 'var(--red)' : isSel ? 'var(--cyan)' : 'var(--text-muted)') + ';">' + t.name.charAt(0) + '</div>';
+    html += '<div class="ts-info">';
+    html += '<div class="ts-name">' + t.name + ' <span style="font-size:11px;color:var(--text-muted);">' + tcn(t.technician_type) + '</span></div>';
+    html += '<div class="ts-meta">' + t.email + ' | ' + t.phone + '</div>';
+    html += '<div class="ts-meta">工单: ';
+    (t.assigned_machines || []).forEach(function(m) { html += '<span style="font-family:var(--font-mono);font-size:10px;">' + m.machine_id + '</span> '; });
+    if (!(t.assigned_machines || []).length) html += '暂无';
+    html += '</div></div>';
+    html += '<div class="ts-workload" style="color:' + wlColor + ';">' + workload + '/' + maxLoad + '</div>';
+    html += '</div>';
+  });
+  document.getElementById('tech-list').innerHTML = html || '<div style="color:var(--text-muted);padding:12px;">无匹配技师</div>';
+  updateTechSelectionUI();
+}
+
+function tcn(t) { return TECH_LABELS[t] || t; }
+
+function toggleTechSelect(techId, maxCount) {
+  var idx = selectedTechIds.indexOf(techId);
+  if (idx >= 0) {
+    selectedTechIds.splice(idx, 1);
+  } else {
+    if (selectedTechIds.length >= maxCount) {
+      selectedTechIds.shift(); // remove first to make room
+    }
+    selectedTechIds.push(techId);
+  }
+  // Re-render cards
+  var techs = [];
+  var cards = document.querySelectorAll('.tech-select-card');
+  cards.forEach(function(card) {
+    var isSel = card.classList.contains('selected');
+    var isFull = card.classList.contains('full');
+    techs.push({ id: parseInt(card.id.replace('tech-card-', '')), selected: isSel, full: isFull });
+  });
+  cards.forEach(function(card) {
+    var tid = parseInt(card.id.replace('tech-card-', ''));
+    card.classList.toggle('selected', selectedTechIds.includes(tid));
+  });
+  updateTechSelectionUI();
+}
+
+function updateTechSelectionUI() {
+  document.getElementById('tech-selected-count').textContent = '已选: ' + selectedTechIds.length + '人';
+  document.getElementById('tech-confirm-btn').disabled = selectedTechIds.length === 0;
+}
+
+async function confirmTechAssignment() {
+  if (selectedTechIds.length === 0) { alert('请至少选择一名技师'); return; }
+  if (!currentMachineForAssign) return;
+  try {
+    var r = await fetch('/api/technicians/assign', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ machine_id: currentMachineForAssign, technician_ids: selectedTechIds })
+    });
+    var d = await r.json();
+    if (d.success) {
+      alert('已分配!');
+      closeTechSelector();
+      closePanel();
+      refreshData();
+    } else {
+      alert('分配失败: ' + (d.error || d.detail || ''));
+    }
+  } catch(e) { alert('网络错误'); }
+}
+
+function closeTechSelector() {
+  document.getElementById('tech-modal-overlay').classList.remove('open');
+  currentMachineForAssign = null;
+  selectedTechIds = [];
+}
+
+async function doTransition(machineId, newStatus) {
+  var notes = prompt('备注（可选）：');
+  if (notes === null) return; // cancelled
+
+  try {
+    var resp = await fetch('/api/work-order/update-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        machine_id: machineId,
+        new_status: newStatus,
+        notes: notes || '',
+        triggered_by: 'user'
+      })
+    });
+    var result = await resp.json();
+
+    if (result.success) {
+      alert('✅ ' + result.message + (result.email_sent ? '\n邮件通知已发送' : ''));
+      closePanel();
+      refreshData();
+    } else {
+      alert('❌ 操作失败: ' + (result.detail || result.error || 'Unknown error'));
+    }
+  } catch (e) {
+    alert('❌ 网络错误: ' + e.message);
+  }
+}
+
+function closePanel() {
+  document.getElementById('panel-overlay').classList.remove('open');
+  document.getElementById('detail-panel').classList.remove('open');
+  currentDetail = null;
+}
+
+/* ═══════════════════════════════════════════════
+   Filters & Refresh
+   ═══════════════════════════════════════════════ */
+var filterTimeout = null;
+function switchStrategyTab(strategy) {
+  currentStrategy = strategy;
+  // Update tab active state
+  document.querySelectorAll('.strategy-tab').forEach(function(t) {
+    t.classList.toggle('active', t.getAttribute('data-strategy') === strategy);
+  });
+  applyFilters();
+}
+
+async function deleteWorkOrder(machineId) {
+  if (!confirm('确认删除工单 ' + machineId + '？\n（对应的技师分配也会清除）')) return;
+  try {
+    var r = await fetch('/api/work-order/delete/' + machineId, { method: 'DELETE' });
+    if (r.ok) refreshData({ strategy: currentStrategy || undefined });
+    else alert('删除失败');
+  } catch(e) { alert('网络错误'); }
+}
+
+async function clearAllOrders() {
+  if (!confirm('确认清空全部工单跟踪数据？\n（技师分配也会被清除，但不影响仪表盘数据）\n此操作不可撤销！')) return;
+  try {
+    var r = await fetch('/api/work-order/clear', { method: 'POST' });
+    var d = await r.json();
+    if (d.success) {
+      alert('已清空 ' + d.cleared + ' 张工单');
+      refreshData({ strategy: currentStrategy || undefined });
+    } else {
+      alert('清空失败');
+    }
+  } catch(e) { alert('网络错误'); }
+}
+
+function applyFiltersDebounced() {
+  clearTimeout(filterTimeout);
+  filterTimeout = setTimeout(applyFilters, 300);
+}
+
+function applyFilters() {
+  var status = document.getElementById('filter-status').value;
+  var technician = document.getElementById('filter-technician').value;
+  var search = document.getElementById('filter-search').value.trim();
+
+  refreshData({ status: status, technician: technician, search: search, strategy: currentStrategy || undefined });
+}
+
+async function refreshData(params) {
+  document.getElementById('error-banner').style.display = 'none';
+
+  var data = await loadData(params);
+  if (!data) {
+    document.getElementById('error-banner').style.display = 'block';
+    document.getElementById('error-banner').textContent = '⚠ 无法加载工单数据，请确认服务是否正常运行';
+    return;
+  }
+
+  DATA.work_orders = data.work_orders || [];
+  DATA.statistics = data.statistics || {};
+  DATA.technicians = data.available_technicians || [];
+
+  // Update strategy counts
+  var sc = data.strategy_counts || {};
+  document.getElementById('strat-cost').textContent = sc.cost_efficiency || 0;
+  document.getElementById('strat-prod').textContent = sc.production_efficiency || 0;
+  document.getElementById('strat-qual').textContent = sc.quality_first || 0;
+  document.getElementById('strat-total').textContent = data.total || 0;
+
+  renderStats(DATA.statistics);
+  renderKanban(DATA.work_orders);
+  updateTechnicianFilter(DATA.technicians);
+
+  // Update status labels
+  if (data.status_labels) STATUS_LABELS = data.status_labels;
+
+  // Reset countdown
+  refreshCountdown = 30;
+  updateCountdown();
+}
+
+function updateCountdown() {
+  document.getElementById('countdown').textContent = refreshCountdown;
+}
+
+/* ═══════════════════════════════════════════════
+   Keyboard Shortcuts
+   ═══════════════════════════════════════════════ */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var panel = document.getElementById('detail-panel');
+    if (panel.classList.contains('open')) closePanel();
+  }
+});
+
+/* ═══════════════════════════════════════════════
+   Init
+   ═══════════════════════════════════════════════ */
+async function init() {
+  await refreshData();
+
+  // Auto-refresh every 30s
+  autoRefreshTimer = setInterval(function() {
+    applyFilters();
+  }, 30000);
+
+  // Countdown timer
+  countdownTimer = setInterval(function() {
+    refreshCountdown--;
+    if (refreshCountdown <= 0) refreshCountdown = 30;
+    updateCountdown();
+  }, 1000);
+}
+
+// Start
+document.addEventListener('DOMContentLoaded', init);
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', function() {
+  if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+  if (countdownTimer) clearInterval(countdownTimer);
+});
+</script>
+
+</body>
+</html>

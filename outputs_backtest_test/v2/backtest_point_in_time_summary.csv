@@ -1,0 +1,4 @@
+threshold,total_tp,total_fp,total_fn,total_tn,precision,recall,f1,fpr,mean_rolling_f1
+Watch,1282,434,885,398,0.7471,0.5916,0.6603,0.5216,0.6151
+Warning,776,174,1391,658,0.8168,0.3581,0.4979,0.2091,0.4441
+Alarm,391,48,1776,784,0.8907,0.1804,0.3001,0.0577,0.2596

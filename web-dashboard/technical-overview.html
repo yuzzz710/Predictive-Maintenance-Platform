@@ -1,14 +1,17 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>系统技术架构与模型设计 — Industrial AI Copilot</title>
-<script src="/shared/navbar.js?v=20260519"></script>
+<title>系统技术架构 — Industrial AI Copilot</title>
+<script src="/shared/role-check.js"></script>
+<script src="/shared/theme-init.js"></script>
+<script src="/shared/navbar.js?v=20260530"></script>
+<script src="/shared/role-switcher.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <style>
 /* ═══════════════════════════════════════════════════════════════
-   DESIGN TOKENS — matches main dashboard theme
+   DESIGN TOKENS
    ═══════════════════════════════════════════════════════════════ */
 :root {
   --bg-root: #080a0d;
@@ -28,6 +31,7 @@
   --accent-blue: #4d94ff;
   --accent-green: #3fb950;
   --accent-purple: #a371f7;
+  --accent-pink: #db61a2;
   --shadow-card: 0 1px 3px rgba(0,0,0,0.4);
   --shadow-lg: 0 8px 30px rgba(0,0,0,0.5);
   --radius: 3px;
@@ -51,6 +55,31 @@ body::before {
   background:
     radial-gradient(ellipse at 20% 0%, rgba(0,201,160,0.03) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 60%, rgba(77,148,255,0.03) 0%, transparent 50%);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LIGHT THEME — Clean Industrial
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="light"] {
+  --bg-root: #f4f6f9;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-alt: #f0f2f5;
+  --bg-input: #ffffff;
+  --border: #dde1e7;
+  --border-light: #e4e8ef;
+  --border-accent: #c4cdd9;
+  --text-primary: #1a1d26;
+  --text-secondary: #4a5568;
+  --text-muted: #7a8498;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.10);
+}
+[data-theme="light"] body::before {
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.006) 2px, rgba(0,0,0,0.006) 4px),
+    radial-gradient(ellipse at 20% 0%, rgba(0,156,130,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(200,130,30,0.04) 0%, transparent 50%);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -95,7 +124,7 @@ body::before {
    ═══════════════════════════════════════════════════════════════ */
 .hero {
   max-width: 1400px; margin: 0 auto;
-  padding: 64px 24px 48px;
+  padding: 56px 24px 40px;
   text-align: center;
   position: relative; z-index: 1;
 }
@@ -118,46 +147,311 @@ body::before {
 }
 .hero-sub {
   font-size: 15px; color: var(--text-secondary);
-  max-width: 680px; margin: 0 auto 32px;
+  max-width: 720px; margin: 0 auto 32px;
   line-height: 1.8;
 }
 .hero-metrics {
-  display: flex; justify-content: center; gap: 40px;
+  display: flex; justify-content: center; gap: 32px;
   flex-wrap: wrap;
 }
 .hero-metric {
-  text-align: center;
+  text-align: center; min-width: 90px;
 }
 .hero-metric-val {
   font-size: 28px; font-weight: 700;
   font-family: var(--font-mono);
-  color: var(--accent-cyan);
 }
 .hero-metric-label {
-  font-size: 12px; color: var(--text-muted);
-  margin-top: 2px;
+  font-size: 11px; color: var(--text-muted);
+  margin-top: 2px; max-width: 120px;
 }
+.val-cyan { color: var(--accent-cyan); }
+.val-amber { color: var(--accent-amber); }
+.val-red { color: var(--accent-red); }
+.val-blue { color: var(--accent-blue); }
+.val-green { color: var(--accent-green); }
+.val-purple { color: var(--accent-purple); }
 
 /* ═══════════════════════════════════════════════════════════════
    SECTION CONTAINER
    ═══════════════════════════════════════════════════════════════ */
 .section {
   max-width: 1400px; margin: 0 auto;
-  padding: 0 24px 60px;
+  padding: 0 24px 56px;
   position: relative; z-index: 1;
 }
 .section-title {
   font-size: 22px; font-weight: 700;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   color: var(--text-primary);
+  display: flex; align-items: center; gap: 10px;
+}
+.section-title .st-num {
+  font-size: 13px; font-family: var(--font-mono);
+  color: var(--accent-cyan); font-weight: 400;
+  background: rgba(0,201,160,0.08);
+  padding: 2px 10px; border-radius: 12px;
 }
 .section-sub {
   font-size: 13px; color: var(--text-muted);
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   EVOLUTION TIMELINE
+   ARCH CONTAINER
+   ═══════════════════════════════════════════════════════════════ */
+.arch-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+.arch-diagram { width: 100%; height: 580px; }
+.arch-diagram.tall { height: 780px; }
+.arch-diagram.medium { height: 520px; }
+.arch-diagram.short { height: 320px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   FORMULA CARDS GRID
+   ═══════════════════════════════════════════════════════════════ */
+.formula-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 18px;
+}
+@media (max-width: 1000px) { .formula-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 650px) { .formula-grid { grid-template-columns: 1fr; } }
+
+.formula-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.formula-card:hover {
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-lg);
+}
+.formula-card-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.formula-card-header .fc-icon {
+  width: 32px; height: 32px; border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.formula-card-header h4 {
+  font-size: 13px; font-weight: 600;
+}
+.formula-card-header .fc-tag {
+  margin-left: auto; font-size: 10px; padding: 2px 8px; border-radius: 10px;
+  font-family: var(--font-mono);
+}
+.fc-body { padding: 16px 18px; }
+.fc-formula {
+  background: var(--bg-input);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--accent-cyan);
+  text-align: center;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+  line-height: 1.8;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.fc-intuition {
+  font-size: 12px; color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 10px;
+}
+.fc-metrics {
+  display: flex; gap: 12px; flex-wrap: wrap;
+}
+.fc-metric {
+  background: var(--bg-card-alt);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  text-align: center;
+  flex: 1; min-width: 60px;
+}
+.fc-metric .fm-val {
+  font-size: 16px; font-weight: 700;
+  font-family: var(--font-mono);
+}
+.fc-metric .fm-lbl {
+  font-size: 10px; color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INFO CARDS
+   ═══════════════════════════════════════════════════════════════ */
+.info-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.info-card-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 900px) { .info-card-grid { grid-template-columns: 1fr; } .info-card-grid.cols-3 { grid-template-columns: 1fr; } }
+
+.info-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  border-left: 3px solid var(--accent-cyan);
+  transition: border-color var(--transition);
+}
+.info-card.c-amber { border-left-color: var(--accent-amber); }
+.info-card.c-red { border-left-color: var(--accent-red); }
+.info-card.c-blue { border-left-color: var(--accent-blue); }
+.info-card.c-purple { border-left-color: var(--accent-purple); }
+.info-card.c-green { border-left-color: var(--accent-green); }
+.info-card:hover { border-left-color: var(--text-primary); }
+.info-card h4 {
+  font-size: 13px; font-weight: 600;
+  margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.info-card p, .info-card li {
+  font-size: 12px; color: var(--text-secondary);
+  line-height: 1.7;
+}
+.info-card ul { padding-left: 18px; margin: 4px 0; }
+.info-card li { margin-bottom: 2px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   METRIC MINI ROW
+   ═══════════════════════════════════════════════════════════════ */
+.metric-row {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  margin-top: 10px;
+}
+.metric-mini {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  text-align: center;
+  min-width: 70px; flex: 1;
+}
+.metric-mini .val {
+  font-size: 17px; font-weight: 700;
+  font-family: var(--font-mono);
+}
+.metric-mini .lbl {
+  font-size: 10px; color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STATE MACHINE
+   ═══════════════════════════════════════════════════════════════ */
+.state-machine {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0; flex-wrap: wrap; padding: 20px 0;
+}
+.state-node {
+  width: 150px; padding: 16px 12px;
+  border-radius: var(--radius-md);
+  text-align: center;
+  border: 2px solid var(--border);
+  background: var(--bg-card);
+  transition: all var(--transition);
+}
+.state-node .sn-level {
+  font-size: 10px; font-family: var(--font-mono);
+  font-weight: 700; letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.state-node .sn-name {
+  font-size: 12px; font-weight: 600;
+  margin-bottom: 4px;
+}
+.state-node .sn-output {
+  font-size: 10px; color: var(--text-muted);
+  line-height: 1.5;
+}
+.state-arrow {
+  font-size: 20px; color: var(--text-muted);
+  padding: 0 8px; flex-shrink: 0;
+}
+.state-node.l0 { border-color: var(--accent-green); }
+.state-node.l0 .sn-level { color: var(--accent-green); }
+.state-node.l1 { border-color: var(--accent-amber); }
+.state-node.l1 .sn-level { color: var(--accent-amber); }
+.state-node.l2 { border-color: #f0883e; }
+.state-node.l2 .sn-level { color: #f0883e; }
+.state-node.l3 { border-color: var(--accent-red); }
+.state-node.l3 .sn-level { color: var(--accent-red); }
+
+/* ── Interactive state machine ── */
+.state-node.interactive { cursor: pointer; }
+.state-node.interactive:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+.state-node.active { box-shadow: 0 0 20px var(--glow-color); }
+.state-node.active.l0 { --glow-color: rgba(63,185,80,0.5); }
+.state-node.active.l1 { --glow-color: rgba(240,160,48,0.5); }
+.state-node.active.l2 { --glow-color: rgba(240,136,62,0.5); }
+.state-node.active.l3 { --glow-color: rgba(240,68,68,0.5); }
+/* Degradation pulse dot */
+.degrade-dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:6px; vertical-align:middle; }
+.degrade-dot.l0 { background:#3fb950; }
+.degrade-dot.l1 { background:#f0a030; }
+.degrade-dot.l2 { background:#f0883e; }
+.degrade-dot.l3 { background:#f04444; }
+@keyframes degradePulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.degrade-dot.pulse { animation:degradePulse 1.5s ease-in-out infinite; }
+/* Degradation detail panel */
+.degrade-detail { margin-top:20px; padding:18px 20px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); display:none; }
+.degrade-detail.show { display:block; animation:fadeIn 0.3s ease; }
+.degrade-detail h4 { font-size:14px; margin-bottom:10px; }
+.degrade-detail .dg-row { display:flex; justify-content:space-between; padding:6px 0; font-size:12px; border-bottom:1px solid var(--border-light); }
+.degrade-detail .dg-impact { margin-top:12px; padding:10px; background:var(--bg-card-alt); border-radius:4px; font-size:12px; line-height:1.8; }
+.degrade-detail .dg-recovery { margin-top:8px; font-size:11px; color:var(--accent-cyan); }
+.degrade-detail .dg-recovery code { background:var(--bg-input); padding:2px 6px; border-radius:3px; font-size:10px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   TOOL TABLE
+   ═══════════════════════════════════════════════════════════════ */
+.tool-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 12px; margin-top: 10px;
+}
+.tool-table th {
+  background: var(--bg-card-alt);
+  text-align: left;
+  padding: 9px 12px;
+  font-weight: 600; font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--border);
+}
+.tool-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  font-family: var(--font-mono); font-size: 11px;
+}
+.tool-table tbody tr:hover td { background: rgba(255,255,255,0.01); }
+.tool-table .tt-name { color: var(--accent-cyan); font-weight: 600; }
+.tool-table .tt-badge {
+  display: inline-block; padding: 1px 7px; border-radius: 10px;
+  font-size: 9px; font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   EVOLUTION TIMELINE (kept from original)
    ═══════════════════════════════════════════════════════════════ */
 .timeline {
   position: relative;
@@ -177,16 +471,14 @@ body::before {
 }
 .timeline-phase {
   position: relative;
-  margin-bottom: 48px;
+  margin-bottom: 36px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow: hidden;
   transition: border-color var(--transition);
 }
-.timeline-phase:hover {
-  border-color: var(--border-accent);
-}
+.timeline-phase:hover { border-color: var(--border-accent); }
 .timeline-dot {
   position: absolute; left: -33px; top: 28px;
   width: 12px; height: 12px; border-radius: 50%;
@@ -219,9 +511,7 @@ body::before {
 .phase-num.p4 { background: rgba(77,148,255,0.1); color: var(--accent-blue); border: 1px solid rgba(77,148,255,0.2); }
 .phase-num.p5 { background: rgba(163,113,247,0.1); color: var(--accent-purple); border: 1px solid rgba(163,113,247,0.2); }
 
-.phase-title-block h3 {
-  font-size: 16px; font-weight: 700;
-}
+.phase-title-block h3 { font-size: 16px; font-weight: 700; }
 .phase-title-block .phase-source {
   font-size: 11px; color: var(--text-muted);
   font-family: var(--font-mono);
@@ -241,9 +531,7 @@ body::before {
   color: var(--text-muted); font-size: 12px;
   transition: transform var(--transition);
 }
-.timeline-phase.open .phase-chevron {
-  transform: rotate(90deg);
-}
+.timeline-phase.open .phase-chevron { transform: rotate(90deg); }
 
 .phase-body {
   display: none;
@@ -252,19 +540,13 @@ body::before {
 }
 .timeline-phase.open .phase-body { display: block; }
 
-/* ── Phase body grid ── */
 .phase-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  margin-top: 20px;
+  gap: 16px;
+  margin-top: 18px;
 }
-.phase-grid-full {
-  grid-template-columns: 1fr;
-}
-@media (max-width: 900px) {
-  .phase-grid { grid-template-columns: 1fr; }
-}
+@media (max-width: 900px) { .phase-grid { grid-template-columns: 1fr; } }
 
 .phase-info-card {
   background: var(--bg-card-alt);
@@ -280,43 +562,12 @@ body::before {
   margin-bottom: 10px;
 }
 .phase-info-card p, .phase-info-card li {
-  font-size: 13px; color: var(--text-secondary);
+  font-size: 12.5px; color: var(--text-secondary);
   line-height: 1.7;
 }
-.phase-info-card ul {
-  padding-left: 18px;
-  margin: 4px 0;
-}
+.phase-info-card ul { padding-left: 18px; margin: 4px 0; }
 .phase-info-card li { margin-bottom: 3px; }
 
-/* Metric mini-cards */
-.metric-row {
-  display: flex; gap: 12px; flex-wrap: wrap;
-  margin-top: 12px;
-}
-.metric-mini {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px 14px;
-  text-align: center;
-  min-width: 80px;
-  flex: 1;
-}
-.metric-mini .val {
-  font-size: 18px; font-weight: 700;
-  font-family: var(--font-mono);
-}
-.metric-mini .lbl {
-  font-size: 10px; color: var(--text-muted);
-  margin-top: 2px;
-}
-.val-good { color: var(--accent-green); }
-.val-warn { color: var(--accent-amber); }
-.val-bad { color: var(--accent-red); }
-.val-info { color: var(--accent-blue); }
-
-/* Limitation → Next arrow */
 .limitation-arrow {
   display: flex; align-items: center; gap: 12px;
   padding: 12px 16px;
@@ -326,18 +577,9 @@ body::before {
   border-radius: var(--radius);
   font-size: 13px;
 }
-.limitation-arrow .arrow-icon {
-  color: var(--accent-amber);
-  font-size: 18px;
-  flex-shrink: 0;
-}
-.limitation-arrow .lim-text {
-  color: var(--text-secondary);
-}
-.limitation-arrow .next-text {
-  color: var(--accent-cyan);
-  font-weight: 600;
-}
+.limitation-arrow .arrow-icon { color: var(--accent-amber); font-size: 18px; flex-shrink: 0; }
+.limitation-arrow .lim-text { color: var(--text-secondary); }
+.limitation-arrow .next-text { color: var(--accent-cyan); font-weight: 600; }
 
 /* ═══════════════════════════════════════════════════════════════
    TECH STACK GRID
@@ -345,7 +587,7 @@ body::before {
 .tech-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
+  gap: 14px;
 }
 .tech-card {
   background: var(--bg-card);
@@ -353,6 +595,7 @@ body::before {
   border-radius: var(--radius-md);
   padding: 20px;
   transition: border-color var(--transition);
+  position: relative;
 }
 .tech-card:hover { border-color: var(--accent-cyan); }
 .tech-card-icon {
@@ -363,7 +606,7 @@ body::before {
 .tech-card h4 { font-size: 14px; margin-bottom: 4px; }
 .tech-card p { font-size: 12px; color: var(--text-secondary); }
 .tech-card .tech-tags {
-  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;
+  display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;
 }
 .tech-tag {
   font-size: 10px; padding: 2px 8px; border-radius: 10px;
@@ -374,54 +617,102 @@ body::before {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   ARCHITECTURE DIAGRAM
+   DECISION LAYER TABLE
    ═══════════════════════════════════════════════════════════════ */
-.arch-container {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  overflow: hidden;
+.layer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
 }
-.arch-diagram {
-  width: 100%; height: 500px;
+@media (max-width: 1000px) { .layer-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .layer-grid { grid-template-columns: 1fr; } }
+.layer-card {
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  text-align: center;
+  transition: border-color var(--transition);
+}
+.layer-card:hover { border-color: var(--accent-cyan); }
+.layer-card .l-num {
+  font-size: 10px; font-family: var(--font-mono);
+  font-weight: 700; letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.layer-card .l-name {
+  font-size: 13px; font-weight: 600;
+  margin-bottom: 4px;
+}
+.layer-card .l-desc {
+  font-size: 11px; color: var(--text-muted);
+  line-height: 1.5;
+}
+.layer-card .l-weight {
+  display: inline-block; margin-top: 6px;
+  font-size: 11px; font-family: var(--font-mono);
+  font-weight: 700; padding: 3px 10px;
+  border-radius: 10px;
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   DASHBOARD MAPPING TABLE
+   MAPPING TABLE
    ═══════════════════════════════════════════════════════════════ */
 .mapping-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 12px;
 }
 .mapping-table th {
   background: var(--bg-card-alt);
   text-align: left;
   padding: 10px 14px;
-  font-weight: 600; font-size: 11px;
+  font-weight: 600; font-size: 10px;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2px solid var(--border);
 }
 .mapping-table td {
   padding: 10px 14px;
   border-bottom: 1px solid var(--border);
   color: var(--text-secondary);
+  font-size: 11px;
 }
-.mapping-table tr:hover td {
-  background: rgba(255,255,255,0.01);
-}
-.mapping-table .module-name {
-  color: var(--accent-cyan);
-  font-weight: 600;
-}
+.mapping-table tr:hover td { background: rgba(255,255,255,0.01); }
+.mapping-table .module-name { color: var(--accent-cyan); font-weight: 600; }
 
 /* ═══════════════════════════════════════════════════════════════
-   CAPABILITY PROGRESSION
+   SYNC FLOW
    ═══════════════════════════════════════════════════════════════ */
-.capability-chart {
-  width: 100%; height: 400px;
+.sync-flow {
+  display: flex; align-items: center; justify-content: center;
+  gap: 20px; flex-wrap: wrap; padding: 20px 0;
+}
+.sync-source {
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  text-align: center;
+  min-width: 140px;
+}
+.sync-source .ss-count {
+  font-size: 24px; font-weight: 700;
+  font-family: var(--font-mono);
+}
+.sync-source .ss-label {
+  font-size: 11px; color: var(--text-muted);
+  margin-top: 4px;
+}
+.sync-source .ss-detail {
+  font-size: 10px; color: var(--text-secondary);
+  margin-top: 6px; line-height: 1.5;
+}
+.sync-arrow-big {
+  font-size: 28px; color: var(--accent-cyan);
+  flex-shrink: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -438,11 +729,199 @@ body::before {
    RESPONSIVE
    ═══════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-  .hero h1 { font-size: 24px; }
-  .hero-metrics { gap: 20px; }
-  .phase-header { flex-direction: column; align-items: flex-start; gap: 12px; }
-  .phase-header-right { align-self: flex-start; }
+  .hero h1 { font-size: 22px; }
+  .hero-metrics { gap: 16px; }
+  .state-machine { flex-direction: column; }
+  .state-arrow { transform: rotate(90deg); }
+  .sync-flow { flex-direction: column; }
+  .sync-arrow-big { transform: rotate(90deg); }
 }
+
+/* ═══ Role visibility ═══ */
+html[data-role="operator"] .role-manager:not(.role-operator) { display: none !important; }
+html[data-role="operator"] .role-developer:not(.role-operator) { display: none !important; }
+html[data-role="manager"] .role-operator:not(.role-manager) { display: none !important; }
+html[data-role="manager"] .role-developer:not(.role-manager) { display: none !important; }
+
+/* ═══════════════════════════════════════════════════════════════
+   DATA CEILING INTERACTIVE DEMO — 数据天花板交互式演示
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Section separator bar */
+.demo-separator {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 28px; padding-top: 8px;
+}
+.demo-separator-line {
+  flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-red), transparent);
+  opacity: 0.3;
+}
+.demo-separator-text {
+  font-size: 11px; font-family: var(--font-mono);
+  color: var(--accent-red); letter-spacing: 1.5px;
+  text-transform: uppercase; font-weight: 600;
+}
+
+/* Two-column responsive grid */
+.ceiling-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+@media (max-width: 900px) {
+  .ceiling-grid { grid-template-columns: 1fr; }
+}
+
+/* Left: 2x2 KDE chart grid */
+.ceiling-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 600px) {
+  .ceiling-charts-grid { grid-template-columns: 1fr; }
+}
+.ceiling-kde-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color 0.25s;
+}
+.ceiling-kde-card:hover { border-color: var(--border-accent); }
+.ceiling-kde-chart { width: 100%; height: 220px; }
+.ceiling-kde-label {
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.ceiling-kde-label .param-name { font-weight: 600; color: var(--text-primary); font-size: 12px; }
+.ceiling-kde-label .overlap-badge {
+  font-family: var(--font-mono); font-size: 10px;
+  background: rgba(240,68,68,0.1); color: var(--accent-red);
+  padding: 2px 8px; border-radius: 10px; font-weight: 600;
+}
+.ceiling-kde-chart .kde-loading {
+  display: flex; align-items: center; justify-content: center;
+  height: 100%; color: var(--text-muted); font-size: 12px;
+}
+
+/* Right: Control panel */
+.ceiling-right {
+  display: flex; flex-direction: column; gap: 16px;
+}
+.ceiling-control-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  display: flex; flex-direction: column; gap: 24px;
+}
+
+/* Youden's J big number */
+.youden-display { text-align: center; }
+.youden-label {
+  font-size: 11px; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 1.5px;
+  margin-bottom: 6px;
+}
+.youden-value {
+  font-size: 64px; font-weight: 800; line-height: 1;
+  font-family: var(--font-mono);
+  transition: color 0.5s ease;
+  color: var(--accent-red);
+}
+.youden-value.level-warning { color: var(--accent-amber); }
+.youden-value.level-good { color: var(--accent-green); }
+.youden-sub {
+  font-size: 11px; color: var(--text-muted); margin-top: 4px;
+}
+
+/* Phase info card */
+.phase-info {
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 8px;
+  transition: border-color 0.3s;
+}
+.phase-info h4 {
+  font-size: 13px; font-weight: 600;
+  color: var(--accent-cyan);
+  display: flex; align-items: center; gap: 6px;
+  margin: 0;
+}
+.phase-info-row {
+  display: flex; justify-content: space-between; font-size: 12px;
+}
+.phase-info-row .lbl { color: var(--text-muted); }
+.phase-info-row .val { font-weight: 600; color: var(--text-primary); font-family: var(--font-mono); }
+
+/* Custom slider */
+.ceiling-slider-wrapper { margin-top: 4px; }
+.ceiling-slider-wrapper input[type=range] {
+  width: 100%; accent-color: var(--accent-cyan);
+  height: 6px; cursor: pointer;
+}
+.ceiling-slider-stops {
+  display: flex; justify-content: space-between;
+  margin-top: 10px; padding: 0 2px;
+}
+.ceiling-slider-stop {
+  font-size: 10px; color: var(--text-muted);
+  text-align: center; cursor: pointer;
+  transition: color 0.3s, font-weight 0.3s;
+  line-height: 1.4; user-select: none;
+  padding: 2px 4px;
+}
+.ceiling-slider-stop.active {
+  color: var(--accent-cyan); font-weight: 700;
+}
+.ceiling-slider-stop:hover { color: var(--text-secondary); }
+.ceiling-slider-stop.active:hover { color: var(--accent-cyan); }
+
+/* Ceiling progress bar */
+.ceiling-bar-container {
+  position: relative; height: 5px;
+  background: var(--bg-input); border-radius: 3px;
+  overflow: hidden;
+}
+.ceiling-bar-fill {
+  height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent-red), var(--accent-amber), var(--accent-green));
+  transition: width 0.5s cubic-bezier(0.33, 1, 0.68, 1);
+  width: 8%;
+}
+.ceiling-bar-label {
+  display: flex; justify-content: space-between;
+  margin-top: 6px; font-size: 10px; color: var(--text-muted);
+}
+.ceiling-bar-label span { font-family: var(--font-mono); }
+
+/* Bottom conclusion */
+.ceiling-conclusion {
+  background: linear-gradient(135deg, rgba(240,68,68,0.06), rgba(240,160,48,0.03));
+  border: 1px solid rgba(240,68,68,0.15);
+  border-radius: var(--radius-md);
+  padding: 18px 24px;
+  text-align: center;
+  font-size: 14px; font-weight: 500;
+  color: var(--text-primary); line-height: 1.7;
+  transition: background 0.4s, border-color 0.4s;
+}
+.ceiling-conclusion .highlight {
+  color: var(--accent-amber); font-weight: 700;
+}
+[data-theme="light"] .ceiling-conclusion {
+  background: linear-gradient(135deg, rgba(220,40,40,0.04), rgba(200,130,30,0.02));
+  border-color: rgba(220,40,40,0.12);
+}
+
 </style>
 </head>
 <body>
@@ -450,14 +929,15 @@ body::before {
 <!-- ═══════════════════════════════════════════════════════════════
      HEADER
      ═══════════════════════════════════════════════════════════════ -->
-<div class="header">
+<div class="header role-developer">
   <div class="header-inner">
     <a class="logo" href="/">
       <span class="logo-dot"></span>
       工业智能运维 — 技术体系
     </a>
     <div class="nav-links">
-      <a href="/">仪表盘</a>
+      <a href="/">首页</a>
+      <a href="/dashboard">仪表盘</a>
       <a href="/chat">AI Copilot</a>
       <a href="/technical-overview" style="color:var(--accent-cyan);">技术架构</a>
     </div>
@@ -467,130 +947,818 @@ body::before {
 <!-- ═══════════════════════════════════════════════════════════════
      HERO
      ═══════════════════════════════════════════════════════════════ -->
+<div class="role-developer">
 <div class="hero">
-  <div class="hero-badge">TECHNICAL ARCHITECTURE &amp; MODEL DESIGN</div>
-  <h1>从统计分析到 AI Copilot<br>工业预测性维护技术演进体系</h1>
+  <div class="hero-badge">TECHNICAL ARCHITECTURE &amp; SYSTEM DESIGN</div>
+  <h1>从4个传感器到AI Copilot<br>工业预测性维护全栈技术架构</h1>
   <p class="hero-sub">
-    100台CNC设备 · 4传感器参数 · 9种故障类型 · 5阶段技术演进<br>
-    核心发现：4参数系统的可预测性理论上限（Youden's J &lt; 0.08），驱动从纯ML到决策融合的架构转型
+    100台CNC设备 · 4传感器参数 · 9种故障类型 · 3角色权限体系 · 7 MCP工具 · 10 Gateway Tools · 22输出文件 · 8交互式标签页<br>
+    核心发现：4参数系统的可预测性理论上限（Youden's J &lt; 0.08），驱动从纯ML到多信号决策融合的架构转型
   </p>
   <div class="hero-metrics">
     <div class="hero-metric">
-      <div class="hero-metric-val">0.077</div>
-      <div class="hero-metric-label">最大Youden's J（电压）</div>
+      <div class="hero-metric-val val-red">0.077</div>
+      <div class="hero-metric-label">最大Youden's J（可用≥0.30）</div>
     </div>
     <div class="hero-metric">
-      <div class="hero-metric-val">0.40</div>
+      <div class="hero-metric-val val-cyan">0.40</div>
       <div class="hero-metric-label">统计基线决策权重</div>
     </div>
     <div class="hero-metric">
-      <div class="hero-metric-val">83.9%</div>
-      <div class="hero-metric-label">Z-score告警精确率</div>
+      <div class="hero-metric-val val-green">83.9%</div>
+      <div class="hero-metric-label">Z-Score告警精确率</div>
     </div>
     <div class="hero-metric">
-      <div class="hero-metric-val">9</div>
+      <div class="hero-metric-val val-purple">3</div>
+      <div class="hero-metric-label">角色权限体系</div>
+    </div>
+    <div class="hero-metric">
+      <div class="hero-metric-val val-cyan">8</div>
+      <div class="hero-metric-label">交互式标签页</div>
+    </div>
+    <div class="hero-metric">
+      <div class="hero-metric-val val-purple">7</div>
       <div class="hero-metric-label">MCP Tools</div>
     </div>
     <div class="hero-metric">
-      <div class="hero-metric-val">5</div>
-      <div class="hero-metric-label">技术演进阶段</div>
+      <div class="hero-metric-val val-amber">22</div>
+      <div class="hero-metric-label">Pipeline输出文件</div>
+    </div>
+    <div class="hero-metric">
+      <div class="hero-metric-val val-blue">4</div>
+      <div class="hero-metric-label">降级路径层级</div>
     </div>
   </div>
 </div>
+
 <!-- ═══════════════════════════════════════════════════════════════
-     SYSTEM ARCHITECTURE TOPOLOGY
+     SECTION 0: SYSTEM OVERVIEW — 系统鸟瞰
      ═══════════════════════════════════════════════════════════════ -->
 <div class="section">
-  <h2 class="section-title">系统架构拓扑</h2>
-  <p class="section-sub">三层物理拓扑 + Agent-MCP逻辑架构 + Web Dashboard Gateway</p>
+  <h2 class="section-title"><span class="st-num">00</span> 系统全景鸟瞰</h2>
+  <p class="section-sub">四层架构：角色门（Role Gate）→ 数据层（4 CSV → 5 Skills）→ 智能层（统计+ML+诊断+决策融合）→ 应用层（三角色专属视图 + Dashboard + AI Copilot + 工单输出）</p>
   <div class="arch-container">
-    <div class="arch-diagram" id="archDiagram"></div>
+    <div class="arch-diagram tall" id="chart-overview"></div>
   </div>
 </div>
+
 <!-- ═══════════════════════════════════════════════════════════════
-     TECH STACK
+     SECTION 1: ROLE ARCHITECTURE — 三角色权限与首页架构
      ═══════════════════════════════════════════════════════════════ -->
 <div class="section">
-  <h2 class="section-title">技术栈全景</h2>
-  <p class="section-sub">覆盖数据分析、机器学习、系统架构、前端可视化的完整技术生态</p>
-  <div class="tech-grid">
-    <div class="tech-card">
-      <div class="tech-card-icon" style="background:rgba(0,201,160,0.1);color:var(--accent-cyan);">&#9776;</div>
-      <h4>数据探索与统计</h4>
-      <p>14项统计任务覆盖单变量/双变量/多变量分析</p>
-      <div class="tech-tags">
-        <span class="tech-tag">scipy</span><span class="tech-tag">pandas</span><span class="tech-tag">KDE</span><span class="tech-tag">Cohen's d</span><span class="tech-tag">KS-test</span><span class="tech-tag">Youden's J</span>
+  <h2 class="section-title"><span class="st-num">01</span> 三角色权限与首页双视图</h2>
+  <p class="section-sub">系统为三类用户提供专属视图，通过同步CSS过滤机制实现零闪烁角色切换。同一套代码，三套视角。</p>
+
+  <!-- Three Role Cards -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0;">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:20px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent-cyan);"></div>
+      <div style="font-size:28px;margin-bottom:8px;">&#9881;</div>
+      <div style="font-size:15px;font-weight:700;color:var(--accent-cyan);margin-bottom:4px;">运维工程师</div>
+      <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-family:var(--font-mono);">Operator · 执行层</div>
+      <div style="font-size:11px;color:var(--text-secondary);line-height:1.7;">
+        <div style="margin-bottom:6px;font-weight:600;color:var(--text-primary);">首页视图</div>
+        统计卡片 + 2×5紧急设备 + 10×10健康网格 + 维护计划表 + 零件清单
+        <div style="margin:8px 0 6px;font-weight:600;color:var(--text-primary);">仪表盘Tab</div>
+        运行日志 · 方案有效性验证
       </div>
     </div>
-    <div class="tech-card">
-      <div class="tech-card-icon" style="background:rgba(240,160,48,0.1);color:var(--accent-amber);">&#9881;</div>
-      <h4>基线分析系统</h4>
-      <p>每设备Z-Score · 成本风险矩阵 · Hotelling T² · 故障签名</p>
-      <div class="tech-tags">
-        <span class="tech-tag">Z-Score</span><span class="tech-tag">T² SPC</span><span class="tech-tag">K-Means</span><span class="tech-tag">Quantile</span>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:20px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent-amber);"></div>
+      <div style="font-size:28px;margin-bottom:8px;">&#128202;</div>
+      <div style="font-size:15px;font-weight:700;color:var(--accent-amber);margin-bottom:4px;">生产管理负责人</div>
+      <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-family:var(--font-mono);">Manager · 决策层</div>
+      <div style="font-size:11px;color:var(--text-secondary);line-height:1.7;">
+        <div style="margin-bottom:6px;font-weight:600;color:var(--text-primary);">首页视图</div>
+        KPI卡片 + 健康分布 + Top5风险表 + 策略选择器 + 快捷入口
+        <div style="margin:8px 0 6px;font-weight:600;color:var(--text-primary);">仪表盘Tab</div>
+        业务总览 · 方案验证 · 决策中心 · 健康升级
       </div>
     </div>
-    <div class="tech-card">
-      <div class="tech-card-icon" style="background:rgba(240,68,68,0.1);color:var(--accent-red);">&#9913;</div>
-      <h4>XGBoost 告警模型</h4>
-      <p>35维特征工程 · 双时间窗口 · 成本敏感学习</p>
-      <div class="tech-tags">
-        <span class="tech-tag">XGBoost</span><span class="tech-tag">GridSearch</span><span class="tech-tag">滑动窗口</span><span class="tech-tag">F2-Score</span>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:20px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent-purple);"></div>
+      <div style="font-size:28px;margin-bottom:8px;">&#128295;</div>
+      <div style="font-size:15px;font-weight:700;color:var(--accent-purple);margin-bottom:4px;">平台开发人员</div>
+      <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-family:var(--font-mono);">Developer · 全量视图</div>
+      <div style="font-size:11px;color:var(--text-secondary);line-height:1.7;">
+        <div style="margin-bottom:6px;font-weight:600;color:var(--text-primary);">首页视图</div>
+        运维+管理全部内容（双视图并存）
+        <div style="margin:8px 0 6px;font-weight:600;color:var(--text-primary);">仪表盘Tab</div>
+        全部8个Tab（sec0-sec7）
       </div>
     </div>
-    <div class="tech-card">
-      <div class="tech-card-icon" style="background:rgba(77,148,255,0.1);color:var(--accent-blue);">&#9650;</div>
-      <h4>Multi-Task 深度学习</h4>
-      <p>106维特征 · 4维度体系 · 多任务回归 · 数据增强</p>
-      <div class="tech-tags">
-        <span class="tech-tag">PyTorch</span><span class="tech-tag">BatchNorm</span><span class="tech-tag">Dropout</span><span class="tech-tag">MSE Loss</span>
+  </div>
+
+  <h3 style="font-size:15px;margin:28px 0 12px;color:var(--text-primary);">权限控制机制</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;">
+      <div style="font-size:12px;font-weight:600;color:var(--accent-cyan);margin-bottom:8px;">&#9654; 入口流程</div>
+      <div style="font-size:11px;color:var(--text-secondary);line-height:1.8;">
+        用户访问 → <code style="background:var(--bg-input);padding:1px 5px;border-radius:3px;color:var(--accent-amber);">role-check.js</code>（&lt;head&gt;同步执行，首帧前完成）→ 检测 <code style="background:var(--bg-input);padding:1px 5px;border-radius:3px;">sessionStorage</code> → 无角色则跳转 <code style="background:var(--bg-input);padding:1px 5px;border-radius:3px;color:var(--accent-cyan);">/role-gate</code> 角色选择门 → 选择后写入并跳回目标页面
       </div>
     </div>
-    <div class="tech-card">
-      <div class="tech-card-icon" style="background:rgba(163,113,247,0.1);color:var(--accent-purple);">&#9783;</div>
-      <h4>决策融合引擎</h4>
-      <p>4层架构 · 6动作类型 · DAG流水线 · 降级路径</p>
-      <div class="tech-tags">
-        <span class="tech-tag">ThreadPool</span><span class="tech-tag">DAG</span><span class="tech-tag">Fusion</span><span class="tech-tag">subprocess</span>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;">
+      <div style="font-size:12px;font-weight:600;color:var(--accent-amber);margin-bottom:8px;">&#9654; 切换方式</div>
+      <div style="font-size:11px;color:var(--text-secondary);line-height:1.8;">
+        导航栏最右侧胶囊按钮 → 点击循环切换 <strong style="color:var(--accent-cyan);">运维</strong> → <strong style="color:var(--accent-amber);">管理</strong> → <strong style="color:var(--accent-purple);">开发</strong> → 运维 → 页面自动刷新应用新角色
       </div>
     </div>
-    <div class="tech-card">
-      <div class="tech-card-icon" style="background:rgba(0,201,160,0.1);color:var(--accent-cyan);">&#9742;</div>
-      <h4>MCP Tool System</h4>
-      <p>7 MCP工具 · 8知识资源 · 3 Prompt模板 · 2执行路径</p>
-      <div class="tech-tags">
-        <span class="tech-tag">FastMCP</span><span class="tech-tag">JSON-RPC</span><span class="tech-tag">stdio</span><span class="tech-tag">subprocess</span>
+  </div>
+
+  <h3 style="font-size:15px;margin:28px 0 12px;color:var(--text-primary);">CSS过滤核心逻辑</h3>
+  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;">
+    <pre style="font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);line-height:1.8;margin:0;">
+<span style="color:var(--text-muted);">/* Operator: 隐藏纯Manager和纯Developer内容 */</span>
+<span style="color:var(--accent-cyan);">html[data-role="operator"]</span> <span style="color:var(--accent-amber);">.role-manager</span>:not(<span style="color:var(--accent-cyan);">.role-operator</span>) { <span style="color:var(--accent-red);">display: none !important</span>; }
+<span style="color:var(--accent-cyan);">html[data-role="operator"]</span> <span style="color:var(--accent-purple);">.role-developer</span>:not(<span style="color:var(--accent-cyan);">.role-operator</span>) { <span style="color:var(--accent-red);">display: none !important</span>; }
+
+<span style="color:var(--text-muted);">/* Manager: 隐藏纯Operator和纯Developer内容 */</span>
+<span style="color:var(--accent-amber);">html[data-role="manager"]</span> <span style="color:var(--accent-cyan);">.role-operator</span>:not(<span style="color:var(--accent-amber);">.role-manager</span>) { <span style="color:var(--accent-red);">display: none !important</span>; }
+<span style="color:var(--accent-amber);">html[data-role="manager"]</span> <span style="color:var(--accent-purple);">.role-developer</span>:not(<span style="color:var(--accent-amber);">.role-manager</span>) { <span style="color:var(--accent-red);">display: none !important</span>; }
+
+<span style="color:var(--text-muted);">/* Developer: 无隐藏规则 → 全量可见 */</span></pre>
+  </div>
+  <p style="font-size:11px;color:var(--text-muted);margin-top:8px;">
+    <strong>关键设计：</strong><code style="background:var(--bg-input);padding:1px 4px;border-radius:2px;">:not()</code> 伪类确保同时拥有多个角色类的元素不被误杀。元素 <code style="background:var(--bg-input);padding:1px 4px;border-radius:2px;">class="role-operator role-manager"</code> 对 operator 和 manager 均可见。
+  </p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 2: CORE ALGORITHMS — 核心算法体系
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2 class="section-title"><span class="st-num">02</span> 核心算法体系</h2>
+  <p class="section-sub">6个核心算法构成系统的数学基础——从单设备统计基线到多信号融合决策</p>
+
+  <div class="formula-grid">
+    <!-- Formula 1: Composite Z-Score -->
+    <div class="formula-card">
+      <div class="formula-card-header">
+        <div class="fc-icon" style="background:rgba(0,201,160,0.1);color:var(--accent-cyan);">σ</div>
+        <h4>逐设备复合Z-Score</h4>
+        <span class="fc-tag" style="background:rgba(0,201,160,0.08);color:var(--accent-cyan);">基线1</span>
+      </div>
+      <div class="fc-body">
+        <div class="fc-formula">Z<sub>composite</sub> = √(Z<sub>V</sub>² + Z<sub>A</sub>² + Z<sub>T</sub>²)</div>
+        <div class="fc-intuition">
+          每台设备独立计算 μ/σ（设备间差异占61-73%总方差）。<br>
+          三维欧氏距离综合电压、电流、温度异常程度。<br>
+          转速被排除（Cohen's d = -0.002，无诊断价值）。
+        </div>
+        <div class="fc-metrics">
+          <div class="fc-metric"><div class="fm-val" style="color:var(--accent-green);">83.9%</div><div class="fm-lbl">精确率 Z>2.0</div></div>
+          <div class="fc-metric"><div class="fm-val" style="color:var(--accent-amber);">39.4%</div><div class="fm-lbl">召回率 Z>2.0</div></div>
+          <div class="fc-metric"><div class="fm-val" style="color:var(--accent-green);">19.7%</div><div class="fm-lbl">误报率</div></div>
+        </div>
       </div>
     </div>
-    <div class="tech-card">
-      <div class="tech-card-icon" style="background:rgba(77,148,255,0.1);color:var(--accent-blue);">&#9729;</div>
-      <h4>AI Gateway</h4>
-      <p>DeepSeek API · 3阶段对话 · SSE Streaming · 9 Tools</p>
-      <div class="tech-tags">
-        <span class="tech-tag">FastAPI</span><span class="tech-tag">DeepSeek</span><span class="tech-tag">SSE</span><span class="tech-tag">httpx</span>
+
+    <!-- Formula 2: Hotelling T² -->
+    <div class="formula-card">
+      <div class="formula-card-header">
+        <div class="fc-icon" style="background:rgba(240,160,48,0.1);color:var(--accent-amber);">T²</div>
+        <h4>Hotelling T² 多元SPC</h4>
+        <span class="fc-tag" style="background:rgba(240,160,48,0.08);color:var(--accent-amber);">基线4</span>
+      </div>
+      <div class="fc-body">
+        <div class="fc-formula">T² = (x − μ)ᵀ Σ⁻¹ (x − μ)</div>
+        <div class="fc-intuition">
+          马氏距离考虑参数协方差结构，χ²控制限（p=3, α=0.01）。<br>
+          高置信度确认通道：检测多参数联合偏移。<br>
+          精确率100%但召回率仅22%，用作验证器而非主检测器。
+        </div>
+        <div class="fc-metrics">
+          <div class="fc-metric"><div class="fm-val" style="color:var(--accent-green);">100%</div><div class="fm-lbl">精确率</div></div>
+          <div class="fc-metric"><div class="fm-val" style="color:var(--accent-red);">22%</div><div class="fm-lbl">召回率</div></div>
+          <div class="fc-metric"><div class="fm-val" style="color:var(--text-muted);">p&lt;0.01</div><div class="fm-lbl">置信水平</div></div>
+        </div>
       </div>
     </div>
-    <div class="tech-card">
-      <div class="tech-card-icon" style="background:rgba(240,160,48,0.1);color:var(--accent-amber);">&#9784;</div>
-      <h4>Web Dashboard</h4>
-      <p>ECharts 5.5 · PapaParse · marked.js · 4-tab懒加载</p>
-      <div class="tech-tags">
-        <span class="tech-tag">ECharts</span><span class="tech-tag">Vanilla JS</span><span class="tech-tag">CSV</span><span class="tech-tag">Dark Theme</span>
+
+    <!-- Formula 3: Risk Fusion -->
+    <div class="formula-card">
+      <div class="formula-card-header">
+        <div class="fc-icon" style="background:rgba(163,113,247,0.1);color:var(--accent-purple);">⊕</div>
+        <h4>多信号风险融合</h4>
+        <span class="fc-tag" style="background:rgba(163,113,247,0.08);color:var(--accent-purple);">决策核心</span>
+      </div>
+      <div class="fc-body">
+        <div class="fc-formula">R<sub>final</sub> = 0.40·S<sub>stat</sub> + 0.25·S<sub>cost</sub> + 0.25·S<sub>ml</sub> + 0.10·S<sub>trend</sub></div>
+        <div class="fc-intuition">
+          放弃纯ML路线，采用4信号加权融合。<br>
+          统计基线占主导（40%）— 因为它是唯一有可靠信号的维度。<br>
+          ML密度权重25%用于风险排序而非逐点分类。
+        </div>
+        <div class="fc-metrics">
+          <div class="fc-metric"><div class="fm-val" style="color:var(--accent-cyan);">0.40</div><div class="fm-lbl">统计异常</div></div>
+          <div class="fc-metric"><div class="fm-val" style="color:var(--accent-purple);">0.25</div><div class="fm-lbl">成本风险</div></div>
+          <div class="fc-metric"><div class="fm-val" style="color:var(--accent-blue);">0.25</div><div class="fm-lbl">ML密度</div></div>
+          <div class="fc-metric"><div class="fm-val" style="color:var(--accent-amber);">0.10</div><div class="fm-lbl">趋势漂移</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formula 4: Health Score -->
+    <div class="formula-card">
+      <div class="formula-card-header">
+        <div class="fc-icon" style="background:rgba(63,185,80,0.1);color:var(--accent-green);">♥</div>
+        <h4>设备健康评分</h4>
+        <span class="fc-tag" style="background:rgba(63,185,80,0.08);color:var(--accent-green);">8维聚合</span>
+      </div>
+      <div class="fc-body">
+        <div class="fc-formula">H = Σ w<sub>i</sub> · dim<sub>i</sub> &nbsp; (Σw<sub>i</sub>=1, 8维)</div>
+        <div class="fc-intuition">
+          8个风险维度加权聚合为0-100健康分。<br>
+          故障率20% + Z-Score风险20% + 温度趋势15% + 电压不稳定15%<br>
+          + 维护逾期10% + 成本风险10% + 质量故障5% + 规格违规5%
+        </div>
+        <div class="fc-metrics">
+          <div class="fc-metric"><div class="fm-val" style="color:var(--accent-red);">55台</div><div class="fm-lbl">危险设备</div></div>
+          <div class="fc-metric"><div class="fm-val" style="color:var(--accent-amber);">43台</div><div class="fm-lbl">劣化设备</div></div>
+          <div class="fc-metric"><div class="fm-val" style="color:var(--accent-green);">2台</div><div class="fm-lbl">健康设备</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formula 5: Youden's J Ceiling -->
+    <div class="formula-card">
+      <div class="formula-card-header">
+        <div class="fc-icon" style="background:rgba(240,68,68,0.1);color:var(--accent-red);">⌈</div>
+        <h4>Youden's J 可预测性上限</h4>
+        <span class="fc-tag" style="background:rgba(240,68,68,0.08);color:var(--accent-red);">理论极限</span>
+      </div>
+      <div class="fc-body">
+        <div class="fc-formula">J = Sensitivity + Specificity − 1 &nbsp; (max = 0.077)</div>
+        <div class="fc-intuition">
+          最优单参数切分点的敏感度+特异度−1。<br>
+          J &lt; 0.08意味着最佳参数也只能区分8%的故障。<br>
+          可用阈值 &gt; 0.30 → 纯ML预测性维护在当前传感器下不可行。
+        </div>
+        <div class="fc-metrics">
+          <div class="fc-metric"><div class="fm-val" style="color:var(--accent-red);">0.077</div><div class="fm-lbl">电压(最高)</div></div>
+          <div class="fc-metric"><div class="fm-val" style="color:var(--accent-red);">0.071</div><div class="fm-lbl">温度</div></div>
+          <div class="fc-metric"><div class="fm-val" style="color:var(--accent-red);">0.025</div><div class="fm-lbl">转速(最低)</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formula 6: Cost-Risk Matrix -->
+    <div class="formula-card">
+      <div class="formula-card-header">
+        <div class="fc-icon" style="background:rgba(77,148,255,0.1);color:var(--accent-blue);">$</div>
+        <h4>成本风险矩阵</h4>
+        <span class="fc-tag" style="background:rgba(77,148,255,0.08);color:var(--accent-blue);">基线2</span>
+      </div>
+      <div class="fc-body">
+        <div class="fc-formula">Risk = P(fault) × UnitCost × DailyOutput</div>
+        <div class="fc-intuition">
+          三维乘积量化每台设备的停机经济损失期望。<br>
+          P90/P75分位数自适应阈值划分高/中/低风险设备。<br>
+          识别"低故障率但高成本"的隐性高风险设备。
+        </div>
+        <div class="fc-metrics">
+          <div class="fc-metric"><div class="fm-val" style="color:var(--accent-red);">$7,232</div><div class="fm-lbl">最高风险(CNC_036)</div></div>
+          <div class="fc-metric"><div class="fm-val" style="color:var(--accent-blue);">$3,610</div><div class="fm-lbl">P50中位数</div></div>
+          <div class="fc-metric"><div class="fm-val" style="color:var(--text-muted);">$3-114</div><div class="fm-lbl">单位成本范围</div></div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
-     EVOLUTION TIMELINE
+     DATA CEILING INTERACTIVE DEMO — 数据天花板交互式演示
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section" id="data-ceiling-demo">
+  <!-- Visual separator -->
+  <div class="demo-separator">
+    <span class="demo-separator-line"></span>
+    <span class="demo-separator-text">◆ 交互式演示 ◆</span>
+    <span class="demo-separator-line"></span>
+  </div>
+
+  <h2 class="section-title">
+    <span class="st-num" style="background:rgba(240,68,68,0.08);color:var(--accent-red);">证据</span>
+    数据天花板 — 纯ML为何不可行
+  </h2>
+  <p class="section-sub">
+    4传感器参数的正常/故障分布几乎完全重叠，任何ML模型都无法从无信息的输入中学习。
+    <span style="color:var(--accent-amber);font-weight:600;">问题不在模型，在传感器给的信息不够多。</span>
+  </p>
+
+  <!-- Main two-column layout -->
+  <div class="ceiling-grid">
+    <!-- LEFT: 2x2 KDE overlap charts -->
+    <div class="ceiling-left">
+      <div class="ceiling-charts-grid">
+        <div class="ceiling-kde-card">
+          <div class="ceiling-kde-chart" id="chart-kde-voltage"><div class="kde-loading">加载中...</div></div>
+          <div class="ceiling-kde-label">
+            <span class="param-name">⚡ 电压 (Voltage)</span>
+            <span class="overlap-badge" id="badge-voltage">重叠 —%</span>
+          </div>
+        </div>
+        <div class="ceiling-kde-card">
+          <div class="ceiling-kde-chart" id="chart-kde-amperage"><div class="kde-loading">加载中...</div></div>
+          <div class="ceiling-kde-label">
+            <span class="param-name">🔌 电流 (Amperage)</span>
+            <span class="overlap-badge" id="badge-amperage">重叠 —%</span>
+          </div>
+        </div>
+        <div class="ceiling-kde-card">
+          <div class="ceiling-kde-chart" id="chart-kde-temperature"><div class="kde-loading">加载中...</div></div>
+          <div class="ceiling-kde-label">
+            <span class="param-name">🌡️ 温度 (Temperature)</span>
+            <span class="overlap-badge" id="badge-temperature">重叠 —%</span>
+          </div>
+        </div>
+        <div class="ceiling-kde-card">
+          <div class="ceiling-kde-chart" id="chart-kde-rotorspeed"><div class="kde-loading">加载中...</div></div>
+          <div class="ceiling-kde-label">
+            <span class="param-name">🔄 转速 (Rotor Speed)</span>
+            <span class="overlap-badge" id="badge-rotorspeed">重叠 —%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Interactive slider + Youden's J -->
+    <div class="ceiling-right">
+      <div class="ceiling-control-panel">
+        <!-- Big Youden's J number -->
+        <div class="youden-display">
+          <div class="youden-label">当前 Youden's J 可预测性上限</div>
+          <div class="youden-value" id="youden-value">0.075</div>
+          <div class="youden-sub">可用阈值 &gt; 0.30 &nbsp;|&nbsp; 当前 <span id="youden-verdict" style="color:var(--accent-red);">不可用</span></div>
+        </div>
+
+        <!-- Slider -->
+        <div class="ceiling-slider-wrapper">
+          <input type="range" id="sensor-slider" min="0" max="3" value="0" step="1">
+          <div class="ceiling-slider-stops">
+            <span class="ceiling-slider-stop active" data-idx="0">现状<br>4 传感器</span>
+            <span class="ceiling-slider-stop" data-idx="1">Phase 1<br>+ 振动监测</span>
+            <span class="ceiling-slider-stop" data-idx="2">Phase 2<br>+ 电流频谱</span>
+            <span class="ceiling-slider-stop" data-idx="3">Phase 3<br>+ 热成像</span>
+          </div>
+        </div>
+
+        <!-- Phase info card -->
+        <div class="phase-info" id="phase-info">
+          <h4>📋 <span id="phase-name">基线 (仅4传感器)</span></h4>
+          <div class="phase-info-row">
+            <span class="lbl">新增传感器</span>
+            <span class="val" id="phase-sensors">—</span>
+          </div>
+          <div class="phase-info-row">
+            <span class="lbl">投资额</span>
+            <span class="val" id="phase-investment">$0</span>
+          </div>
+          <div class="phase-info-row">
+            <span class="lbl">5年预期 ROI</span>
+            <span class="val" id="phase-roi" style="color:var(--accent-green);">—</span>
+          </div>
+        </div>
+
+        <!-- Ceiling progress bar -->
+        <div>
+          <div class="ceiling-bar-container">
+            <div class="ceiling-bar-fill" id="ceiling-bar-fill" style="width:8%;"></div>
+          </div>
+          <div class="ceiling-bar-label">
+            <span>可用阈值 J &gt; 0.30</span>
+            <span>理论极限 J = 0.90</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom conclusion -->
+  <div class="ceiling-conclusion" id="ceiling-conclusion">
+    💡 <span class="highlight">不是模型不够好，是传感器给的信息不够多。</span>
+    4个基础传感器下 Youden's J 仅 <strong style="color:var(--accent-red);">0.075</strong>，
+    96%+ 故障样本与正常无法区分，<strong>任何 ML 模型都无从学习</strong>。
+    第一步：部署振动传感器（$402K，5年ROI 994%，6个月回本），Youden's J 立即跃升至 <strong style="color:var(--accent-green);">0.525</strong>。
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 3: PIPELINE ARCHITECTURE — 流水线架构
      ═══════════════════════════════════════════════════════════════ -->
 <div class="section">
-  <h2 class="section-title">技术演进路线</h2>
-  <p class="section-sub">从基础统计分析逐步演进为工业AI Copilot平台 — 每一阶段由前一阶段的数据发现和局限性驱动</p>
+  <h2 class="section-title"><span class="st-num">03</span> DAG流水线与降级架构</h2>
+  <p class="section-sub">5技能DAG调度 + ThreadPool并行 + 四级自动降级保障系统在任何条件下都能产出可用的维护建议</p>
+
+  <!-- DAG Pipeline SVG -->
+  <div class="arch-container" style="padding:28px;">
+    <div style="text-align:center;margin-bottom:12px;">
+      <span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);">
+        ⚡ 完整路径 ~43s &nbsp;|&nbsp; 无ML降级 ~9s &nbsp;|&nbsp; 应急模式 &lt;1s
+      </span>
+    </div>
+    <svg viewBox="0 0 1100 300" style="width:100%;max-width:1100px;display:block;margin:0 auto;">
+      <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+          <polygon points="0 0, 10 3.5, 0 7" fill="#2a3a50" />
+        </marker>
+        <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+          <polygon points="0 0, 10 3.5, 0 7" fill="#00c9a0" />
+        </marker>
+        <marker id="arrowRed" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+          <polygon points="0 0, 10 3.5, 0 7" fill="#f04444" />
+        </marker>
+        <linearGradient id="boxGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#141820" /><stop offset="100%" stop-color="#0e1117" />
+        </linearGradient>
+      </defs>
+
+      <!-- Data source -->
+      <rect x="20" y="90" width="140" height="80" rx="6" fill="url(#boxGrad)" stroke="#5a6474" stroke-width="1.5" />
+      <text x="90" y="122" text-anchor="middle" fill="#8e9aab" font-size="12" font-weight="600">原始数据集</text>
+      <text x="90" y="142" text-anchor="middle" fill="#5a6474" font-size="10">4 CSV · 254KB</text>
+      <text x="90" y="158" text-anchor="middle" fill="#5a6474" font-size="9">2999条×100台</text>
+
+      <line x1="160" y1="130" x2="215" y2="130" stroke="#2a3a50" stroke-width="2" marker-end="url(#arrowhead)" />
+
+      <!-- Skill 1 -->
+      <rect x="225" y="80" width="150" height="100" rx="6" fill="url(#boxGrad)" stroke="#00c9a0" stroke-width="2" />
+      <text x="300" y="112" text-anchor="middle" fill="#00c9a0" font-size="13" font-weight="700">Skill 1</text>
+      <text x="300" y="132" text-anchor="middle" fill="#e6ebf2" font-size="12">数据准备</text>
+      <text x="300" y="150" text-anchor="middle" fill="#5a6474" font-size="9">z-score · cost_risk</text>
+      <text x="300" y="166" text-anchor="middle" fill="#5a6474" font-size="9">baseline · T² (~5s)</text>
+
+      <line x1="375" y1="105" x2="430" y2="80" stroke="#2a3a50" stroke-width="2" marker-end="url(#arrowhead)" />
+      <line x1="375" y1="155" x2="430" y2="180" stroke="#2a3a50" stroke-width="2" marker-end="url(#arrowhead)" />
+
+      <!-- Parallel bracket -->
+      <rect x="420" y="62" width="6" height="155" rx="2" fill="#2a3a50" />
+      <text x="410" y="140" text-anchor="middle" fill="#5a6474" font-size="9" transform="rotate(-90,410,140)">ThreadPool 并行</text>
+
+      <!-- Skill 2 (top) -->
+      <rect x="440" y="55" width="150" height="70" rx="6" fill="url(#boxGrad)" stroke="#f0a030" stroke-width="1.5" />
+      <text x="515" y="82" text-anchor="middle" fill="#f0a030" font-size="13" font-weight="700">Skill 2</text>
+      <text x="515" y="100" text-anchor="middle" fill="#e6ebf2" font-size="12">统计推理 (~35s)</text>
+      <text x="515" y="116" text-anchor="middle" fill="#5a6474" font-size="9">alert · T² · health_score</text>
+
+      <!-- Skill 3 (bottom) -->
+      <rect x="440" y="150" width="150" height="70" rx="6" fill="url(#boxGrad)" stroke="#4d94ff" stroke-width="1.5" stroke-dasharray="6,3" />
+      <text x="515" y="177" text-anchor="middle" fill="#4d94ff" font-size="13" font-weight="700">Skill 3 (可选)</text>
+      <text x="515" y="195" text-anchor="middle" fill="#e6ebf2" font-size="12">ML推理 (~30s-5min)</text>
+      <text x="515" y="211" text-anchor="middle" fill="#5a6474" font-size="9">XGBoost/MTNN预测</text>
+
+      <!-- Arrows 2,3 → 4 -->
+      <line x1="590" y1="90" x2="650" y2="105" stroke="#2a3a50" stroke-width="2" marker-end="url(#arrowhead)" />
+      <line x1="590" y1="185" x2="650" y2="160" stroke="#2a3a50" stroke-width="1" stroke-dasharray="4,4" marker-end="url(#arrowhead)" />
+
+      <!-- Degradation path (dashed red from Skill 2 straight to Skill 5) -->
+      <line x1="515" y1="55" x2="515" y2="28" stroke="#f04444" stroke-width="1" stroke-dasharray="6,3" />
+      <line x1="515" y1="28" x2="760" y2="28" stroke="#f04444" stroke-width="1" stroke-dasharray="6,3" />
+      <line x1="760" y1="28" x2="760" y2="80" stroke="#f04444" stroke-width="1" stroke-dasharray="6,3" marker-end="url(#arrowRed)" />
+      <text x="638" y="22" text-anchor="middle" fill="#f04444" font-size="9">降级路径: ML不可用 → 跳过Skill 3+4 → 统计直接驱动决策</text>
+
+      <!-- Skill 4 -->
+      <rect x="660" y="90" width="140" height="80" rx="6" fill="url(#boxGrad)" stroke="#a371f7" stroke-width="1.5" stroke-dasharray="6,3" />
+      <text x="730" y="118" text-anchor="middle" fill="#a371f7" font-size="13" font-weight="700">Skill 4 (可选)</text>
+      <text x="730" y="138" text-anchor="middle" fill="#e6ebf2" font-size="12">诊断分析 (~2s)</text>
+      <text x="730" y="156" text-anchor="middle" fill="#5a6474" font-size="9">4模式异常诊断</text>
+
+      <line x1="800" y1="130" x2="855" y2="130" stroke="#2a3a50" stroke-width="2" marker-end="url(#arrowhead)" />
+
+      <!-- Skill 5 -->
+      <rect x="865" y="80" width="150" height="100" rx="6" fill="url(#boxGrad)" stroke="#00c9a0" stroke-width="2.5" />
+      <text x="940" y="112" text-anchor="middle" fill="#00c9a0" font-size="13" font-weight="700">Skill 5</text>
+      <text x="940" y="132" text-anchor="middle" fill="#e6ebf2" font-size="12">决策工单 (~1s)</text>
+      <text x="940" y="150" text-anchor="middle" fill="#5a6474" font-size="9">3阶段决策引擎</text>
+      <text x="940" y="166" text-anchor="middle" fill="#5a6474" font-size="9">20优先级工单</text>
+
+      <!-- Emergency path -->
+      <text x="140" y="256" text-anchor="middle" fill="#f04444" font-size="9" font-family="var(--font-mono);">应急路径: 原始数据 →</text>
+      <rect x="240" y="240" width="140" height="24" rx="4" fill="rgba(240,68,68,0.08)" stroke="#f04444" stroke-width="1" stroke-dasharray="4,2" />
+      <text x="310" y="256" text-anchor="middle" fill="#f04444" font-size="10">emergency_work_orders.csv</text>
+
+      <text x="555" y="290" text-anchor="middle" fill="#00c9a0" font-size="11" font-weight="600">全流程 5个阶段 · 4级降级保障 · 2条执行路径</text>
+    </svg>
+  </div>
+
+  <!-- ══ 四级降级状态机 · 交互式 ══ -->
+  <div class="state-machine" style="margin-top:18px;">
+    <div class="state-node l0 interactive active" data-level="FULL" onclick="selectDegradeLevel('FULL')">
+      <div class="sn-level">L0 · FULL</div>
+      <div class="sn-name"><span class="degrade-dot l0 pulse" id="dot-FULL"></span>全功能模式</div>
+      <div class="sn-output">22文件 · ~43s</div>
+    </div>
+    <div class="state-arrow">→</div>
+    <div class="state-node l1 interactive" data-level="STAT_ONLY" onclick="selectDegradeLevel('STAT_ONLY')">
+      <div class="sn-level">L1 · STAT_ONLY</div>
+      <div class="sn-name"><span class="degrade-dot l1" id="dot-STAT_ONLY"></span>统计降级</div>
+      <div class="sn-output">17文件 · ~9s</div>
+    </div>
+    <div class="state-arrow">→</div>
+    <div class="state-node l2 interactive" data-level="RULE_ONLY" onclick="selectDegradeLevel('RULE_ONLY')">
+      <div class="sn-level">L2 · RULE_ONLY</div>
+      <div class="sn-name"><span class="degrade-dot l2" id="dot-RULE_ONLY"></span>规则降级</div>
+      <div class="sn-output">5文件 · ~3s</div>
+    </div>
+    <div class="state-arrow">→</div>
+    <div class="state-node l3 interactive" data-level="EMERGENCY" onclick="selectDegradeLevel('EMERGENCY')">
+      <div class="sn-level">L3 · EMERGENCY</div>
+      <div class="sn-name"><span class="degrade-dot l3" id="dot-EMERGENCY"></span>应急模式</div>
+      <div class="sn-output">1文件 · &lt;1s</div>
+    </div>
+  </div>
+
+  <!-- 选中级别详情面板 -->
+  <div class="degrade-detail show" id="degrade-detail">
+    <h4 id="dg-title"></h4>
+    <div id="dg-components"></div>
+    <div class="dg-impact" id="dg-impact"></div>
+    <div class="dg-recovery" id="dg-recovery"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 4: DECISION ENGINE — 决策引擎三层架构
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2 class="section-title"><span class="st-num">04</span> 决策引擎 · 三层架构</h2>
+  <p class="section-sub">Phase A 基础决策 → Phase B 工业扩展 → Phase C 传感器升级路线图</p>
+
+  <!-- Phase A: 4-Layer Fusion -->
+  <div style="margin-bottom:24px;">
+    <h3 style="font-size:15px;color:var(--accent-cyan);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+      <span style="background:rgba(0,201,160,0.1);padding:2px 10px;border-radius:10px;font-size:11px;">Phase A</span>
+      基础决策引擎 · 4层融合架构
+    </h3>
+    <div class="layer-grid">
+      <div class="layer-card" style="border-top:3px solid var(--accent-cyan);">
+        <div class="l-num" style="color:var(--accent-cyan);">Layer 1</div>
+        <div class="l-name">多信号融合</div>
+        <div class="l-desc">统计异常 + 成本风险 + ML密度 + 趋势漂移</div>
+        <span class="l-weight" style="background:rgba(0,201,160,0.08);color:var(--accent-cyan);">4维加权</span>
+      </div>
+      <div class="layer-card" style="border-top:3px solid var(--accent-amber);">
+        <div class="l-num" style="color:var(--accent-amber);">Layer 2</div>
+        <div class="l-name">异常诊断</div>
+        <div class="l-desc">电压骤升 · 温度漂移 · 电流波动 · 复合异常</div>
+        <span class="l-weight" style="background:rgba(240,160,48,0.08);color:var(--accent-amber);">4模式</span>
+      </div>
+      <div class="layer-card" style="border-top:3px solid var(--accent-red);">
+        <div class="l-num" style="color:var(--accent-red);">Layer 3</div>
+        <div class="l-name">决策分级</div>
+        <div class="l-desc">紧急停机 · 预防维修 · 计划检查 · 加强监控 · 延期观察 · 正常运行</div>
+        <span class="l-weight" style="background:rgba(240,68,68,0.08);color:var(--accent-red);">6动作</span>
+      </div>
+      <div class="layer-card" style="border-top:3px solid var(--accent-green);">
+        <div class="l-num" style="color:var(--accent-green);">Layer 4</div>
+        <div class="l-name">维护工单输出</div>
+        <div class="l-desc">优先级排序 · 建议时间窗 · 预期节省 · 根因标注</div>
+        <span class="l-weight" style="background:rgba(63,185,80,0.08);color:var(--accent-green);">20工单</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase B: Industrial Extension -->
+  <div style="margin-bottom:24px;">
+    <h3 style="font-size:15px;color:var(--accent-amber);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+      <span style="background:rgba(240,160,48,0.1);padding:2px 10px;border-radius:10px;font-size:11px;">Phase B</span>
+      工业维护扩展 · 9层完整体系 (L5-L9)
+    </h3>
+    <div class="info-card-grid cols-3">
+      <div class="info-card c-cyan">
+        <h4>L5 · 策略选择器</h4>
+        <p>3种策略：成本效率 / 生产效率 / 质量优先。不同阈值、SLA目标、工单上限。Dashboard可实时切换对比。</p>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:6px;">strategy_selector.py</div>
+      </div>
+      <div class="info-card c-amber">
+        <h4>L6 · 技师分配</h4>
+        <p>5种技师类型（高级/电气/热控/机械/初级）。成本感知降级——低于P50成本设备自动降级技师节省费用。</p>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:6px;">technician_assigner.py</div>
+      </div>
+      <div class="info-card c-blue">
+        <h4>L7 · 备件规划</h4>
+        <p>故障→备件目录查找。自动生成所需备件清单和数量。基于故障类型匹配备件数据库。</p>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:6px;">spare_parts_planner.py</div>
+      </div>
+      <div class="info-card c-purple">
+        <h4>L8 · 停机优化</h4>
+        <p>6规则决策树：立即/夜间/周末/下次间隙/计划停机。最小化生产影响。</p>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:6px;">downtime_optimizer.py</div>
+      </div>
+      <div class="info-card c-green">
+        <h4>L9 · 验收标准</h4>
+        <p>维修后验收规则自动生成。基于故障类型的通过/不通过标准。维修质量闭环管理。</p>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:6px;">acceptance_validator.py</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase C: Sensor Roadmap -->
+  <div>
+    <h3 style="font-size:15px;color:var(--accent-purple);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+      <span style="background:rgba(163,113,247,0.1);padding:2px 10px;border-radius:10px;font-size:11px;">Phase C</span>
+      传感器升级路线图 · 概率工业ROI模型 v2.0
+    </h3>
+    <div class="info-card-grid cols-3">
+      <div class="info-card c-purple">
+        <h4>📊 方法论</h4>
+        <p>三场景ROI估算（保守0.294× / 预期0.578× / 乐观0.812×）。3个落地折损系数：部署×采纳×维护质量。</p>
+      </div>
+      <div class="info-card c-blue">
+        <h4>🔧 三阶段路径</h4>
+        <p><b>P0:</b> 振动加速度计（覆盖机械故障）→ <b>P0:</b> 电流特征分析（覆盖电气故障）→ <b>P0:</b> 延长监测周期</p>
+      </div>
+      <div class="info-card c-green">
+        <h4>📈 ROI输出</h4>
+        <p>CAPEX/OPEX堆叠图 · 三场景ROI对比 · 回收期比较 · Youden's J提升曲线 · 部署时间线 · 工业免责声明</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 5: AI COPILOT — MCP + Gateway 架构
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2 class="section-title"><span class="st-num">05</span> AI Copilot · MCP + Gateway 架构</h2>
+  <p class="section-sub">7 MCP工具 → FastAPI Gateway (9 Tools) → DeepSeek API → SSE Streaming → Browser — 自然语言驱动的工业AI助手</p>
+
+  <div class="arch-container">
+    <div class="arch-diagram tall" id="chart-aicopilot"></div>
+  </div>
+
+  <!-- Tool Tables Side by Side -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px;">
+    <div>
+      <h4 style="font-size:13px;color:var(--accent-amber);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+        <span style="background:rgba(240,160,48,0.1);padding:2px 8px;border-radius:8px;font-size:10px;">MCP Server</span> 7 MCP Tools (JSON-RPC over stdio)
+      </h4>
+      <table class="tool-table">
+        <thead><tr><th>工具</th><th>类型</th><th>功能</th></tr></thead>
+        <tbody>
+          <tr><td class="tt-name">explain_predictability_limit</td><td><span class="tt-badge" style="background:rgba(0,201,160,0.1);color:var(--accent-cyan);">只读</span></td><td>5维度可预测性限制分析</td></tr>
+          <tr><td class="tt-name">prepare_data</td><td><span class="tt-badge" style="background:rgba(240,160,48,0.1);color:var(--accent-amber);">流水线</span></td><td>数据准备→z-score/基线/成本矩阵</td></tr>
+          <tr><td class="tt-name">run_stat_analysis</td><td><span class="tt-badge" style="background:rgba(240,160,48,0.1);color:var(--accent-amber);">流水线</span></td><td>统计推理→告警/T²/健康评分</td></tr>
+          <tr><td class="tt-name">run_ml_analysis</td><td><span class="tt-badge" style="background:rgba(240,160,48,0.1);color:var(--accent-amber);">流水线</span></td><td>ML推理→XGBoost/MTNN预测</td></tr>
+          <tr><td class="tt-name">run_diagnosis</td><td><span class="tt-badge" style="background:rgba(240,160,48,0.1);color:var(--accent-amber);">流水线</span></td><td>4模式异常诊断</td></tr>
+          <tr><td class="tt-name">generate_decision</td><td><span class="tt-badge" style="background:rgba(240,160,48,0.1);color:var(--accent-amber);">流水线</span></td><td>多信号融合→工单生成</td></tr>
+          <tr><td class="tt-name">run_predictive_maintenance</td><td><span class="tt-badge" style="background:rgba(163,113,247,0.1);color:var(--accent-purple);">全流程</span></td><td>一键DAG流水线（自动降级）</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h4 style="font-size:13px;color:var(--accent-cyan);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+        <span style="background:rgba(0,201,160,0.1);padding:2px 8px;border-radius:8px;font-size:10px;">Gateway</span> 9 API Tools (OpenAI Function-Calling)
+      </h4>
+      <table class="tool-table">
+        <thead><tr><th>工具</th><th>类型</th><th>功能</th></tr></thead>
+        <tbody>
+          <tr><td class="tt-name">query_device_status</td><td><span class="tt-badge" style="background:rgba(0,201,160,0.1);color:var(--accent-cyan);">只读</span></td><td>查询设备状态(健康评分/趋势/首要风险)</td></tr>
+          <tr><td class="tt-name">query_alert_list</td><td><span class="tt-badge" style="background:rgba(0,201,160,0.1);color:var(--accent-cyan);">只读</span></td><td>告警设备列表(含z-score/T²信息)</td></tr>
+          <tr><td class="tt-name">query_fault_history</td><td><span class="tt-badge" style="background:rgba(0,201,160,0.1);color:var(--accent-cyan);">只读</span></td><td>故障类型分布/历史记录</td></tr>
+          <tr><td class="tt-name">query_sensor_trend</td><td><span class="tt-badge" style="background:rgba(0,201,160,0.1);color:var(--accent-cyan);">只读</span></td><td>4参数时序趋势+ECharts渲染</td></tr>
+          <tr><td class="tt-name">compare_devices</td><td><span class="tt-badge" style="background:rgba(0,201,160,0.1);color:var(--accent-cyan);">只读</span></td><td>多设备横向对比(雷达图数据)</td></tr>
+          <tr><td class="tt-name">diagnose_root_cause</td><td><span class="tt-badge" style="background:rgba(0,201,160,0.1);color:var(--accent-cyan);">只读</span></td><td>根因分析(基于SHAP归因)</td></tr>
+          <tr><td class="tt-name">query_work_orders</td><td><span class="tt-badge" style="background:rgba(0,201,160,0.1);color:var(--accent-cyan);">只读</span></td><td>工单列表/详情</td></tr>
+          <tr><td class="tt-name">run_data_prep_pipeline</td><td><span class="tt-badge" style="background:rgba(240,160,48,0.1);color:var(--accent-amber);">流水线</span></td><td>运行数据准备(300s超时)</td></tr>
+          <tr><td class="tt-name">run_full_pipeline</td><td><span class="tt-badge" style="background:rgba(240,160,48,0.1);color:var(--accent-amber);">流水线</span></td><td>运行完整预测性维护流水线</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SSE Conversation Flow -->
+  <div class="info-card-grid" style="margin-top:18px;">
+    <div class="info-card c-cyan">
+      <h4>🔄 3阶段对话循环</h4>
+      <p><b>Phase 1:</b> 用户输入 → DeepSeek API（流式SSE）→ LLM判断是否需要工具<br>
+      <b>Phase 2:</b> 工具调用（含chart_data检测）→ 执行本地脚本/查询CSV<br>
+      <b>Phase 3:</b> 工具结果注入 → LLM生成最终回复（含ECharts图表）</p>
+    </div>
+    <div class="info-card c-purple">
+      <h4>📡 SSE事件类型</h4>
+      <p><code>text_delta</code> — 流式文本增量<br>
+      <code>tool_call</code> — 工具调用请求<br>
+      <code>tool_result</code> — 工具执行结果<br>
+      <code>chart</code> — ECharts图表数据（前端自动渲染）<br>
+      <code>report</code> — AI生成报告<br>
+      <code>error</code> / <code>done</code> — 异常/完成信号</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 6: SHAP EXPLAINABILITY — 可解释性管线
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2 class="section-title"><span class="st-num">06</span> SHAP可解释性管线</h2>
+  <p class="section-sub">两条归因路径实现从数学特征到工业根因的透明映射，确保每个告警都可追溯、可解释</p>
+
+  <div class="arch-container">
+    <div class="arch-diagram medium" id="chart-shap"></div>
+  </div>
+
+  <div class="info-card-grid cols-3" style="margin-top:18px;">
+    <div class="info-card c-cyan">
+      <h4>📐 路径1: 直接公式分解</h4>
+      <p><code>RiskDecomposer</code> — 对final_risk_score做公式逆推，无需训练代理模型。分解4个信号维度各自的贡献比例。</p>
+    </div>
+    <div class="info-card c-blue">
+      <h4>🌳 路径2: TreeSHAP子层</h4>
+      <p><code>StatLayerSHAP</code> — 在统计异常子层上运行TreeSHAP，量化各传感器z-score对最终异常的边际贡献。</p>
+    </div>
+    <div class="info-card c-purple">
+      <h4>🏭 特征→根因映射</h4>
+      <p><code>LocalExplainer</code> — 将数学特征映射到5大工业根因类别：电气/热控/机械/维护/过程质量，生成中文自然语言解释。</p>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;">
+    <div class="info-card c-green">
+      <h4>📤 Dashboard集成</h4>
+      <p>• <b>sec3:</b> 全局特征重要性柱状图 + 根因类别饼图（折叠面板）<br>
+      • <b>sec7:</b> 单设备瀑布图 + 异常信号列表 + 自然语言摘要 + 排查清单<br>
+      • <b>工单:</b> 5个SHAP列（top_risk_factor_1/2/3, shap_explanation, shap_risk_summary）</p>
+    </div>
+    <div class="info-card c-amber">
+      <h4>📦 输出文件</h4>
+      <p>• <code>shap_dashboard.json</code> (618KB, 100台设备完整归因数据)<br>
+      • 5个新列注入 <code>industrial_maintenance_plan.csv</code><br>
+      • 全部图表由前端ECharts从JSON渲染，无PNG依赖</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 7: DASHBOARD DATA SYNC — 数据同步架构
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2 class="section-title"><span class="st-num">07</span> Dashboard数据同步架构</h2>
+  <p class="section-sub">22个文件从3个来源汇聚到Dashboard的8个交互式分析标签页（sec0-sec7），按角色权限过滤可见Tab</p>
+
+  <!-- Sync Flow -->
+  <div class="sync-flow">
+    <div class="sync-source" style="border-top:3px solid var(--accent-cyan);">
+      <div class="ss-count" style="color:var(--accent-cyan);">9</div>
+      <div class="ss-label">决策引擎输出</div>
+      <div class="ss-detail">work_orders<br>industrial_plan<br>technician_schedule<br>spare_parts_plan<br>strategy_comparison<br>downtime_schedule<br>acceptance_rules<br>sensor_upgrade_plan<br>sensor_roi_analysis</div>
+    </div>
+    <span class="sync-arrow-big">+</span>
+    <div class="sync-source" style="border-top:3px solid var(--accent-amber);">
+      <div class="ss-count" style="color:var(--accent-amber);">7</div>
+      <div class="ss-label">数据准备输出</div>
+      <div class="ss-detail">z_scores<br>cost_risk<br>baseline_stats<br>failure_sig<br>variance_decomp<br>machine_clusters<br>t2_results</div>
+    </div>
+    <span class="sync-arrow-big">+</span>
+    <div class="sync-source" style="border-top:3px solid var(--accent-purple);">
+      <div class="ss-count" style="color:var(--accent-purple);">6</div>
+      <div class="ss-label">统计+ SHAP输出</div>
+      <div class="ss-detail">alert_summary<br>health_score<br>quality_cost_chain<br>quality_cost_summary<br>shap_dashboard<br>degradation_status</div>
+    </div>
+    <span class="sync-arrow-big">→</span>
+    <div class="sync-source" style="border-top:3px solid var(--accent-green);border:2px solid var(--accent-green);">
+      <div class="ss-count" style="color:var(--accent-green);">22</div>
+      <div class="ss-label">Dashboard /data/</div>
+      <div class="ss-detail">6个标签页<br>~1.2MB总计<br>纯静态CSV/JSON</div>
+    </div>
+  </div>
+
+  <!-- File rename table -->
+  <div style="overflow-x:auto;margin-top:18px;">
+    <table class="mapping-table">
+      <thead>
+        <tr><th>原始输出</th><th>Dashboard文件名</th><th>来源</th><th>标签页</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="module-name">failure_signatures.csv</td><td>failure_sig.csv</td><td>数据准备</td><td>基线划定分析</td></tr>
+        <tr><td class="module-name">cost_risk_matrix.csv</td><td>cost_risk.csv</td><td>数据准备</td><td>基线划定分析</td></tr>
+        <tr><td class="module-name">hotelling_t2.csv</td><td>t2_results.csv</td><td>数据准备</td><td>基线划定分析</td></tr>
+        <tr><td class="module-name">industrial_maintenance_plan.csv</td><td>（同名+5 SHAP列）</td><td>决策引擎 + SHAP</td><td>智能维护决策中心</td></tr>
+        <tr><td class="module-name">equipment_health_score.csv</td><td>（同名）</td><td>统计推理</td><td>设备健康与感知升级</td></tr>
+        <tr><td class="module-name">shap_dashboard.json</td><td>（同名）</td><td>诊断SHAP后处理</td><td>sec3可解释性 + sec7单设备</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:10px;padding:8px 14px;background:var(--bg-card-alt);border-radius:var(--radius);">
+    💡 数据同步由 orchestrator <code>--dashboard-data</code> 标志触发，自动拷贝+重命名。链分析(china_analysis.py)单独运行后手动同步 <code>quality_cost_chain_summary.json</code>。
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 8: EVOLUTION TIMELINE — 技术演进路线
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2 class="section-title"><span class="st-num">08</span> 数据流转与技术演进</h2>
+  <p class="section-sub">5阶段由数据发现驱动——每一阶段由前一阶段的核心局限推动，最终收敛到多信号融合+AI Copilot架构</p>
+
+  <!-- Evolution Overview Chart -->
+  <div class="arch-container" style="margin-bottom:28px;">
+    <div class="arch-diagram short" id="chart-evolution"></div>
+  </div>
 
   <div class="timeline" id="timeline">
 
-    <!-- ═══════ Phase 1: Data Exploration ═══════ -->
+    <!-- Phase 1 -->
     <div class="timeline-phase open" id="phase1">
       <div class="timeline-dot p1"></div>
       <div class="phase-header" onclick="togglePhase('phase1')">
@@ -598,7 +1766,7 @@ body::before {
           <div class="phase-num p1">1</div>
           <div class="phase-title-block">
             <h3>数据探索与参数分析</h3>
-            <div class="phase-source">figure_documentation_master · 14项统计任务 · 17组可视化</div>
+            <div class="phase-source">14项统计任务 · 17组可视化 · 4参数诊断力评估</div>
           </div>
         </div>
         <div class="phase-header-right">
@@ -609,25 +1777,14 @@ body::before {
       <div class="phase-body">
         <div class="phase-grid">
           <div class="phase-info-card">
-            <h4>技术目标</h4>
-            <p>量化评估4个传感器参数（电压、电流、温度、转速）各自对9类故障的区分能力，建立安全运行区间。</p>
-            <div class="metric-row">
-              <div class="metric-mini"><div class="val val-bad">0.077</div><div class="lbl">电压 Youden's J</div></div>
-              <div class="metric-mini"><div class="val val-bad">0.071</div><div class="lbl">温度 Youden's J</div></div>
-              <div class="metric-mini"><div class="val val-bad">0.060</div><div class="lbl">电流 Youden's J</div></div>
-              <div class="metric-mini"><div class="val val-bad">0.025</div><div class="lbl">转速 Youden's J</div></div>
-            </div>
-          </div>
-          <div class="phase-info-card">
             <h4>技术方法</h4>
             <ul>
-              <li>描述统计 + KDE分布拟合 — 建立正常/故障参数分布画像</li>
-              <li>Cohen's d效应量 + KS检验 — 量化参数区分力（14个任务）</li>
-              <li>Youden's J最优阈值搜索 — 找到最佳单参数切分点</li>
-              <li>99%分位数安全区间 — 非参数方法建立运行边界</li>
-              <li>Pearson相关矩阵（正常 vs 故障） — 检测故障态参数耦合变化</li>
-              <li>衍生指标工程：视在功率(V×I)、效率(RPM/A)、热负荷(T/A)</li>
-              <li>热负荷三级风险框架：P90预警 / P95告警 / P99紧急停机</li>
+              <li>KDE分布拟合 — 正常/故障参数分布画像</li>
+              <li>Cohen's d + KS检验 — 14项任务量化区分力</li>
+              <li>Youden's J最优阈值搜索 — 单参数最佳切分点</li>
+              <li>99%分位数安全区间 — 非参数运行边界</li>
+              <li>Pearson相关矩阵（正常 vs 故障）— 耦合变化检测</li>
+              <li>衍生指标：视在功率(V×I)、效率(RPM/A)、热负荷(T/A)</li>
             </ul>
           </div>
           <div class="phase-info-card">
@@ -635,9 +1792,8 @@ body::before {
             <ul>
               <li>所有4参数 Youden's J &lt; 0.08（可用阈值 &gt; 0.30）</li>
               <li>转速完全无诊断价值：Cohen's d = -0.002，KS p = 0.458</li>
-              <li>正常与故障的参数分布高度重叠（约70%故障样本落在正常范围）</li>
-              <li>4参数在正常态近乎独立（|r| &lt; 0.09），故障态无显著耦合变化</li>
-              <li>衍生指标（功率、效率）仅增加微小增量信息</li>
+              <li>~96-98%故障样本参数值落在正常范围内</li>
+              <li>4参数在正常/故障态下均近乎独立（|r| &lt; 0.09）</li>
             </ul>
           </div>
           <div class="phase-info-card">
@@ -646,7 +1802,7 @@ body::before {
               <span class="arrow-icon">↓</span>
               <div>
                 <div class="lim-text">单参数阈值无法区分故障。需要多参数融合 + 每设备单独基线。</div>
-                <div class="next-text">→ 进入阶段2：基线分析与确定</div>
+                <div class="next-text">→ 阶段2：基线分析与确定</div>
               </div>
             </div>
           </div>
@@ -654,7 +1810,7 @@ body::before {
       </div>
     </div>
 
-    <!-- ═══════ Phase 2: Baseline Development ═══════ -->
+    <!-- Phase 2 -->
     <div class="timeline-phase" id="phase2">
       <div class="timeline-dot p2"></div>
       <div class="phase-header" onclick="togglePhase('phase2')">
@@ -662,7 +1818,7 @@ body::before {
           <div class="phase-num p2">2</div>
           <div class="phase-title-block">
             <h3>基线分析与统计告警系统</h3>
-            <div class="phase-source">BASELINE_DEVELOPMENT_DOC · 4基线模型 · 三级告警体系</div>
+            <div class="phase-source">4基线模型 · 三级告警 · 逐设备μ/σ</div>
           </div>
         </div>
         <div class="phase-header-right">
@@ -673,33 +1829,23 @@ body::before {
       <div class="phase-body">
         <div class="phase-grid">
           <div class="phase-info-card">
-            <h4>技术目标</h4>
-            <p>建立不依赖ML的统计基线告警系统，作为任何后续模型必须超越的最低性能门槛。</p>
-            <div class="metric-row">
-              <div class="metric-mini"><div class="val val-good">83.9%</div><div class="lbl">Z>2.0 精确率</div></div>
-              <div class="metric-mini"><div class="val val-warn">39.4%</div><div class="lbl">Z>2.0 召回率</div></div>
-              <div class="metric-mini"><div class="val val-info">19.7%</div><div class="lbl">误报率</div></div>
-              <div class="metric-mini"><div class="val val-good">100%</div><div class="lbl">T² 精确率</div></div>
-            </div>
-          </div>
-          <div class="phase-info-card">
             <h4>技术方法</h4>
             <ul>
-              <li><strong>基线1：每设备复合Z-Score</strong> — 电压/电流/温度三者欧氏组合，每台设备独立 μ/σ（设备间差异占61-73%总方差）</li>
-              <li><strong>基线2：成本风险矩阵</strong> — Risk = P(fault) × UnitCost × DailyOutput，P90/P75自适应阈值</li>
-              <li><strong>基线3：故障类型分层阈值</strong> — 3组故障签名（高压/热/微弱），不同z权重</li>
-              <li><strong>基线4：Hotelling T² 多元SPC</strong> — χ²控制限(p=3, α=0.01)，作为高置信度确认通道</li>
-              <li>K-Means冷启动策略 — 稀疏数据设备（&lt;6正常样本）借用聚类基线</li>
+              <li><b>基线1:</b> 逐设备复合Z-Score（V/A/T欧氏组合，独立μ/σ）</li>
+              <li><b>基线2:</b> 成本风险矩阵 Risk = P(fault)×UnitCost×DailyOutput</li>
+              <li><b>基线3:</b> 故障类型分层阈值（3组签名，不同z权重）</li>
+              <li><b>基线4:</b> Hotelling T²多元SPC（χ²控制限, p=3, α=0.01）</li>
+              <li>K-Means冷启动 — 稀疏数据设备借用聚类基线</li>
+              <li>3层适配：集群回退 + 故障分组权重 + 产能分层阈值</li>
             </ul>
           </div>
           <div class="phase-info-card">
             <h4>关键发现</h4>
             <ul>
               <li>设备间方差占61-73% — 全局阈值完全不可用</li>
-              <li>Z>2.0为推荐运行点：精确率83.9%，约4/5告警正确</li>
-              <li>Z>1.0的F1=79%最高但误报率80.5%不可接受</li>
-              <li>T²精确率100%但召回率仅22% — 用作验证器而非主检测器</li>
-              <li>约22%故障样本落在z&lt;2.5范围 — 静态基线完全不可见</li>
+              <li>Z>2.0为推荐操作点：精确率83.9%，FPR=19.7%</li>
+              <li>T²精确率100%但召回率仅22% — 用作验证器</li>
+              <li>约22%故障样本落在z&lt;2.5范围内 — 静态基线不可见</li>
             </ul>
           </div>
           <div class="phase-info-card">
@@ -707,8 +1853,8 @@ body::before {
             <div class="limitation-arrow">
               <span class="arrow-icon">↓</span>
               <div>
-                <div class="lim-text">静态基线无时序信息（无法检测漂移趋势）。22%故障在正常z-score范围内。仅7小时观测窗口无法建立退化曲线。需要引入时序特征和ML。</div>
-                <div class="next-text">→ 进入阶段3：XGBoost监督学习模型</div>
+                <div class="lim-text">静态基线无时序信息。22%故障在正常z-score范围内。仅7小时观测窗口。需要引入ML时序特征。</div>
+                <div class="next-text">→ 阶段3：XGBoost监督学习</div>
               </div>
             </div>
           </div>
@@ -716,15 +1862,15 @@ body::before {
       </div>
     </div>
 
-    <!-- ═══════ Phase 3: XGBoost ═══════ -->
+    <!-- Phase 3 -->
     <div class="timeline-phase" id="phase3">
       <div class="timeline-dot p3"></div>
       <div class="phase-header" onclick="togglePhase('phase3')">
         <div class="phase-header-left">
           <div class="phase-num p3">3</div>
           <div class="phase-title-block">
-            <h3>XGBoost 预测性告警模型</h3>
-            <div class="phase-source">model_development_doc · 4组特征工程 · 双时间窗口</div>
+            <h3>XGBoost 预测性告警模型 v1</h3>
+            <div class="phase-source">4组特征工程 · 双时间窗口 · 成本敏感权重</div>
           </div>
         </div>
         <div class="phase-header-right">
@@ -735,35 +1881,22 @@ body::before {
       <div class="phase-body">
         <div class="phase-grid">
           <div class="phase-info-card">
-            <h4>技术目标</h4>
-            <p>引入监督学习预测14/28分钟内的故障风险，超越统计基线性能。</p>
-            <div class="metric-row">
-              <div class="metric-mini"><div class="val val-bad">0.480</div><div class="lbl">AUC (28min)</div></div>
-              <div class="metric-mini"><div class="val val-bad">0.475</div><div class="lbl">AUC (14min)</div></div>
-              <div class="metric-mini"><div class="val val-warn">58.3%</div><div class="lbl">先验故障率</div></div>
-              <div class="metric-mini"><div class="val val-bad">~0.50</div><div class="lbl">≈随机猜测</div></div>
-            </div>
-          </div>
-          <div class="phase-info-card">
             <h4>技术方法</h4>
             <ul>
-              <li><strong>特征组A（17维）</strong>：滑动窗口时序统计量（均值/标准差/斜率/波动率/安全区间违规比）</li>
-              <li><strong>特征组B（8维）</strong>：设备级静态特征（成本/产量/风险值/老化度/聚类标签）</li>
-              <li><strong>特征组C（4维）</strong>：产品质量特征（15/100设备有数据，其余中位数填充+指示器）</li>
-              <li><strong>特征组D（6维）</strong>：当前状态（最近故障类型/步数/原始值）</li>
-              <li>双独立XGBoost分类器（14min + 28min）+ 概率一致性约束</li>
-              <li>成本敏感样本权重：weight[i] ∝ UnitCost × DailyOutput</li>
+              <li>特征组A（17维）：滑动窗口时序统计量</li>
+              <li>特征组B（8维）：设备静态特征（成本/产量/风险）</li>
+              <li>特征组C（4维）：产品质量特征（15台有数据）</li>
+              <li>特征组D（6维）：当前状态特征</li>
+              <li>双XGBoost（14min + 28min）+ 概率一致性约束</li>
             </ul>
           </div>
           <div class="phase-info-card">
             <h4>关键发现</h4>
             <ul>
-              <li>AUC ≈ 0.48~0.50 — 等价于随机猜测</li>
+              <li>AUC ≈ 0.48~0.50 — 等价随机猜测</li>
               <li>模型收敛到"总是预测故障"的平凡解</li>
-              <li>P(next=fault | current=normal) = 71.2% ≈ P(next=fault | current=fault) = 72.5%</li>
-              <li>故障呈现随机分布，时序依赖性极弱</li>
-              <li>特征重要性验证：z-score特征排名前三，证实基线方法的信号是真实的</li>
-              <li>模型价值在风险排序（risk ranking）而非逐点分类</li>
+              <li>P(next=fault|normal)=71.2% ≈ P(next=fault|fault)=72.5%</li>
+              <li>z-score特征排名前3 — 证实时序信号极弱但基线方法信号真实</li>
             </ul>
           </div>
           <div class="phase-info-card">
@@ -771,8 +1904,8 @@ body::before {
             <div class="limitation-arrow">
               <span class="arrow-icon">↓</span>
               <div>
-                <div class="lim-text">二分类不是正确任务框架。树模型无法建模时序依赖和参数间复杂交互。需要更深层的特征工程和连续目标变量。</div>
-                <div class="next-text">→ 进入阶段4：Multi-Task深度学习模型</div>
+                <div class="lim-text">二分类不是正确任务。树模型无法建模时序依赖和参数间复杂交互。</div>
+                <div class="next-text">→ 阶段4：Multi-Task深度学习</div>
               </div>
             </div>
           </div>
@@ -780,7 +1913,7 @@ body::before {
       </div>
     </div>
 
-    <!-- ═══════ Phase 4: Multi-Task NN ═══════ -->
+    <!-- Phase 4 -->
     <div class="timeline-phase" id="phase4">
       <div class="timeline-dot p4"></div>
       <div class="phase-header" onclick="togglePhase('phase4')">
@@ -788,7 +1921,7 @@ body::before {
           <div class="phase-num p4">4</div>
           <div class="phase-title-block">
             <h3>Multi-Task 深度学习模型 v2</h3>
-            <div class="phase-source">model_development_doc_v2 · 106维特征 · 4维度特征体系 · 3窗口变体</div>
+            <div class="phase-source">106维特征 · 4维度体系 · 3窗口变体 · 故障密度回归</div>
           </div>
         </div>
         <div class="phase-header-right">
@@ -799,37 +1932,22 @@ body::before {
       <div class="phase-body">
         <div class="phase-grid">
           <div class="phase-info-card">
-            <h4>技术目标</h4>
-            <p>用深度神经网络+多任务学习提升预测能力，从二分类转向故障密度回归。</p>
-            <div class="metric-row">
-              <div class="metric-mini"><div class="val val-warn">0.589</div><div class="lbl">最佳AUC (10in→5pred)</div></div>
-              <div class="metric-mini"><div class="val val-bad">0.019</div><div class="lbl">R²</div></div>
-              <div class="metric-mini"><div class="val val-bad">0.537</div><div class="lbl">理论上限AUC</div></div>
-              <div class="metric-mini"><div class="val val-info">25,570</div><div class="lbl">参数量 (CPU推理)</div></div>
-            </div>
-          </div>
-          <div class="phase-info-card">
             <h4>技术方法</h4>
             <ul>
-              <li><strong>共享特征提取器</strong>：128→64→32全连接层 + BatchNorm + ReLU + Dropout(0.35)</li>
-              <li><strong>故障头（主任务）</strong>：回归未来5步故障密度（而非二分类）</li>
-              <li><strong>质量头（辅助任务）</strong>：预测平均产品缺陷数（权重0.30，仅15台设备有标签）</li>
-              <li><strong>4维度特征体系（106维）</strong>：
-                <br>维度1-趋势（24+特征）：斜率/Kendall τ/加速度/连续变化计数
-                <br>维度2-波动率（36+特征）：标准差/CV/IQR/RMS/峰值因子/波形因子
-                <br>维度3-状态（26+特征）：Z-score/安全违规/功率指数/参数相关性
-                <br>维度4-成本与上下文（19+特征）：成本风险/设备老化/历史故障率</li>
-              <li>数据增强：高斯噪声 + 随机掩码 + 特征Dropout（20种噪声条件鲁棒性测试）</li>
+              <li>共享特征提取器：128→64→32 + BatchNorm + Dropout(0.35)</li>
+              <li>故障头：回归未来5步故障密度（非二分类）</li>
+              <li>质量头：预测平均产品缺陷数（辅助任务，权重0.30）</li>
+              <li>4维度特征体系（106维）：趋势/波动率/状态/成本</li>
+              <li>数据增强：高斯噪声 + 随机掩码 + 20种鲁棒性测试</li>
             </ul>
           </div>
           <div class="phase-info-card">
             <h4>关键发现</h4>
             <ul>
-              <li>AUC从0.50提升至0.59（+18%相对提升），但来自特征工程改善而非深度学习能力</li>
-              <li>多任务学习完全失败：质量头R²=0，辅助任务未提供有用梯度信号</li>
-              <li>模型实际预测的是"高历史故障率的高成本设备"（静态属性）而非实时退化</li>
-              <li>告警输出：100台中仅7台进入WATCH级别，0台WARNING/ALARM</li>
-              <li>AUC 0.59已接近理论上限（0.5+J_max/2=0.537），更复杂模型不会显著提升</li>
+              <li>AUC从0.50提升至0.59（+18%），但来自特征工程而非DL</li>
+              <li>多任务学习失败：质量头R²=0，无有用梯度信号</li>
+              <li>模型实际预测"高故障率的高成本设备"（静态属性）</li>
+              <li>AUC 0.59已接近理论上限（0.5+J_max/2=0.537）</li>
             </ul>
           </div>
           <div class="phase-info-card">
@@ -837,8 +1955,8 @@ body::before {
             <div class="limitation-arrow">
               <span class="arrow-icon">↓</span>
               <div>
-                <div class="lim-text">硬件感知是绑定性约束。纯ML路线已触碰数据的信息理论上限。需要转型：放弃"ML=主告警引擎"，采用决策融合架构。</div>
-                <div class="next-text">→ 进入阶段5：系统级决策融合 + AI Copilot</div>
+                <div class="lim-text">硬件感知是绑定性约束。纯ML已触碰信息理论上限。需要架构转型：决策融合 + AI Copilot。</div>
+                <div class="next-text">→ 阶段5：系统级决策融合 + AI Copilot</div>
               </div>
             </div>
           </div>
@@ -846,7 +1964,7 @@ body::before {
       </div>
     </div>
 
-    <!-- ═══════ Phase 5: System Design + AI Copilot ═══════ -->
+    <!-- Phase 5 -->
     <div class="timeline-phase" id="phase5">
       <div class="timeline-dot p5"></div>
       <div class="phase-header" onclick="togglePhase('phase5')">
@@ -854,7 +1972,7 @@ body::before {
           <div class="phase-num p5">5</div>
           <div class="phase-title-block">
             <h3>系统级决策融合 + Industrial AI Copilot</h3>
-            <div class="phase-source">predictive_maintenance_system_design · agent-mcp架构 · web-dashboard gateway</div>
+            <div class="phase-source">agent-mcp架构 · 3阶段决策引擎 · web-dashboard gateway</div>
           </div>
         </div>
         <div class="phase-header-right">
@@ -865,45 +1983,34 @@ body::before {
       <div class="phase-body">
         <div class="phase-grid">
           <div class="phase-info-card">
-            <h4>技术目标</h4>
-            <p>构建工业级决策融合引擎 + AI Copilot自然语言接口。放弃纯ML路线，拥抱统计+成本+ML+趋势的多信号融合架构。</p>
-            <div class="metric-row">
-              <div class="metric-mini"><div class="val val-info">0.40</div><div class="lbl">统计权重</div></div>
-              <div class="metric-mini"><div class="val val-info">0.25</div><div class="lbl">ML权重</div></div>
-              <div class="metric-mini"><div class="val val-info">0.25</div><div class="lbl">成本风险权重</div></div>
-              <div class="metric-mini"><div class="val val-info">0.10</div><div class="lbl">趋势权重</div></div>
-            </div>
-          </div>
-          <div class="phase-info-card">
-            <h4>技术方法 — 决策引擎</h4>
+            <h4>决策引擎</h4>
             <ul>
-              <li><strong>4层决策架构</strong>：Layer1 多信号融合 → Layer2 异常诊断（4模式）→ Layer3 决策分级（6动作）→ Layer4 维护工单输出</li>
-              <li><strong>融合权重</strong>：统计异常 0.40 + ML密度 0.25 + 成本风险 0.25 + 趋势漂移 0.10</li>
-              <li><strong>DAG流水线</strong>：数据准备 → (统计推理 ∥ ML推理) → 诊断 → 决策工单</li>
-              <li><strong>降级路径</strong>：ML不可用时自动切换至纯统计路径（子进程检测依赖可用性）</li>
-              <li><strong>可预测性上限分析</strong>：5维度证据链证明数据瓶颈（单参数无区分力/耦合不变/非渐进故障/模型收敛平凡/传感器缺口）</li>
-              <li><strong>传感器升级路线图</strong>：振动加速度计(P0) → 电流特征分析(P0) → 延长监测周期(P0)</li>
+              <li>4层融合架构：信号融合→异常诊断→决策分级→工单输出</li>
+              <li>融合权重：统计0.40 + 成本风险0.25 + ML密度0.25 + 趋势0.10</li>
+              <li>DAG流水线 + ThreadPool并行 + 4级自动降级</li>
+              <li>9层工业扩展：策略选择/技师分配/备件规划/停机优化/验收</li>
+              <li>传感器升级路线图：概率工业ROI模型 v2.0</li>
             </ul>
           </div>
           <div class="phase-info-card">
-            <h4>技术方法 — AI Copilot</h4>
+            <h4>AI Copilot + 可解释性</h4>
             <ul>
-              <li><strong>MCP Tool Ecosystem</strong>：7个MCP工具（FastMCP + JSON-RPC over stdio）+ 8个知识资源 + 3个Prompt模板</li>
-              <li><strong>FastAPI Gateway（端口8765）</strong>：DeepSeek API + 9个OpenAI兼容Tool Definitions</li>
-              <li><strong>3-阶段对话循环</strong>：Phase1 流式LLM调用 → Phase2 工具执行（含chart_data检测）→ Phase3 带工具结果的跟进回复</li>
-              <li><strong>SSE流式传输</strong>：text_delta / tool_call / tool_result / chart / error / done 六种事件</li>
-              <li><strong>ECharts可视化集成</strong>：工具返回ECharts-ready chart_data → 前端自动渲染折线图/多线对比图/异常标记点/阈值线</li>
-              <li><strong>系统提示词编码</strong>：完整领域知识（9类故障映射、决策权重、传感器局限、问题路由规则）</li>
+              <li>7 MCP Tools (FastMCP + JSON-RPC over stdio)</li>
+              <li>FastAPI Gateway：9 Tools + DeepSeek + SSE Streaming</li>
+              <li>3阶段对话循环 + 6种SSE事件类型</li>
+              <li>SHAP双路径归因：直接公式分解 + TreeSHAP子层</li>
+              <li>设备健康评分：8维度加权聚合（0-100分+趋势判定）</li>
+              <li>5维度证据链系统性证明"为什么无法纯ML预测"</li>
             </ul>
           </div>
-          <div class="phase-info-card">
+          <div class="phase-info-card" style="grid-column:1/-1;">
             <h4>关键成果</h4>
             <ul>
-              <li>9个MCP工具覆盖完整运维流程（设备状态→告警列表→故障历史→传感器趋势→设备对比→根因分析→工单历史→可预测性解释→全流水线）</li>
+              <li>统计基线P=83.9%确保ML信号极弱时系统依然可用</li>
+              <li>设备健康评分：55台危险 + 43台劣化 + 100台全量排序</li>
               <li>自然语言 → 工具调用 → 真实数据 → ECharts图表 → AI分析，全链路闭环</li>
-              <li>统计基线(P=83.9%)确保了即使ML信号极弱时系统依然可用</li>
-              <li>5维度证据链系统性证明了"为什么无法预测"（非盲目调参）</li>
-              <li>工业深色主题Web Dashboard + AI Chat界面</li>
+              <li>5维度证据链系统性证明数据瓶颈（非盲目调参）</li>
+              <li>4级降级保障：任何条件下都能产出可执行的维护建议</li>
             </ul>
           </div>
         </div>
@@ -914,173 +2021,92 @@ body::before {
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
-     CAPABILITY PROGRESSION CHART
+     SECTION 9: TECH STACK — 技术栈全景
      ═══════════════════════════════════════════════════════════════ -->
 <div class="section">
-  <h2 class="section-title">系统能力增长曲线</h2>
-  <p class="section-sub">从阶段1到阶段5，系统检测能力、工程复杂度、AI自主性的逐步提升</p>
-  <div class="arch-container">
-    <div class="capability-chart" id="capabilityChart"></div>
-  </div>
-</div>
-
-
-<!-- ═══════════════════════════════════════════════════════════════
-     DASHBOARD MODULE MAPPING
-     ═══════════════════════════════════════════════════════════════ -->
-<div class="section">
-  <h2 class="section-title">文档 → Dashboard模块映射</h2>
-  <p class="section-sub">每份技术文档对应Dashboard中的一个可交互分析模块</p>
-  <div style="overflow-x:auto;">
-    <table class="mapping-table">
-      <thead>
-        <tr>
-          <th>Dashboard模块</th>
-          <th>技术文档</th>
-          <th>核心方法</th>
-          <th>关键指标</th>
-          <th>阶段</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="module-name">数据探索分析</td>
-          <td>figure_documentation_master</td>
-          <td>KDE · Cohen's d · KS检验 · Youden's J · 安全区间 · 衍生指标</td>
-          <td>Youden's J &lt; 0.08 · 70%故障重叠</td>
-          <td><span class="phase-badge stat">1</span></td>
-        </tr>
-        <tr>
-          <td class="module-name">基线划定分析</td>
-          <td>BASELINE_DEVELOPMENT_DOC</td>
-          <td>每设备Z-Score · 成本风险矩阵 · 故障签名 · Hotelling T²</td>
-          <td>P=83.9% · R=39.4% · T² P=100%</td>
-          <td><span class="phase-badge stat">2</span></td>
-        </tr>
-        <tr>
-          <td class="module-name">预测性维护模型</td>
-          <td>model_development_doc</td>
-          <td>XGBoost · 4组特征工程 · 双时间窗口 · 成本敏感权重</td>
-          <td>AUC≈0.48 · 模型=随机猜测</td>
-          <td><span class="phase-badge ml">3</span></td>
-        </tr>
-        <tr>
-          <td class="module-name">深度学习模型 v2</td>
-          <td>model_development_doc_v2</td>
-          <td>Multi-Task NN · 106维特征 · 4维度体系 · 故障密度回归</td>
-          <td>AUC=0.589 · R²=0.019</td>
-          <td><span class="phase-badge dl">4</span></td>
-        </tr>
-        <tr>
-          <td class="module-name">系统决策引擎</td>
-          <td>predictive_maintenance_system_design</td>
-          <td>4层决策融合 · DAG流水线 · 5维度可预测性分析</td>
-          <td>融合权重0.40/0.25/0.25/0.10</td>
-          <td><span class="phase-badge fusion">5</span></td>
-        </tr>
-        <tr>
-          <td class="module-name">AI Copilot</td>
-          <td>web-dashboard/gateway</td>
-          <td>DeepSeek + MCP · 9 Tools · SSE Streaming · ECharts</td>
-          <td>7 MCP工具 + 9 Gateway工具</td>
-          <td><span class="phase-badge fusion">5</span></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-
-<!-- ═══════════════════════════════════════════════════════════════
-     DAG PIPELINE DIAGRAM
-     ═══════════════════════════════════════════════════════════════ -->
-<div class="section">
-  <h2 class="section-title">DAG推理流水线</h2>
-  <p class="section-sub">5阶段有向无环图：数据准备 → 并行统计+ML推理 → 诊断 → 决策工单</p>
-  <div class="arch-container" style="padding:32px;">
-    <svg viewBox="0 0 1100 280" style="width:100%;max-width:1100px;display:block;margin:0 auto;">
-      <defs>
-        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
-          <polygon points="0 0, 10 3.5, 0 7" fill="#2a3a50" />
-        </marker>
-        <marker id="arrowheadGreen" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
-          <polygon points="0 0, 10 3.5, 0 7" fill="#00c9a0" />
-        </marker>
-        <linearGradient id="boxGrad1" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#141820" />
-          <stop offset="100%" stop-color="#0e1117" />
-        </linearGradient>
-      </defs>
-
-      <!-- Skill 1: Data Prep -->
-      <rect x="20" y="80" width="160" height="90" rx="6" fill="url(#boxGrad1)" stroke="#00c9a0" stroke-width="1.5" />
-      <text x="100" y="115" text-anchor="middle" fill="#00c9a0" font-size="13" font-weight="700">Skill 1</text>
-      <text x="100" y="135" text-anchor="middle" fill="#e6ebf2" font-size="12">数据准备</text>
-      <text x="100" y="153" text-anchor="middle" fill="#5a6474" font-size="10">z_scores · cost_risk · baseline</text>
-
-      <!-- Arrow 1→2 -->
-      <line x1="180" y1="125" x2="240" y2="125" stroke="#2a3a50" stroke-width="2" marker-end="url(#arrowhead)" />
-
-      <!-- Fork label -->
-      <text x="210" y="118" text-anchor="middle" fill="#5a6474" font-size="9">串行</text>
-
-      <!-- Skill 2: Stat (top) -->
-      <rect x="250" y="45" width="160" height="80" rx="6" fill="url(#boxGrad1)" stroke="#f0a030" stroke-width="1.5" />
-      <text x="330" y="78" text-anchor="middle" fill="#f0a030" font-size="13" font-weight="700">Skill 2</text>
-      <text x="330" y="98" text-anchor="middle" fill="#e6ebf2" font-size="12">统计推理</text>
-      <text x="330" y="116" text-anchor="middle" fill="#5a6474" font-size="10">alert_summary · T² results</text>
-
-      <!-- Skill 3: ML (bottom) -->
-      <rect x="250" y="155" width="160" height="80" rx="6" fill="url(#boxGrad1)" stroke="#4d94ff" stroke-width="1.5" stroke-dasharray="6,3" />
-      <text x="330" y="188" text-anchor="middle" fill="#4d94ff" font-size="13" font-weight="700">Skill 3 (可选)</text>
-      <text x="330" y="208" text-anchor="middle" fill="#e6ebf2" font-size="12">ML推理</text>
-      <text x="330" y="226" text-anchor="middle" fill="#5a6474" font-size="10">prediction_report · AUC评估</text>
-
-      <!-- Parallel bracket -->
-      <rect x="240" y="45" width="6" height="190" rx="2" fill="#2a3a50" />
-      <text x="235" y="140" text-anchor="middle" fill="#5a6474" font-size="9" transform="rotate(-90,235,140)">ThreadPool 并行</text>
-
-      <!-- Arrows from Skill 2→4 and 3→4 -->
-      <line x1="410" y1="85" x2="480" y2="110" stroke="#2a3a50" stroke-width="2" marker-end="url(#arrowhead)" />
-      <line x1="410" y1="195" x2="480" y2="160" stroke="#2a3a50" stroke-width="1" stroke-dasharray="4,4" marker-end="url(#arrowhead)" />
-
-      <!-- Wait label -->
-      <text x="445" y="148" text-anchor="middle" fill="#5a6474" font-size="9">等待两者</text>
-      <text x="445" y="160" text-anchor="middle" fill="#5a6474" font-size="9">完成</text>
-
-      <!-- Skill 4: Diagnosis -->
-      <rect x="490" y="90" width="160" height="80" rx="6" fill="url(#boxGrad1)" stroke="#a371f7" stroke-width="1.5" stroke-dasharray="6,3" />
-      <text x="570" y="118" text-anchor="middle" fill="#a371f7" font-size="13" font-weight="700">Skill 4 (可选)</text>
-      <text x="570" y="138" text-anchor="middle" fill="#e6ebf2" font-size="12">诊断分析</text>
-      <text x="570" y="156" text-anchor="middle" fill="#5a6474" font-size="10">diagnosis_report · 4模式</text>
-
-      <!-- Arrow 4→5 -->
-      <line x1="650" y1="130" x2="710" y2="130" stroke="#2a3a50" stroke-width="2" marker-end="url(#arrowhead)" />
-
-      <!-- Skill 5: Decision -->
-      <rect x="720" y="80" width="160" height="90" rx="6" fill="url(#boxGrad1)" stroke="#00c9a0" stroke-width="2" />
-      <text x="800" y="115" text-anchor="middle" fill="#00c9a0" font-size="13" font-weight="700">Skill 5</text>
-      <text x="800" y="135" text-anchor="middle" fill="#e6ebf2" font-size="12">决策工单</text>
-      <text x="800" y="153" text-anchor="middle" fill="#5a6474" font-size="10">work_orders · 20优先级</text>
-
-      <!-- Final output -->
-      <rect x="920" y="85" width="150" height="80" rx="20" fill="rgba(0,201,160,0.05)" stroke="#00c9a0" stroke-width="1" stroke-dasharray="4,2" />
-      <text x="995" y="118" text-anchor="middle" fill="#00c9a0" font-size="11" font-weight="700">FINAL OUTPUT</text>
-      <text x="995" y="138" text-anchor="middle" fill="#e6ebf2" font-size="11">维护工单</text>
-      <text x="995" y="153" text-anchor="middle" fill="#5a6474" font-size="10">maintenance_work_orders.csv</text>
-
-      <!-- Arrow 5→output -->
-      <line x1="880" y1="125" x2="918" y2="125" stroke="#00c9a0" stroke-width="1.5" marker-end="url(#arrowheadGreen)" />
-
-      <!-- Timeline at bottom -->
-      <text x="100" y="230" text-anchor="middle" fill="#5a6474" font-size="9">~5s</text>
-      <text x="330" y="260" text-anchor="middle" fill="#5a6474" font-size="9">~35s (最长路径)</text>
-      <text x="570" y="210" text-anchor="middle" fill="#5a6474" font-size="9">~2s</text>
-      <text x="800" y="230" text-anchor="middle" fill="#5a6474" font-size="9">~1s</text>
-
-      <!-- Total -->
-      <text x="555" y="275" text-anchor="middle" fill="#00c9a0" font-size="11" font-weight="600">总耗时: ~43秒 (完整路径) · ~9秒 (无ML降级路径)</text>
-    </svg>
+  <h2 class="section-title"><span class="st-num">09</span> 技术栈全景</h2>
+  <p class="section-sub">覆盖数据探索、统计建模、机器学习、深度学习、系统工程、前端可视化的完整技术生态</p>
+  <div class="tech-grid">
+    <div class="tech-card">
+      <div class="tech-card-icon" style="background:rgba(0,201,160,0.1);color:var(--accent-cyan);">📊</div>
+      <h4>数据探索与统计</h4>
+      <p>14项统计任务 · 17组可视化 · 4参数诊断力量化</p>
+      <div class="tech-tags">
+        <span class="tech-tag">scipy</span><span class="tech-tag">pandas</span><span class="tech-tag">KDE</span><span class="tech-tag">Cohen's d</span><span class="tech-tag">KS-test</span><span class="tech-tag">Youden's J</span>
+      </div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-card-icon" style="background:rgba(240,160,48,0.1);color:var(--accent-amber);">📐</div>
+      <h4>基线分析系统</h4>
+      <p>4基线模型 · 逐设备Z-Score · 成本风险矩阵 · T² SPC</p>
+      <div class="tech-tags">
+        <span class="tech-tag">Z-Score</span><span class="tech-tag">Hotelling T²</span><span class="tech-tag">K-Means</span><span class="tech-tag">Quantile</span><span class="tech-tag">χ²控制限</span>
+      </div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-card-icon" style="background:rgba(240,68,68,0.1);color:var(--accent-red);">🌲</div>
+      <h4>XGBoost 告警模型 v1</h4>
+      <p>35维特征 · 双时间窗口 · 成本敏感学习 · F2-Score优化</p>
+      <div class="tech-tags">
+        <span class="tech-tag">XGBoost 1.7</span><span class="tech-tag">GridSearchCV</span><span class="tech-tag">滑动窗口</span><span class="tech-tag">概率校准</span>
+      </div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-card-icon" style="background:rgba(77,148,255,0.1);color:var(--accent-blue);">🧠</div>
+      <h4>Multi-Task NN v2</h4>
+      <p>106维特征 · 4维度体系 · 故障密度回归 · 数据增强</p>
+      <div class="tech-tags">
+        <span class="tech-tag">PyTorch 2.x</span><span class="tech-tag">BatchNorm</span><span class="tech-tag">Dropout</span><span class="tech-tag">MSE Loss</span><span class="tech-tag">25K参数</span>
+      </div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-card-icon" style="background:rgba(163,113,247,0.1);color:var(--accent-purple);">⚙️</div>
+      <h4>决策融合引擎 v3</h4>
+      <p>4层融合 · 6动作类型 · 9层工业扩展 · 3阶段决策</p>
+      <div class="tech-tags">
+        <span class="tech-tag">ThreadPool</span><span class="tech-tag">DAG调度</span><span class="tech-tag">多信号融合</span><span class="tech-tag">降级路径</span>
+      </div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-card-icon" style="background:rgba(0,201,160,0.1);color:var(--accent-cyan);">🔧</div>
+      <h4>MCP Tool System</h4>
+      <p>7 MCP工具 · 8知识资源 · JSON-RPC · subprocess调度</p>
+      <div class="tech-tags">
+        <span class="tech-tag">FastMCP</span><span class="tech-tag">JSON-RPC</span><span class="tech-tag">stdio</span><span class="tech-tag">subprocess</span><span class="tech-tag">重试机制</span>
+      </div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-card-icon" style="background:rgba(77,148,255,0.1);color:var(--accent-blue);">🌐</div>
+      <h4>AI Gateway</h4>
+      <p>DeepSeek API · 3阶段对话 · SSE Streaming · 9 Tools</p>
+      <div class="tech-tags">
+        <span class="tech-tag">FastAPI</span><span class="tech-tag">DeepSeek V3</span><span class="tech-tag">SSE</span><span class="tech-tag">httpx</span><span class="tech-tag">Tool Calling</span>
+      </div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-card-icon" style="background:rgba(240,160,48,0.1);color:var(--accent-amber);">📱</div>
+      <h4>Web Dashboard</h4>
+      <p>6标签页 · 懒加载 · Vanilla JS · ECharts 5.5 · 深色主题</p>
+      <div class="tech-tags">
+        <span class="tech-tag">ECharts 5.5</span><span class="tech-tag">PapaParse</span><span class="tech-tag">Vanilla JS</span><span class="tech-tag">Dark Theme</span>
+      </div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-card-icon" style="background:rgba(63,185,80,0.1);color:var(--accent-green);">🔍</div>
+      <h4>SHAP可解释性</h4>
+      <p>双路径归因 · 工业根因映射 · 自然语言解释</p>
+      <div class="tech-tags">
+        <span class="tech-tag">TreeSHAP</span><span class="tech-tag">公式分解</span><span class="tech-tag">shap 0.45</span><span class="tech-tag">JSON导出</span>
+      </div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-card-icon" style="background:rgba(240,68,68,0.1);color:var(--accent-red);">📡</div>
+      <h4>传感器升级路线图</h4>
+      <p>概率ROI模型 v2.0 · 三场景估算 · 3阶段部署</p>
+      <div class="tech-tags">
+        <span class="tech-tag">落地折损系数</span><span class="tech-tag">ROI建模</span><span class="tech-tag">CAPEX/OPEX</span><span class="tech-tag">回收期</span>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1089,51 +2115,405 @@ body::before {
      ═══════════════════════════════════════════════════════════════ -->
 <div class="footer">
   Industrial Predictive Maintenance System — Technical Architecture Overview<br>
-  100 CNC Machines · 4 Sensor Parameters · 9 Fault Types · 5 Evolution Phases · AI Copilot Platform
+  100 CNC Machines · 4 Sensor Parameters · 9 Fault Types · 5 Evolution Phases · 7 MCP Tools · 22 Output Files · AI Copilot Platform
 </div>
 
 <script>
-console.log('[tech-overview] init');
+console.log('[tech-overview-v2] init');
 
 // ═══════════════════════════════════════════════════════════════
 // Phase toggle
 // ═══════════════════════════════════════════════════════════════
 function togglePhase(id) {
-  const el = document.getElementById(id);
+  var el = document.getElementById(id);
   el.classList.toggle('open');
 }
-console.log('[tech-overview] togglePhase registered');
 
 // ═══════════════════════════════════════════════════════════════
-// Capability Progression Chart
+// Chart Color Palette
+// ═══════════════════════════════════════════════════════════════
+var C = {
+  cyan: '#00c9a0', amber: '#f0a030', red: '#f04444', blue: '#4d94ff',
+  green: '#3fb950', purple: '#a371f7', pink: '#db61a2',
+  border: '#1c2230', borderLight: '#242b38', borderAccent: '#2a3a50',
+  textPrimary: '#e6ebf2', textSecondary: '#8e9aab', textMuted: '#5a6474',
+  bgCard: '#141820', bgCardAlt: '#181d26', bgInput: '#0c0f15',
+  bgRoot: '#080a0d', bgSurface: '#0e1117'
+};
+
+function tooltipCfg() {
+  return {
+    backgroundColor: 'rgba(14,17,23,0.95)',
+    borderColor: C.border,
+    textStyle: { color: C.textPrimary, fontSize: 12 }
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 0: System Overview — Layered Architecture Graph
 // ═══════════════════════════════════════════════════════════════
 (function() {
-  var dom = document.getElementById('capabilityChart');
+  var dom = document.getElementById('chart-overview');
   if (!dom) return;
-  var chart = echarts.init(dom, null, { renderer: 'canvas' });
+  var chart = echarts.init(dom);
 
-  var phases = ['Phase 1\n数据探索', 'Phase 2\n统计基线', 'Phase 3\nXGBoost', 'Phase 4\nMulti-Task NN', 'Phase 5\nAI Copilot'];
+  // Three-layer architecture with fixed x positions
+  var categories = [
+    { name: '数据层' },
+    { name: '流水线层' },
+    { name: '智能层' },
+    { name: '应用层' },
+    { name: '输出层' }
+  ];
+
+  // Fixed-position nodes for clear layered layout
+  var nodes = [
+    // Data Layer (x: 50-80)
+    { name: 'LOG\n2,999条', category: 0, x: 60, y: 80, symbolSize: 40, itemStyle: { color: C.bgCard, borderColor: C.cyan, borderWidth: 1.5 } },
+    { name: 'SUMMARY\n100台', category: 0, x: 60, y: 180, symbolSize: 38, itemStyle: { color: C.bgCard, borderColor: C.cyan, borderWidth: 1.5 } },
+    { name: 'ASSEMBLY\n135条', category: 0, x: 60, y: 280, symbolSize: 35, itemStyle: { color: C.bgCard, borderColor: C.cyan, borderWidth: 1 } },
+    { name: 'TESTS\n420条', category: 0, x: 60, y: 360, symbolSize: 35, itemStyle: { color: C.bgCard, borderColor: C.cyan, borderWidth: 1 } },
+
+    // Pipeline Layer (x: 200-280)
+    { name: 'Skill 1\n数据准备', category: 1, x: 200, y: 130, symbolSize: 50, itemStyle: { color: C.bgCard, borderColor: C.cyan, borderWidth: 2.5 } },
+    { name: 'Skill 2\n统计推理', category: 1, x: 280, y: 60, symbolSize: 45, itemStyle: { color: C.bgCard, borderColor: C.amber, borderWidth: 2 } },
+    { name: 'Skill 3\nML推理', category: 1, x: 280, y: 200, symbolSize: 42, itemStyle: { color: C.bgCard, borderColor: C.blue, borderWidth: 1.5, borderType: 'dashed' } },
+    { name: 'Skill 4\n诊断分析', category: 1, x: 350, y: 130, symbolSize: 40, itemStyle: { color: C.bgCard, borderColor: C.purple, borderWidth: 1.5 } },
+    { name: 'Skill 5\n决策工单', category: 1, x: 430, y: 130, symbolSize: 52, itemStyle: { color: C.bgCard, borderColor: C.cyan, borderWidth: 3 } },
+
+    // Intelligence Layer (x: 550-650)
+    { name: '4层决策融合\n统计+成本+ML+趋势', category: 2, x: 560, y: 80, symbolSize: 55, itemStyle: { color: C.bgCardAlt, borderColor: C.purple, borderWidth: 2 } },
+    { name: '健康评分\n8维聚合', category: 2, x: 560, y: 200, symbolSize: 45, itemStyle: { color: C.bgCardAlt, borderColor: C.green, borderWidth: 2 } },
+    { name: 'SHAP\n可解释性', category: 2, x: 650, y: 140, symbolSize: 42, itemStyle: { color: C.bgCardAlt, borderColor: C.pink, borderWidth: 1.5 } },
+
+    // Application Layer (x: 750-850)
+    { name: 'Dashboard\n6标签页', category: 3, x: 760, y: 60, symbolSize: 48, itemStyle: { color: C.bgCard, borderColor: C.cyan, borderWidth: 2 } },
+    { name: 'AI Copilot\nChat', category: 3, x: 760, y: 180, symbolSize: 48, itemStyle: { color: C.bgCard, borderColor: C.cyan, borderWidth: 2 } },
+    { name: 'MCP Server\n7 Tools', category: 3, x: 850, y: 120, symbolSize: 45, itemStyle: { color: C.bgCard, borderColor: C.amber, borderWidth: 2 } },
+
+    // Output Layer (x: 920-960)
+    { name: '维护工单\n20优先级', category: 4, x: 930, y: 80, symbolSize: 48, itemStyle: { color: C.bgCardAlt, borderColor: C.green, borderWidth: 2.5 } },
+    { name: '传感器路线图\n3阶段ROI', category: 4, x: 930, y: 200, symbolSize: 42, itemStyle: { color: C.bgCardAlt, borderColor: C.amber, borderWidth: 1.5 } },
+  ];
+
+  var edges = [
+    // Data → Skill 1
+    { source: 'LOG\n2,999条', target: 'Skill 1\n数据准备' },
+    { source: 'SUMMARY\n100台', target: 'Skill 1\n数据准备' },
+    { source: 'ASSEMBLY\n135条', target: 'Skill 1\n数据准备' },
+    { source: 'TESTS\n420条', target: 'Skill 1\n数据准备' },
+    // Skill 1 → Skill 2,3
+    { source: 'Skill 1\n数据准备', target: 'Skill 2\n统计推理' },
+    { source: 'Skill 1\n数据准备', target: 'Skill 3\nML推理' },
+    // Skill 2,3 → Skill 4
+    { source: 'Skill 2\n统计推理', target: 'Skill 4\n诊断分析' },
+    { source: 'Skill 3\nML推理', target: 'Skill 4\n诊断分析' },
+    // Skill 4 → Skill 5
+    { source: 'Skill 4\n诊断分析', target: 'Skill 5\n决策工单' },
+    // Skill 5 → Intelligence
+    { source: 'Skill 5\n决策工单', target: '4层决策融合\n统计+成本+ML+趋势' },
+    { source: 'Skill 2\n统计推理', target: '健康评分\n8维聚合' },
+    // Intelligence → Application
+    { source: '4层决策融合\n统计+成本+ML+趋势', target: 'MCP Server\n7 Tools' },
+    { source: '4层决策融合\n统计+成本+ML+趋势', target: 'Dashboard\n6标签页' },
+    { source: '健康评分\n8维聚合', target: 'Dashboard\n6标签页' },
+    { source: 'MCP Server\n7 Tools', target: 'AI Copilot\nChat' },
+    { source: 'SHAP\n可解释性', target: 'Dashboard\n6标签页' },
+    { source: 'SHAP\n可解释性', target: 'AI Copilot\nChat' },
+    // Application → Output
+    { source: 'Dashboard\n6标签页', target: '维护工单\n20优先级' },
+    { source: 'MCP Server\n7 Tools', target: '传感器路线图\n3阶段ROI' },
+  ];
 
   chart.setOption({
     backgroundColor: 'transparent',
-    tooltip: { trigger: 'axis', backgroundColor: 'rgba(14,17,23,0.95)', borderColor: '#1c2230', textStyle: { color: '#e6ebf2', fontSize: 12 } },
-    legend: { bottom: 0, textStyle: { color: '#8e9aab', fontSize: 11 }, data: ['检测能力指数', '工程复杂度', 'AI自主性'] },
-    grid: { left: '5%', right: '5%', top: 60, bottom: 50 },
-    xAxis: { type: 'category', data: phases, axisLine: { lineStyle: { color: '#2a3a50' } }, axisLabel: { color: '#8e9aab', fontSize: 11 } },
-    yAxis: { type: 'value', min: 0, max: 100, axisLabel: { color: '#5a6474', fontSize: 10 }, splitLine: { lineStyle: { color: '#1c2230', type: 'dashed' } } },
+    tooltip: tooltipCfg(),
+    series: [{
+      type: 'graph',
+      layout: 'force',
+      roam: false,
+      draggable: false,
+      force: { repulsion: 600, edgeLength: [80, 200], gravity: 0.12, layoutAnimation: false },
+      edgeSymbol: ['none', 'arrow'],
+      edgeSymbolSize: 7,
+      lineStyle: { color: C.borderAccent, width: 1.5, curveness: 0.15, opacity: 0.7 },
+      label: { show: true, color: C.textPrimary, fontSize: 10, fontWeight: 500, formatter: function(p) { return p.name; } },
+      categories: [
+        { name: '数据层', itemStyle: { color: C.bgCard } },
+        { name: '流水线层', itemStyle: { color: C.bgCard } },
+        { name: '智能层', itemStyle: { color: C.bgCardAlt } },
+        { name: '应用层', itemStyle: { color: C.bgCard } },
+        { name: '输出层', itemStyle: { color: C.bgCardAlt } }
+      ],
+      data: nodes,
+      links: edges
+    }]
+  });
+
+  new ResizeObserver(function() { chart.resize(); }).observe(dom);
+})();
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 1: Data Flow Sankey
+// ═══════════════════════════════════════════════════════════════
+(function() {
+  var dom = document.getElementById('chart-dataflow');
+  if (!dom) return;
+  var chart = echarts.init(dom);
+
+  var sankeyData = [
+    // Layer 1: Raw CSVs → Skill 1
+    { source: 'LOG (2,999条)', target: 'Skill 1\n数据准备', value: 150 },
+    { source: 'SUMMARY (100台)', target: 'Skill 1\n数据准备', value: 30 },
+    { source: 'ASSEMBLY (135条)', target: 'Skill 1\n数据准备', value: 20 },
+    { source: 'TESTS (420条)', target: 'Skill 1\n数据准备', value: 50 },
+
+    // Skill 1 → Skill 2,3
+    { source: 'Skill 1\n数据准备', target: 'Skill 2\n统计推理', value: 120 },
+    { source: 'Skill 1\n数据准备', target: 'Skill 3\nML推理', value: 100 },
+
+    // Skill 2,3 → Skill 4
+    { source: 'Skill 2\n统计推理', target: 'Skill 4\n诊断分析', value: 80 },
+    { source: 'Skill 3\nML推理', target: 'Skill 4\n诊断分析', value: 60 },
+
+    // Skill 4 → Skill 5
+    { source: 'Skill 4\n诊断分析', target: 'Skill 5\n决策工单', value: 130 },
+
+    // Skill 5 → Dashboard tabs
+    { source: 'Skill 5\n决策工单', target: '智能维护\n决策中心', value: 80 },
+    { source: 'Skill 5\n决策工单', target: '设备健康\n与感知升级', value: 50 },
+
+    // Skill 2 → Dashboard tabs
+    { source: 'Skill 2\n统计推理', target: '基线划定\n分析', value: 70 },
+    { source: 'Skill 2\n统计推理', target: '设备健康\n与感知升级', value: 40 },
+
+    // Skill 1 → Dashboard
+    { source: 'Skill 1\n数据准备', target: '基线划定\n分析', value: 60 },
+    { source: 'Skill 1\n数据准备', target: '数据探索\n分析', value: 30 },
+
+    // Raw → Dashboard (direct)
+    { source: 'LOG (2,999条)', target: '运行日志', value: 120 },
+    { source: 'SUMMARY (100台)', target: '数据探索\n分析', value: 30 },
+
+    // ML outputs
+    { source: 'Skill 3\nML推理', target: '预测性\n维护模型', value: 60 },
+  ];
+
+  chart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'item', triggerOn: 'mousemove', ...tooltipCfg() },
+    series: [{
+      type: 'sankey',
+      emphasis: { focus: 'adjacency' },
+      nodeAlign: 'left',
+      layoutIterations: 32,
+      data: [
+        { name: 'LOG (2,999条)', itemStyle: { color: '#1a3a2a' } },
+        { name: 'SUMMARY (100台)', itemStyle: { color: '#1a3a2a' } },
+        { name: 'ASSEMBLY (135条)', itemStyle: { color: '#1a2a1a' } },
+        { name: 'TESTS (420条)', itemStyle: { color: '#1a2a1a' } },
+        { name: 'Skill 1\n数据准备', itemStyle: { color: '#0d3b2a' } },
+        { name: 'Skill 2\n统计推理', itemStyle: { color: '#3a2a0d' } },
+        { name: 'Skill 3\nML推理', itemStyle: { color: '#0d1a3a' } },
+        { name: 'Skill 4\n诊断分析', itemStyle: { color: '#2a0d3a' } },
+        { name: 'Skill 5\n决策工单', itemStyle: { color: '#0d3a2a' } },
+        { name: '运行日志', itemStyle: { color: '#1a2a2a' } },
+        { name: '数据探索\n分析', itemStyle: { color: '#1a2a2a' } },
+        { name: '基线划定\n分析', itemStyle: { color: '#1a2a2a' } },
+        { name: '预测性\n维护模型', itemStyle: { color: '#1a2a2a' } },
+        { name: '智能维护\n决策中心', itemStyle: { color: '#1a2a2a' } },
+        { name: '设备健康\n与感知升级', itemStyle: { color: '#1a2a2a' } },
+      ],
+      links: sankeyData,
+      label: { color: C.textSecondary, fontSize: 11 },
+      lineStyle: { color: 'gradient', curveness: 0.5, opacity: 0.3 }
+    }]
+  });
+
+  new ResizeObserver(function() { chart.resize(); }).observe(dom);
+})();
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 5: AI Copilot Architecture Graph
+// ═══════════════════════════════════════════════════════════════
+(function() {
+  var dom = document.getElementById('chart-aicopilot');
+  if (!dom) return;
+  var chart = echarts.init(dom);
+
+  var nodes = [
+    // User layer
+    { name: 'Browser\nChat', category: 0, x: 50, y: 200, symbolSize: 50, itemStyle: { color: C.bgCard, borderColor: C.cyan, borderWidth: 2 } },
+
+    // Gateway layer
+    { name: 'FastAPI\n:8765', category: 1, x: 200, y: 120, symbolSize: 55, itemStyle: { color: C.bgCard, borderColor: C.green, borderWidth: 2.5 } },
+    { name: '9 Tools\nFunction Calling', category: 1, x: 200, y: 280, symbolSize: 45, itemStyle: { color: C.bgCardAlt, borderColor: C.amber, borderWidth: 1.5 } },
+
+    // MCP layer
+    { name: 'MCP Server\n7 Tools', category: 2, x: 380, y: 120, symbolSize: 52, itemStyle: { color: C.bgCard, borderColor: C.amber, borderWidth: 2 } },
+    { name: 'Skill 1\n数据准备', category: 2, x: 500, y: 40, symbolSize: 38, itemStyle: { color: C.bgCardAlt, borderColor: C.cyan, borderWidth: 1 } },
+    { name: 'Skill 2\n统计推理', category: 2, x: 500, y: 110, symbolSize: 38, itemStyle: { color: C.bgCardAlt, borderColor: C.amber, borderWidth: 1 } },
+    { name: 'Skill 3\nML推理', category: 2, x: 500, y: 180, symbolSize: 38, itemStyle: { color: C.bgCardAlt, borderColor: C.blue, borderWidth: 1 } },
+    { name: 'Skill 5\n决策工单', category: 2, x: 500, y: 260, symbolSize: 38, itemStyle: { color: C.bgCardAlt, borderColor: C.cyan, borderWidth: 1 } },
+
+    // AI layer
+    { name: 'DeepSeek API\nTool Calling', category: 3, x: 300, y: 380, symbolSize: 55, itemStyle: { color: C.bgCard, borderColor: C.blue, borderWidth: 2 } },
+
+    // Data layer
+    { name: '22 CSV/JSON\nDashboard Data', category: 4, x: 600, y: 160, symbolSize: 48, itemStyle: { color: C.bgCardAlt, borderColor: C.purple, borderWidth: 2 } },
+    { name: '原始数据集\n4 CSV', category: 4, x: 650, y: 300, symbolSize: 42, itemStyle: { color: C.bgCardAlt, borderColor: C.textMuted, borderWidth: 1.5 } },
+
+    // Output
+    { name: 'ECharts\n可视化', category: 5, x: 130, y: 380, symbolSize: 42, itemStyle: { color: C.bgCardAlt, borderColor: C.purple, borderWidth: 1.5 } },
+    { name: 'AI报告\nMarkdown', category: 5, x: 50, y: 380, symbolSize: 40, itemStyle: { color: C.bgCardAlt, borderColor: C.green, borderWidth: 1.5 } },
+  ];
+
+  var edges = [
+    { source: 'Browser\nChat', target: 'FastAPI\n:8765', label: { show: true, formatter: 'POST /api/chat\nSSE Streaming', fontSize: 9, color: C.textMuted } },
+    { source: 'FastAPI\n:8765', target: 'DeepSeek API\nTool Calling' },
+    { source: 'FastAPI\n:8765', target: '9 Tools\nFunction Calling' },
+    { source: '9 Tools\nFunction Calling', target: 'MCP Server\n7 Tools' },
+    { source: 'MCP Server\n7 Tools', target: 'Skill 1\n数据准备' },
+    { source: 'MCP Server\n7 Tools', target: 'Skill 2\n统计推理' },
+    { source: 'MCP Server\n7 Tools', target: 'Skill 3\nML推理' },
+    { source: 'MCP Server\n7 Tools', target: 'Skill 5\n决策工单' },
+    { source: 'Skill 1\n数据准备', target: '原始数据集\n4 CSV' },
+    { source: 'Skill 2\n统计推理', target: '22 CSV/JSON\nDashboard Data' },
+    { source: 'Skill 5\n决策工单', target: '22 CSV/JSON\nDashboard Data' },
+    { source: '9 Tools\nFunction Calling', target: '22 CSV/JSON\nDashboard Data' },
+    { source: 'DeepSeek API\nTool Calling', target: 'FastAPI\n:8765' },
+    { source: 'FastAPI\n:8765', target: 'Browser\nChat' },
+    { source: 'Browser\nChat', target: 'ECharts\n可视化' },
+    { source: 'Browser\nChat', target: 'AI报告\nMarkdown' },
+  ];
+
+  var categories = [
+    { name: '前端' }, { name: 'Gateway' }, { name: 'MCP' }, { name: 'AI' }, { name: '数据' }, { name: '输出' }
+  ];
+
+  chart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: tooltipCfg(),
+    series: [{
+      type: 'graph',
+      layout: 'force',
+      roam: false,
+      draggable: false,
+      force: { repulsion: 400, edgeLength: [50, 130], gravity: 0.2, layoutAnimation: false },
+      edgeSymbol: ['none', 'arrow'],
+      edgeSymbolSize: 7,
+      lineStyle: { color: C.borderAccent, width: 1.5, curveness: 0.2, opacity: 0.6 },
+      label: { show: true, color: C.textPrimary, fontSize: 10, fontWeight: 500 },
+      categories: categories,
+      data: nodes,
+      links: edges
+    }]
+  });
+
+  new ResizeObserver(function() { chart.resize(); }).observe(dom);
+})();
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 6: SHAP Pipeline Graph
+// ═══════════════════════════════════════════════════════════════
+(function() {
+  var dom = document.getElementById('chart-shap');
+  if (!dom) return;
+  var chart = echarts.init(dom);
+
+  var nodes = [
+    { name: '最终风险评分\nfinal_risk_score', category: 0, x: 60, y: 150, symbolSize: 48, itemStyle: { color: C.bgCard, borderColor: C.red, borderWidth: 2 } },
+
+    { name: '路径1\n公式直接分解\nRiskDecomposer', category: 1, x: 230, y: 60, symbolSize: 50, itemStyle: { color: C.bgCardAlt, borderColor: C.cyan, borderWidth: 2 } },
+    { name: '路径2\nTreeSHAP子层\nStatLayerSHAP', category: 1, x: 230, y: 240, symbolSize: 50, itemStyle: { color: C.bgCardAlt, borderColor: C.blue, borderWidth: 2 } },
+
+    { name: '4信号贡献\n统计·成本·ML·趋势', category: 2, x: 420, y: 60, symbolSize: 45, itemStyle: { color: C.bgCard, borderColor: C.cyan, borderWidth: 1.5 } },
+    { name: '传感器z-score\n边际贡献', category: 2, x: 420, y: 240, symbolSize: 42, itemStyle: { color: C.bgCard, borderColor: C.blue, borderWidth: 1.5 } },
+
+    { name: '工业根因映射\nLocalExplainer', category: 3, x: 600, y: 150, symbolSize: 52, itemStyle: { color: C.bgCardAlt, borderColor: C.purple, borderWidth: 2.5 } },
+
+    { name: '电气类\n电压/电流异常', category: 4, x: 770, y: 40, symbolSize: 38, itemStyle: { color: C.bgCard, borderColor: C.cyan, borderWidth: 1 } },
+    { name: '热控类\n温度漂移', category: 4, x: 770, y: 110, symbolSize: 36, itemStyle: { color: C.bgCard, borderColor: C.red, borderWidth: 1 } },
+    { name: '机械类\n转速/振动', category: 4, x: 770, y: 180, symbolSize: 35, itemStyle: { color: C.bgCard, borderColor: C.amber, borderWidth: 1 } },
+    { name: '维护类\n保养逾期', category: 4, x: 770, y: 240, symbolSize: 35, itemStyle: { color: C.bgCard, borderColor: C.blue, borderWidth: 1 } },
+    { name: '过程质量\n缺陷率关联', category: 4, x: 770, y: 300, symbolSize: 33, itemStyle: { color: C.bgCard, borderColor: C.green, borderWidth: 1 } },
+
+    { name: 'shap_dashboard.json\n618KB · 100台', category: 5, x: 550, y: 340, symbolSize: 45, itemStyle: { color: C.bgCardAlt, borderColor: C.pink, borderWidth: 2 } },
+    { name: 'Dashboard\nsec3 + sec7', category: 5, x: 730, y: 370, symbolSize: 42, itemStyle: { color: C.bgCard, borderColor: C.cyan, borderWidth: 1.5 } },
+  ];
+
+  var edges = [
+    { source: '最终风险评分\nfinal_risk_score', target: '路径1\n公式直接分解\nRiskDecomposer' },
+    { source: '最终风险评分\nfinal_risk_score', target: '路径2\nTreeSHAP子层\nStatLayerSHAP' },
+    { source: '路径1\n公式直接分解\nRiskDecomposer', target: '4信号贡献\n统计·成本·ML·趋势' },
+    { source: '路径2\nTreeSHAP子层\nStatLayerSHAP', target: '传感器z-score\n边际贡献' },
+    { source: '4信号贡献\n统计·成本·ML·趋势', target: '工业根因映射\nLocalExplainer' },
+    { source: '传感器z-score\n边际贡献', target: '工业根因映射\nLocalExplainer' },
+    { source: '工业根因映射\nLocalExplainer', target: '电气类\n电压/电流异常' },
+    { source: '工业根因映射\nLocalExplainer', target: '热控类\n温度漂移' },
+    { source: '工业根因映射\nLocalExplainer', target: '机械类\n转速/振动' },
+    { source: '工业根因映射\nLocalExplainer', target: '维护类\n保养逾期' },
+    { source: '工业根因映射\nLocalExplainer', target: '过程质量\n缺陷率关联' },
+    { source: '4信号贡献\n统计·成本·ML·趋势', target: 'shap_dashboard.json\n618KB · 100台' },
+    { source: '传感器z-score\n边际贡献', target: 'shap_dashboard.json\n618KB · 100台' },
+    { source: 'shap_dashboard.json\n618KB · 100台', target: 'Dashboard\nsec3 + sec7' },
+  ];
+
+  var categories = [
+    { name: '输入' }, { name: '归因路径' }, { name: '中间输出' }, { name: '根因映射' }, { name: '根因类别' }, { name: '最终输出' }
+  ];
+
+  chart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: tooltipCfg(),
+    series: [{
+      type: 'graph',
+      layout: 'force',
+      roam: false,
+      draggable: false,
+      force: { repulsion: 400, edgeLength: [60, 160], gravity: 0.2, layoutAnimation: false },
+      edgeSymbol: ['none', 'arrow'],
+      edgeSymbolSize: 7,
+      lineStyle: { color: C.borderAccent, width: 1.5, curveness: 0.15, opacity: 0.7 },
+      label: { show: true, color: C.textPrimary, fontSize: 10, fontWeight: 500 },
+      categories: categories,
+      data: nodes,
+      links: edges
+    }]
+  });
+
+  new ResizeObserver(function() { chart.resize(); }).observe(dom);
+})();
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 8: Evolution Overview Chart
+// ═══════════════════════════════════════════════════════════════
+(function() {
+  var dom = document.getElementById('chart-evolution');
+  if (!dom) return;
+  var chart = echarts.init(dom);
+
+  var phases = ['Phase 1\n数据探索', 'Phase 2\n统计基线', 'Phase 3\nXGBoost', 'Phase 4\nMTNN v2', 'Phase 5\nAI Copilot'];
+
+  chart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis', ...tooltipCfg() },
+    legend: { bottom: 0, textStyle: { color: C.textSecondary, fontSize: 11 }, data: ['检测能力指数', '工程复杂度', 'AI自主性', '可用性保障'] },
+    grid: { left: '5%', right: '5%', top: 50, bottom: 50 },
+    xAxis: { type: 'category', data: phases, axisLine: { lineStyle: { color: C.borderAccent } }, axisLabel: { color: C.textSecondary, fontSize: 11 } },
+    yAxis: { type: 'value', min: 0, max: 100, axisLabel: { color: C.textMuted, fontSize: 10 }, splitLine: { lineStyle: { color: C.border, type: 'dashed' } } },
     series: [
       {
         name: '检测能力指数', type: 'line',
-        data: [15, 40, 42, 55, 78],
+        data: [15, 40, 42, 55, 80],
         smooth: true, symbol: 'circle', symbolSize: 10,
-        lineStyle: { width: 3, color: '#00c9a0' },
-        itemStyle: { color: '#00c9a0' },
+        lineStyle: { width: 3, color: C.cyan },
+        itemStyle: { color: C.cyan },
         areaStyle: { color: 'rgba(0,201,160,0.06)' },
         markLine: {
           silent: true, symbol: 'none',
           data: [
-            { yAxis: 50, lineStyle: { color: '#f0a030', type: 'dashed', width: 1 }, label: { formatter: '工业可用阈值', color: '#8e9aab', fontSize: 10 } },
-            { yAxis: 80, lineStyle: { color: '#00c9a0', type: 'dashed', width: 1 }, label: { formatter: '目标线', color: '#8e9aab', fontSize: 10 } }
+            { yAxis: 50, lineStyle: { color: C.amber, type: 'dashed', width: 1 }, label: { formatter: '工业可用阈值', color: C.textSecondary, fontSize: 10 } }
           ]
         }
       },
@@ -1141,15 +2521,28 @@ console.log('[tech-overview] togglePhase registered');
         name: '工程复杂度', type: 'line',
         data: [8, 20, 40, 65, 90],
         smooth: true, symbol: 'diamond', symbolSize: 8,
-        lineStyle: { width: 2, color: '#f0a030' },
-        itemStyle: { color: '#f0a030' },
+        lineStyle: { width: 2, color: C.amber },
+        itemStyle: { color: C.amber },
       },
       {
         name: 'AI自主性', type: 'line',
         data: [0, 5, 10, 25, 85],
         smooth: true, symbol: 'triangle', symbolSize: 9,
-        lineStyle: { width: 2, color: '#a371f7' },
-        itemStyle: { color: '#a371f7' },
+        lineStyle: { width: 2, color: C.purple },
+        itemStyle: { color: C.purple },
+      },
+      {
+        name: '可用性保障', type: 'line',
+        data: [30, 50, 55, 60, 95],
+        smooth: true, symbol: 'rect', symbolSize: 8,
+        lineStyle: { width: 2, color: C.green, type: 'dashed' },
+        itemStyle: { color: C.green },
+        markLine: {
+          silent: true, symbol: 'none',
+          data: [
+            { yAxis: 95, lineStyle: { color: C.green, type: 'dashed', width: 1 }, label: { formatter: '4级降级保障', color: C.green, fontSize: 10 } }
+          ]
+        }
       }
     ]
   });
@@ -1157,72 +2550,353 @@ console.log('[tech-overview] togglePhase registered');
   new ResizeObserver(function() { chart.resize(); }).observe(dom);
 })();
 
-// ═══════════════════════════════════════════════════════════════
-// System Architecture Topology Chart
-// ═══════════════════════════════════════════════════════════════
-(function() {
-  var dom = document.getElementById('archDiagram');
-  if (!dom) return;
-  var chart = echarts.init(dom, null, { renderer: 'canvas' });
+console.log('[tech-overview-v2] all ' + document.querySelectorAll('.arch-diagram').length + ' charts initialized');
 
-  // Sankey-style layout using graph
+// ═══════════════════════════════════════════════════════════════
+// DATA CEILING INTERACTIVE DEMO — 数据天花板交互式演示
+// ═══════════════════════════════════════════════════════════════
+
+// ── Phase data (hardcoded from sensor_phase_summary.csv) ──
+var PHASE_DATA = [
+  {
+    name: '基线 (仅4传感器)', youden_j: 0.075,
+    sensors_added: '—', investment: '$0', roi: '—',
+    ceiling_pct: 8, color_class: '', verdict: '不可用', verdict_color: 'var(--accent-red)'
+  },
+  {
+    name: 'Phase 1: 振动监测', youden_j: 0.525,
+    sensors_added: '加速度计 ×2 + FFT分析仪', investment: '$402K', roi: '994%（5年）',
+    ceiling_pct: 58, color_class: 'level-warning', verdict: '可用', verdict_color: 'var(--accent-amber)'
+  },
+  {
+    name: 'Phase 2: 电流频谱', youden_j: 0.805,
+    sensors_added: '电流频谱传感器 + 谐波分析', investment: '$237K', roi: '1136%（5年）',
+    ceiling_pct: 89, color_class: 'level-good', verdict: '工业级', verdict_color: 'var(--accent-green)'
+  },
+  {
+    name: 'Phase 3: 热成像', youden_j: 0.900,
+    sensors_added: '红外热像仪 + 趋势软件', investment: '$393K', roi: '723%（5年）',
+    ceiling_pct: 100, color_class: 'level-good', verdict: '优秀', verdict_color: 'var(--accent-green)'
+  }
+];
+
+var CONCLUSION_TEXTS = [
+  '💡 <span class="highlight">不是模型不够好，是传感器给的信息不够多。</span> 4个基础传感器下 Youden\'s J 仅 <strong style="color:var(--accent-red);">0.075</strong>，96%+ 故障样本与正常无法区分，<strong>任何 ML 模型都无从学习</strong>。第一步：部署振动传感器（$402K，5年ROI 994%，6个月回本），Youden\'s J 立即跃升至 <strong style="color:var(--accent-green);">0.525</strong>。',
+  '💡 <span class="highlight">振动传感器让 ML 开始可用。</span> Youden\'s J 从 0.075 跃升至 <strong style="color:var(--accent-amber);">0.525</strong>（7倍提升），超过可用阈值 0.30。$402K 投资 5年预期 ROI <strong style="color:var(--accent-green);">994%</strong>，6个月回本。机械故障占 CNC 故障的 ~40%，振动监测提供单次最大精度增益。',
+  '💡 <span class="highlight">电流频谱分析推动 ML 达到工业级。</span> Youden\'s J 达 <strong style="color:var(--accent-green);">0.805</strong>，捕获振动无法检测的电气故障特征。累计投资 $639K，电机绕组和电源质量问题占 ~25% 故障，现在可被提前预测。',
+  '💡 <span class="highlight">多物理场全覆盖，预测能力提升 12 倍。</span> Youden\'s J 接近理论极限 <strong style="color:var(--accent-green);">0.900</strong>。红外热成像提供最早期的灾难性故障预警（热失控、绝缘击穿）。累计投资 $1.03M，年节省 $1.07M-$2.97M。'
+];
+
+// ── State ──
+var _kdeCharts = {};    // id → echarts instance
+var _kdeData = null;    // loaded JSON
+var _animId = null;     // current animation frame
+
+// ── Render one KDE overlay chart ──
+function renderKdeChart(domId, paramData) {
+  var dom = document.getElementById(domId);
+  if (!dom) return;
+  // Remove loading placeholder
+  var loadingEl = dom.querySelector('.kde-loading');
+  if (loadingEl) loadingEl.remove();
+
+  // Dispose previous instance
+  var old = echarts.getInstanceByDom(dom);
+  if (old) old.dispose();
+
+  var chart = echarts.init(dom);
+  _kdeCharts[domId] = chart;
+
+  // Build [x, y] pairs
+  var xyNormal = paramData.x_grid.map(function(x, i) { return [x, paramData.y_normal[i]]; });
+  var xyFault  = paramData.x_grid.map(function(x, i) { return [x, paramData.y_fault[i]]; });
+
+  var pct = paramData.overlap_pct.toFixed(1);
+
   chart.setOption({
     backgroundColor: 'transparent',
-    tooltip: { trigger: 'item', backgroundColor: 'rgba(14,17,23,0.95)', borderColor: '#1c2230', textStyle: { color: '#e6ebf2', fontSize: 12 } },
-    series: [{
-      type: 'graph',
-      layout: 'force',
-      roam: false,
-      draggable: false,
-      force: { repulsion: 500, edgeLength: [120, 280], gravity: 0.1 },
-      edgeSymbol: ['none', 'arrow'],
-      edgeSymbolSize: 8,
-      lineStyle: { color: '#2a3a50', width: 1.5, curveness: 0.2, opacity: 0.7 },
-      label: { show: true, color: '#e6ebf2', fontSize: 11, fontWeight: 500 },
-      categories: [
-        { name: 'Data' },
-        { name: 'Pipeline' },
-        { name: 'Engine' },
-        { name: 'Gateway' },
-        { name: 'Frontend' }
-      ],
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: 'rgba(14,17,23,0.95)',
+      borderColor: C.border,
+      textStyle: { color: C.textPrimary, fontSize: 11 },
+      formatter: function(ps) {
+        var lines = [];
+        for (var i = 0; i < ps.length; i++) {
+          lines.push(
+            '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;' +
+            'background:' + (ps[i].seriesName === '正常' ? C.cyan : C.red) + ';"></span>' +
+            ps[i].seriesName + ': ' + paramData.label.split(' ')[0] + ' = ' + ps[i].data[0].toFixed(1) + ' ' + paramData.unit
+          );
+        }
+        return lines.join('<br>');
+      }
+    },
+    legend: {
+      bottom: 2, left: 'center',
+      textStyle: { color: C.textSecondary, fontSize: 10 },
+      itemWidth: 12, itemHeight: 8,
       data: [
-        { name: '原始数据集\n4 CSV', category: 0, symbolSize: 35, itemStyle: { color: '#1c2230', borderColor: '#5a6474', borderWidth: 1.5 } },
-        { name: '数据准备\nSkill 1', category: 1, symbolSize: 40, itemStyle: { color: '#141820', borderColor: '#00c9a0', borderWidth: 2 } },
-        { name: '统计推理\nSkill 2', category: 1, symbolSize: 35, itemStyle: { color: '#141820', borderColor: '#f0a030', borderWidth: 1.5 } },
-        { name: 'ML推理\nSkill 3', category: 1, symbolSize: 35, itemStyle: { color: '#141820', borderColor: '#4d94ff', borderWidth: 1.5 } },
-        { name: '诊断分析\nSkill 4', category: 1, symbolSize: 30, itemStyle: { color: '#141820', borderColor: '#a371f7', borderWidth: 1.5 } },
-        { name: '决策工单\nSkill 5', category: 1, symbolSize: 40, itemStyle: { color: '#141820', borderColor: '#00c9a0', borderWidth: 2 } },
-        { name: '决策融合引擎\nLayer 1-4', category: 2, symbolSize: 45, itemStyle: { color: '#0e1117', borderColor: '#a371f7', borderWidth: 2 } },
-        { name: 'MCP Server\n7 Tools', category: 3, symbolSize: 40, itemStyle: { color: '#141820', borderColor: '#f0a030', borderWidth: 2 } },
-        { name: 'FastAPI Gateway\n:8765', category: 3, symbolSize: 40, itemStyle: { color: '#141820', borderColor: '#00c9a0', borderWidth: 2 } },
-        { name: 'DeepSeek API\nTool Calling', category: 3, symbolSize: 35, itemStyle: { color: '#141820', borderColor: '#4d94ff', borderWidth: 1.5 } },
-        { name: 'Dashboard\nECharts', category: 4, symbolSize: 35, itemStyle: { color: '#141820', borderColor: '#00c9a0', borderWidth: 1.5 } },
-        { name: 'AI Chat\nchat.html', category: 4, symbolSize: 35, itemStyle: { color: '#141820', borderColor: '#00c9a0', borderWidth: 1.5 } },
-        { name: '维护工单\nCSV输出', category: 4, symbolSize: 30, itemStyle: { color: '#0e1117', borderColor: '#f0a030', borderWidth: 1.5 } }
-      ],
-      links: [
-        { source: '原始数据集\n4 CSV', target: '数据准备\nSkill 1' },
-        { source: '数据准备\nSkill 1', target: '统计推理\nSkill 2' },
-        { source: '数据准备\nSkill 1', target: 'ML推理\nSkill 3' },
-        { source: '统计推理\nSkill 2', target: '诊断分析\nSkill 4' },
-        { source: 'ML推理\nSkill 3', target: '诊断分析\nSkill 4' },
-        { source: '诊断分析\nSkill 4', target: '决策工单\nSkill 5' },
-        { source: '决策工单\nSkill 5', target: '决策融合引擎\nLayer 1-4' },
-        { source: '决策融合引擎\nLayer 1-4', target: 'MCP Server\n7 Tools' },
-        { source: 'MCP Server\n7 Tools', target: 'FastAPI Gateway\n:8765' },
-        { source: 'FastAPI Gateway\n:8765', target: 'DeepSeek API\nTool Calling' },
-        { source: 'FastAPI Gateway\n:8765', target: 'Dashboard\nECharts' },
-        { source: 'FastAPI Gateway\n:8765', target: 'AI Chat\nchat.html' },
-        { source: '决策融合引擎\nLayer 1-4', target: '维护工单\nCSV输出' }
+        { name: '正常', icon: 'rect' },
+        { name: '故障', icon: 'rect' }
       ]
-    }]
+    },
+    grid: { left: 52, right: 12, top: 18, bottom: 36 },
+    xAxis: {
+      type: 'value',
+      axisLine: { lineStyle: { color: C.borderAccent } },
+      axisLabel: { color: C.textMuted, fontSize: 9, formatter: function(v) { return v.toFixed(0); } },
+      splitLine: { show: false },
+      name: paramData.unit, nameTextStyle: { color: C.textMuted, fontSize: 9 }
+    },
+    yAxis: { type: 'value', show: false, min: 0 },
+    series: [
+      {
+        name: '正常', type: 'line',
+        data: xyNormal, smooth: true, symbol: 'none',
+        lineStyle: { width: 2.5, color: C.cyan },
+        areaStyle: { color: 'rgba(0,201,160,0.10)' }
+      },
+      {
+        name: '故障', type: 'line',
+        data: xyFault, smooth: true, symbol: 'none',
+        lineStyle: { width: 2.5, color: C.red },
+        areaStyle: { color: 'rgba(240,68,68,0.12)' }
+      }
+    ],
+    graphic: [
+      {
+        type: 'text', left: 'center', top: 4,
+        style: {
+          text: pct + '% 故障样本落在正常范围内',
+          fill: C.red, fontSize: 10, fontWeight: 600,
+          textAlign: 'center'
+        }
+      }
+    ]
   });
 
   new ResizeObserver(function() { chart.resize(); }).observe(dom);
+}
+
+// ── Render all 4 KDE charts ──
+function renderAllKdeCharts(data) {
+  var params = data.parameters;
+  var map = {
+    'chart-kde-voltage':     params.Voltage,
+    'chart-kde-amperage':    params.Amperage,
+    'chart-kde-temperature': params.Temperature,
+    'chart-kde-rotorspeed':  params.Rotor_Speed
+  };
+  for (var id in map) {
+    if (map[id]) renderKdeChart(id, map[id]);
+  }
+
+  // Update overlap badges
+  for (var key in params) {
+    var p = params[key];
+    var badgeId = 'badge-' + key.toLowerCase().replace('_', '');
+    if (key === 'Rotor_Speed') badgeId = 'badge-rotorspeed';
+    var badge = document.getElementById(badgeId);
+    if (badge) {
+      badge.textContent = '重叠 ' + p.overlap_pct.toFixed(1) + '%';
+    }
+  }
+}
+
+// ── Animate Youden's J number ──
+function animateYoudenJ(fromVal, toVal, phaseIdx) {
+  if (_animId) cancelAnimationFrame(_animId);
+  var el = document.getElementById('youden-value');
+  var duration = 600;
+  var startTime = null;
+
+  function step(ts) {
+    if (!startTime) startTime = ts;
+    var progress = Math.min((ts - startTime) / duration, 1);
+    var eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+    var current = fromVal + (toVal - fromVal) * eased;
+    el.textContent = current.toFixed(3);
+
+    // Color by value
+    el.classList.remove('level-warning', 'level-good');
+    if (current >= 0.70) el.classList.add('level-good');
+    else if (current >= 0.30) el.classList.add('level-warning');
+
+    if (progress < 1) {
+      _animId = requestAnimationFrame(step);
+    } else {
+      el.textContent = toVal.toFixed(3);
+      _animId = null;
+    }
+  }
+  _animId = requestAnimationFrame(step);
+}
+
+// ── Update right panel on slider change ──
+function updatePhaseDisplay(idx) {
+  var pd = PHASE_DATA[idx];
+  var prevJ = parseFloat(document.getElementById('youden-value').textContent) || pd.youden_j;
+
+  // Animate the big number
+  animateYoudenJ(prevJ, pd.youden_j, idx);
+
+  // Update verdict
+  var verdict = document.getElementById('youden-verdict');
+  verdict.textContent = pd.verdict;
+  verdict.style.color = pd.verdict_color;
+
+  // Update phase info card
+  document.getElementById('phase-name').textContent = pd.name;
+  document.getElementById('phase-sensors').textContent = pd.sensors_added;
+  document.getElementById('phase-investment').textContent = pd.investment;
+  document.getElementById('phase-roi').textContent = pd.roi;
+
+  // Update ceiling bar
+  document.getElementById('ceiling-bar-fill').style.width = pd.ceiling_pct + '%';
+
+  // Update slider stops
+  document.querySelectorAll('.ceiling-slider-stop').forEach(function(s, i) {
+    s.classList.toggle('active', i === idx);
+  });
+
+  // Update conclusion
+  document.getElementById('ceiling-conclusion').innerHTML = CONCLUSION_TEXTS[idx];
+}
+
+// ── Initialize the data ceiling demo ──
+(function initDataCeiling() {
+  var slider = document.getElementById('sensor-slider');
+  if (!slider) return; // section not on page
+
+  // Slider input event
+  slider.addEventListener('input', function() {
+    updatePhaseDisplay(parseInt(this.value));
+  });
+
+  // Click on slider stop labels
+  document.querySelectorAll('.ceiling-slider-stop').forEach(function(stop) {
+    stop.addEventListener('click', function() {
+      var idx = parseInt(this.dataset.idx);
+      slider.value = idx;
+      updatePhaseDisplay(idx);
+    });
+  });
+
+  // Load KDE data and render charts
+  fetch('/data/kde_params.json')
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function(data) {
+      _kdeData = data;
+      renderAllKdeCharts(data);
+      // Use actual baseline YJ from data
+      if (data.baseline_youden_j) {
+        PHASE_DATA[0].youden_j = data.baseline_youden_j;
+      }
+      updatePhaseDisplay(0);
+      console.log('[data-ceiling] initialized, baseline YJ: ' + data.baseline_youden_j);
+    })
+    .catch(function(err) {
+      console.error('[data-ceiling] Failed to load kde_params.json:', err);
+      // Show error state in all chart containers
+      document.querySelectorAll('.ceiling-kde-chart .kde-loading').forEach(function(el) {
+        el.textContent = '数据加载失败，请运行 compute_kde_params.py';
+        el.style.color = 'var(--accent-red)';
+      });
+      // Still init slider with hardcoded data
+      updatePhaseDisplay(0);
+    });
 })();
 
-console.log('[tech-overview] all charts initialized');
+// ═══════════════════════════════════════════════════════════════
+// Degradation State Machine — 四级降级交互式演示
+// ═══════════════════════════════════════════════════════════════
+
+var DEGRADE_DATA = {
+  FULL: {
+    label: '全功能模式', icon: '🟢', color: '#3fb950',
+    files: 22, time: '~43s',
+    components: { stat: true, ml: true, rule: true, shap: true },
+    impact: '所有5个Skill正常运行，ML推理+SHAP归因完整可用，22个输出文件全量生成。这是系统默认运行模式，工单质量最高（含SHAP归因）。',
+    recovery: '系统正常运行，无需干预。'
+  },
+  STAT_ONLY: {
+    label: '统计降级模式', icon: '🟡', color: '#f0a030',
+    files: 17, time: '~9s',
+    components: { stat: true, ml: false, rule: true, shap: false },
+    impact: 'ML推理不可用（缺torch/xgboost依赖或模型文件损坏）。自动跳过Skill 3(ML推理)+Skill 4(诊断分析)，统计基线直接驱动决策引擎。工单质量高（统计基线+规则），但缺少SHAP归因分析。',
+    recovery: '<b>恢复ML:</b> <code>pip install torch xgboost</code> 或运行 <code>python agent_orchestrator.py --skip-ml --skip-diagnosis --dashboard-data ../web-dashboard/data</code>'
+  },
+  RULE_ONLY: {
+    label: '规则降级模式', icon: '🟠', color: '#f0883e',
+    files: 5, time: '~3s',
+    components: { stat: false, ml: false, rule: true, shap: false },
+    impact: '统计推理失败（z_scores.csv缺失或基线数据损坏）。基于电压/电流/温度硬阈值的纯规则引擎生成工单。工单质量中等（无统计基线，无可解释性），但保证基本维护建议可执行。',
+    recovery: '<b>恢复统计:</b> 检查 <code>web-dashboard/data/z_scores.csv</code> 是否存在，运行 <code>python agent_orchestrator.py --skip-ml --skip-diagnosis --dashboard-data ../web-dashboard/data</code>'
+  },
+  EMERGENCY: {
+    label: '应急模式', icon: '🔴', color: '#f04444',
+    files: 1, time: '<1s',
+    components: { stat: false, ml: false, rule: false, shap: false },
+    impact: '数据准备完全失败（原始传感器日志不可读）。系统直接从原始数据计算各设备参数波动率(volatility)，排序生成应急工单。工单质量低（仅参数超限告警），但<b>保证任何条件下都能产出可执行的维护建议——系统永不死机</b>。',
+    recovery: '<b>恢复全功能:</b> 检查原始数据集目录完整性，运行 <code>python agent_orchestrator.py --data-dir ../原始数据集 --dashboard-data ../web-dashboard/data</code>'
+  }
+};
+var _currentDegradeLevel = 'FULL';
+
+async function initDegradeStateMachine() {
+  try {
+    var resp = await fetch('/data/degradation_status.json');
+    if (resp.ok) {
+      var data = await resp.json();
+      _currentDegradeLevel = data.mode || 'FULL';
+    }
+  } catch(e) {}
+  highlightDegradeLevel(_currentDegradeLevel);
+}
+
+function selectDegradeLevel(level) {
+  highlightDegradeLevel(level);
+}
+
+function highlightDegradeLevel(level) {
+  document.querySelectorAll('.state-node.interactive').forEach(function(node) {
+    node.classList.remove('active');
+    if (node.getAttribute('data-level') === level) node.classList.add('active');
+  });
+  document.querySelectorAll('.degrade-dot').forEach(function(dot) {
+    dot.classList.remove('pulse');
+  });
+  var activeDot = document.getElementById('dot-' + level);
+  if (activeDot && level === _currentDegradeLevel) activeDot.classList.add('pulse');
+  renderDegradeDetail(level);
+}
+
+function renderDegradeDetail(level) {
+  var d = DEGRADE_DATA[level];
+  var isCurrent = (level === _currentDegradeLevel);
+  document.getElementById('dg-title').innerHTML = d.icon + ' ' + d.label +
+    (isCurrent ? ' <span style="font-size:11px;color:' + d.color + ';font-weight:400;">● 当前运行模式</span>' : '');
+  var names = { stat: '统计推理 (Z-Score基线)', ml: 'ML推理 (XGBoost/MTNN)', rule: '规则引擎 (硬阈值)', shap: 'SHAP可解释性归因' };
+  var compsHtml = '';
+  Object.keys(names).forEach(function(k) {
+    compsHtml += '<div class="dg-row"><span>' + names[k] + '</span><span style="color:' +
+      (d.components[k] ? 'var(--accent-green)' : 'var(--accent-red)') + ';font-weight:600;">' +
+      (d.components[k] ? '✅ 可用' : '❌ 不可用') + '</span></div>';
+  });
+  document.getElementById('dg-components').innerHTML = compsHtml;
+  document.getElementById('dg-impact').innerHTML = '<b>📋 影响范围:</b> ' + d.impact;
+  document.getElementById('dg-recovery').innerHTML = '<b>🔧 恢复建议:</b> ' + d.recovery;
+  document.getElementById('degrade-detail').classList.add('show');
+}
+
+initDegradeStateMachine();
+
 </script>
+
+</div><!-- .role-developer -->
 </body>
 </html>

@@ -135,11 +135,13 @@ def _chart_risk_distribution(report_data: dict) -> str:
     fig.patch.set_facecolor(BG_COLOR)
     ax.set_facecolor(CARD_COLOR)
 
+    def _get_wo(d):
+        return d.get("industrial_plan") or d.get("work_order") or {}
     sorted_devs = sorted(devices,
-                        key=lambda d: d.get("work_order", {}).get("urgency_score", 0) or 0,
+                        key=lambda d: _get_wo(d).get("urgency_score", 0) or 0,
                         reverse=True)[:10]
     names = [d["machine_id"] for d in sorted_devs]
-    scores = [d.get("work_order", {}).get("urgency_score", 0) or 0 for d in sorted_devs]
+    scores = [_get_wo(d).get("urgency_score", 0) or 0 for d in sorted_devs]
     colors = [ACCENT_RED if s > 70 else ACCENT_ORANGE if s > 40 else ACCENT_CYAN for s in scores]
 
     ax.barh(range(len(names)), scores, color=colors, height=0.6, alpha=0.85)
@@ -324,14 +326,26 @@ def generate_report(report_data: dict, report_type: str = "weekly",
         "weekly": "weekly_report.html",
         "risk": "weekly_report.html",
         "thermal": "weekly_report.html",
+        "health_critical": "weekly_report.html",
+        "parts_summary": "weekly_report.html",
     }
     template = template_map.get(report_type, "weekly_report.html")
 
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    cn_names = {
+        "weekly": "周度系统报告",
+        "device": "单设备报告",
+        "risk": "高风险设备报告",
+        "thermal": "热漂移分析报告",
+        "health_critical": "低健康分报告",
+        "parts_summary": "备件需求汇总",
+        "work_order": "工单执行报告",
+    }
+    cn = cn_names.get(report_type, report_type)
     if report_type == "device" and machine_id:
-        base_name = f"{report_type}_report_{machine_id}_{ts}"
+        base_name = f"{cn}_{machine_id}_{ts}"
     else:
-        base_name = f"{report_type}_report_{ts}"
+        base_name = f"{cn}_{ts}"
 
     try:
         # ── PRIMARY: HTML Report ──

@@ -1,0 +1,2276 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能设备预测性维护 — 设备健康状态总览</title>
+<script src="/shared/role-check.js"></script>
+<script src="/shared/theme-init.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="/shared/navbar.js?v=20260530"></script>
+<script src="/shared/role-switcher.js"></script>
+<style>
+/* ══════════════════════════════════════════════════════════════════════
+   Theme Variables
+   ══════════════════════════════════════════════════════════════════════ */
+:root {
+  --bg: #0d1117; --bg-card: #161b22; --bg-card-alt: #1c2129;
+  --text: #e6ebf2; --text-secondary: #8e9aab; --text-muted: #5a6474;
+  --border: #21262d; --radius: 8px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.3);
+  --green: #3fb950; --yellow: #f0a030; --orange: #f0883e; --red: #f04444;
+  --blue: #4d94ff; --purple: #8b5cf6; --teal: #00c9a0;
+}
+[data-theme="light"] {
+  --bg: #f6f8fa; --bg-card: #ffffff; --bg-card-alt: #f0f2f5;
+  --text: #1a1d26; --text-secondary: #4a5568; --text-muted: #7a8498;
+  --border: #d0d7de; --shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+[data-theme="light"] body::before {
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(0,156,130,0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(200,130,30,0.03) 0%, transparent 50%);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: "PingFang SC","Microsoft YaHei","Hiragino Sans GB","Segoe UI",system-ui,sans-serif;
+  min-height:100vh; overflow-x:hidden;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Header
+   ══════════════════════════════════════════════════════════════════════ */
+.header {
+  padding: 12px 24px 0; max-width:1400px; margin:0 auto;
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
+}
+.header h1 { font-size:20px; font-weight:700; letter-spacing:0.5px; }
+.header h1 span { color:var(--teal); }
+.header-stats { display:flex; gap:20px; font-size:12px; color:var(--text-secondary); }
+.header-stats b { color:var(--text); font-family:"Cascadia Code","Fira Code","Consolas",monospace; }
+.mode-badge {
+  font-size:11px; padding:4px 10px; border-radius:12px; font-weight:600;
+  background:rgba(63,185,80,0.1); color:var(--green); border:1px solid rgba(63,185,80,0.2);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Grid Container
+   ══════════════════════════════════════════════════════════════════════ */
+.grid-wrapper {
+  max-width:1400px; margin:16px auto; padding:0 24px;
+  perspective:800px;
+}
+.grid-legend {
+  display:flex; gap:18px; margin-bottom:12px; font-size:11px; color:var(--text-secondary);
+  flex-wrap:wrap; align-items:center;
+}
+.grid-legend span { display:flex; align-items:center; gap:5px; }
+.legend-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+
+.machine-grid {
+  display:grid; grid-template-columns:repeat(10, 1fr); grid-template-rows:repeat(10, 1fr);
+  gap:7px; max-width:760px; margin:0 auto;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Cell — keycap style
+   ══════════════════════════════════════════════════════════════════════ */
+.cell {
+  aspect-ratio:1; border-radius:8px; cursor:pointer; position:relative;
+  display:flex; align-items:center; justify-content:center;
+  font-size:8px; font-weight:700; letter-spacing:0.5px;
+  color:rgba(255,255,255,0.9); text-shadow:0 1px 1px rgba(0,0,0,0.4);
+  user-select:none;
+  /* Keycap 3D body */
+  border:none;
+  border-bottom:3px solid rgba(0,0,0,0.35);
+  border-left:2px solid rgba(0,0,0,0.15);
+  border-right:2px solid rgba(0,0,0,0.15);
+  box-shadow:
+    0 3px 0 rgba(0,0,0,0.25),        /* bottom shadow (keycap base) */
+    0 5px 10px rgba(0,0,0,0.3),      /* ambient shadow */
+    inset 0 1px 0 rgba(255,255,255,0.15); /* top highlight */
+  transition:transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+.cell:hover {
+  transform:translateY(-5px);
+  box-shadow:
+    0 8px 0 rgba(0,0,0,0.2),
+    0 12px 24px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+  filter:brightness(1.1);
+  z-index:10;
+}
+
+/* Health colors — keycap top surface gradient */
+.cell.healthy {
+  background:linear-gradient(180deg, #2ea043 0%, #238636 60%, #1a6e2a 100%);
+}
+.cell.degrading {
+  background:linear-gradient(180deg, #d29922 0%, #b8860b 60%, #8b6508 100%);
+}
+.cell.critical {
+  background:linear-gradient(180deg, #da3633 0%, #b62324 60%, #8b1a1a 100%);
+}
+
+/* Work-order glow — keycap keeps shape, adds colored rim */
+.cell.has-wo { animation:keycapPulse 2s ease-in-out infinite; }
+.cell.has-wo.alarm {
+  box-shadow:0 3px 0 rgba(240,68,68,0.4), 0 5px 10px rgba(0,0,0,0.3), 0 0 8px rgba(240,68,68,0.4), 0 0 18px rgba(240,68,68,0.15), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.cell.has-wo.warning {
+  box-shadow:0 3px 0 rgba(240,136,62,0.4), 0 5px 10px rgba(0,0,0,0.3), 0 0 6px rgba(240,136,62,0.35), 0 0 14px rgba(240,136,62,0.1), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+@keyframes keycapPulse {
+  0%,100% { filter:brightness(1); }
+  50%     { filter:brightness(1.12); }
+}
+.cell.has-wo.alarm { animation-name:keycapAlarm; }
+@keyframes keycapAlarm {
+  0%,100% {
+    box-shadow:0 3px 0 rgba(240,68,68,0.4), 0 5px 10px rgba(0,0,0,0.3), 0 0 4px rgba(240,68,68,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+    filter:brightness(1);
+  }
+  50% {
+    box-shadow:0 3px 0 rgba(240,68,68,0.5), 0 5px 10px rgba(0,0,0,0.3), 0 0 12px rgba(255,60,60,0.55), 0 0 26px rgba(255,60,60,0.22), inset 0 1px 0 rgba(255,255,255,0.18);
+    filter:brightness(1.12);
+  }
+}
+.cell.has-wo.warning { animation-name:keycapWarn; }
+@keyframes keycapWarn {
+  0%,100% {
+    box-shadow:0 3px 0 rgba(240,136,62,0.4), 0 5px 10px rgba(0,0,0,0.3), 0 0 3px rgba(240,136,62,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+    filter:brightness(1);
+  }
+  50% {
+    box-shadow:0 3px 0 rgba(240,136,62,0.45), 0 5px 10px rgba(0,0,0,0.3), 0 0 8px rgba(255,150,40,0.45), 0 0 18px rgba(255,150,40,0.18), inset 0 1px 0 rgba(255,255,255,0.16);
+    filter:brightness(1.08);
+  }
+}
+
+/* Priority badge on keycap */
+.cell .pri-badge {
+  position:absolute; top:3px; right:3px;
+  font-size:7px; padding:1px 4px; border-radius:7px;
+  background:rgba(0,0,0,0.55); color:#fff;
+  font-family:"Cascadia Code","Fira Code","Consolas",monospace;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Detail Panel (slide from right)
+   ══════════════════════════════════════════════════════════════════════ */
+.panel-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:2000;
+  display:none; opacity:0; transition:opacity 0.25s ease;
+}
+.panel-overlay.open { display:block; opacity:1; }
+
+.detail-panel {
+  position:fixed; top:0; right:0; width:420px; max-width:95vw; height:100vh;
+  background:var(--bg-card); border-left:1px solid var(--border);
+  z-index:2001; overflow-y:auto; padding:0;
+  transform:translateX(100%); transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  box-shadow:-8px 0 32px rgba(0,0,0,0.3);
+}
+.detail-panel.open { transform:translateX(0); }
+
+.panel-header {
+  position:sticky; top:0; background:var(--bg-card); z-index:10;
+  padding:18px 20px 12px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.panel-close {
+  width:32px; height:32px; border-radius:50%; border:1px solid var(--border);
+  background:var(--bg-card-alt); color:var(--text-secondary); cursor:pointer;
+  font-size:16px; display:flex; align-items:center; justify-content:center;
+  transition:all 0.15s;
+}
+.panel-close:hover { background:var(--red); color:#fff; border-color:var(--red); }
+
+.panel-body { padding:16px 20px; }
+.panel-section {
+  background:var(--bg-card-alt); border-radius:var(--radius);
+  padding:14px 16px; margin-bottom:12px;
+  border:1px solid var(--border);
+}
+.panel-section h3 {
+  font-size:13px; margin-bottom:10px; color:var(--text-secondary);
+  display:flex; align-items:center; gap:6px;
+}
+.panel-section h3 .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+.stat-row { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:8px; }
+.stat-item { flex:1; min-width:80px; }
+.stat-label { font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
+.stat-value { font-size:18px; font-weight:700; font-family:"Cascadia Code","Fira Code","Consolas",monospace; }
+
+.signal-item {
+  display:flex; align-items:flex-start; gap:8px; padding:6px 0;
+  border-bottom:1px solid var(--border); font-size:12px; line-height:1.6;
+}
+.signal-item:last-child { border-bottom:none; }
+.signal-badge {
+  font-size:14px; flex-shrink:0; width:20px; text-align:center;
+}
+
+.checklist-item {
+  font-size:12px; padding:4px 0; color:var(--text-secondary);
+  display:flex; gap:6px;
+}
+.checklist-item .idx { color:var(--teal); flex-shrink:0; font-weight:600; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   SHAP Interactive Exploration Modal
+   ══════════════════════════════════════════════════════════════════════ */
+.shap-explore-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.55);
+  z-index:3000; display:none; opacity:0;
+  transition:opacity 0.25s ease;
+  backdrop-filter:blur(2px);
+}
+.shap-explore-overlay.open { display:flex; align-items:center; justify-content:center; opacity:1; }
+.shap-explore-modal {
+  background:var(--bg-card); border:1px solid var(--border);
+  border-radius:12px; width:920px; max-width:95vw; max-height:90vh;
+  overflow-y:auto; box-shadow:0 16px 64px rgba(0,0,0,0.4);
+  display:flex; flex-direction:column;
+}
+.shap-explore-header {
+  position:sticky; top:0; z-index:10; background:var(--bg-card);
+  padding:20px 24px 14px; border-bottom:1px solid var(--border);
+  display:flex; align-items:flex-start; justify-content:space-between;
+}
+.shap-explore-title { font-size:18px; font-weight:700; color:var(--purple); }
+.shap-explore-subtitle { font-size:12px; color:var(--text-muted); margin-top:4px; }
+.shap-explore-close {
+  background:none; border:none; color:var(--text-muted);
+  font-size:22px; cursor:pointer; padding:4px 8px;
+  border-radius:4px; transition:all 0.2s;
+}
+.shap-explore-close:hover { background:var(--red); color:#fff; }
+.shap-explore-body { padding:16px 24px 24px; }
+.shap-explore-controls {
+  display:flex; align-items:center; gap:12px;
+  margin-bottom:14px; flex-wrap:wrap;
+}
+.shap-explore-label { font-size:13px; color:var(--text-secondary); white-space:nowrap; }
+.shap-explore-select {
+  background:var(--bg-input); color:var(--text-primary);
+  border:1px solid var(--border); border-radius:var(--radius);
+  padding:7px 32px 7px 12px; font-size:13px; font-family:var(--font-sans);
+  cursor:pointer; appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238e9aab' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 10px center;
+}
+.shap-explore-select:focus { outline:none; border-color:var(--purple); }
+.shap-explore-tagline {
+  font-size:12px; color:var(--teal); font-style:italic;
+  flex:1; min-width:200px; line-height:1.5;
+}
+.shap-explore-chart {
+  background:var(--bg-card-alt); border-radius:var(--radius);
+  padding:4px; border:1px solid var(--border-light);
+}
+.shap-explore-stats {
+  display:flex; gap:24px; margin-top:12px;
+  font-size:11px; color:var(--text-secondary);
+  flex-wrap:wrap;
+}
+.shap-explore-stats b { color:var(--text-primary); }
+.shap-explore-btn-open {
+  width:100%; padding:9px 14px; margin:8px 0 12px;
+  border-radius:var(--radius); cursor:pointer;
+  font-size:12px; font-family:var(--font-sans);
+  border:1px dashed var(--purple);
+  background:rgba(163,113,247,0.06);
+  color:var(--purple);
+  transition:all 0.2s;
+  text-align:center;
+}
+.shap-explore-btn-open:hover { background:rgba(163,113,247,0.15); border-style:solid; }
+
+[data-theme="light"] .shap-explore-modal { box-shadow:0 16px 64px rgba(0,0,0,0.15); }
+
+/* ══════════════════════════════════════════════════════════════════════
+   Footer
+   ══════════════════════════════════════════════════════════════════════ */
+.grid-footer {
+  max-width:1400px; margin:12px auto; padding:8px 24px;
+  font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Responsive
+   ══════════════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════════
+   Role-based visibility
+   ══════════════════════════════════════════════════════════════════════ */
+html[data-role="operator"] .role-manager:not(.role-operator) { display: none !important; }
+html[data-role="operator"] .role-developer:not(.role-operator) { display: none !important; }
+html[data-role="manager"] .role-operator:not(.role-manager) { display: none !important; }
+html[data-role="manager"] .role-developer:not(.role-manager) { display: none !important; }
+html[data-role="developer"] .role-manager-header { display: none !important; }
+
+
+
+/* ── Manager Dashboard ── */
+.mgr-dashboard {
+  max-width: 1400px; margin: 16px auto; padding: 0 24px;
+}
+.mgr-kpi-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+  margin-bottom: 20px;
+}
+.mgr-kpi-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px 22px;
+  position: relative; overflow: hidden;
+}
+.mgr-kpi-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0;
+  height: 2px;
+}
+.mgr-kpi-card.kpi-warn::before { background: var(--red); }
+.mgr-kpi-card.kpi-orders::before { background: var(--blue); }
+.mgr-kpi-card.kpi-savings::before { background: var(--teal); }
+.mgr-kpi-card.kpi-precision::before { background: var(--purple); }
+.mgr-kpi-label {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text-muted); margin-bottom: 6px;
+  font-family: var(--font-mono, 'Cascadia Code', 'Fira Code', 'Consolas', monospace);
+}
+.mgr-kpi-value {
+  font-size: 28px; font-weight: 700;
+  font-family: var(--font-mono, 'Cascadia Code', 'Fira Code', 'Consolas', monospace);
+  color: var(--text);
+}
+.mgr-kpi-sub {
+  font-size: 11px; color: var(--text-secondary); margin-top: 4px;
+}
+.mgr-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  margin-bottom: 16px;
+}
+.mgr-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px 22px;
+}
+.mgr-card h3 {
+  font-size: 14px; font-weight: 600; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+  color: var(--text);
+}
+.mgr-card h3 .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.mgr-top-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mgr-top-table th {
+  text-align: left; padding: 6px 10px; font-size: 10px;
+  color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono, 'Cascadia Code', 'Fira Code', 'Consolas', monospace);
+}
+.mgr-top-table td {
+  padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,0.03);
+  color: var(--text-secondary);
+}
+.mgr-top-table tr:hover td { background: rgba(255,255,255,0.015); }
+.mgr-top-table .risk-high { color: var(--red); font-weight: 600; }
+.mgr-top-table .risk-mid { color: var(--amber, #f0a030); }
+.mgr-health-bar {
+  display: flex; height: 24px; border-radius: 4px; overflow: hidden;
+  margin-bottom: 16px;
+}
+.mgr-health-bar .bar-critical { background: var(--red); }
+.mgr-health-bar .bar-degrading { background: var(--amber, #f0a030); }
+.mgr-health-bar .bar-healthy { background: var(--green); }
+.mgr-health-legend {
+  display: flex; gap: 16px; font-size: 11px; color: var(--text-secondary);
+  font-family: var(--font-mono, 'Cascadia Code', 'Fira Code', 'Consolas', monospace);
+}
+.mgr-health-legend span { display: flex; align-items: center; gap: 5px; }
+.mgr-health-legend .ld { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.mgr-strategy-bar {
+  display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+}
+.mgr-strategy-tag {
+  padding: 5px 14px; border-radius: 14px; font-size: 11px;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-family: var(--font-mono, 'Cascadia Code', 'Fira Code', 'Consolas', monospace);
+}
+.mgr-strategy-tag.active {
+  border-color: var(--teal); color: var(--teal);
+  background: rgba(0,201,160,0.06);
+}
+.mgr-quick-links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.mgr-quick-link {
+  padding: 8px 16px; border-radius: var(--radius);
+  font-size: 12px; text-decoration: none;
+  background: var(--bg-card-alt); border: 1px solid var(--border);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  font-family: var(--font-mono, 'Cascadia Code', 'Fira Code', 'Consolas', monospace);
+}
+.mgr-quick-link:hover { border-color: var(--teal); color: var(--teal); }
+@media (max-width:768px) {
+  .machine-grid { gap:3px; max-width:100%; }
+  .cell { font-size:7px; border-radius:3px; }
+  .detail-panel { width:100vw; }
+  .header { padding:12px 12px 0; }
+  .header h1 { font-size:16px; }
+  .mgr-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .mgr-row { grid-template-columns: 1fr; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Operator Dashboard — stats, 2x5 grid, plan table, parts list
+   ══════════════════════════════════════════════════════════════════════ */
+.ops-dashboard { max-width: 1400px; margin: 0 auto; padding: 0 24px; }
+.ops-stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
+.ops-stat-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 18px;
+  text-align: center;
+}
+.ops-stat-val { font-size: 24px; font-weight: 700; font-family: "Cascadia Code","Fira Code","Consolas",monospace; }
+.ops-stat-lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+.ops-stat-sub { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
+
+/* 2x5 emergency device grid */
+.ops-section-title {
+  font-size: 14px; font-weight: 600; color: var(--text);
+  margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+}
+.ops-emergency-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(2, 1fr); gap: 10px; margin-bottom: 16px;
+}
+.ops-device-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 14px;
+  transition: all 0.2s ease; cursor: pointer;
+}
+.ops-device-card:hover { border-color: var(--teal); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+.ops-device-card .dev-mid { font-size: 12px; font-weight: 700; font-family: "Cascadia Code","Fira Code","Consolas",monospace; color: var(--text); margin-bottom: 4px; }
+.ops-device-card .dev-health-bar-wrap { height: 6px; background: var(--bg-card-alt); border-radius: 3px; margin: 6px 0; overflow: hidden; }
+.ops-device-card .dev-health-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.ops-device-card .dev-health-num { font-size: 11px; font-family: "Cascadia Code","Fira Code","Consolas",monospace; color: var(--text-secondary); }
+.ops-device-card .dev-deadline { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+.ops-device-card .dev-cause { font-size: 10px; color: var(--text-secondary); margin-top: 3px; line-height: 1.4; }
+
+/* Maintenance plan table */
+.ops-table-wrap { margin-bottom: 16px; overflow-x: auto; }
+.ops-table { width: 100%; border-collapse: collapse; font-size: 11px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.ops-table thead th {
+  text-align: left; padding: 8px 10px; font-size: 10px; font-weight: 600;
+  color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+  background: var(--bg-card-alt); border-bottom: 1px solid var(--border);
+  font-family: "Cascadia Code","Fira Code","Consolas",monospace;
+}
+.ops-table tbody td { padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,0.03); color: var(--text-secondary); }
+.ops-table tbody tr:hover td { background: rgba(255,255,255,0.015); }
+.ops-table .pri-1 { color: var(--red); font-weight: 700; }
+.ops-table .pri-2 { color: var(--amber, #f0a030); font-weight: 600; }
+
+@media (max-width: 768px) {
+  .ops-stats-row { grid-template-columns: repeat(2, 1fr); }
+  .ops-emergency-grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: auto; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   Work Order Cards (operator dashboard)
+   ══════════════════════════════════════════════════════════════════════ */
+.wo-card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+.wo-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  cursor: pointer; transition: all 0.2s ease;
+  border-left: 3px solid var(--border); position: relative;
+}
+.wo-card:hover { border-color: var(--border-accent); box-shadow: var(--shadow); transform: translateX(2px); }
+.wo-card.p1 { border-left-color: var(--red); }
+.wo-card.p2 { border-left-color: var(--amber, #f0a030); }
+.wo-card.p3 { border-left-color: var(--blue); }
+.wo-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.wo-card-mid { font-size: 14px; font-weight: 700; font-family: "Cascadia Code","Fira Code","Consolas",monospace; color: var(--text); }
+.wo-card-pri { font-size: 10px; padding: 2px 8px; border-radius: 8px; font-weight: 600; font-family: "Cascadia Code","Fira Code","Consolas",monospace; }
+.wo-card-pri.p1 { background: rgba(240,68,68,0.12); color: var(--red); }
+.wo-card-pri.p2 { background: rgba(240,160,48,0.12); color: var(--amber, #f0a030); }
+.wo-card-pri.p3 { background: rgba(77,148,255,0.12); color: var(--blue); }
+.wo-card-action { font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; }
+.wo-card-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; font-size: 10px; color: var(--text-muted); }
+.wo-card-meta b { color: var(--text-secondary); }
+.wo-card-savings { font-size: 10px; color: var(--green); font-family: "Cascadia Code","Fira Code","Consolas",monospace; margin-top: 4px; }
+@media (max-width: 768px) { .wo-card-grid { grid-template-columns: 1fr; } }
+
+
+/* Baseline Trace Panel */
+.trace-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:3000;display:none;opacity:0;transition:opacity 0.25s ease}
+.trace-overlay.open{display:block;opacity:1}
+.trace-panel{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:560px;max-width:94vw;max-height:80vh;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);z-index:3001;overflow-y:auto;box-shadow:0 16px 48px rgba(0,0,0,0.5)}
+.trace-header{position:sticky;top:0;background:var(--bg-card);z-index:10;padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.trace-close{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--bg-card-alt);color:var(--text-secondary);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.trace-close:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.trace-body{padding:16px 20px;font-size:12px;line-height:1.8;color:var(--text-secondary)}
+.trace-body h3{font-size:14px;color:var(--text-primary);margin:14px 0 8px}
+.trace-body h3:first-child{margin-top:0}
+.trace-item{padding:6px 10px;margin:3px 0;background:var(--bg-card-alt);border-radius:4px;display:flex;justify-content:space-between}
+.trace-bar-wrap{height:6px;background:var(--bg-card-alt);border-radius:3px;margin:4px 0 8px;overflow:hidden}
+.trace-bar-fill{height:100%;border-radius:3px}
+.trace-note{font-size:11px;color:var(--text-muted);margin-top:12px;padding:10px 14px;background:var(--bg-card-alt);border-radius:4px;border-left:3px solid var(--teal);line-height:1.7}
+.trace-table{width:100%;border-collapse:collapse;font-size:10px;margin:8px 0}
+.trace-table th{text-align:left;padding:4px 8px;color:var(--text-muted);border-bottom:1px solid var(--border);font-family:var(--font-mono)}
+.trace-table td{padding:4px 8px;border-bottom:1px solid rgba(255,255,255,0.03)}
+.trace-table .hl{color:var(--accent-cyan);font-weight:600}/* ═══════════════════════════════════════════════════════════════
+   FAULT INJECTION DEMO — 故障注入演示
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Injection button (Developer only, in header) */
+.btn-fi {
+  padding: 6px 16px; border-radius: 6px; font-size: 12px; font-weight: 600;
+  background: rgba(240,68,68,0.1); color: var(--red);
+  border: 1px solid rgba(240,68,68,0.25); cursor: pointer;
+  transition: all 0.2s; white-space: nowrap; letter-spacing: 0.5px;
+  font-family: "Cascadia Code","Fira Code","Consolas",monospace;
+  margin-left: 8px;
+}
+.btn-fi:hover { background: rgba(240,68,68,0.2); border-color: var(--red); box-shadow: 0 0 12px rgba(240,68,68,0.2); }
+
+/* Injection Modal */
+.fi-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  z-index: 2500; display: none; align-items: center; justify-content: center;
+}
+.fi-overlay.open { display: flex; }
+.fi-modal {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); width: 480px; max-width: 95vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6); overflow: hidden;
+}
+.fi-modal-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.fi-modal-header h3 { font-size: 15px; font-weight: 700; margin: 0; }
+.fi-modal-close {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--text-secondary); cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.fi-modal-close:hover { background: rgba(240,68,68,0.1); border-color: var(--red); color: var(--red); }
+.fi-modal-body { padding: 20px; }
+.fi-form-group { margin-bottom: 16px; }
+.fi-form-label {
+  font-size: 11px; color: var(--text-muted); margin-bottom: 6px;
+  letter-spacing: 0.5px; font-weight: 600;
+}
+.fi-select {
+  width: 100%; padding: 10px 12px; background: var(--bg-input);
+  border: 1px solid var(--border-light); border-radius: var(--radius);
+  color: var(--text-primary); font-size: 13px; font-family: var(--font-sans);
+  cursor: pointer; transition: border-color 0.2s;
+  -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%235a6474' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat; background-position: right 10px center; background-size: 14px;
+  padding-right: 32px;
+}
+.fi-select:focus { outline: none; border-color: var(--accent-purple); }
+.fi-btn-inject {
+  width: 100%; padding: 12px; border-radius: 6px; font-size: 14px; font-weight: 700;
+  cursor: pointer; border: 1px solid var(--red); background: rgba(240,68,68,0.15);
+  color: var(--red); transition: all 0.25s; letter-spacing: 1px;
+  font-family: var(--font-sans);
+}
+.fi-btn-inject:hover { background: rgba(240,68,68,0.3); box-shadow: 0 0 16px rgba(240,68,68,0.25); }
+.fi-btn-inject:disabled { opacity: 0.5; cursor: not-allowed; }
+.fi-modal-note {
+  margin-top: 12px; font-size: 10px; color: var(--text-muted);
+  text-align: center; line-height: 1.5;
+}
+
+/* Step Animation Overlay */
+.fi-step-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+  z-index: 3000; display: none; align-items: center; justify-content: center;
+}
+.fi-step-overlay.active { display: flex; }
+.fi-step-panel {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 28px 32px; min-width: 440px;
+  max-width: 560px; box-shadow: 0 24px 72px rgba(0,0,0,0.7);
+  animation: fiStepIn 0.35s cubic-bezier(0.33, 1, 0.68, 1);
+}
+.fi-step-indicator {
+  display: flex; gap: 8px; justify-content: center; margin-bottom: 20px;
+}
+.fi-step-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--border-light); transition: all 0.4s;
+}
+.fi-step-dot.done { background: var(--accent-green); }
+.fi-step-dot.current { background: var(--accent-red); box-shadow: 0 0 8px rgba(240,68,68,0.5); }
+.fi-step-icon-area { text-align: center; margin-bottom: 12px; }
+.fi-step-icon-area .icon { font-size: 40px; display: block; }
+.fi-step-title-area { font-size: 16px; font-weight: 700; margin-bottom: 12px; text-align: center; }
+.fi-step-desc-area {
+  font-size: 13px; color: var(--text-secondary); line-height: 1.8;
+  margin-bottom: 20px;
+}
+.fi-step-close-btn {
+  display: block; margin: 0 auto; padding: 8px 28px;
+  border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--border-light); background: var(--bg-card-alt);
+  color: var(--text-primary); transition: all 0.2s;
+  font-family: var(--font-sans);
+}
+.fi-step-close-btn:hover { border-color: var(--accent-cyan); background: rgba(0,201,160,0.06); }
+
+/* New keyframes */
+@keyframes fiCellHighlight {
+  0%   { filter: brightness(1); transform: scale(1); }
+  50%  { filter: brightness(1.5); transform: scale(1.06); box-shadow: 0 0 18px rgba(240,68,68,0.6); }
+  100% { filter: brightness(1); transform: scale(1); }
+}
+@keyframes fiStepIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Post-injection cell highlight */
+.cell.fi-active {
+  animation: fiCellHighlight 0.6s ease-in-out 3;
+  z-index: 15; position: relative;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     Header — role-aware
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="header">
+  <!-- Operator / Developer header -->
+  <div class="role-operator" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;width:100%;">
+    <h1><span>◆</span> 设备健康状态总览</h1>
+    <div class="header-stats">
+      <span>健康: <b id="stat-healthy">--</b></span>
+      <span>退化: <b id="stat-degrading">--</b></span>
+      <span>高危: <b id="stat-critical">--</b></span>
+      <span>工单: <b id="stat-wo">--</b></span>
+    </div>
+    <span class="mode-badge" id="mode-badge" style="background:rgba(0,201,160,0.1);color:var(--teal);border-color:rgba(0,201,160,0.2);">执行视图</span>
+    <button class="btn-fi role-developer" id="btn-fi" onclick="openFixture()" title="一键模拟完整故障→告警→诊断→工单→派工→验收流程">⚡ 故障注入演示</button>
+  </div>
+  <!-- Manager header (hidden from developer to avoid duplicate headers) -->
+  <div class="role-manager role-manager-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;width:100%;">
+    <h1><span style="color:var(--amber, #f0a030);">◆</span> 运维业务总览</h1>
+    <div class="header-stats">
+      <span>当前角色: <b style="color:var(--amber, #f0a030);">生产管理负责人</b></span>
+      <span>监控设备: <b>100</b>台</span>
+    </div>
+    <span class="mode-badge" id="mgr-mode-badge" style="background:rgba(240,160,48,0.1);color:var(--amber, #f0a030);border-color:rgba(240,160,48,0.2);">决策视图</span>
+  </div>
+</div>
+
+
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     Operator Dashboard — stats, emergency devices, plan, parts
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="role-operator">
+<div class="ops-dashboard">
+  <!-- Stats Row -->
+  <div class="ops-stats-row">
+    <div class="ops-stat-card">
+      <div class="ops-stat-val" style="color:var(--teal);" id="ops-healthy-pct" data-trace="health">--</div>
+      <div class="ops-stat-lbl">设备健康率</div>
+      <div class="ops-stat-sub" id="ops-healthy-sub">--</div>
+    </div>
+    <div class="ops-stat-card">
+      <div class="ops-stat-val" style="color:var(--red);" id="ops-critical-count" data-trace="health">--</div>
+      <div class="ops-stat-lbl">高危设备</div>
+      <div class="ops-stat-sub">需立即处理</div>
+    </div>
+    <div class="ops-stat-card">
+      <div class="ops-stat-val" style="color:var(--blue);" id="ops-accuracy">83.9%</div>
+      <div class="ops-stat-lbl">告警精确率</div>
+      <div class="ops-stat-sub">Z-Score z>2.0</div>
+    </div>
+    <div class="ops-stat-card">
+      <div class="ops-stat-val" style="color:var(--amber, #f0a030);" id="ops-today-wos">--</div>
+      <div class="ops-stat-lbl">今日待维护</div>
+      <div class="ops-stat-sub" id="ops-today-sub">--</div>
+    </div>
+  </div>
+
+  <!-- 2x5 Emergency Device Grid -->
+  <div class="ops-section-title"><span style="color:var(--red);">■</span> 紧急维护设备（Top 10）</div>
+  <div class="ops-emergency-grid" id="ops-emergency-grid"></div>
+
+  <!-- Parts Procurement List -->
+  <div class="ops-section-title"><span style="color:var(--amber, #f0a030);">■</span> 零件采购清单</div>
+  <div class="ops-table-wrap">
+    <table class="ops-table">
+      <thead><tr><th>零件名称</th><th>关联设备数</th><th>预估总成本</th><th>关联设备</th></tr></thead>
+      <tbody id="ops-parts-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     Grid
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="grid-wrapper">
+  <div class="grid-legend">
+    <span><span class="legend-dot" style="background:var(--green);"></span>健康 (Healthy/Degrading-Warning)</span>
+    <span><span class="legend-dot" style="background:#d29922;"></span>退化 (Degrading)</span>
+    <span><span class="legend-dot" style="background:var(--red);"></span>高危 (Critical)</span>
+    <span><span class="legend-dot" style="box-shadow:0 0 8px rgba(240,68,68,0.6);background:var(--red);"></span>活跃工单 (脉冲)</span>
+    <span style="margin-left:auto;font-family:monospace;">CNC_001 → CNC_100</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;
+    background:var(--bg-card);border:1px solid var(--border);
+    border-radius:var(--radius);margin-bottom:10px;max-width:760px;margin-left:auto;margin-right:auto;">
+    <span style="font-size:13px;">🤖</span>
+    <span style="font-size:11px;color:var(--text-secondary);">AI 快速解读：当前哪些设备风险最高？为什么？</span>
+    <a href="/chat?prompt=%E5%BD%93%E5%89%8D100%E5%8F%B0%E8%AE%BE%E5%A4%87%E4%B8%AD%E5%93%AA%E4%BA%9B%E9%A3%8E%E9%99%A9%E6%9C%80%E9%AB%98%EF%BC%9F%E8%AF%B7%E5%88%97%E4%B8%BE%20Top%205%20%E5%B9%B6%E8%A7%A3%E9%87%8A%E6%AF%8F%E5%8F%B0%E7%9A%84%E9%A6%96%E8%A6%81%E9%A3%8E%E9%99%A9%E5%9B%A0%E5%AD%90%E3%80%81%E5%81%A5%E5%BA%B7%E8%AF%84%E5%88%86%E5%92%8C%E5%BB%BA%E8%AE%AE%E5%8A%A8%E4%BD%9C"
+      style="margin-left:auto;padding:5px 14px;background:rgba(0,201,160,0.08);
+      border:1px solid rgba(0,201,160,0.2);color:#00c9a0;
+      border-radius:3px;font-size:10px;text-decoration:none;
+      font-family:'Cascadia Code','Fira Code','Consolas',monospace;white-space:nowrap;"
+      onmouseover="this.style.background='rgba(0,201,160,0.15)'"
+      onmouseout="this.style.background='rgba(0,201,160,0.08)'">
+      AI 解读 →
+    </a>
+  </div>
+  <div class="machine-grid" id="machine-grid"></div>
+</div>
+
+<div class="grid-footer">
+  <span>点击任意设备查看 SHAP 归因 + 维护工单</span>
+  <span>数据来源: equipment_health_score.csv · maintenance_work_orders.csv · shap_dashboard.json</span>
+</div>
+
+  <!-- Industrial Work Order Cards (below grid, synced with strategy) -->
+  <div style="max-width:1400px;margin:0 auto;padding:0 24px;">
+  <div class="ops-section-title"><span style="color:var(--teal);">■</span> 维护工单 · <span id="ops-wo-strategy">当前策略</span></div>
+  <div class="wo-card-grid" id="ops-wo-cards"></div>
+  </div>
+</div><!-- end .role-operator.role-developer (grid area) -->
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     Detail Panel
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="role-manager">
+<div class="mgr-dashboard">
+  <!-- KPI Row -->
+  <div class="mgr-kpi-grid">
+    <div class="mgr-kpi-card kpi-warn">
+      <div class="mgr-kpi-label">高危设备</div>
+      <div class="mgr-kpi-value" id="mgr-critical">--</div>
+      <div class="mgr-kpi-sub">健康分 &lt; 40 · 需紧急关注</div>
+    </div>
+    <div class="mgr-kpi-card kpi-orders">
+      <div class="mgr-kpi-label">活跃工单</div>
+      <div class="mgr-kpi-value" id="mgr-orders">--</div>
+      <div class="mgr-kpi-sub" id="mgr-strategy-label">当前策略: 生产效率 ⚡</div>
+    </div>
+    <div class="mgr-kpi-card kpi-savings">
+      <div class="mgr-kpi-label">预期月度节省</div>
+      <div class="mgr-kpi-value" id="mgr-savings">--</div>
+      <div class="mgr-kpi-sub">基于当前工单预估</div>
+    </div>
+    <div class="mgr-kpi-card kpi-precision">
+      <div class="mgr-kpi-label">告警精确率</div>
+      <div class="mgr-kpi-value">83.9<small style="font-size:14px;color:var(--text-muted);">%</small></div>
+      <div class="mgr-kpi-sub">Z-Score z>2.0 · 每5次≈4次正确</div>
+    </div>
+  </div>
+
+  <!-- Health + Top Risk Row -->
+  <div class="mgr-row">
+    <div class="mgr-card">
+      <h3><span class="dot" style="background:var(--teal);"></span>设备健康分布</h3>
+      <div class="mgr-health-bar" id="mgr-health-bar">
+        <div class="bar-critical" style="flex:0.10;"></div>
+        <div class="bar-degrading" style="flex:0.88;"></div>
+        <div class="bar-healthy" style="flex:0.02;"></div>
+      </div>
+      <div class="mgr-health-legend">
+        <span><span class="ld" style="background:var(--red);"></span> 危险: <b id="mgr-crit-num">--</b>台</span>
+        <span><span class="ld" style="background:var(--amber, #f0a030);"></span> 劣化: <b id="mgr-deg-num">--</b>台</span>
+        <span><span class="ld" style="background:var(--green);"></span> 健康: <b id="mgr-hlth-num">--</b>台</span>
+      </div>
+    </div>
+    <div class="mgr-card">
+      <h3><span class="dot" style="background:var(--red);"></span>日成本风险 Top 5</h3>
+      <table class="mgr-top-table">
+        <thead><tr><th>设备</th><th>日成本风险</th><th>故障率</th><th>健康分</th></tr></thead>
+        <tbody id="mgr-top-risks"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Strategy + Quick Links Row -->
+  <div class="mgr-row">
+    <div class="mgr-card">
+      <h3><span class="dot" style="background:var(--amber, #f0a030);"></span>当前维护策略</h3>
+      <div class="mgr-strategy-bar">
+        <span class="mgr-strategy-tag" id="mgr-tag-cost">💰 成本效率 15工单</span>
+        <span class="mgr-strategy-tag active" id="mgr-tag-prod">⚡ 生产效率 20工单 · 推荐</span>
+        <span class="mgr-strategy-tag" id="mgr-tag-quality">🔬 质量优先 30工单</span>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:10px;">策略可在 AI Copilot 或维护决策中心切换</div>
+    </div>
+    <div class="mgr-card">
+      <h3><span class="dot" style="background:var(--blue);"></span>快捷入口</h3>
+      <div class="mgr-quick-links">
+        <a class="mgr-quick-link" href="/dashboard#sec0">📊 业务总览仪表盘</a>
+        <a class="mgr-quick-link" href="/dashboard#sec6">⚙️ 维护决策中心</a>
+        <a class="mgr-quick-link" href="/dashboard#sec7">📈 传感器升级ROI</a>
+        <a class="mgr-quick-link" href="/chat">🤖 AI Copilot</a>
+        <a class="mgr-quick-link" href="/reports">📋 生成周报</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manager AI Prompt -->
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
+    background:var(--bg-card);border:1px solid var(--border);
+    border-radius:var(--radius);margin-bottom:10px;">
+    <span style="font-size:13px;">🤖</span>
+    <span style="font-size:11px;color:var(--text-secondary);">AI 快速解读：当前维护投入产出比？传感器升级 ROI 分析？</span>
+    <a href="/chat?prompt=%E6%9C%AC%E6%9C%88%E7%BB%B4%E6%8A%A4%E6%8A%95%E5%85%A5%E4%BA%A7%E5%87%BA%E6%AF%94%E5%A6%82%E4%BD%95%EF%BC%9F%E4%BC%A0%E6%84%9F%E5%99%A8%E5%8D%87%E7%BA%A7%E6%8A%95%E8%B5%84%E5%9B%9E%E6%8A%A5%E7%8E%87%E6%98%AF%E5%A4%9A%E5%B0%91%EF%BC%9F"
+      style="margin-left:auto;padding:5px 14px;background:rgba(240,160,48,0.08);
+      border:1px solid rgba(240,160,48,0.2);color:#f0a030;
+      border-radius:3px;font-size:10px;text-decoration:none;
+      font-family:'Cascadia Code','Fira Code','Consolas',monospace;white-space:nowrap;">
+      AI 解读 →
+    </a>
+  </div>
+</div>
+</div><!-- end .role-manager.role-developer (manager dashboard) -->
+
+<div class="role-operator">
+<div class="panel-overlay" id="panel-overlay"></div>
+<div class="detail-panel" id="detail-panel">
+  <div class="panel-header">
+    <div>
+      <div style="font-size:18px;font-weight:700;" id="panel-mid">--</div>
+      <div style="font-size:11px;color:var(--text-muted);" id="panel-subtitle">--</div>
+    </div>
+    <button class="panel-close" id="panel-close">&times;</button>
+  </div>
+  <div class="panel-body" id="panel-body"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SHAP Interactive Exploration Modal
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="shap-explore-overlay" id="shap-explore-overlay">
+  <div class="shap-explore-modal">
+    <div class="shap-explore-header">
+      <div>
+        <div class="shap-explore-title">🔍 SHAP 归因交互式探索</div>
+        <div class="shap-explore-subtitle" id="shap-explore-subtitle">
+          选择一个特征，查看其对所有100台设备风险评分的影响
+        </div>
+      </div>
+      <button class="shap-explore-close" id="shap-explore-close">&times;</button>
+    </div>
+    <div class="shap-explore-body">
+      <div class="shap-explore-controls">
+        <label class="shap-explore-label">📊 选择特征:</label>
+        <select class="shap-explore-select" id="shap-feature-select"></select>
+        <div class="shap-explore-tagline" id="shap-tagline"></div>
+      </div>
+      <div class="shap-explore-chart" id="chart-shap-scatter" style="height:460px;"></div>
+      <div class="shap-explore-stats" id="shap-explore-stats"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     Scripts
+     ═══════════════════════════════════════════════════════════════════ -->
+<script>
+// ── Data loading (same sources as main dashboard) ──
+async function loadCSV(path) {
+  const r = await fetch(path);
+  const t = await r.text();
+  return Papa.parse(t, { header:true, dynamicTyping:true }).data;
+}
+async function loadJSON(path) {
+  const r = await fetch(path);
+  return r.json();
+}
+
+// ── Global state ──
+var machineMap = {};      // mid -> {health, workOrder, shap}
+var _traceBaseline = null;
+var _traceZScores = null;
+var shapScatterData = null;  // SHAP interactive exploration data
+
+// ── Fault Injection Demo State ──
+var _fiInjected = null;       // stores last injection result
+var _fiOriginal = null;       // stores original machineMap entry for rollback
+var _fiStepTimer = null;      // setTimeout handle for step animation
+var _fiStepRunning = false;   // guard flag
+
+// ── Manager Dashboard Init ──
+async function initManagerDashboard() {
+  try {
+    if (typeof Papa === 'undefined') {
+      await new Promise(function(resolve) {
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js';
+        s.onload = resolve;
+        document.head.appendChild(s);
+      });
+    }
+    var healthData = await loadCSV('data/equipment_health_score.csv');
+    var workOrderData = await loadCSV('data/maintenance_work_orders.csv');
+
+    // Count health levels
+    var crit = 0, deg = 0, hlth = 0;
+    var topRisks = [];
+    healthData.forEach(function(r) {
+      var level = r.health_level || '';
+      if (level === 'Critical') crit++;
+      else if (level === 'Degrading') deg++;
+      else hlth++;
+      var mid = r['Equipment.Id'] || r.machine_id || '';
+      var costRisk = parseFloat(r.cost_at_risk) || 0;
+      var failRate = parseFloat(r.failure_rate) || 0;
+      var score = parseFloat(r.health_score) || 50;
+      topRisks.push({ mid: mid, costRisk: costRisk, failRate: failRate, score: score });
+    });
+
+    // Sort by cost risk descending
+    topRisks.sort(function(a, b) { return b.costRisk - a.costRisk; });
+    var top5 = topRisks.slice(0, 5);
+
+    // Count work orders
+    var woCount = 0;
+    var totalSavings = 0;
+    workOrderData.forEach(function(r) {
+      if (r.machine_id) woCount++;
+      totalSavings += parseFloat(r.expected_savings) || 0;
+    });
+
+    // Update KPI cards
+    document.getElementById('mgr-critical').textContent = crit + ' 台';
+    document.getElementById('mgr-orders').textContent = woCount + ' 张';
+    document.getElementById('mgr-savings').textContent = '$' + (totalSavings / 1000).toFixed(0) + 'k';
+    document.getElementById('mgr-crit-num').textContent = crit;
+    document.getElementById('mgr-deg-num').textContent = deg;
+    document.getElementById('mgr-hlth-num').textContent = hlth;
+
+    // Update health bar
+    var total = crit + deg + hlth || 1;
+    var bar = document.getElementById('mgr-health-bar');
+    bar.innerHTML =
+      '<div class=\"bar-critical\" style=\"flex:' + (crit/total).toFixed(2) + ';\"></div>' +
+      '<div class=\"bar-degrading\" style=\"flex:' + (deg/total).toFixed(2) + ';\"></div>' +
+      '<div class=\"bar-healthy\" style=\"flex:' + (hlth/total).toFixed(2) + ';\"></div>';
+
+    // Top risks table
+    var tbody = document.getElementById('mgr-top-risks');
+    var rows = '';
+    top5.forEach(function(r, i) {
+      var riskClass = i < 2 ? 'risk-high' : (i < 4 ? 'risk-mid' : '');
+      rows += '<tr>' +
+        '<td><b>' + r.mid + '</b></td>' +
+        '<td class=\"' + riskClass + '\">$' + (r.costRisk/1000).toFixed(1) + 'k/天</td>' +
+        '<td>' + (r.failRate*100).toFixed(1) + '%</td>' +
+        '<td>' + r.score + '</td>' +
+        '</tr>';
+    });
+    tbody.innerHTML = rows;
+
+    // ── Strategy sync from sessionStorage ──
+    var strategy = sessionStorage.getItem('current_strategy') || 'production_efficiency';
+    var strategyLabels = {
+      cost_efficiency: { label: '当前策略: 成本效率 💰', tagId: 'mgr-tag-cost' },
+      production_efficiency: { label: '当前策略: 生产效率 ⚡', tagId: 'mgr-tag-prod' },
+      quality_first: { label: '当前策略: 质量优先 🔬', tagId: 'mgr-tag-quality' }
+    };
+    var info = strategyLabels[strategy] || strategyLabels.production_efficiency;
+    var labelEl = document.getElementById('mgr-strategy-label');
+    if (labelEl) labelEl.textContent = info.label;
+    // Highlight active strategy tag
+    ['mgr-tag-cost', 'mgr-tag-prod', 'mgr-tag-quality'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.classList.toggle('active', id === info.tagId);
+    });
+  } catch(e) {
+    console.error('Manager dashboard init failed:', e);
+  }
+}
+
+// ── Init ──
+async function init() {
+  var role = sessionStorage.getItem('user_role') || 'developer';
+
+  // Manager gets the business dashboard, not the grid
+  if (role === 'manager') {
+    initManagerDashboard();
+    return;
+  }
+
+  // Load PapaParse if not already loaded
+  if (typeof Papa === 'undefined') {
+    await new Promise(function(resolve) {
+      var s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js';
+      s.onload = resolve;
+      document.head.appendChild(s);
+    });
+  }
+
+  try {
+    var healthData    = await loadCSV('data/equipment_health_score.csv');
+    var workOrderData = await loadCSV('data/maintenance_work_orders.csv');
+    var shapData      = await loadJSON('data/shap_dashboard.json');
+    shapScatterData = await loadJSON('data/shap_scatter_data.json').catch(function(e) {
+      console.warn('[shap-explore] Data not available — run: python scripts/build_shap_scatter_data.py');
+      return null;
+    });
+  } catch(e) {
+    document.getElementById('machine-grid').innerHTML =
+      '<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-muted);">'
+      + '数据加载失败。请先运行 Pipeline 生成数据文件。<br><br>'
+      + '<code style="font-size:12px;">python agent-mcp架构/agent_orchestrator.py --data-dir 原始数据集 --skip-ml --skip-diagnosis --shap --dashboard-data web-dashboard/data</code>'
+      + '</div>';
+    console.error('Data load failed:', e);
+    return;
+  }
+
+  // Build machine data map
+  var woMap = {};
+  workOrderData.forEach(function(r) {
+    if (r.machine_id) woMap[r.machine_id] = r;
+  });
+
+  var shapMap = {};
+  if (shapData && shapData.machines) {
+    Object.keys(shapData.machines).forEach(function(k) {
+      shapMap[k] = shapData.machines[k];
+    });
+  }
+
+  healthData.forEach(function(r) {
+    var mid = r['Equipment.Id'] || r.machine_id;
+    if (!mid) return;
+    machineMap[mid] = {
+      health: r,
+      workOrder: woMap[mid] || null,
+      shap: shapMap[mid] || null
+    };
+  });
+
+  // Stats
+  var counts = { healthy:0, degrading:0, critical:0, wo:0 };
+  Object.values(machineMap).forEach(function(m) {
+    var level = m.health.health_level || '';
+    if (level === 'Healthy' || level === 'Warning') counts.healthy++;
+    else if (level === 'Degrading') counts.degrading++;
+    else if (level === 'Critical') counts.critical++;
+    if (m.workOrder) counts.wo++;
+  });
+  document.getElementById('stat-healthy').textContent = counts.healthy;
+  document.getElementById('stat-degrading').textContent = counts.degrading;
+  document.getElementById('stat-critical').textContent = counts.critical;
+  document.getElementById('stat-wo').textContent = counts.wo;
+
+  // Degradation mode badge
+  fetch('data/degradation_status.json').then(function(r){return r.ok?r.json():null;}).then(function(s){
+    if (!s) return;
+    var colors = {FULL:'rgba(63,185,80,0.1)',STAT_ONLY:'rgba(240,160,48,0.1)',RULE_ONLY:'rgba(240,136,62,0.1)',EMERGENCY:'rgba(240,68,68,0.1)'};
+    var bcolors = {FULL:'#3fb950',STAT_ONLY:'#f0a030',RULE_ONLY:'#f0883e',EMERGENCY:'#f04444'};
+    var labels = {FULL:'全功能',STAT_ONLY:'统计降级',RULE_ONLY:'规则降级',EMERGENCY:'应急'};
+    var badge = document.getElementById('mode-badge');
+    var role = sessionStorage.getItem('user_role') || 'developer';
+    if (role === 'operator') {
+      badge.textContent = '执行视图';
+      badge.style.background = 'rgba(0,201,160,0.1)';
+      badge.style.color = 'var(--teal)';
+      badge.style.borderColor = 'rgba(0,201,160,0.2)';
+    } else {
+      badge.textContent = labels[s.mode] || s.mode;
+      badge.style.background = colors[s.mode] || colors.FULL;
+      badge.style.color = bcolors[s.mode] || bcolors.FULL;
+      badge.style.borderColor = bcolors[s.mode] || bcolors.FULL;
+    }
+  }).catch(function(){});
+
+  // Init operator dashboard (stats, 2x5, plan, parts)
+  loadTraceData();
+  initOperatorDashboard(healthData, workOrderData);
+
+  // Developer mode also needs manager dashboard populated
+  if (role === 'developer') {
+    initManagerDashboard();
+  }
+
+  // Render grid
+  renderGrid();
+
+  // Panel events
+  document.getElementById('panel-overlay').addEventListener('click', closePanel);
+  document.getElementById('panel-close').addEventListener('click', closePanel);
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      // Close SHAP explore if open, else close panel
+      var seOverlay = document.getElementById('shap-explore-overlay');
+      if (seOverlay && seOverlay.classList.contains('open')) {
+        closeShapExploration();
+      } else {
+        closePanel();
+      }
+    }
+  });
+
+  // SHAP exploration events
+  var seOverlay = document.getElementById('shap-explore-overlay');
+  if (seOverlay) {
+    seOverlay.addEventListener('click', function(e) { if (e.target === this) closeShapExploration(); });
+  }
+  var seClose = document.getElementById('shap-explore-close');
+  if (seClose) seClose.addEventListener('click', closeShapExploration);
+  var seSelect = document.getElementById('shap-feature-select');
+  if (seSelect) seSelect.addEventListener('change', renderShapScatter);
+
+  // Theme change observer for SHAP scatter re-render
+  if (typeof MutationObserver !== 'undefined') {
+    var _themeObs = new MutationObserver(function(muts) {
+      muts.forEach(function(m) {
+        if (m.attributeName === 'data-theme') {
+          var seOver = document.getElementById('shap-explore-overlay');
+          if (seOver && seOver.classList.contains('open')) {
+            renderShapScatter();
+          }
+        }
+      });
+    });
+    _themeObs.observe(document.documentElement, { attributes: true });
+  }
+
+  // FI overlay click-to-close
+  document.getElementById('fi-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeFixture();
+  });
+  document.getElementById('fi-step-overlay').addEventListener('click', function(e) {
+    if (e.target === this && !_fiStepRunning) closeStepOverlay();
+  });
+
+  // Esc key also closes FI panels (only if not in step animation)
+  var origEscHandler = document.onkeydown;
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape') return;
+    if (_fiStepRunning) return; // don't interrupt animation
+    var fiOverlay = document.getElementById('fi-overlay');
+    if (fiOverlay && fiOverlay.classList.contains('open')) {
+      closeFixture();
+      e.stopPropagation();
+    }
+  });
+}
+
+// ── Helper: recalulate header stats from machineMap ──
+function updateHeaderStats() {
+  var counts = { healthy: 0, degrading: 0, critical: 0, wo: 0 };
+  Object.values(machineMap).forEach(function(m) {
+    var level = (m.health && m.health.health_level) || '';
+    if (level === 'Healthy' || level === 'Warning') counts.healthy++;
+    else if (level === 'Degrading') counts.degrading++;
+    else if (level === 'Critical') counts.critical++;
+    if (m.workOrder) counts.wo++;
+  });
+  var el;
+  el = document.getElementById('stat-healthy'); if (el) el.textContent = counts.healthy;
+  el = document.getElementById('stat-degrading'); if (el) el.textContent = counts.degrading;
+  el = document.getElementById('stat-critical'); if (el) el.textContent = counts.critical;
+  el = document.getElementById('stat-wo'); if (el) el.textContent = counts.wo;
+}
+
+
+// ── Operator Dashboard population ──
+async function initOperatorDashboard(healthData, workOrderData) {
+  try {
+    // Stats — align with grid header counting logic
+    var crit = 0, deg = 0, hlth = 0, totalWOs = workOrderData.length;
+    healthData.forEach(function(r) {
+      var level = r.health_level || '';
+      if (level === 'Critical') crit++;
+      else if (level === 'Degrading') deg++;
+      else if (level === 'Healthy' || level === 'Warning') hlth++;
+    });
+
+    var total = crit + deg + hlth || 1;
+    document.getElementById('ops-healthy-pct').textContent = ((hlth/total)*100).toFixed(0) + '%';
+    document.getElementById('ops-healthy-sub').textContent = hlth + ' 健康 / ' + deg + ' 退化 / ' + crit + ' 高危';
+    document.getElementById('ops-critical-count').textContent = crit + ' 台';
+    document.getElementById('ops-today-wos').textContent = totalWOs + ' 张';
+    document.getElementById('ops-today-sub').textContent = '活跃维护工单';
+
+    // Sort work orders by priority
+    var sortedWOs = workOrderData.slice().sort(function(a, b) {
+      return (parseInt(a.priority) || 99) - (parseInt(b.priority) || 99);
+    });
+
+    // Build health lookup
+    var healthMap = {};
+    healthData.forEach(function(r) {
+      healthMap[r['Equipment.Id'] || r.machine_id] = r;
+    });
+
+    // ── 2x5 Emergency Device Grid (top 10, enriched with plan data) ──
+    var top10 = sortedWOs.slice(0, 10);
+    var gridEl = document.getElementById('ops-emergency-grid');
+    var gridHtml = '';
+
+    // Load plan data for enrichment
+    var planLookup = {};
+    try {
+      var planCsv = await loadCSV('data/industrial_maintenance_plan.csv');
+      planCsv.forEach(function(r) { if (r.machine_id) planLookup[r.machine_id] = r; });
+    } catch(e) {}
+
+    top10.forEach(function(wo) {
+      var mid = wo.machine_id || '';
+      var h = healthMap[mid] || {};
+      var p = planLookup[mid] || {};
+      var score = parseInt(h.health_score) || 50;
+      var pattern = p.reasoning || wo.primary_pattern || h.top_risk_factor_label || '';
+      // Truncate long reasoning
+      if (pattern.length > 50) pattern = pattern.substring(0, 50) + '...';
+
+      var barColor = score >= 80 ? 'var(--green)' : score >= 60 ? 'var(--yellow)' : score >= 40 ? 'var(--amber, #f0a030)' : 'var(--red)';
+
+      var actionMap = {
+        immediate_shutdown: '紧急停机', preventive_repair: '预防维修',
+        schedule_inspection: '计划检查', increase_monitoring: '加强监控',
+        routine_check: '常规检查', no_action: '无需处理'
+      };
+      var action = actionMap[wo.action_type] || wo.action_type || '检查';
+      var deadline = p.recommended_downtime_window || wo.recommended_window_days || wo.window_days || '--';
+      var downtimeNames = { night: '夜间', immediate: '立即', weekend: '周末', standard: '标准' };
+      if (downtimeNames[deadline]) deadline = downtimeNames[deadline];
+
+      gridHtml += '<div class="ops-device-card" data-trace="health" data-trace-mid="' + mid + '" onclick="var m=machineMap[\'' + mid + '\']; if(m)openPanel(\'' + mid + '\',m);">' +
+        '<div class="dev-mid">' + mid + '</div>' +
+        '<div class="dev-health-bar-wrap"><div class="dev-health-bar-fill" style="width:' + score + '%;background:' + barColor + ';"></div></div>' +
+        '<div class="dev-health-num">健康分 ' + score + ' · ' + action + '</div>' +
+        '<div class="dev-deadline">⏱ 窗口: ' + deadline + '</div>' +
+        '<div class="dev-cause">' + (pattern || '待诊断') + '</div>' +
+        '</div>';
+    });
+    gridEl.innerHTML = gridHtml;
+
+    // ── Work Order Cards (from industrial_maintenance_plan.csv) ──
+    var strategyLabel = sessionStorage.getItem('current_strategy') || 'production_efficiency';
+    var strategyNames = { cost_efficiency: '成本效率 💰', production_efficiency: '生产效率 ⚡', quality_first: '质量优先 🔬' };
+    var stratEl = document.getElementById('ops-wo-strategy');
+    if (stratEl) stratEl.textContent = '当前策略: ' + (strategyNames[strategyLabel] || '生产效率 ⚡');
+
+    // Tech name mapping
+    var techNames = {
+      senior_technician: '高级技师', junior_technician: '初级技师',
+      thermal_specialist: '热控专家', electrical_specialist: '电气专家',
+      mechanical_engineer: '机械工程师'
+    };
+
+    var actionNames = {
+      immediate_shutdown: '紧急停机', preventive_repair: '预防维修',
+      schedule_inspection: '计划检查', increase_monitoring: '加强监控',
+      routine_check: '常规检查', no_action: '无需处理'
+    };
+
+    // Load industrial plan for rich data
+    var planCards = '';
+    try {
+      var planData = await loadCSV('data/industrial_maintenance_plan.csv');
+      var planMap = {};
+      planData.forEach(function(r) {
+        if (r.machine_id) planMap[r.machine_id] = r;
+      });
+
+      sortedWOs.forEach(function(wo) {
+        var mid = wo.machine_id || '';
+        var h = healthMap[mid] || {};
+        var p = planMap[mid] || {};
+        var pri = parseInt(wo.priority) || 99;
+        var priLevel = pri <= 3 ? 'p1' : pri <= 7 ? 'p2' : 'p3';
+        var action = actionNames[wo.action_type] || wo.action_type || '检查';
+        var tech = techNames[p.technician_type] || p.technician_type || '待分配';
+        var parts = (typeof p.spare_parts === 'string' && p.spare_parts.length > 2) ? p.spare_parts.replace(/[\[\]"]/g, '').substring(0, 40) : '--';
+        var savings = parseFloat(wo.expected_savings) || 0;
+        var deadline = p.recommended_downtime_window || wo.window_days || '--';
+        var downtimeNames = { night: '夜间', immediate: '立即', weekend: '周末', standard: '标准' };
+        var downtimeCN = downtimeNames[deadline] || deadline;
+
+        planCards += '<div class="wo-card ' + priLevel + '" data-trace="zscore" data-trace-mid="' + mid + '" onclick="var m=machineMap[\'' + mid + '\']; if(m)openPanel(\'' + mid + '\',m);">' +
+          '<div class="wo-card-header">' +
+          '<span class="wo-card-mid">' + mid + '</span>' +
+          '<span class="wo-card-pri ' + priLevel + '">#' + pri + ' ' + action + '</span>' +
+          '</div>' +
+          '<div class="wo-card-meta">' +
+          '<span>🔧 <b>技师:</b> ' + tech + '</span>' +
+          '<span>📦 <b>备件:</b> ' + parts + '</span>' +
+          '<span>⏱ <b>窗口:</b> ' + downtimeCN + '</span>' +
+          '<span>📅 <b>期限:</b> ' + (wo.recommended_window_days || wo.window_days || '--') + '天</span>' +
+          '</div>' +
+          '<div class="wo-card-savings">💰 预期节省: $' + savings.toFixed(0) + '</div>' +
+          '</div>';
+      });
+    } catch(e) {
+      planCards = '<div style="grid-column:1/-1;color:var(--text-muted);padding:20px;text-align:center;">工单数据加载失败</div>';
+    }
+    var woGrid = document.getElementById('ops-wo-cards');
+    if (woGrid) woGrid.innerHTML = planCards || '<div style="grid-column:1/-1;color:var(--text-muted);padding:20px;text-align:center;">暂无维护工单</div>';
+
+
+    // ── Parts List (load from spare_parts_plan.csv) ──
+    try {
+      var partsData = await loadCSV('data/spare_parts_plan.csv');
+      // English to Chinese part name mapping
+      var partNameCN = {
+        'rotor_assembly': '转子总成',
+        'bearing_kit': '轴承套件',
+        'seal_kit': '密封套件',
+        'lubrication_kit': '润滑套件',
+        'o-ring_set': 'O型密封圈组',
+        'cooling_fan_assembly': '散热风扇总成',
+        'thermal_paste': '导热硅脂',
+        'temperature_sensor_pt100': 'PT100温度传感器',
+        'heat_sink_assembly': '散热器总成'
+      };
+
+      // Aggregate by part_name
+      var partsMap = {};
+      partsData.forEach(function(r) {
+        var name = partNameCN[r.part_name] || r.part_name || '';
+        if (!name) return;
+        if (!partsMap[name]) partsMap[name] = { count: 0, cost: 0, machines: [] };
+        partsMap[name].count++;
+        partsMap[name].cost += parseFloat(r.estimated_cost || r.unit_cost) || 0;
+        if (r.machine_id) partsMap[name].machines.push(r.machine_id);
+      });
+
+      var partsTbody = document.getElementById('ops-parts-tbody');
+      var partsRows = '';
+      Object.keys(partsMap).sort().forEach(function(name) {
+        var p = partsMap[name];
+        var uniqueMachines = [];
+        p.machines.forEach(function(m) { if (uniqueMachines.indexOf(m) === -1) uniqueMachines.push(m); });
+        partsRows += '<tr>' +
+          '<td>' + name + '</td>' +
+          '<td>' + p.count + ' 台设备</td>' +
+          '<td>$' + p.cost.toFixed(0) + '</td>' +
+          '<td>' + uniqueMachines.slice(0, 5).join(', ') + (uniqueMachines.length > 5 ? ' ...' : '') + '</td>' +
+          '</tr>';
+      });
+      partsTbody.innerHTML = partsRows || '<tr><td colspan="4" style="color:var(--text-muted);">暂无零件采购需求</td></tr>';
+    } catch(e) {
+      document.getElementById('ops-parts-tbody').innerHTML = '<tr><td colspan="4" style="color:var(--text-muted);">零件数据加载失败</td></tr>';
+    }
+  } catch(e) {
+    console.error('Operator dashboard init failed:', e);
+  }
+}
+
+// ── Render 10x10 Grid ──
+function renderGrid() {
+  var grid = document.getElementById('machine-grid');
+  grid.innerHTML = '';
+
+  for (var i = 1; i <= 100; i++) {
+    var mid = 'CNC_' + String(i).padStart(3, '0');
+    var m = machineMap[mid];
+    if (!m) {
+      var cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.style.opacity = '0.3';
+      cell.textContent = mid.replace('CNC_','');
+      grid.appendChild(cell);
+      continue;
+    }
+
+    var h = m.health;
+    var wo = m.workOrder;
+    var level = h.health_level || '';
+    var score = h.health_score || 50;
+
+    var cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.title = mid + ' | 健康:' + score + ' | ' + level;
+
+    // Health color
+    if (level === 'Healthy' || level === 'Warning') {
+      cell.classList.add('healthy');
+    } else if (level === 'Degrading') {
+      cell.classList.add('degrading');
+    } else {
+      cell.classList.add('critical');
+    }
+
+    // Work order glow
+    if (wo) {
+      cell.classList.add('has-wo');
+      cell.classList.add(wo.alert_level === 'ALARM' ? 'alarm' : 'warning');
+      // Priority badge
+      var badge = document.createElement('span');
+      badge.className = 'pri-badge';
+      badge.textContent = '#' + (wo.priority || '?');
+      cell.appendChild(badge);
+    }
+
+    // Cell label
+    var label = document.createElement('span');
+    label.textContent = mid.replace('CNC_','');
+    cell.appendChild(label);
+
+    // Click
+    cell.setAttribute('data-trace','health');cell.setAttribute('data-trace-mid',mid);cell.addEventListener('click', function(mid, m) {
+      return function() { openPanel(mid, m); };
+    }(mid, m));
+
+    grid.appendChild(cell);
+  }
+}
+
+// ── Panel ──
+function openPanel(mid, m) {
+  var h = m.health;
+  var wo = m.workOrder;
+  var sh = m.shap;
+
+  document.getElementById('panel-mid').textContent = mid;
+  var levelColor = {'Healthy':'var(--green)','Warning':'var(--yellow)','Degrading':'var(--orange)','Critical':'var(--red)'};
+  var lc = levelColor[h.health_level] || 'var(--text-muted)';
+  var alertTag = wo ? ('<span style="color:'+(wo.alert_level==='ALARM'?'var(--red)':'var(--orange)')+';font-weight:700;">'+wo.alert_level+'</span>') : '无工单';
+  document.getElementById('panel-subtitle').innerHTML =
+    '健康: <b style="color:'+lc+'">'+h.health_score+'</b> &nbsp;|&nbsp; '+h.health_level+' &nbsp;|&nbsp; 趋势: '+h.trend+' &nbsp;|&nbsp; '+alertTag;
+
+  var html = '';
+
+  // ── Section: Key metrics ──
+  html += '<div class="panel-section">';
+  html += '<h3><span class="dot" style="background:var(--blue);"></span>关键指标</h3>';
+  html += '<div class="stat-row">';
+  html += '<div class="stat-item"><div class="stat-label">健康评分</div><div class="stat-value" style="color:'+lc+'">'+h.health_score+'</div></div>';
+  html += '<div class="stat-item"><div class="stat-label">故障率</div><div class="stat-value">'+(h.failure_rate*100).toFixed(1)+'%</div></div>';
+  html += '<div class="stat-item"><div class="stat-label">维护超期</div><div class="stat-value">'+h.maintenance_overdue_days+'天</div></div>';
+  html += '<div class="stat-item"><div class="stat-label">成本风险</div><div class="stat-value">$'+((h.cost_at_risk||0)/1000).toFixed(1)+'k</div></div>';
+  html += '</div></div>';
+
+  // ── Section: Key anomaly signals ──
+  if (sh && sh.key_anomaly_signals && sh.key_anomaly_signals.length > 0) {
+    html += '<div class="panel-section">';
+    html += '<h3><span class="dot" style="background:var(--orange);"></span>关键异常信号</h3>';
+    sh.key_anomaly_signals.forEach(function(s) {
+      var badge = (s.severity||0) > 2 ? '🔴' : (s.severity||0) > 1 ? '🟡' : '🟢';
+      html += '<div class="signal-item">';
+      html += '<span class="signal-badge">'+badge+'</span>';
+      html += '<div><b>'+s.feature_label+'</b> ('+s.value_label+')<br>';
+      html += '<span style="color:var(--text-muted);">'+s.explanation+'</span></div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  // ── Section: SHAP attribution ──
+  if (sh && sh.top_contributors && sh.top_contributors.length > 0) {
+    html += '<div class="panel-section">';
+    html += '<h3><span class="dot" style="background:var(--purple);"></span>SHAP 归因分析</h3>';
+    html += '<div style="font-size:12px;line-height:1.7;margin-bottom:8px;">'+sh.natural_summary+'</div>';
+    // Interactive exploration button
+    html += '<button class="shap-explore-btn-open" onclick="event.stopPropagation();openShapExploration();">' +
+      '🔍 交互式探索：查看单一特征对所有100台设备的影响</button>';
+    sh.top_contributors.slice(0,5).forEach(function(c) {
+      var dirColor = c.contribution > 0 ? 'var(--red)' : 'var(--green)';
+      var arrow = c.contribution > 0 ? '↑' : '↓';
+      html += '<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;">';
+      html += '<span>'+c.feature+' <span style="color:var(--text-muted);">('+c.category_label+')</span></span>';
+      html += '<span style="color:'+dirColor+';font-family:monospace;">'+arrow+' '+(c.contribution>0?'+':'')+c.contribution.toFixed(3)+'</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  // ── Section: Work order ──
+  if (wo) {
+    html += '<div class="panel-section">';
+    html += '<h3><span class="dot" style="background:var(--red);"></span>维护工单</h3>';
+    html += '<div class="stat-row">';
+    html += '<div class="stat-item"><div class="stat-label">优先级</div><div class="stat-value">#'+wo.priority+'</div></div>';
+    html += '<div class="stat-item"><div class="stat-label">动作</div><div class="stat-value" style="font-size:14px;">'+wo.action_type+'</div></div>';
+    html += '<div class="stat-item"><div class="stat-label">紧急度</div><div class="stat-value">'+wo.urgency_score+'</div></div>';
+    html += '</div>';
+    html += '<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">建议窗口: '+wo.window_days+'天 &nbsp;|&nbsp; 预期节省: $'+wo.expected_savings.toFixed(0)+'</div>';
+    if (wo.top_risk_factor_1) {
+      html += '<div style="font-size:11px;margin-top:8px;padding:8px;background:var(--bg-card);border-radius:4px;line-height:1.6;">';
+      html += '<b>根因:</b> '+wo.top_risk_factor_1+'<br>';
+      if (wo.top_risk_factor_2) html += '<b>次要:</b> '+wo.top_risk_factor_2+'<br>';
+      if (wo.shap_risk_summary) html += '<b>风险分布:</b> '+wo.shap_risk_summary;
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+
+  // ── Section: Inspection checklist ──
+  if (sh && sh.inspection_checklist && sh.inspection_checklist.length > 0) {
+    html += '<div class="panel-section">';
+    html += '<h3><span class="dot" style="background:var(--teal);"></span>建议排查清单</h3>';
+    sh.inspection_checklist.forEach(function(item, i) {
+      html += '<div class="checklist-item"><span class="idx">'+(i+1)+'.</span> '+item+'</div>';
+    });
+    html += '</div>';
+  }
+
+  // No data fallback
+  if (!sh && !wo) {
+    html += '<div class="panel-section"><div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">该设备无活跃工单，SHAP 数据不可用。<br>如需归因分析，请运行 Pipeline 并启用 --shap。</div></div>';
+  }
+
+  // ── Add to Work Order Tracking button ──
+  var strategy = sessionStorage.getItem('current_strategy') || 'production_efficiency';
+  var strategyLabels = {cost_efficiency:'成本效率',production_efficiency:'生产效率',quality_first:'质量优先'};
+  html += '<div class="panel-section">';
+  html += '<button id="btn-add-tracking" style="width:100%;padding:10px;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid var(--cyan);background:rgba(0,201,160,0.1);color:var(--cyan);font-family:var(--font-sans);transition:all 0.2s;" onclick="addToTracking(\''+mid+'\')">+ 加入工单跟踪（'+ (strategyLabels[strategy] || strategy) +'）</button>';
+  html += '</div>';
+
+  document.getElementById('panel-body').innerHTML = html;
+  document.getElementById('detail-panel').classList.add('open');
+  document.getElementById('panel-overlay').classList.add('open');
+}
+
+function addToTracking(machineId) {
+  var strategy = sessionStorage.getItem('current_strategy') || 'production_efficiency';
+  var strategyLabels = {cost_efficiency:'成本效率',production_efficiency:'生产效率',quality_first:'质量优先'};
+  var btn = document.getElementById('btn-add-tracking');
+  if (!btn) return;
+  btn.disabled = true;
+  btn.textContent = '... 正在加入 ...';
+
+  function doCreate(force) {
+    fetch('/api/work-order/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ machine_id: machineId, strategy: strategy, force: force })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.success) {
+        btn.textContent = d.transferred ? '已转移到当前策略' : '已加入工单跟踪';
+        btn.style.background = 'rgba(63,185,80,0.1)';
+        btn.style.borderColor = 'var(--green)';
+        btn.style.color = 'var(--green)';
+      } else if (d.same_strategy) {
+        btn.textContent = '已在跟踪中';
+        btn.style.background = 'rgba(240,160,48,0.1)';
+        btn.style.borderColor = 'var(--amber)';
+        btn.style.color = 'var(--amber)';
+      } else if (d.different_strategy) {
+        var oldLabel = strategyLabels[d.old_strategy] || d.old_strategy;
+        var newLabel = strategyLabels[strategy] || strategy;
+        if (confirm(machineId + ' 已在「' + oldLabel + '」策略下存在工单。\n\n是否转移到「' + newLabel + '」策略？\n（原工单及其分配记录将被清除）')) {
+          btn.textContent = '... 转移中 ...';
+          doCreate(true);
+        } else {
+          btn.textContent = '+ 加入工单跟踪（' + newLabel + '）';
+          btn.disabled = false;
+        }
+      }
+    })
+    .catch(function() {
+      btn.textContent = '网络错误，重试';
+      btn.disabled = false;
+    });
+  }
+
+  doCreate(false);
+}
+
+function closePanel() {
+  document.getElementById('detail-panel').classList.remove('open');
+  document.getElementById('panel-overlay').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SHAP Interactive Exploration — 归因交互式探索
+// ═══════════════════════════════════════════════════════════════
+
+function openShapExploration() {
+  if (!shapScatterData) {
+    alert('SHAP 交互式探索数据尚未生成。请在 web-dashboard 目录下运行:\npython scripts/build_shap_scatter_data.py');
+    return;
+  }
+  // Populate feature dropdown
+  var sel = document.getElementById('shap-feature-select');
+  sel.innerHTML = shapScatterData.meta.features.map(function(f) {
+    return '<option value="' + f.feature_id + '">' + f.display_name + ' (' + f.unit + ')</option>';
+  }).join('');
+  // Show overlay
+  document.getElementById('shap-explore-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  // Render default feature
+  sel.value = shapScatterData.meta.features[0].feature_id;
+  renderShapScatter();
+}
+
+function closeShapExploration() {
+  document.getElementById('shap-explore-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderShapScatter() {
+  var sel = document.getElementById('shap-feature-select');
+  var fid = sel.value;
+  var featMeta = shapScatterData.meta.features.find(function(f) { return f.feature_id === fid; });
+  if (!featMeta) return;
+
+  // Build scatter data: [feature_value, shap_contribution, mid, health_level, risk_score]
+  var scatterData = [];
+  var machines = shapScatterData.machines;
+  Object.keys(machines).sort().forEach(function(mid) {
+    var m = machines[mid];
+    var fv = m.features[fid];
+    if (!fv) return;
+    scatterData.push([fv.value, fv.contribution, mid, m.health_level, m.risk_score]);
+  });
+
+  // Update tagline
+  var nonZero = scatterData.filter(function(d) { return Math.abs(d[1]) > 0.0001; }).length;
+  var maxContrib = 0, maxMid = '';
+  scatterData.forEach(function(d) { if (Math.abs(d[1]) > Math.abs(maxContrib)) { maxContrib = d[1]; maxMid = d[2]; } });
+  document.getElementById('shap-tagline').innerHTML =
+    '<b>' + nonZero + '</b>/' + scatterData.length + ' 台设备受此特征显著影响 | ' +
+    '最大贡献: <b>' + maxMid + '</b> (' + (maxContrib > 0 ? '+' : '') + maxContrib.toFixed(4) + ')';
+
+  // Stats bar
+  var nTotal = scatterData.length;
+  var nPositive = scatterData.filter(function(d) { return d[1] > 0.001; }).length;
+  var nNegative = scatterData.filter(function(d) { return d[1] < -0.001; }).length;
+  var meanContrib = scatterData.reduce(function(s, d) { return s + d[1]; }, 0) / nTotal;
+  document.getElementById('shap-explore-stats').innerHTML =
+    '<span>设备数: <b>' + nTotal + '</b></span>' +
+    '<span style="color:var(--red);">风险↑ <b>' + nPositive + '</b></span>' +
+    '<span style="color:var(--green);">风险↓ <b>' + nNegative + '</b></span>' +
+    '<span>均值贡献: <b>' + (meanContrib > 0 ? '+' : '') + meanContrib.toFixed(4) + '</b></span>';
+
+  // Theme detection
+  var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  var textPrimary = isDark ? '#e6ebf2' : '#1a1d26';
+  var textSecondary = isDark ? '#8e9aab' : '#4a5568';
+  var levelColor = { 'Healthy': '#3fb950', 'Warning': '#f0a030', 'Degrading': '#f0883e', 'Critical': '#f04444' };
+
+  // Init or get existing ECharts instance
+  var dom = document.getElementById('chart-shap-scatter');
+  var chart = echarts.getInstanceByDom(dom);
+  if (!chart) chart = echarts.init(dom, isDark ? null : 'light');
+
+  chart.setOption({
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: isDark ? 'rgba(20,24,32,0.95)' : 'rgba(255,255,255,0.95)',
+      borderColor: isDark ? '#2a3a50' : '#d0d7de',
+      textStyle: { color: textPrimary, fontSize: 12 },
+      formatter: function(p) {
+        var v = p.value;
+        return '<b>' + v[2] + '</b><br/>' +
+          featMeta.display_name + ': <b>' + (typeof v[0] === 'number' ? v[0].toFixed(3) : v[0]) + ' ' + featMeta.unit + '</b><br/>' +
+          'SHAP 贡献: <b style="color:' + (v[1] > 0 ? '#f04444' : '#3fb950') + ';">' + (v[1] > 0 ? '+' : '') + v[1].toFixed(4) + '</b><br/>' +
+          '健康等级: <b style="color:' + (levelColor[v[3]] || '#888') + ';">' + v[3] + '</b> | 风险评分: ' + v[4].toFixed(3) +
+          '<br/><span style="color:' + textSecondary + ';font-size:10px;">🖱 点击查看设备详情 →</span>';
+      }
+    },
+    grid: { left: 80, right: 40, top: 30, bottom: 55 },
+    xAxis: {
+      type: 'value',
+      name: featMeta.display_name + ' (' + featMeta.unit + ')',
+      nameLocation: 'center', nameGap: 35,
+      nameTextStyle: { color: textSecondary, fontSize: 11 },
+      axisLabel: { color: textSecondary, fontSize: 10 },
+      splitLine: { lineStyle: { color: isDark ? '#1c2230' : '#e0e0e0', type: 'dashed' } }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'SHAP 贡献值',
+      nameTextStyle: { color: textSecondary, fontSize: 11 },
+      axisLabel: { color: textSecondary, fontSize: 10 },
+      splitLine: { lineStyle: { color: isDark ? '#1c2230' : '#e0e0e0', type: 'dashed' } }
+    },
+    series: [{
+      type: 'scatter',
+      data: scatterData,
+      symbolSize: function(d) {
+        return 8 + Math.abs(d[1]) * 55;
+      },
+      itemStyle: {
+        opacity: 0.78,
+        color: function(p) {
+          return levelColor[p.value[3]] || '#888';
+        },
+        borderColor: function(p) {
+          return Math.abs(p.value[1]) > 0.001 ? '#fff' : 'transparent';
+        },
+        borderWidth: function(p) {
+          return Math.abs(p.value[1]) > 0.001 ? 1 : 0;
+        }
+      },
+      emphasis: {
+        itemStyle: { borderWidth: 2, borderColor: '#fff', opacity: 1 },
+        scale: 1.4
+      },
+      markLine: {
+        silent: true, symbol: 'none',
+        label: { formatter: '贡献=0', fontSize: 9, color: textSecondary },
+        data: [{ yAxis: 0 }],
+        lineStyle: { color: textSecondary, type: 'dashed', width: 1 }
+      }
+    }]
+  });
+
+  // Click → navigate to device detail
+  chart.off('click');
+  chart.on('click', function(params) {
+    if (params.componentType === 'series') {
+      var mid = params.value[2];
+      closeShapExploration();
+      setTimeout(function() {
+        var m = machineMap[mid];
+        if (m) openPanel(mid, m);
+      }, 300);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Fault Injection Demo — 故障注入演示全流程
+// ═══════════════════════════════════════════════════════════════
+
+var FAULT_TYPE_LABELS = {
+  1: 'Type 1 (Subtle-微弱) — 电压+0.8% 电流+1.6%',
+  2: 'Type 2 (Subtle-微弱) — 电压+0.8% 电流+4.5%',
+  3: 'Type 3 (Thermal-热控) — 温度+4.1%',
+  4: 'Type 4 (High-Voltage-高压) — 电压+4.8%',
+  5: 'Type 5 (High-Voltage-高压) — 电压+4.7%',
+  6: 'Type 6 (Thermal-热控) — 温度+3.0%',
+  7: 'Type 7 (Thermal-热控) — 温度+1.4%',
+  8: 'Type 8 (Thermal-热控) — 温度+1.4%',
+  9: 'Type 9 (Thermal-热控) — 温度-0.5%',
+};
+
+function injectFaultButton() {
+  // Only show for Developer role
+  var role = sessionStorage.getItem('user_role') || 'developer';
+  if (role !== 'developer') return;
+
+  var badge = document.getElementById('mode-badge');
+  if (!badge) return;
+
+  var btn = document.createElement('button');
+  btn.className = 'btn-fi role-developer';
+  btn.textContent = '⚡ 故障注入演示';
+  btn.title = '一键模拟完整故障→告警→诊断→工单→派工→验收流程';
+  btn.onclick = openFixture;
+  badge.parentNode.insertBefore(btn, badge.nextSibling);
+}
+
+// ── Modal ──
+
+function openFixture() {
+  if (_fiStepRunning) {
+    if (!confirm('当前演示正在进行中，是否中断并重新注入？')) return;
+    stopStepAnimation();
+  }
+
+  // Populate device selector
+  var devSel = document.getElementById('fi-device');
+  devSel.innerHTML = '';
+  for (var i = 1; i <= 100; i++) {
+    var mid = 'CNC_' + String(i).padStart(3, '0');
+    var opt = document.createElement('option');
+    opt.value = mid;
+    opt.textContent = mid;
+    devSel.appendChild(opt);
+  }
+
+  // Populate fault type selector
+  var ftSel = document.getElementById('fi-fault-type');
+  ftSel.innerHTML = '';
+  for (var ft = 1; ft <= 9; ft++) {
+    var opt2 = document.createElement('option');
+    opt2.value = ft;
+    opt2.textContent = FAULT_TYPE_LABELS[ft];
+    ftSel.appendChild(opt2);
+  }
+
+  // Select current grid device if any panel is open
+  var panelMid = document.getElementById('panel-mid');
+  if (panelMid && panelMid.textContent !== '--') {
+    devSel.value = panelMid.textContent.trim();
+  }
+
+  document.getElementById('fi-overlay').classList.add('open');
+}
+
+function closeFixture() {
+  document.getElementById('fi-overlay').classList.remove('open');
+}
+
+// ── Injection ──
+
+function runInjection() {
+  var mid = document.getElementById('fi-device').value;
+  var ft = parseInt(document.getElementById('fi-fault-type').value);
+  var sev = document.getElementById('fi-severity').value;
+
+  var btn = document.getElementById('fi-btn-inject');
+  btn.disabled = true;
+  btn.textContent = '⏳ 注入中...';
+
+  fetch('/api/fault-injection', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ machine_id: mid, fault_type: ft, severity: sev })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    btn.disabled = false;
+    btn.textContent = '⚡ 一键注入故障';
+    if (!d.success) {
+      alert('注入失败: ' + (d.error || '未知错误'));
+      return;
+    }
+    _fiInjected = d;
+    closeFixture();
+    startStepAnimation(d);
+  })
+  .catch(function(e) {
+    btn.disabled = false;
+    btn.textContent = '⚡ 一键注入故障';
+    alert('网络错误: ' + e.message);
+  });
+}
+
+// ── MachineMap Override ──
+
+function overrideMachineMap(mid, injectionData) {
+  if (!_fiOriginal) {
+    // Save original for rollback
+    _fiOriginal = { mid: mid, entry: machineMap[mid] || null };
+  }
+
+  var inj = injectionData.injection;
+  var mh = inj.modified_health;
+  var wo = inj.work_order;
+  var shap = inj.shap;
+
+  machineMap[mid] = {
+    health: {
+      'Equipment.Id': mid,
+      'health_score': mh.health_score,
+      'health_level': mh.health_level,
+      'cost_at_risk': mh.cost_at_risk,
+      'failure_rate': mh.failure_rate,
+      'trend': mh.trend,
+      'maintenance_overdue_days': mh.maintenance_overdue_days,
+      'zscore_risk': mh.zscore_risk,
+      'temperature_slope': 0.5,
+      'voltage_instability': 2.1,
+      'quality_failure_rate': 0.03,
+      'spec_violation_rate': 0.01,
+      'top_risk_factor': wo.primary_pattern,
+      'top_risk_factor_label': wo.pattern_cn,
+      'confidence': 0.85
+    },
+    workOrder: {
+      'machine_id': mid,
+      'alert_level': inj.alert_level === 'Alarm' ? 'ALARM' : 'WARNING',
+      'priority': wo.priority_num,
+      'action_type': wo.action_type,
+      'urgency_score': parseFloat(wo.urgency_score) || 75,
+      'window_days': parseInt(wo.recommended_window_days) || 3,
+      'expected_savings': parseFloat(wo.expected_savings) || 0,
+      'top_risk_factor_1': shap.top_risk_factor_1 || '',
+      'top_risk_factor_2': shap.top_risk_factor_2 || '',
+      'shap_risk_summary': shap.shap_risk_summary || '',
+      'suggestion': wo.maintenance_suggestion || ''
+    },
+    shap: shap
+  };
+}
+
+function rollbackInjection() {
+  if (_fiOriginal) {
+    var mid = _fiOriginal.mid;
+    if (_fiOriginal.entry) {
+      machineMap[mid] = _fiOriginal.entry;
+    } else {
+      delete machineMap[mid];
+    }
+    _fiOriginal = null;
+  }
+  _fiInjected = null;
+  renderGrid();
+  updateHeaderStats();
+}
+
+// ── Step Animation ──
+
+function startStepAnimation(injectionData) {
+  _fiStepRunning = true;
+  var inj = injectionData.injection;
+  var steps = inj.steps;
+  var mid = injectionData.machine_id;
+  var currentStep = 0;
+
+  // Reset overlay state
+  var closeBtn = document.getElementById('fi-step-close-btn');
+  closeBtn.style.display = 'none';
+
+  // Build progress dots
+  var dotsHtml = '';
+  for (var i = 0; i < steps.length; i++) {
+    dotsHtml += '<div class="fi-step-dot" id="fi-dot-' + i + '"></div>';
+  }
+  document.getElementById('fi-step-indicator').innerHTML = dotsHtml;
+
+  // Show overlay
+  document.getElementById('fi-step-overlay').classList.add('active');
+
+  function showStep(idx) {
+    if (idx >= steps.length) {
+      finishAnimation();
+      return;
+    }
+
+    var s = steps[idx];
+    document.getElementById('fi-step-icon').textContent = s.icon;
+    document.getElementById('fi-step-title').textContent = s.title;
+    document.getElementById('fi-step-desc').innerHTML = s.desc;
+
+    // Update progress dots
+    for (var j = 0; j < steps.length; j++) {
+      var dot = document.getElementById('fi-dot-' + j);
+      dot.classList.remove('done', 'current');
+      if (j < idx) dot.classList.add('done');
+      else if (j === idx) dot.classList.add('current');
+    }
+
+    // Animate step panel
+    var panel = document.getElementById('fi-step-panel');
+    panel.style.animation = 'none';
+    panel.offsetHeight; // trigger reflow
+    panel.style.animation = 'fiStepIn 0.35s cubic-bezier(0.33, 1, 0.68, 1)';
+
+    // Handle grid changes per step
+    handleStepGridAction(idx, s.grid_class, mid, injectionData);
+
+    // Auto-advance
+    var delays = [1000, 1400, 1800, 1400, 1400, 1800];
+    _fiStepTimer = setTimeout(function() {
+      showStep(idx + 1);
+    }, delays[idx] || 1400);
+  }
+
+  function handleStepGridAction(idx, gridClass, mid, data) {
+    if (idx === 0) {
+      // Step 1: Override map, render grid, highlight cell
+      overrideMachineMap(mid, data);
+      renderGrid();
+      updateHeaderStats();
+      highlightGridCell(mid, 'fi-active');
+    } else if (idx === 3) {
+      // Step 4: Add work order pulse
+      highlightGridCell(mid, 'fi-active has-wo alarm');
+      // Also add priority badge
+      addPriorityBadge(mid, data.injection.priority);
+    } else if (idx === 5) {
+      // Step 6: Rollback
+      rollbackInjection();
+      updateHeaderStats();
+    }
+  }
+
+  function findGridCell(mid) {
+    var grid = document.getElementById('machine-grid');
+    if (!grid) return null;
+    var shortId = mid.replace('CNC_', '');
+    var cells = grid.querySelectorAll('.cell');
+    for (var k = 0; k < cells.length; k++) {
+      if (cells[k].textContent.trim() === shortId) return cells[k];
+    }
+    return null;
+  }
+
+  function highlightGridCell(mid, cls) {
+    var cell = findGridCell(mid);
+    if (!cell) return;
+    cell.classList.remove('fi-active', 'has-wo', 'alarm', 'warning');
+    if (cls) {
+      var classes = cls.split(' ');
+      for (var c = 0; c < classes.length; c++) {
+        cell.classList.add(classes[c]);
+      }
+    }
+    cell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function addPriorityBadge(mid, priority) {
+    var cell = findGridCell(mid);
+    if (!cell) return;
+    // Remove existing badge
+    var old = cell.querySelector('.pri-badge');
+    if (old) old.remove();
+    // Add new badge
+    var badge = document.createElement('span');
+    badge.className = 'pri-badge';
+    badge.textContent = priority === 'P1' ? '#1' : priority === 'P2' ? '#2' : '#3';
+    cell.appendChild(badge);
+  }
+
+  function finishAnimation() {
+    _fiStepRunning = false;
+    document.getElementById('fi-step-close-btn').style.display = 'block';
+    // Ensure dots all show done
+    for (var j = 0; j < steps.length; j++) {
+      var dot = document.getElementById('fi-dot-' + j);
+      dot.classList.remove('current');
+      dot.classList.add('done');
+    }
+    document.getElementById('fi-step-icon').textContent = '🎉';
+    document.getElementById('fi-step-title').textContent = '全流程演示完成';
+  }
+
+  function stopStepAnimation() {
+    if (_fiStepTimer) { clearTimeout(_fiStepTimer); _fiStepTimer = null; }
+    _fiStepRunning = false;
+    document.getElementById('fi-step-overlay').classList.remove('active');
+    rollbackInjection();
+  }
+
+  // Start with first step
+  showStep(0);
+
+  // Expose stop function
+  window.stopStepAnimation = stopStepAnimation;
+}
+
+function closeStepOverlay() {
+  if (_fiStepTimer) { clearTimeout(_fiStepTimer); _fiStepTimer = null; }
+  _fiStepRunning = false;
+  document.getElementById('fi-step-overlay').classList.remove('active');
+  // Ensure rollback is complete
+  if (_fiOriginal) {
+    rollbackInjection();
+    updateHeaderStats();
+  }
+}
+
+
+// ── Baseline Trace ──
+async function loadTraceData() {
+  try { var bl=await loadCSV('data/baseline_stats.csv'); _traceBaseline={}; bl.forEach(function(r){var m=r['Equipment.Id']||r.machine_id;if(m)_traceBaseline[m]=r;}); } catch(e){}
+  try { var zs=await loadCSV('data/z_scores.csv'); _traceZScores={}; zs.forEach(function(r){var m=r['Equipment.Id']||r.machine_id;if(m&&!_traceZScores[m])_traceZScores[m]=r;}); } catch(e){}
+}
+
+function showTrace(type,mid) {
+  var b=_traceBaseline && _traceBaseline[mid];
+  var z=_traceZScores && _traceZScores[mid];
+  var h=machineMap[mid] && machineMap[mid].health;
+  if(!h&&!b&&!z) return;
+  var title='',body='';
+  if(type==='health'){title=mid+' 健康分: '+((h&&h.health_score)||'--')+'（'+((h&&h.health_level)||'--')+'）';body=buildHealthTrace(mid,h,b);}
+  else if(type==='zscore'){var zc=z?(parseFloat(z.z_composite)||0).toFixed(1):'--';title=mid+' 综合Z-Score: '+zc+'（'+((z&&z.alert_level)||'--')+'）';body=buildZScoreTrace(mid,h,b,z);}
+  else if(type==='risk'){var cr=h?((h.cost_at_risk||0)/1000).toFixed(1):'--';title=mid+' 日成本风险: $'+cr+'k';body=buildRiskTrace(mid,h,b);}
+  document.getElementById('trace-title').textContent=title;
+  document.getElementById('trace-body').innerHTML=body;
+  document.getElementById('trace-panel').style.display='block';
+  document.getElementById('trace-overlay').classList.add('open');
+}
+
+function closeTrace() {
+  document.getElementById('trace-panel').style.display='none';
+  document.getElementById('trace-overlay').classList.remove('open');
+}
+
+function buildHealthTrace(mid,h,b) {
+  if(!h) return '<p style="color:var(--text-muted)">健康分数据不可用</p>';
+  var score=parseFloat(h.health_score)||0;
+  var dims=[
+    {label:'故障率',w:0.20,v:parseFloat(h.failure_rate)||0,raw:((parseFloat(h.failure_rate)||0)*100).toFixed(1)+'%'},
+    {label:'Z-Score异常',w:0.20,v:parseFloat(h.zscore_risk)||0,raw:(parseFloat(h.zscore_risk)||0).toFixed(1)},
+    {label:'温度趋势',w:0.15,v:Math.abs(parseFloat(h.temperature_slope)||0),raw:(parseFloat(h.temperature_slope)||0).toFixed(2)+'°C/步'},
+    {label:'电压不稳定',w:0.15,v:parseFloat(h.voltage_instability)||0,raw:(parseFloat(h.voltage_instability)||0).toFixed(1)},
+    {label:'维护超期',w:0.10,v:parseFloat(h.maintenance_overdue_days)||0,raw:(parseFloat(h.maintenance_overdue_days)||0).toFixed(0)+'天'},
+    {label:'成本风险',w:0.10,v:((parseFloat(h.cost_at_risk)||0)/1000),raw:'$'+((parseFloat(h.cost_at_risk)||0)/1000).toFixed(1)+'k'},
+    {label:'质量缺陷率',w:0.05,v:parseFloat(h.quality_failure_rate)||0,raw:((parseFloat(h.quality_failure_rate)||0)*100).toFixed(1)+'%'},
+    {label:'超规格率',w:0.05,v:parseFloat(h.spec_violation_rate)||0,raw:((parseFloat(h.spec_violation_rate)||0)*100).toFixed(1)+'%'}
+  ];
+  dims.sort(function(a,b){return(b.w*b.v)-(a.w*a.v);});
+  var html='<p>该设备健康分仅 <b style="color:var(--accent-red)">'+score.toFixed(0)+'</b> 分（满分100），判定为<b>"'+(h.health_level||'--')+'"</b>级别，主要由以下因素驱动：</p>';
+  dims.forEach(function(d,i){
+    var contrib=(d.w*d.v).toFixed(2);
+    var icon=i<3?(i===0?'🔴':i===1?'🟡':'🟡'):'⚪';
+    var colors=['var(--red)','var(--amber,#f0a030)','var(--teal)','var(--text-muted)'];
+    html+='<div class="trace-item"><span class="ti-label">'+icon+' '+d.label+'（权重'+(d.w*100).toFixed(0)+'%）</span><span class="ti-val">'+d.raw+' → 贡献 '+contrib+'</span></div>';
+    html+='<div class="trace-bar-wrap"><div class="trace-bar-fill" style="width:'+Math.min(100,parseFloat(contrib)/10*100)+'%;background:'+colors[Math.min(i,3)]+'"></div></div>';
+  });
+  if(b){
+    var bq={stable:'稳定',sparse:'稀疏',cold_start:'冷启动'};
+    html+='<h3>📌 基线说明</h3><p>该设备使用 <b>'+(b.n_normal_total||'--')+'</b> 个正常运行时段的电压/电流/温度数据建立统计基线（μ±σ）。基线来源：<b>'+(b.baseline_source==='self'?'自身数据':b.baseline_source==='hybrid'?'自身+集群混合':'集群均值')+'</b>，基线质量：<b>'+(bq[b.baseline_quality]||b.baseline_quality||'--')+'</b>。</p><p>当前值与基线的偏差越大，Z-Score越高，健康扣分越多。8个维度各自乘以权重后求和，从100分中扣除。</p>';
+  }
+  html+='<div class="trace-note">💡 <b>自然语言解读：</b>'+nlHealth(h)+'</div>';
+  return html;
+}
+
+function nlHealth(h){
+  var s=parseFloat(h.health_score)||0;
+  var tf=h.top_risk_factor_label||'';
+  var t=h.trend||'';
+  var p=[];
+  if(s<40)p.push('设备处于危险状态，需立即关注');
+  else if(s<60)p.push('设备处于退化阶段，建议安排检查');
+  else p.push('设备运行基本正常');
+  if(tf)p.push('主要风险来源于'+tf);
+  if(t==='Critical')p.push('趋势持续恶化，存在突发故障可能');
+  else if(t==='Degrading')p.push('健康分呈下降趋势，需预防性维护');
+  else if(t==='Stable')p.push('健康分趋于稳定，可适当延长检查周期');
+  return p.join('。')+'。';
+}
+
+function buildZScoreTrace(mid,h,b,z){
+  if(!z) return '<p style="color:var(--text-muted)">Z-Score数据不可用</p>';
+  var params=[
+    {label:'电压',zk:'z_Voltage',mk:'Op.Voltage_mu',sk:'Op.Voltage_sigma'},
+    {label:'电流',zk:'z_Amperage',mk:'Op.Amperage_mu',sk:'Op.Amperage_sigma'},
+    {label:'温度',zk:'z_Temperature',mk:'Op.Temperature_mu',sk:'Op.Temperature_sigma'}
+  ];
+  var html='<p>当前参数与自身正常工况基线的偏差：</p>';
+  var worstP=null,worstZ=0;
+  params.forEach(function(p){
+    var zv=parseFloat(z[p.zk])||0;
+    var mu=b?(parseFloat(b[p.mk])||0).toFixed(0):'--';
+    var sg=b?(parseFloat(b[p.sk])||0).toFixed(1):'--';
+    var lv=Math.abs(zv)>2.5?'🔴':Math.abs(zv)>2.0?'🟡':Math.abs(zv)>1.5?'🟢':'⚪';
+    html+='<div class="trace-item"><span class="ti-label">'+lv+' '+p.label+'</span><span class="ti-val">Z='+zv.toFixed(1)+'（基线 '+mu+'±'+sg+'）</span></div>';
+    if(Math.abs(zv)>worstZ){worstZ=Math.abs(zv);worstP=p.label;}
+  });
+  var zComp=parseFloat(z.z_composite)||0;
+  html+='<p style="margin-top:10px">综合判定：<b>'+worstP+'</b>单项偏离最大（Z='+worstZ.toFixed(1)+'），复合Z-Score='+zComp.toFixed(1)+'（取电压/电流/温度Z值平方和开根）。当前触发：<b style="color:'+(z.alert_level==='ALARM'?'var(--accent-red)':'var(--accent-amber)')+'">'+(z.alert_level||'--')+'</b></p>';
+  html+='<h3>📌 阈值选择依据</h3><p>推荐操作点 z>2.0：每5次告警约4次正确，误报率控制在20%以内。阈值基于30步时序回测的精确率/召回率/FPR平衡。</p>';
+  html+='<table class="trace-table"><thead><tr><th>阈值</th><th>精确率</th><th>召回率</th><th>F1</th><th>误报率</th><th>场景</th></tr></thead><tbody>';
+  var rows=[
+    ['z>1.0','73.5%','85.6%','79.0%','80.5%','FPR过高不可用'],
+    ['z>1.5','76.0%','62.2%','68.4%','51.2%','初步筛查(Watch)'],
+    ['z>2.0 ★','83.9%','39.4%','53.6%','19.7%','运维派单(推荐)'],
+    ['z>2.5','92.1%','21.9%','35.4%','4.9%','紧急干预(Alarm)']
+  ];
+  rows.forEach(function(r,i){
+    html+='<tr'+(i===2?' class="hl"':'')+'><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td><td>'+r[4]+'</td><td>'+r[5]+'</td></tr>';
+  });
+  html+='</tbody></table>';
+  if(b) html+='<div class="trace-note">💡 <b>基线来源：</b>'+(b.baseline_source==='self'?'自身'+b.n_normal_total+'个正常样本':b.baseline_source==='hybrid'?'自身+集群混合':'集群均值')+'，质量：'+(b.baseline_quality||'--')+'。逐设备基线是必需的——设备间差异占总方差的61-73%，全局阈值完全不可用。</div>';
+  return html;
+}
+
+function buildRiskTrace(mid,h,b){
+  if(!h) return '<p style="color:var(--text-muted)">成本风险数据不可用</p>';
+  var fr=((parseFloat(h.failure_rate)||0)*100).toFixed(1);
+  var cr=parseFloat(h.cost_at_risk)||0;
+  var html='<p>风险计算公式：<b>故障概率 × 单件成本 × 日产量</b></p>';
+  html+='<div class="trace-item"><span class="ti-label">故障概率</span><span class="ti-val">'+fr+'%</span></div>';
+  html+='<div class="trace-item"><span class="ti-label">日成本风险</span><span class="ti-val">$'+cr.toFixed(0)+'/天</span></div>';
+  html+='<div class="trace-note">💡 <b>解读：</b>如果该设备发生故障导致停产，每天将损失约 <b>$'+(cr/1000).toFixed(1)+'k</b> 的产值。此数值用于工单优先级排序——成本风险越高的设备，越优先安排维护。</div>';
+  var rn=cr>6000?'属于全厂成本风险最高档位，建议优先保障该设备的维护资源。':cr>3000?'处于中等风险档位，按计划维护即可。':'风险较低，可适当延后维护。';
+  html+='<p style="margin-top:8px;font-size:11px">📌 '+rn+'</p>';
+  return html;
+}
+
+// Context menu — right-click on data-trace elements
+document.addEventListener('contextmenu',function(e){
+  var el=e.target.closest('[data-trace]');
+  if(!el) return;
+  e.preventDefault();
+  var type=el.getAttribute('data-trace');
+  var mid=el.getAttribute('data-trace-mid');
+  if(type&&mid) showTrace(type,mid);
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeTrace();});
+
+// ── Boot ──
+init();
+</script>
+<div class="trace-overlay" id="trace-overlay" onclick="closeTrace()"></div>
+<div class="trace-panel" id="trace-panel" style="display:none">
+  <div class="trace-header">
+    <div style="font-size:16px;font-weight:700;" id="trace-title">基线溯源</div>
+    <button class="trace-close" onclick="closeTrace()">&times;</button>
+  </div>
+  <div class="trace-body" id="trace-body"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     Fault Injection Demo — Modals & Overlays
+     ═══════════════════════════════════════════════════════════════ -->
+
+<!-- Injection Modal -->
+<div class="fi-overlay" id="fi-overlay">
+  <div class="fi-modal" id="fi-modal">
+    <div class="fi-modal-header">
+      <h3>⚡ 故障注入演示</h3>
+      <button class="fi-modal-close" onclick="closeFixture()">&times;</button>
+    </div>
+    <div class="fi-modal-body">
+      <div class="fi-form-group">
+        <div class="fi-form-label">目标设备</div>
+        <select class="fi-select" id="fi-device"></select>
+      </div>
+      <div class="fi-form-group">
+        <div class="fi-form-label">故障类型</div>
+        <select class="fi-select" id="fi-fault-type"></select>
+      </div>
+      <div class="fi-form-group">
+        <div class="fi-form-label">严重度</div>
+        <select class="fi-select" id="fi-severity">
+          <option value="mild">轻微 — 参数轻微偏移，Watch 级别告警</option>
+          <option value="medium" selected>中等 — 参数明显偏离，Warning/Alarm 级别告警</option>
+          <option value="severe">严重 — 参数大幅偏离，Alarm 级别紧急告警</option>
+        </select>
+      </div>
+      <button class="fi-btn-inject" id="fi-btn-inject" onclick="runInjection()">
+        ⚡ 一键注入故障
+      </button>
+      <div class="fi-modal-note">
+        💡 此演示仅修改客户端显示数据，不会写入任何实际数据文件。<br>刷新页面即可恢复原始状态。
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Step Animation Overlay -->
+<div class="fi-step-overlay" id="fi-step-overlay">
+  <div class="fi-step-panel" id="fi-step-panel">
+    <div class="fi-step-indicator" id="fi-step-indicator"></div>
+    <div class="fi-step-icon-area"><span class="icon" id="fi-step-icon"></span></div>
+    <div class="fi-step-title-area" id="fi-step-title"></div>
+    <div class="fi-step-desc-area" id="fi-step-desc"></div>
+    <button class="fi-step-close-btn" id="fi-step-close-btn" style="display:none;" onclick="closeStepOverlay()">
+      关闭演示
+    </button>
+  </div>
+</div>
+
+</body>
+</html>

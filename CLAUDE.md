@@ -1,124 +1,95 @@
-# CLAUDE.md
+# CLAUDE.md — 智能设备预测性维护系统
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+> 苗圃杯·半决赛作品 v2.1 | 最后更新：2026-06-04
+>
+> 参考文档（按需 Read 加载）：
+> `CLAUDE_REF_架构.md`（项目概述·目录·前端·CSS·JS） |
+> `CLAUDE_REF_后端.md`（Gateway·Skills·数据文件） |
+> `CLAUDE_REF_算法.md`（算法·角色·降级·RAG·业务）
 
-## Project Overview
+---
 
-智能设备预测性维护 — A predictive maintenance system for 100 CNC machines. Uses 4 sensor parameters (Voltage, Amperage, Temperature, Rotor Speed) to detect anomalies and generate prioritized maintenance work orders. The core finding across all analysis phases: 4 parameters are insufficient for pure ML predictive maintenance (max Youden's J = 0.075). The system therefore uses a **cost-risk-driven + statistical-baseline fusion** approach.
+## 项目定位
 
-## Project Phases
+工业智能运维解决方案 — 100台 CNC 数控机床（CNC_001~100），4传感器参数（V/A/T/Rotor），9种故障类型。
+3个系统角色（运维/管理/开发），3种维护策略（成本效率/生产效率/质量优先）。
 
-The analysis follows a 4-phase pipeline, each in its own directory:
+技术栈：Python数据分析 + FastAPI后端（8765端口）+ Vanilla JS/ECharts前端 + DeepSeek API。
 
-| Phase | Directory | Purpose |
-|---|---|---|
-| 1 | `数据探索分析/` | 14 statistical analyses + 17 visualizations of raw data |
-| 2 | `基线分析和确定/` | 4 statistical baselines (z-score, cost-risk matrix, failure signatures, Hotelling T²) |
-| 3 | `预测性维护模型/` + `预测性维护模型_v2/` | v1 XGBoost + v2 Multi-Task NN experiments |
-| 4 | `预测性维护模型_v3/` | Decision engine + predictability analysis + system design doc |
+---
 
-## Architecture: Agent-MCP Framework
+## 核心约定（必须遵守）
 
-The production runtime is in `agent-mcp架构/`. It exposes 7 MCP Tools via FastMCP and runs a DAG pipeline via a Python orchestrator.
+1. **Windows 环境** — PowerShell 优先，文件路径用正斜杠或反斜杠，UTF-8 编码（所有CSV/JSON/Python读取需显式 `encoding='utf-8'`）
+2. **逐设备基线是强制性的** — 设备间方差占 61-73%，不可用全局阈值（≥3样本才能建基线，三层回退策略）
+3. **纯ML预测不可行** — 4参数 Youden's J≤0.075，AUC上限≈0.537，必须用多信号融合补偿（统计+ML+成本+趋势）
+4. **角色分版用 CSS `:not()` 过滤** — `html[data-role]` + CSS类名（role-operator/role-manager/role-developer），不是简单高亮，不同角色看到不同页面子集
+5. **策略切换需重新生成CSV** — `POST /api/maintenance/strategy` 后端重新计算工单，不是纯前端切换
+6. **降级保障是工业级要求** — 四级降级（FULL→STAT_ONLY→RULE_ONLY→EMERGENCY），任何条件下都能产出可执行维护方案
+7. **SHAP可解释性是核心竞争力** — 每个告警必须可追溯到具体参数和工业根因（RiskDecomposer + StatLayerSHAP → LocalExplainer）
+8. **故障注入纯内存计算** — `POST /api/fault-injection` 不修改任何数据文件，演示完成后前端自动回滚
+9. **算法对比用实际训练数据** — `benchmark_algorithms.py` 在真实2999行数据上训练，不使用虚拟/合成数据
+10. **数据天花板可视化** — `kde_params.json` 提供4参数×200点KDE分布，前端交互式演示 Youden's J 从 0.075→0.90
 
-**Two execution paths:**
+---
 
-1. **Agent mode** — Claude calls individual MCP tools in any order:
-   `explain_predictability_limit` → `prepare_data` → `run_stat_analysis` + `run_ml_analysis` (parallel) → `run_diagnosis` → `generate_decision`
+## 关键路径
 
-2. **Full pipeline** — Single call to `run_predictive_maintenance()`, which imports `agent_orchestrator.PredictiveMaintenanceAgent` in-process and runs the fixed DAG.
+| 用途 | 路径 |
+|------|------|
+| Web入口 | `web-dashboard/app.py` → http://localhost:8765 |
+| 流水线调度 | `agent-mcp架构/agent_orchestrator.py`（DAG + ThreadPool） |
+| 原始数据 | `原始数据集/`（4个脱敏CSV：LOG/SUMMARY/ASSEMBLY/TESTS） |
+| 仪表盘数据 | `web-dashboard/data/`（60+CSV/JSON，从Pipeline同步） |
+| 环境变量 | `.env`（DEEPSEEK_API_KEY/BASE_URL/MODEL） |
+| 前端页面 | `web-dashboard/*.html`（home/index/chat/technical-overview/reports/role-gate 等10个页面） |
+| Gateway后端 | `web-dashboard/gateway/`（tools/prompts/deepseek_client/routes 等20文件） |
+| Skills | `skills/`（5个技能包：data_prep→stat_inference/ml_inference→diagnosis→decision） |
 
-**MCP server:** `agent-mcp架构/mcp_server.py` uses `FastMCP("predictive-maintenance")`. Tools 1-5 invoke skills via `subprocess.run()` (600s timeout per skill). Tool 0 (`explain_predictability_limit`) runs in-process reading precomputed CSVs from `预测性维护模型_v3/outputs/`. Tool 6 imports the orchestrator directly.
+---
 
-**Orchestrator:** `agent-mcp架构/agent_orchestrator.py` — `PredictiveMaintenanceAgent` class. DAG: `data_prep → stat+ml(ThreadPool parallel) → diagnosis → decision`. ML unavailable → auto-skip to stat-only degradation path. Skill invocation is always `subprocess.run()` targeting each skill's `scripts/run.py`.
-
-**The `skills/` directory is intentionally separate from `agent-mcp架构/`** — 5 independent Python packages, each with `scripts/run.py` as CLI entry point and `SKILL.md` as documentation:
-
-| Skill | Directory | CLI Args | Key Output |
-|---|---|---|---|
-| 1 data-prep | `skills/predictive-maintenance-data-prep/` | positional: `<data_dir> <output_dir>` | `z_scores.csv`, `cost_risk_matrix.csv` |
-| 2 stat-inference | `skills/predictive-maintenance-stat-inference/` | `--data-dir --prep-dir --output-dir` | `alert_summary.csv`, `t2_results.csv` |
-| 3 ml-inference | `skills/predictive-maintenance-ml-inference/` | `--data-dir --prep-dir --output-dir --model` | `prediction_report.csv` |
-| 4 diagnosis | `skills/predictive-maintenance-diagnosis/` | `--data-dir --prep-dir --stat-dir [--ml-dir] --output-dir --skip-predictability` | `diagnosis_report.csv` |
-| 5 decision | `skills/predictive-maintenance-decision/` | `--data-dir --prep-dir --stat-dir [--ml-dir --diag-dir] --output-dir --max-orders` | `maintenance_work_orders.csv` |
-
-Skills share code via copy-paste (e.g., `maintenance_decision_engine.py` exists in both diagnosis and decision skills). Each skill's `run.py` does `sys.path.insert(0, os.path.dirname(__file__))` before importing its local modules.
-
-## Common Commands
-
-### Dashboard
-
-```bash
-cd web-dashboard
-python server.py
-# Open http://localhost:8765
-```
-
-Or double-click `web-dashboard/start.bat`. The server is a minimal stdlib HTTP server on port 8765 with CSV/JSON MIME types.
-
-### Run Full Predictive Maintenance Pipeline
+## 常用命令
 
 ```bash
-cd agent-mcp架构
-python agent_orchestrator.py --data-dir ../原始数据集 --model v1
-# With ML skip (fast stat-only path, ~5.7s):
-python agent_orchestrator.py --data-dir ../原始数据集 --skip-ml --skip-diagnosis
+# 启动Web平台
+cd web-dashboard; python app.py
+
+# 运行完整流水线
+cd agent-mcp架构; python agent_orchestrator.py --data-dir ../原始数据集 --model v1
+
+# 仅统计（快速，~9s）
+cd agent-mcp架构; python agent_orchestrator.py --data-dir ../原始数据集 --skip-ml --skip-diagnosis
+
+# 含策略+仪表盘同步
+cd agent-mcp架构; python agent_orchestrator.py --data-dir ../原始数据集 --skip-ml --skip-diagnosis --shap --strategy production_efficiency --dashboard-data ../web-dashboard/data
+
+# 算法对比实验（~2分钟）
+cd web-dashboard; python scripts/benchmark_algorithms.py
+
+# KDE分布参数计算（~2秒）
+cd web-dashboard; python scripts/compute_kde_params.py
+
+# 运行测试
+pytest tests/ -v
 ```
 
-### Run Individual Skills (from project root)
+---
 
-```bash
-# Skill 1: Data preparation
-python skills/predictive-maintenance-data-prep/scripts/run.py 原始数据集 outputs/data_prep
+## 按需索引
 
-# Skill 2: Statistical inference
-python skills/predictive-maintenance-stat-inference/scripts/run.py --data-dir 原始数据集 --prep-dir outputs/data_prep --output-dir outputs/stat
+需要了解架构/前端/后端/算法等详细信息时，Read 对应的参考文件：
 
-# Skill 3: ML inference (v1 XGBoost)
-python skills/predictive-maintenance-ml-inference/scripts/run.py --data-dir 原始数据集 --prep-dir outputs/data_prep --output-dir outputs/ml --model v1
-
-# Skill 5: Decision engine
-python skills/predictive-maintenance-decision/scripts/run.py --data-dir 原始数据集 --prep-dir outputs/data_prep --stat-dir outputs/stat --output-dir outputs/decision --max-orders 20
-```
-
-### Test MCP Tool 0 (in-process, no skill invocation)
-
-```bash
-cd agent-mcp架构
-python -c "from mcp_server import explain_predictability_limit; print(explain_predictability_limit()['conclusion'])"
-```
-
-### Start MCP Server (for Claude Desktop integration)
-
-```bash
-cd agent-mcp架构
-python mcp_server.py
-# Uses stdio transport — connect from Claude Desktop config
-```
-
-## Dashboard Architecture (`web-dashboard/`)
-
-Single-page HTML application (~1244 lines). No build step, no framework — vanilla JS + ECharts 5.5.0 + PapaParse 5.4.1 from CDN.
-
-**4 tabs, rendered lazily** (only sec1 at init; sec2/sec3/sec4 render on first navigation):
-
-| Tab | Data Sources | Key Charts |
-|---|---|---|
-| 数据探索 | `summary.csv`, `fault_dist.csv`, `log.csv` | Daily output bar, fault stack, boxplots, scatter |
-| 基线划定分析 | `variance_decomp.csv`, `z_scores.csv`, `failure_sig.csv`, `cost_risk.csv` | Variance bars, alert donut, radar, bubble, z-score timeseries |
-| 预测性维护模型 | `eval_metrics.csv`, `variant_comp.csv`, `feature_imp.csv`, `robustness.csv`, `dim1.csv`, `dim4.csv` | Eval bars, variant bars, feat importance, robustness heatmap, ceiling bar |
-| 预测性维护建议 | `work_orders.csv`, `diagnosis.csv`, `dim1.csv`, `dim5.csv` | Youden's J bars, anomaly donut, fault-overlap bars, work order cards, sensor cards |
-
-**Image galleries:** 50 PNG images in `images/{eda,baseline,v1,v2}/`. Each section has a toggle gallery with Chinese captions + lightbox (keyboard: ← → Esc). The `GALLERY` JS object maps each section's images to figure names and descriptions.
-
-**Key JS globals:** `DATA` (cached CSV data), `CHARTS` (ECharts instances), `_rendered` (lazy-render tracker). Data loading uses `loadCSV(path)` → PapaParse with `dynamicTyping:true`. CSV column names in JS use bracket notation (e.g., `r['f2_0.5']`) — dots in column headers from the CSV source require this.
-
-## Key Technical Details
-
-**Sensor limitation is the project's central finding:** All 4 parameters have Youden's J < 0.08. ~22% of fault samples fall within normal z-score range. ML models (XGBoost AUC≈0.48, MTNN AUC≈0.59) converge to trivial predictors because the information simply isn't in the 4 sensors. The decision engine compensates by weighting statistical anomaly (0.40) + cost risk (0.25) + ML density (0.25) + trend (0.10).
-
-**Per-machine baselines are mandatory:** Inter-machine variance accounts for 61-73% of total variance — global thresholds are invalid. Every z-score, T² statistic, and alert is computed relative to each machine's own normal-operation distribution.
-
-**Windows encoding on data files:** All CSV/JSON files are UTF-8. Python scripts that read from `原始数据集/` or `agent-mcp架构/` must specify `encoding='utf-8'` explicitly — Windows defaults to GBK.
-
-**Data files:** 4 raw CSVs in `原始数据集/` (~254KB total). 100 machines, 2,999 observations, 9 fault types (Type 0 = normal, Types 1-9 = various faults). Key files for downstream use: `MACHINE_LOG_DATA._2025.csv` (time-series sensor readings with fault labels), `MACHINE_SUMMARY_DATA._2025.csv` (per-machine metadata with cost/output).
+| 需要了解的内容 | 文件 | 涵盖 |
+|---------------|------|------|
+| 项目概述、目录结构 | `CLAUDE_REF_架构.md` §一~二 | 定位、数据、技术栈、完整目录树 |
+| Web前端页面与组件 | `CLAUDE_REF_架构.md` §三 | 角色门/首页双视图/仪表盘8Tab/Copilot/技术架构/报告中心 |
+| CSS设计系统 | `CLAUDE_REF_架构.md` §四 | 设计令牌/深色主题/页面级变量/视觉模式 |
+| JavaScript模块 | `CLAUDE_REF_架构.md` §五 | role-check/role-switcher/theme-init/navbar |
+| Gateway后端架构 | `CLAUDE_REF_后端.md` §六 | app.py/config/routes/DeepSeek客户端/25个Tools/故障注入/提示词/报告系统 |
+| Skills技能架构 | `CLAUDE_REF_后端.md` §七 | DAG流水线/5个技能包详解/Phase A/B/C决策体系 |
+| 数据文件详解 | `CLAUDE_REF_后端.md` §八 | 原始数据/仪表盘数据/知识库JSON |
+| 核心算法详解 | `CLAUDE_REF_算法.md` §九 | Z-Score基线/T²/成本风险/健康评分/决策融合/Youden's J/方差分解/算法对比/KDE |
+| 角色权限体系 | `CLAUDE_REF_算法.md` §十 | 三角色定义/CSS过滤机制/类名语义/执行流程 |
+| 降级架构 | `CLAUDE_REF_算法.md` §十一 | 四级降级/状态指示器 |
+| RAG智能客服 | `CLAUDE_REF_算法.md` §十二 | 三层知识库/技术选型/文档分块/问题分类 |
+| 业务流程自动化 | `CLAUDE_REF_算法.md` §十三 | 工单6状态机/定时任务/库存管理/员工管理 |

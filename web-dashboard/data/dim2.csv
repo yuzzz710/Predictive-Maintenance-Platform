@@ -1,4 +1,0 @@
-parameter_pair,normal_correlation,normal_p_value,fault_correlation,fault_p_value,correlation_change,fisher_z_p_value,significant_change,per_machine_normal_mean,per_machine_fault_mean,per_machine_corr_abs_change
-V-A,-0.0111,0.7502,0.0867,0.0001,0.0978,0.0164,True,0.0758,0.0745,0.0012
-V-T,-0.0874,0.0116,-0.0825,0.0001,0.0049,0.9038,False,-0.0089,-0.0198,0.0109
-A-T,-0.0043,0.9008,-0.0084,0.6948,-0.0041,0.9199,False,0.0329,0.0061,0.0268

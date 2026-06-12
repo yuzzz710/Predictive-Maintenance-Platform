@@ -1,0 +1,134 @@
+{
+  "data_summary": {
+    "n_machines": 100,
+    "n_time_steps": 30,
+    "minutes_per_step": 14
+  },
+  "point_in_time": {
+    "best_threshold": "Watch",
+    "best_f1": 0.6603,
+    "best_precision": 0.7471,
+    "best_recall": 0.5916
+  },
+  "event_based": {
+    "Watch": {
+      "avg_lead_time_minutes": 23.6,
+      "median_lead_time_minutes": 14.0,
+      "miss_rate": 0.2041,
+      "detection_rate": 0.7959,
+      "total_events": 147,
+      "detected_events": 117,
+      "missed_events_count": 30,
+      "lookback_window": 5
+    },
+    "Warning": {
+      "avg_lead_time_minutes": 37.1,
+      "median_lead_time_minutes": 42.0,
+      "miss_rate": 0.5714,
+      "detection_rate": 0.4286,
+      "total_events": 147,
+      "detected_events": 63,
+      "missed_events_count": 84,
+      "lookback_window": 5
+    },
+    "Alarm": {
+      "avg_lead_time_minutes": 49.3,
+      "median_lead_time_minutes": 56.0,
+      "miss_rate": 0.8299,
+      "detection_rate": 0.1701,
+      "total_events": 147,
+      "detected_events": 25,
+      "missed_events_count": 122,
+      "lookback_window": 5
+    },
+    "threshold_comparison": [
+      {
+        "threshold": "Watch",
+        "total_events": 147,
+        "detected_events": 117,
+        "missed_events_count": 30,
+        "avg_lead_time_minutes": 23.6,
+        "median_lead_time_minutes": 14.0,
+        "miss_rate": 0.2041,
+        "detection_rate": 0.7959
+      },
+      {
+        "threshold": "Warning",
+        "total_events": 147,
+        "detected_events": 63,
+        "missed_events_count": 84,
+        "avg_lead_time_minutes": 37.1,
+        "median_lead_time_minutes": 42.0,
+        "miss_rate": 0.5714,
+        "detection_rate": 0.4286
+      },
+      {
+        "threshold": "Alarm",
+        "total_events": 147,
+        "detected_events": 25,
+        "missed_events_count": 122,
+        "avg_lead_time_minutes": 49.3,
+        "median_lead_time_minutes": 56.0,
+        "miss_rate": 0.8299,
+        "detection_rate": 0.1701
+      }
+    ]
+  },
+  "fault_group_stratified": [
+    {
+      "fault_group": "High-Voltage",
+      "fault_types": "[4, 5]",
+      "total_events": 164,
+      "detected_events": 47,
+      "missed_events_count": 117,
+      "avg_lead_time_steps": 3.06,
+      "avg_lead_time_minutes": 42.9,
+      "median_lead_time_minutes": 42.0,
+      "miss_rate": 0.7134,
+      "detection_rate": 0.2866,
+      "alert_threshold": "Warning"
+    },
+    {
+      "fault_group": "Thermal",
+      "fault_types": "[3, 6, 7, 8, 9]",
+      "total_events": 184,
+      "detected_events": 61,
+      "missed_events_count": 123,
+      "avg_lead_time_steps": 2.61,
+      "avg_lead_time_minutes": 36.5,
+      "median_lead_time_minutes": 42.0,
+      "miss_rate": 0.6685,
+      "detection_rate": 0.3315,
+      "alert_threshold": "Warning"
+    },
+    {
+      "fault_group": "Subtle",
+      "fault_types": "[1, 2]",
+      "total_events": 164,
+      "detected_events": 47,
+      "missed_events_count": 117,
+      "avg_lead_time_steps": 2.77,
+      "avg_lead_time_minutes": 38.7,
+      "median_lead_time_minutes": 42.0,
+      "miss_rate": 0.7134,
+      "detection_rate": 0.2866,
+      "alert_threshold": "Warning"
+    }
+  ],
+  "walk_forward": {
+    "early_steps_f1_mean": 0.7304,
+    "early_steps_f1_std": 0.0621,
+    "late_steps_f1_mean": 0.7341,
+    "late_steps_f1_std": 0.027,
+    "f1_stability_improvement_pct": 56.6,
+    "convergence_step": 18,
+    "total_folds": 19,
+    "min_train_steps": 10
+  },
+  "config": {
+    "min_normal_before_onset": 2,
+    "lookback_window": 5,
+    "min_train_steps": 10,
+    "test_steps": 1
+  }
+}

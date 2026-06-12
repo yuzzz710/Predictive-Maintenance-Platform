@@ -26,7 +26,7 @@ warnings.filterwarnings("ignore")
 # ============================================================================
 
 CONFIG = {
-    # Z-score thresholds (Baseline 1)
+    # Z-score thresholds (Baseline 1) — default for standard production tier
     "z_thresholds": {
         "watch": 1.5,    # yellow alert
         "warning": 2.0,  # orange alert
@@ -34,6 +34,10 @@ CONFIG = {
     },
     # Minimum normal samples for per-machine baseline
     "min_normal_samples": 6,
+    # Full self-baseline requires >= min_self_samples (>=6 → self, 3-5 → hybrid, <3 → cluster)
+    "min_self_samples": 6,
+    # Hybrid blend: 60% self, 40% cluster for machines with 3-5 normal samples
+    "hybrid_blend_self_ratio": 0.6,
     # IQR multiplier for outlier bounds
     "iqr_multiplier": 1.5,
     # Hotelling T2 confidence level
@@ -45,6 +49,19 @@ CONFIG = {
         "High-Voltage": [4, 5],
         "Thermal": [3, 6, 7, 8, 9],
         "Subtle": [1, 2],
+    },
+    # Layer 2 — Fault-group-differentiated parameter weights for weighted z_composite
+    "fault_group_weights": {
+        "High-Voltage": {"Voltage": 0.50, "Amperage": 0.25, "Temperature": 0.25},
+        "Thermal":      {"Voltage": 0.25, "Amperage": 0.25, "Temperature": 0.50},
+        "Subtle":       {"Voltage": 0.33, "Amperage": 0.33, "Temperature": 0.34},
+        "Normal":       {"Voltage": 0.33, "Amperage": 0.33, "Temperature": 0.34},
+    },
+    # Layer 3 — Production-load tiered thresholds (watch/warning/alarm)
+    "production_tiers": {
+        "critical":  {"watch": 1.3, "warning": 1.8, "alarm": 2.3},
+        "standard":  {"watch": 1.5, "warning": 2.0, "alarm": 2.5},
+        "auxiliary": {"watch": 1.6, "warning": 2.1, "alarm": 2.6},
     },
     # Cost risk thresholds (P75 and P90 of cost_at_risk distribution)
     "cost_risk": {
@@ -205,10 +222,22 @@ def build_cost_risk_matrix(df_log: pd.DataFrame, df_summary: pd.DataFrame) -> pd
         merged["failure_rate"] * merged["Unit Cost of Production"] * merged["Units Produced Per day"] / 100
     )
 
-    thresholds = CONFIG["cost_risk"]
+    # Data-driven thresholds: P75/P90 of actual cost_at_risk distribution.
+    # Falls back to CONFIG hardcoded values when data is too sparse (< 10 devices),
+    # ensuring robustness across different datasets and small-sample edge cases.
+    cost_values = merged["cost_at_risk"].dropna().values
+    if len(cost_values) >= 10:
+        p50, p75, p90 = np.percentile(cost_values, [50, 75, 90])
+        high_cut = p90
+        medium_cut = p75
+    else:
+        thresholds = CONFIG["cost_risk"]
+        high_cut = thresholds["high"]
+        medium_cut = thresholds["medium"]
+
     merged["risk_tier"] = "Low"
-    merged.loc[merged["cost_at_risk"] > thresholds["medium"], "risk_tier"] = "Medium"
-    merged.loc[merged["cost_at_risk"] > thresholds["high"], "risk_tier"] = "High"
+    merged.loc[merged["cost_at_risk"] >= medium_cut, "risk_tier"] = "Medium"
+    merged.loc[merged["cost_at_risk"] >= high_cut, "risk_tier"] = "High"
 
     return merged.sort_values("cost_at_risk", ascending=False).reset_index(drop=True)
 
@@ -344,6 +373,189 @@ def cluster_machines(df_log: pd.DataFrame) -> pd.DataFrame:
     profiles["cluster"] = kmeans.fit_predict(X_scaled)
 
     return profiles
+
+
+# ============================================================================
+# SECTION 6b: Layered Dynamic Baseline (3-Layer Extension)
+# ============================================================================
+
+def build_cluster_baselines(df_log, clusters_df):
+    """
+    Compute cluster-level mu/sigma from normal-operation samples.
+    Used as fallback for sparse machines (< 6 normal samples).
+    """
+    params = CONFIG["params"]
+    normal = df_log[df_log["Failure.Equipment.Type"] == 0].copy()
+    normal = normal.merge(clusters_df[["Equipment.Id", "cluster"]], on="Equipment.Id", how="left")
+
+    cluster_stats = {}
+    for c in sorted(clusters_df["cluster"].unique()):
+        c_normal = normal[normal["cluster"] == c]
+        if len(c_normal) < 3:
+            continue
+        stats = {}
+        for p in params:
+            p_short = p.split(".")[1]
+            stats[f"{p_short}_mu"] = float(c_normal[p].mean())
+            stats[f"{p_short}_sigma"] = max(float(c_normal[p].std()), 0.5)
+        cluster_stats[c] = stats
+    return cluster_stats
+
+
+def assign_production_tier(summary_df):
+    """
+    Assign each machine to a production tier based on daily output.
+    Top 25% → critical, Middle 50% → standard, Bottom 25% → auxiliary.
+    """
+    daily = summary_df[["Equipment.Id", "Units Produced Per day"]].copy()
+    p25 = daily["Units Produced Per day"].quantile(0.25)
+    p75 = daily["Units Produced Per day"].quantile(0.75)
+
+    def _tier(output):
+        if output >= p75:
+            return "critical"
+        elif output >= p25:
+            return "standard"
+        return "auxiliary"
+
+    daily["production_tier"] = daily["Units Produced Per day"].apply(_tier)
+    return daily[["Equipment.Id", "production_tier"]]
+
+
+def build_layered_baseline(df_log, summary_df):
+    """
+    Build per-machine baseline with 3-layer enhancement:
+      Layer 1 — Cluster fallback for sparse machines
+      Layer 3 — Production-tier assignment (thresholds applied at z-score time)
+
+    Returns baseline DataFrame indexed by Equipment.Id with additional columns:
+      baseline_source, cluster, production_tier
+    """
+    params = CONFIG["params"]
+
+    # 1. Self-baseline (original per-machine stats)
+    self_baseline = build_per_machine_baseline(df_log)
+
+    # 2. Machine clusters
+    clusters_df = cluster_machines(df_log)
+
+    # 3. Cluster-level baselines
+    cluster_stats = build_cluster_baselines(df_log, clusters_df)
+
+    # 4. Production tiers
+    tiers_df = assign_production_tier(summary_df)
+
+    # 5. Merge
+    baseline = self_baseline.reset_index().merge(
+        clusters_df[["Equipment.Id", "cluster"]], on="Equipment.Id", how="left"
+    )
+    baseline = baseline.merge(tiers_df, on="Equipment.Id", how="left")
+    baseline["cluster"] = baseline["cluster"].fillna(0)
+    baseline["production_tier"] = baseline["production_tier"].fillna("standard")
+
+    # 6. Layer 1: Apply cluster fallback for sparse/hybrid machines
+    cfg = CONFIG
+    for p in params:
+        p_short = p.split(".")[1]
+        mu_col = f"{p}_mu"
+        sigma_col = f"{p}_sigma"
+
+        for idx, row in baseline.iterrows():
+            n_normal = row["n_normal_total"]
+            cid = row["cluster"]
+
+            if n_normal >= cfg["min_self_samples"]:
+                baseline.at[idx, "baseline_source"] = "self"
+            elif n_normal >= 3 and cid in cluster_stats:
+                baseline.at[idx, "baseline_source"] = "hybrid"
+                cs = cluster_stats[cid]
+                alpha = cfg["hybrid_blend_self_ratio"]
+                baseline.at[idx, mu_col] = (
+                    alpha * row[mu_col] + (1 - alpha) * cs.get(f"{p_short}_mu", row[mu_col])
+                )
+                self_sig = row[sigma_col] if row[sigma_col] > 1e-6 else 1.0
+                cluster_sig = cs.get(f"{p_short}_sigma", self_sig)
+                baseline.at[idx, sigma_col] = max(self_sig, cluster_sig * 0.8)
+            elif cid in cluster_stats:
+                baseline.at[idx, "baseline_source"] = "cluster"
+                cs = cluster_stats[cid]
+                baseline.at[idx, mu_col] = cs.get(f"{p_short}_mu", row[mu_col])
+                baseline.at[idx, sigma_col] = max(cs.get(f"{p_short}_sigma", 1.0), 0.5)
+            else:
+                baseline.at[idx, "baseline_source"] = "self"
+
+    return baseline.set_index("Equipment.Id")
+
+
+def compute_layered_z_scores(df_log, baseline):
+    """
+    Compute z-scores with all 3 layers applied:
+      Layer 1 — Cluster-fallback mu/sigma (already in baseline)
+      Layer 2 — Fault-group-differentiated weighted z_composite
+      Layer 3 — Production-tier-specific alert thresholds
+
+    Output columns added beyond original: baseline_source, cluster,
+    production_tier, failure_group, z_weighted_composite,
+    alert_threshold_watch, alert_threshold_alarm
+    """
+    params = CONFIG["params"]
+    p_short_map = {p: p.split(".")[1] for p in params}
+
+    merge_cols = []
+    for p in params:
+        merge_cols.append(f"{p}_mu")
+        merge_cols.append(f"{p}_sigma")
+    merge_cols += ["baseline_source", "cluster", "production_tier"]
+
+    df = df_log.merge(
+        baseline[merge_cols].reset_index(),
+        on="Equipment.Id", how="left",
+    )
+
+    # Individual z-scores
+    for p in params:
+        p_short = p_short_map[p]
+        sigma_safe = df[f"{p}_sigma"].replace(0, 1e-6)
+        df[f"z_{p_short}"] = (df[p] - df[f"{p}_mu"]) / sigma_safe
+
+    # Standard equal-weight composite
+    z_cols = [f"z_{p_short_map[p]}" for p in params]
+    df["z_composite"] = np.sqrt((df[z_cols] ** 2).sum(axis=1))
+
+    # Layer 2: Fault-group weighted composite
+    fg_map = {}
+    for gname, ftypes in CONFIG["failure_groups"].items():
+        for ft in ftypes:
+            fg_map[ft] = gname
+    df["failure_group"] = df["Failure.Equipment.Type"].map(fg_map).fillna("Normal")
+
+    fg_weights = CONFIG["fault_group_weights"]
+    w_volt = df["failure_group"].map(lambda g: fg_weights.get(g, {}).get("Voltage", 0.33))
+    w_amp = df["failure_group"].map(lambda g: fg_weights.get(g, {}).get("Amperage", 0.33))
+    w_temp = df["failure_group"].map(lambda g: fg_weights.get(g, {}).get("Temperature", 0.34))
+
+    df["z_weighted_composite"] = np.sqrt(
+        w_volt * df["z_Voltage"]**2 +
+        w_amp * df["z_Amperage"]**2 +
+        w_temp * df["z_Temperature"]**2
+    )
+
+    # Layer 3: Production-tier-specific thresholds
+    tier_cfg = CONFIG["production_tiers"]
+    df["alert_level"] = "Normal"
+
+    for tier, tcfg in tier_cfg.items():
+        mask = df["production_tier"] == tier
+        df.loc[mask & (df["z_composite"] > tcfg["watch"]), "alert_level"] = "Watch"
+        df.loc[mask & (df["z_composite"] > tcfg["warning"]), "alert_level"] = "Warning"
+        df.loc[mask & (df["z_composite"] > tcfg["alarm"]), "alert_level"] = "Alarm"
+
+    df["alert_threshold_watch"] = df["production_tier"].map(
+        lambda t: tier_cfg.get(t, tier_cfg["standard"])["watch"])
+    df["alert_threshold_alarm"] = df["production_tier"].map(
+        lambda t: tier_cfg.get(t, tier_cfg["standard"])["alarm"])
+
+    return df
 
 
 # ============================================================================
@@ -489,16 +701,22 @@ def run_baseline_pipeline(data_dir: str = ".") -> dict:
     print("\n[1/8] Loading datasets...")
     data = load_data(data_dir)
 
-    # Build per-machine baseline
-    print("\n[2/8] Building per-machine statistical baseline...")
-    baseline = build_per_machine_baseline(data["log"])
-    n_sparse = (baseline["baseline_quality"] == "sparse").sum()
-    n_stable = (baseline["baseline_quality"] == "stable").sum()
-    print(f"  → {n_stable} stable baselines, {n_sparse} sparse (need cluster fallback)")
+    # Build per-machine baseline (Layered: cluster fallback + production tiers)
+    print("\n[2/8] Building layered per-machine baseline (cluster fallback + production tiers)...")
+    baseline = build_layered_baseline(data["log"], data["summary"])
+    src_dist = baseline["baseline_source"].value_counts()
+    for src in ["self", "hybrid", "cluster"]:
+        if src in src_dist:
+            print(f"  → baseline_source={src}: {src_dist[src]} machines")
+    tier_dist = baseline["production_tier"].value_counts()
+    for tier in ["critical", "standard", "auxiliary"]:
+        if tier in tier_dist:
+            tc = CONFIG["production_tiers"][tier]
+            print(f"  → production_tier={tier}: {tier_dist[tier]} machines (watch={tc['watch']}, alarm={tc['alarm']})")
 
-    # Compute z-scores
-    print("\n[3/8] Computing per-machine z-scores...")
-    df_z = compute_z_scores(data["log"], baseline)
+    # Compute z-scores (Layered: tiered thresholds + fault-group weights)
+    print("\n[3/8] Computing layered z-scores (tiered thresholds + fault-group weights)...")
+    df_z = compute_layered_z_scores(data["log"], baseline)
     z_eval = evaluate_z_baseline(df_z)
     best = z_eval["best_f1"]
     print(f"  → Best F1={best['f1']:.3f} at threshold z>{best['threshold']}")

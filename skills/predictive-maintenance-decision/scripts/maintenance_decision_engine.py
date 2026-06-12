@@ -21,7 +21,7 @@ Date   : 2026-05-17
 
 import numpy as np
 import pandas as pd
-import os, json, warnings
+import os, json, sys, warnings
 from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass, field
 from enum import Enum
@@ -82,6 +82,12 @@ class WorkOrder:
     recommended_window_days: int
     expected_savings: float  # cost avoided by acting
     maintenance_suggestion: str
+    # SHAP explainability fields (populated by shap_postprocess after decision)
+    top_risk_factor_1: str = ""
+    top_risk_factor_2: str = ""
+    top_risk_factor_3: str = ""
+    shap_explanation: str = ""
+    shap_risk_summary: str = ""
 
 
 # ============================================================================
@@ -116,12 +122,17 @@ class MaintenanceDecisionEngine:
             config: Override default configuration
         """
         self.config = {
-            # Layer 1: Input fusion weights
+            # Layer 1: Input fusion weights (4-signal, for RUL-unavailable fallback)
             "fusion": {
                 "ml_density_weight": 0.25,     # reduced from 0.40 — ML is weak
                 "stat_anomaly_weight": 0.40,    # increased — Z-Score is our best signal
                 "cost_risk_weight": 0.25,       # cost stays important
                 "trend_weight": 0.10,           # new: trend signals
+                # v3.1: 5-signal fusion weights (used when RUL is available)
+                "ml_density_weight_v3": 0.20,
+                "stat_anomaly_weight_v3": 0.35,
+                "cost_risk_weight_v3": 0.20,
+                "rul_urgency_weight": 0.15,
             },
 
             # Layer 2: Diagnostic thresholds
@@ -145,6 +156,7 @@ class MaintenanceDecisionEngine:
             # Layer 4: Work order configuration
             "work_order": {
                 "max_orders_per_cycle": 20,
+                "max_budget": 0,               # 0 = unlimited; >0 = budget cap in USD
                 "preventive_cost_ratio": 0.30,  # preventive costs 30% of corrective
                 "emergency_cost_multiplier": 3.0,  # emergency repair costs 3x
             },
@@ -223,6 +235,9 @@ class MaintenanceDecisionEngine:
 
         Each individual signal is weak (AUC ~0.5-0.6), but combined they provide
         a more reliable risk indicator than any single source.
+
+        v3.1: Added RUL urgency as 5th signal (0.15 weight).
+        When RUL is unavailable, automatically falls back to 4-signal fusion.
         """
         w = self.config["fusion"]
 
@@ -261,12 +276,32 @@ class MaintenanceDecisionEngine:
             0, 1
         )
 
-        risk_score = (
-            w["ml_density_weight"] * ml_sig +
-            w["stat_anomaly_weight"] * stat_sig +
-            w["cost_risk_weight"] * cost_sig +
-            w["trend_weight"] * trend_sig
-        )
+        # RUL urgency signal (v3.1): shorter RUL → higher urgency
+        rul_days = signals.get("rul_days", None)
+        rul_available = rul_days is not None and not np.isnan(float(rul_days))
+
+        if rul_available:
+            # RUL urgency: 0 = RUL > 30 days (no urgency), 1 = RUL <= 0 (critical)
+            rul_days_val = float(rul_days)
+            rul_urgency = max(0.0, 1.0 - min(rul_days_val, 30.0) / 30.0)
+
+            # 5-signal fusion weights (v3.1)
+            risk_score = (
+                w.get("ml_density_weight_v3", 0.20) * ml_sig +
+                w.get("stat_anomaly_weight_v3", 0.35) * stat_sig +
+                w.get("cost_risk_weight_v3", 0.20) * cost_sig +
+                w.get("trend_weight", 0.10) * trend_sig +
+                w.get("rul_urgency_weight", 0.15) * rul_urgency
+            )
+        else:
+            # Fallback: 4-signal fusion (RUL unavailable — auto-degrade)
+            # Use existing weights (sum to 1.0)
+            risk_score = (
+                w["ml_density_weight"] * ml_sig +
+                w["stat_anomaly_weight"] * stat_sig +
+                w["cost_risk_weight"] * cost_sig +
+                w["trend_weight"] * trend_sig
+            )
 
         return float(np.clip(risk_score, 0, 1))
 
@@ -506,6 +541,27 @@ class MaintenanceDecisionEngine:
         max_orders = self.config["work_order"]["max_orders_per_cycle"]
         active = active[:max_orders]
 
+        # Budget-constrained optimization (0/1 knapsack greedy by cost-efficiency)
+        max_budget = self.config["work_order"].get("max_budget", 0)
+        if max_budget > 0:
+            ratio = self.config["work_order"]["preventive_cost_ratio"]
+            # Compute preventive cost and cost-efficiency for each candidate
+            for d in active:
+                d._preventive_cost = d.estimated_cost_at_risk * ratio
+                d._cost_efficiency = d.urgency_score / max(d._preventive_cost, 1.0)
+            # Sort by cost-efficiency (urgency per dollar) descending
+            active.sort(key=lambda d: d._cost_efficiency, reverse=True)
+            # Greedy selection within budget
+            budgeted = []
+            spent = 0.0
+            for d in active:
+                if spent + d._preventive_cost <= max_budget:
+                    budgeted.append(d)
+                    spent += d._preventive_cost
+            # Re-sort budgeted by urgency for final priority ranking
+            budgeted.sort(key=lambda d: (d.urgency_score, d.estimated_cost_at_risk), reverse=True)
+            active = budgeted
+
         work_orders = []
         for rank, decision in enumerate(active, 1):
             # Expected savings = (emergency cost - preventive cost) if we act now
@@ -539,47 +595,48 @@ class MaintenanceDecisionEngine:
         daily_value = unit_cost * daily_output
         risk_tier = cost_info.get("risk_tier", "Medium")
 
+        risk_tier_cn = {"High": "高", "Medium": "中", "Low": "低"}.get(risk_tier, risk_tier)
+
         if decision.action_type == ActionType.PREVENTIVE_REPAIR:
             return (
-                f"[{risk_tier} Risk Tier] Preventive repair within {decision.recommended_window_days} day(s). "
-                f"Daily production value at risk: ${daily_value:,.0f}. "
-                f"Cost avoidance by acting now vs. emergency repair: ~${decision.estimated_cost_at_risk * 0.7:,.0f}. "
-                f"Key concern: {decision.reasoning[0] if decision.reasoning else 'elevated parameters'}. "
-                f"Recommend: deploy vibration analysis + thermal scan during intervention."
+                f"[{risk_tier_cn}风险等级] {decision.recommended_window_days}日内执行预防性维修。"
+                f"日产值风险：${daily_value:,.0f}。"
+                f"立即处理可避免紧急维修成本约：~${decision.estimated_cost_at_risk * 0.7:,.0f}。"
+                f"重点关注：{decision.reasoning[0] if decision.reasoning else '参数异常'}"
             )
 
         elif decision.action_type == ActionType.SCHEDULE_INSPECTION:
-            focus = decision.reasoning[0] if decision.reasoning else 'parameter deviation'
+            focus = decision.reasoning[0] if decision.reasoning else '参数偏移'
             return (
-                f"[{risk_tier} Risk Tier] Schedule inspection within {decision.recommended_window_days} day(s). "
-                f"Focus: {focus}. "
-                f"Daily value at stake: ${daily_value:,.0f}. "
-                f"Recommended checks: electrical signature analysis, thermal imaging, physical inspection."
+                f"[{risk_tier_cn}风险等级] {decision.recommended_window_days}日内安排检查。"
+                f"重点项：{focus}。"
+                f"日产值风险：${daily_value:,.0f}。"
+                f"建议检查项：电气特征分析、热成像、物理检查。"
             )
 
         elif decision.action_type == ActionType.INCREASE_MONITORING:
             return (
-                f"Increase monitoring to every {decision.recommended_window_days} day(s). "
-                f"Track: {decision.reasoning[0] if decision.reasoning else 'all parameters'}. "
-                f"Escalate to inspection if parameters continue to drift."
+                f"加密监控至每{decision.recommended_window_days}日一次。"
+                f"跟踪指标：{decision.reasoning[0] if decision.reasoning else '全部参数'}。"
+                f"如参数继续偏移，升级为安排检查。"
             )
 
         elif decision.action_type == ActionType.ROUTINE_CHECK:
             return (
-                f"Continue routine maintenance (next check in {decision.recommended_window_days} days). "
-                f"Cost at risk: ${decision.estimated_cost_at_risk:,.0f}. Baseline monitoring sufficient."
+                f"继续常规维护（{decision.recommended_window_days}日后下次检查）。"
+                f"风险成本：${decision.estimated_cost_at_risk:,.0f}。基线监控即可。"
             )
 
         elif decision.action_type == ActionType.IMMEDIATE_SHUTDOWN:
             return (
-                f"*** IMMEDIATE SHUTDOWN *** Parameter deviation is critical. "
-                f"Daily production exposure: ${daily_value:,.0f}. "
-                f"Initiate emergency protocol. Contact maintenance supervisor immediately. "
-                f"Root cause suspects: {decision.reasoning[0] if decision.reasoning else 'severe parameter deviation'}."
+                f"*** 立即停机 *** 参数偏离已达临界值。"
+                f"日产值暴露：${daily_value:,.0f}。"
+                f"启动应急预案，立即联系维护主管。"
+                f"根因推测：{decision.reasoning[0] if decision.reasoning else '严重参数偏离'}。"
             )
 
         else:
-            return "No action required. Standard monitoring per maintenance schedule."
+            return "无需处理。按维护计划进行标准监控。"
 
     # ========================================================================
     # Main evaluation entry point
@@ -760,6 +817,19 @@ class MaintenanceDecisionEngine:
 
 def build_signal_from_row(row: dict, cost_data: dict = None) -> dict:
     """Construct the signals dict expected by MaintenanceDecisionEngine from a data row."""
+    # RUL days: accept rul_days, rul_hours, or compute from rul_steps
+    rul_days = None
+    if "rul_days" in row:
+        rul_days = row.get("rul_days")
+    elif "rul_hours" in row:
+        rul_hours = row.get("rul_hours")
+        if rul_hours is not None and not (isinstance(rul_hours, float) and np.isnan(rul_hours)):
+            rul_days = float(rul_hours) / 24.0
+    elif "rul_steps" in row:
+        rul_steps = row.get("rul_steps")
+        if rul_steps is not None and not (isinstance(rul_steps, float) and np.isnan(rul_steps)):
+            rul_days = float(rul_steps) * 14.0 / (60.0 * 24.0)  # steps * 14min → days
+
     signals = {
         "machine_id": str(row.get("machine_id", row.get("Equipment.Id", "unknown"))),
         "ml_fault_density": float(row.get("fault_density_pred", row.get("P_fault_5steps", 0.7))),
@@ -773,6 +843,7 @@ def build_signal_from_row(row: dict, cost_data: dict = None) -> dict:
         "temp_trend_slope": float(row.get("t_slope", 0)),
         "amperage_trend_slope": float(row.get("a_slope", 0)),
         "cost_at_risk": float(row.get("cost_at_risk", 5000)),
+        "rul_days": rul_days,
     }
     return signals
 
@@ -885,6 +956,388 @@ def run_demo():
         return engine, batch_df
 
     return engine, None
+
+
+# ============================================================================
+# Industrial Maintenance Extension (v4 — added 2026-05-27)
+# ============================================================================
+# The classes below extend the existing 4-layer engine with 5 new industrial
+# layers WITHOUT modifying any existing code paths.
+#
+# Layer 5 — StrategySelector:      multi-strategy threshold adaptation
+# Layer 6 — TechnicianAssigner:    technician type/count/duration assignment
+# Layer 7 — SparePartsPlanner:     fault→parts recommendation
+# Layer 8 — DowntimeOptimizer:     risk-aware downtime window scheduling
+# Layer 9 — AcceptanceValidator:   post-repair verification criteria
+# ============================================================================
+
+
+@dataclass
+class IndustrialWorkOrder:
+    """
+    Industrial-grade maintenance work order — 22 fields for direct execution.
+
+    Extends the original WorkOrder (9 fields) with technician assignment,
+    spare parts, downtime scheduling, acceptance criteria, and SLA targets.
+    All fields are derivable from existing pipeline outputs + new engines.
+    """
+    machine_id: str
+    anomaly_score: float = 0.0
+    health_score: float = 50.0
+    maintenance_priority: str = "P3"          # P1 / P2 / P3
+    maintenance_strategy: str = "production_efficiency"
+    predicted_risk: str = "NORMAL"            # ALARM / WARNING / WATCH / NORMAL
+    primary_pattern: str = "normal"
+    recommended_action: str = "no_action"
+    spare_parts: str = "[]"                   # JSON array string
+    technician_type: str = "junior_technician"
+    technician_count: int = 1
+    estimated_duration_hours: float = 1.0
+    recommended_downtime_window: str = "scheduled"
+    downtime_start: str = ""
+    production_impact: float = 0.0
+    estimated_cost: float = 0.0
+    acceptance_standard: str = ""
+    sla_target_hours: float = 72.0
+    trigger_threshold: str = ""
+    execution_status: str = "pending"
+    reasoning: str = ""
+    maintenance_suggestion: str = ""
+
+    priority: int = 99
+    alert_level: str = "NORMAL"
+    action_type: str = "no_action"
+    cost_at_risk: float = 0.0
+    urgency_score: float = 0.0
+    recommended_window_days: int = 30
+    expected_savings: float = 0.0
+    # SHAP explainability fields (populated by shap_postprocess after decision)
+    top_risk_factor_1: str = ""
+    top_risk_factor_2: str = ""
+    top_risk_factor_3: str = ""
+    shap_explanation: str = ""
+    shap_risk_summary: str = ""
+
+
+class IndustrialMaintenanceEngine(MaintenanceDecisionEngine):
+    """
+    Industrial-grade maintenance engine extending the base 4-layer engine.
+
+    Adds 5 new layers (Strategy, Technician, SpareParts, Downtime, Acceptance)
+    via composable engine modules. All existing evaluate(), generate_work_orders(),
+    and fuse_signals() paths remain unchanged.
+
+    Usage:
+        engine = IndustrialMaintenanceEngine(
+            cost_risk_data=cost_df,
+            strategy="production_efficiency",
+            health_score_df=health_df,
+        )
+        plan_df = engine.generate_industrial_plan(signal_list)
+    """
+
+    def __init__(self, cost_risk_data: pd.DataFrame = None,
+                 config: dict = None,
+                 strategy: str = "production_efficiency",
+                 health_score_df: pd.DataFrame = None):
+        """
+        Args:
+            cost_risk_data: DataFrame from cost_risk_matrix.csv
+            config: Override for base engine configuration
+            strategy: "cost_efficiency" | "production_efficiency" | "quality_first"
+            health_score_df: DataFrame from equipment_health_score.csv
+        """
+        super().__init__(cost_risk_data, config)
+
+        # Lazy-import new engine modules (same directory)
+        _here = os.path.dirname(os.path.abspath(__file__))
+        if _here not in sys.path:
+            sys.path.insert(0, _here)
+
+        from strategy_selector import (
+            MaintenanceStrategy, StrategySelector, STRATEGY_CONFIGS,
+        )
+        from technician_assigner import TechnicianAssigner
+        from spare_parts_planner import SparePartsPlanner
+        from downtime_optimizer import DowntimeOptimizer
+        from acceptance_validator import AcceptanceValidator
+
+        self._ms = MaintenanceStrategy
+        self._strat_enum = self._ms(strategy)
+        self.strategy_selector = StrategySelector(self._strat_enum)
+
+        # OR optimization: override budget/orders from config if provided
+        max_budget_override = (
+            config.get("work_order", {}).get("max_budget", 0) if config else 0
+        )
+        max_orders_override = (
+            config.get("work_order", {}).get("max_orders_per_cycle", 0) if config else 0
+        )
+        if max_budget_override > 0:
+            self.strategy_selector._or_max_budget = max_budget_override
+        if max_orders_override > 0 and max_orders_override != self.strategy_selector.config.max_orders:
+            self.strategy_selector._or_max_orders = max_orders_override
+        self.tech_assigner = TechnicianAssigner()
+        self.parts_planner = SparePartsPlanner()
+        self.downtime_optimizer = DowntimeOptimizer(self.strategy_selector.config)
+        self.acceptance_validator = AcceptanceValidator()
+
+        # Load health scores
+        self.health_scores: Dict[str, float] = {}
+        if health_score_df is not None:
+            id_col = ("Equipment.Id" if "Equipment.Id" in health_score_df.columns
+                      else "machine_id")
+            hs_col = ("health_score" if "health_score" in health_score_df.columns
+                      else "Health_Score")
+            for _, row in health_score_df.iterrows():
+                mid = str(row[id_col])
+                self.health_scores[mid] = float(row.get(hs_col, 50.0))
+
+    # ── Public API ──────────────────────────────────────────────────────
+
+    def generate_industrial_plan(self, signal_list: List[dict],
+                                  reference_date=None) -> pd.DataFrame:
+        """
+        Generate the full 22-column industrial maintenance plan.
+
+        Execution flow:
+          1. Base engine Layer 1-2: fuse_signals() + diagnose() per machine
+          2. StrategySelector: filter/re-rank by strategy thresholds
+          3. For each prioritized machine:
+             a. TechnicianAssigner: assign tech + estimate duration
+             b. SparePartsPlanner: recommend parts
+             c. DowntimeOptimizer: select downtime window
+             d. AcceptanceValidator: get acceptance criteria
+          4. Assemble IndustrialWorkOrder rows → DataFrame
+
+        Args:
+            signal_list: List of signal dicts (same format as engine.evaluate())
+            reference_date: Reference timestamp for downtime scheduling
+
+        Returns:
+            DataFrame with 22 columns per industrial_maintenance_plan.csv schema
+        """
+        sc = self.strategy_selector
+
+        # Step 1+2: Evaluate through base engine, filter by strategy
+        filtered = sc.apply_strategy_thresholds(signal_list, self)
+
+        # Step 3: Build industrial rows
+        rows: List[dict] = []
+        ref_date = reference_date or pd.Timestamp.now()
+
+        # Sort by risk_score descending
+        filtered_sorted = sorted(filtered, key=lambda e: e["risk_score"], reverse=True)
+
+        for rank, entry in enumerate(filtered_sorted, 1):
+            row = self._build_industrial_row(entry, ref_date, rank)
+            rows.append(row)
+
+        # Assemble DataFrame
+        df = pd.DataFrame(rows)
+        if "anomaly_score" in df.columns and len(df) > 0:
+            df = df.sort_values("anomaly_score", ascending=False).reset_index(drop=True)
+        return df
+
+    def _build_industrial_row(self, entry: dict, reference_date,
+                               rank: int) -> dict:
+        """Build a single row of the industrial maintenance plan."""
+        s = entry["signals"]
+        risk = entry["risk_score"]
+        diag = entry["diagnosis"]
+        level = entry["alert_level"]
+
+        mid = str(s.get("machine_id", "unknown"))
+        sc = self.strategy_selector
+        cfg = sc.config
+
+        # ── Priority ──
+        if level.value >= 3:                     # ALARM
+            mp = "P1"
+        elif level.value >= 2:                   # WARNING
+            mp = "P2"
+        else:
+            mp = "P3"
+
+        # ── Action mapping ──
+        action = self._map_action_for_industrial(risk, diag, s, level)
+
+        # ── Technician (cost-aware: low-value machines get downgraded) ──
+        risk_tier = self.cost_data.get(mid, {}).get("risk_tier", "Medium")
+        cost_val = float(s.get("cost_at_risk", self.cost_p50))
+        tech = self.tech_assigner.assign(
+            diag.primary_pattern, level.name, action, risk_tier,
+            cost_at_risk=cost_val, cost_p50=self.cost_p50,
+        )
+
+        # ── Duration ──
+        severity = min(2.0, 1.0 + max(
+            abs(s.get("z_v", 0)), abs(s.get("z_a", 0)), abs(s.get("z_t", 0))
+        ) / 5.0)
+        hours = self.tech_assigner.estimate_duration(
+            action, tech.get("count", 1), severity,
+        )
+
+        # ── Spare Parts ──
+        parts = self.parts_planner.recommend(
+            diag.primary_pattern,
+            z_v=s.get("z_v", 0),
+            z_a=s.get("z_a", 0),
+            z_t=s.get("z_t", 0),
+        )
+        parts_cost = self.parts_planner.estimate_parts_cost(parts)
+        parts_names = [p.get("name", "unknown") for p in parts]
+
+        # ── Production Impact ──
+        ci = self.cost_data.get(mid, {})
+        daily_output = ci.get("daily_output", 1000)
+        unit_cost = ci.get("unit_cost", 5)
+        prod_impact = self.downtime_optimizer.get_production_impact(
+            daily_output, unit_cost, hours,
+        )
+
+        # ── Downtime Window ──
+        urgency = self._calc_industrial_urgency(risk, s, level)
+        cost_at_risk_val = float(s.get("cost_at_risk", 5000))
+
+        window, reasons = self.downtime_optimizer.optimize(
+            urgency_score=urgency,
+            cost_at_risk=cost_at_risk_val,
+            production_impact=prod_impact,
+            estimated_duration_hours=hours,
+            risk_tier=risk_tier,
+            primary_pattern=diag.primary_pattern,
+        )
+        dts = self.downtime_optimizer.calculate_downtime_start(window, reference_date)
+
+        # ── Acceptance ──
+        criteria = self.acceptance_validator.get_acceptance_criteria(
+            diag.primary_pattern,
+        )
+        acc_text = self.acceptance_validator.format_acceptance_standard(criteria)
+
+        # ── Costs ──
+        labor_cost = self.tech_assigner.estimate_labor_cost(
+            tech.get("type", "junior_technician"), hours,
+        )
+        preventive_cost = cost_at_risk_val * self.config["work_order"]["preventive_cost_ratio"]
+        total_cost = preventive_cost + parts_cost + labor_cost
+
+        # ── SLA ──
+        sla = cfg.get_sla(mp)
+
+        # ── Health Score ──
+        hs = self.health_scores.get(mid, 50.0)
+
+        # ── Assemble ──
+        return {
+            "machine_id": mid,
+            "anomaly_score": round(risk, 4),
+            "health_score": hs,
+            "maintenance_priority": mp,
+            "maintenance_strategy": cfg.strategy.value,
+            "predicted_risk": level.name,
+            "primary_pattern": diag.primary_pattern,
+            "recommended_action": action,
+            "spare_parts": json.dumps(parts_names, ensure_ascii=False),
+            "technician_type": tech.get("type", "junior_technician"),
+            "technician_count": tech.get("count", 1),
+            "tech_cost_tier": tech.get("cost_tier", "standard"),
+            "tech_labor_savings": tech.get("labor_savings_per_hour", 0.0),
+            "estimated_duration_hours": round(hours, 1),
+            "recommended_downtime_window": window.value,
+            "downtime_start": str(dts),
+            "production_impact": round(prod_impact, 2),
+            "estimated_cost": round(total_cost, 2),
+            "acceptance_standard": acc_text,
+            "sla_target_hours": float(sla),
+            "trigger_threshold": sc.get_threshold_description(),
+            "execution_status": "pending",
+            "reasoning": "; ".join(reasons),
+            "maintenance_suggestion": self._industrial_suggestion(
+                mid, level, diag, action, hours, window, parts_names, total_cost
+            ),
+            # Backward-compatible fields
+            "priority": rank,
+            "alert_level": level.name,
+            "action_type": action,
+            "cost_at_risk": cost_at_risk_val,
+            "urgency_score": urgency,
+            "recommended_window_days": max(1, int(hours / 8) + 1),
+            "expected_savings": round(cost_at_risk_val * 0.7, 2),
+        }
+
+    # ── Helpers ─────────────────────────────────────────────────────────
+
+    def _map_action_for_industrial(self, risk_score: float,
+                                    diagnosis, signals: dict,
+                                    alert_level) -> str:
+        """Map risk + diagnosis to an action type string."""
+        z_max = float(signals.get("z_comp_max", 0))
+        if z_max >= 10.0:
+            return "immediate_shutdown"
+        if alert_level.value >= 3:  # ALARM
+            if z_max >= 8.0:
+                return "preventive_repair"
+            return "schedule_inspection"
+        if alert_level.value >= 2:  # WARNING
+            if diagnosis.primary_pattern in ("thermal_buildup", "voltage_drift",
+                                              "power_anomaly", "combined_degradation"):
+                return "schedule_inspection"
+            return "increase_monitoring"
+        if alert_level.value >= 1:  # WATCH
+            return "increase_monitoring" if diagnosis.primary_pattern != "normal" else "routine_check"
+        return "no_action"
+
+    def _calc_industrial_urgency(self, risk_score: float, signals: dict,
+                                  alert_level) -> float:
+        """Calculate urgency score (0-100) for the industrial plan."""
+        base = {3: 85, 2: 55, 1: 30, 0: 5}.get(alert_level.value, 5)
+        cost = float(signals.get("cost_at_risk", self.cost_p50))
+        if cost >= self.config["decision"]["critical_cost_threshold"]:
+            base *= 1.4
+        elif cost >= self.config["decision"]["high_cost_threshold"]:
+            base *= 1.2
+        elif cost < self.cost_p50:
+            base *= 0.8
+        return round(min(100.0, base), 1)
+
+    def _industrial_suggestion(self, machine_id: str, alert_level,
+                                diagnosis, action: str, hours: float,
+                                window, parts_names: List[str],
+                                total_cost: float) -> str:
+        """Generate industrial-grade maintenance suggestion text (Chinese)."""
+        ci = self.cost_data.get(machine_id, {})
+        risk_tier = ci.get("risk_tier", "Medium")
+        risk_tier_cn = {"High": "高", "Medium": "中", "Low": "低"}.get(risk_tier, risk_tier)
+        daily_value = ci.get("unit_cost", 5) * ci.get("daily_output", 1000)
+        parts_str = ", ".join(parts_names[:3]) if parts_names else "无"
+
+        action_cn = {
+            "immediate_shutdown": "立即停机", "preventive_repair": "预防维修",
+            "schedule_inspection": "安排检查", "increase_monitoring": "加密监控",
+            "routine_check": "常规检查", "no_action": "无需操作",
+        }.get(action, action.replace("_", " "))
+
+        window_cn = {
+            "immediate_shutdown": "立即停机", "night": "夜间", "weekend": "周末",
+            "next_gap": "下次间隙", "scheduled": "计划内",
+        }.get(window.value if hasattr(window, 'value') else str(window), str(window))
+
+        pattern_cn = {
+            "thermal_buildup": "热累积", "combined_degradation": "综合退化",
+            "voltage_drift": "电压漂移", "power_anomaly": "功率异常",
+            "normal": "正常",
+        }.get(diagnosis.primary_pattern, diagnosis.primary_pattern)
+
+        return (
+            f"[{risk_tier_cn}风险等级 | {window_cn}窗口] "
+            f"{action_cn}：预计{hours}h，"
+            f"备件=[{parts_str}]，估算成本=${total_cost:,.0f}，"
+            f"日产值风险=${daily_value:,.0f}。"
+            f"故障模式：{pattern_cn}。"
+            f"验收标准：参照{pattern_cn}类验收规则执行。"
+        )
 
 
 if __name__ == "__main__":

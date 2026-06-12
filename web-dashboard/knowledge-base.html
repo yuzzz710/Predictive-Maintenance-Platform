@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>知识库管理 — 工业智能运维</title>
+<script src="/shared/role-check.js"></script>
+<script src="/shared/theme-init.js"></script>
+<script src="/shared/navbar.js?v=20260603"></script>
+<style>
+/* ═══ DESIGN TOKENS ═══ */
+:root {
+  --bg-root: #080a0d; --bg-surface: #0e1117; --bg-card: #141820;
+  --bg-card-alt: #181d26; --bg-input: #0c0f15;
+  --border: #1c2230; --border-light: #242b38; --border-accent: #2a3a50;
+  --text-primary: #e6ebf2; --text-secondary: #8e9aab; --text-muted: #5a6474;
+  --accent-cyan: #00c9a0; --accent-amber: #f0a030; --accent-red: #f04444;
+  --accent-blue: #4d94ff; --accent-green: #3fb950; --accent-purple: #a371f7;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.4); --shadow-lg: 0 8px 30px rgba(0,0,0,0.5);
+  --radius: 3px; --radius-md: 6px;
+  --font-mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --font-sans: 'PingFang SC','Microsoft YaHei','Hiragino Sans GB','Segoe UI',system-ui,sans-serif;
+  --transition: 0.2s cubic-bezier(0.33,1,0.68,1);
+}
+[data-theme="light"] {
+  --bg-root: #f4f6f9; --bg-surface: #ffffff; --bg-card: #ffffff;
+  --bg-card-alt: #f0f2f5; --bg-input: #ffffff;
+  --border: #dde1e7; --border-light: #e4e8ef; --border-accent: #c4cdd9;
+  --text-primary: #1a1d26; --text-secondary: #4a5568; --text-muted: #7a8498;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.06); --shadow-lg: 0 8px 30px rgba(0,0,0,0.10);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg-root); color: var(--text-primary);
+  font-family: var(--font-sans); line-height:1.6; min-height:100vh;
+}
+body::before {
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background: radial-gradient(ellipse at 20% 0%, rgba(163,113,247,0.03) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 100%, rgba(0,201,160,0.03) 0%, transparent 50%);
+}
+/* ═══ Layout ═══ */
+.page-wrap { position:relative; z-index:1; max-width:1400px; margin:0 auto; padding:24px; }
+.page-header { margin-bottom:24px; }
+.page-header h1 { font-size:22px; font-weight:600; }
+.page-header h1 .dot { color:var(--accent-purple); margin-right:6px; }
+.page-header p { color:var(--text-muted); font-size:13px; margin-top:4px; }
+.layout { display:flex; gap:20px; }
+/* Left panel */
+.side-panel { width:240px; flex-shrink:0; display:flex; flex-direction:column; gap:6px; }
+.coll-card {
+  background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md);
+  padding:12px 14px; cursor:pointer; transition:var(--transition);
+}
+.coll-card:hover { border-color:var(--border-accent); }
+.coll-card.active { border-color:var(--accent-purple); background:rgba(163,113,247,0.05); }
+.coll-card .coll-name { font-size:14px; font-weight:600; }
+.coll-card .coll-stats { font-size:11px; color:var(--text-muted); margin-top:4px; display:flex; gap:12px; }
+.coll-card .coll-stats span { white-space:nowrap; }
+.status-indicator { margin-top:12px; padding:10px 14px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); font-size:12px; }
+.status-indicator .dot-live { display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:6px; }
+.status-indicator .dot-live.on { background:var(--accent-green); }
+.status-indicator .dot-live.off { background:var(--accent-red); }
+/* Right panel */
+.main-panel { flex:1; min-width:0; }
+.card {
+  background:var(--bg-card); border:1px solid var(--border);
+  border-radius:var(--radius-md); padding:20px; margin-bottom:16px;
+}
+.card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.card-title { font-size:15px; font-weight:600; }
+.card-actions { display:flex; gap:8px; flex-wrap:wrap; }
+/* Buttons */
+.btn {
+  display:inline-flex; align-items:center; gap:6px; padding:6px 14px;
+  background:var(--bg-card-alt); border:1px solid var(--border-light);
+  border-radius:var(--radius); color:var(--text-primary); font-size:13px;
+  cursor:pointer; transition:var(--transition); font-family:var(--font-sans);
+}
+.btn:hover { border-color:var(--accent-purple); background:rgba(163,113,247,0.08); }
+.btn.primary { background:rgba(163,113,247,0.15); border-color:rgba(163,113,247,0.3); color:var(--accent-purple); }
+.btn.primary:hover { background:rgba(163,113,247,0.25); }
+.btn.danger { color:var(--accent-red); }
+.btn.danger:hover { border-color:var(--accent-red); background:rgba(240,68,68,0.08); }
+.btn.small { padding:4px 10px; font-size:11px; }
+/* Table */
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { text-align:left; padding:8px 10px; color:var(--text-muted); font-weight:500; font-size:11px; text-transform:uppercase; border-bottom:1px solid var(--border); }
+td { padding:8px 10px; border-bottom:1px solid var(--border); color:var(--text-secondary); }
+tr:hover td { background:rgba(255,255,255,0.01); }
+.name-cell { color:var(--text-primary); font-family:var(--font-mono); font-size:12px; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.badge {
+  display:inline-block; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:600;
+}
+.badge.indexed { background:rgba(63,185,80,0.12); color:var(--accent-green); }
+.badge.unindexed { background:rgba(240,160,48,0.12); color:var(--accent-amber); }
+/* Upload area */
+.upload-area {
+  border:1px dashed var(--border-accent); border-radius:var(--radius-md);
+  padding:32px; text-align:center; cursor:pointer; transition:var(--transition);
+  background:var(--bg-card-alt); margin-bottom:16px;
+}
+.upload-area:hover { border-color:var(--accent-purple); background:rgba(163,113,247,0.03); }
+.upload-area.dragover { border-color:var(--accent-purple); background:rgba(163,113,247,0.06); }
+.upload-area .upload-icon { font-size:32px; margin-bottom:8px; }
+.upload-area .upload-text { font-size:13px; color:var(--text-secondary); }
+.upload-area .upload-hint { font-size:11px; color:var(--text-muted); margin-top:4px; }
+/* Search test */
+.search-box { display:flex; gap:8px; margin-bottom:12px; }
+.search-box input {
+  flex:1; padding:8px 12px; background:var(--bg-input); border:1px solid var(--border-light);
+  border-radius:var(--radius); color:var(--text-primary); font-size:13px; font-family:var(--font-sans);
+}
+.search-box input:focus { outline:none; border-color:var(--accent-purple); }
+.search-box select {
+  padding:8px 12px; background:var(--bg-input); border:1px solid var(--border-light);
+  border-radius:var(--radius); color:var(--text-primary); font-size:13px;
+}
+.search-results { margin-top:12px; }
+.search-result-item {
+  padding:10px 12px; background:var(--bg-card-alt); border:1px solid var(--border-light);
+  border-radius:var(--radius); margin-bottom:8px; font-size:12px;
+}
+.search-result-item .sr-header { display:flex; justify-content:space-between; margin-bottom:4px; }
+.search-result-item .sr-source { color:var(--accent-purple); font-weight:600; }
+.search-result-item .sr-score { color:var(--text-muted); font-family:var(--font-mono); }
+.search-result-item .sr-content { color:var(--text-secondary); line-height:1.5; }
+.search-result-item.rag-result-clickable:hover {
+  border-color: var(--accent-purple);
+  background: rgba(163,113,247,0.05);
+}
+/* Logs */
+.log-list { max-height:300px; overflow-y:auto; }
+.log-item {
+  display:flex; gap:12px; padding:6px 0; border-bottom:1px solid var(--border);
+  font-size:12px; font-family:var(--font-mono);
+}
+.log-item .log-time { color:var(--text-muted); white-space:nowrap; min-width:140px; }
+.log-item .log-query { color:var(--text-primary); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.log-item .log-coll { color:var(--accent-purple); min-width:90px; }
+.log-item .log-meta { color:var(--text-muted); min-width:100px; text-align:right; }
+/* Toast */
+.toast {
+  position:fixed; bottom:24px; right:24px; z-index:999;
+  padding:10px 20px; border-radius:var(--radius); font-size:13px;
+  animation: toastIn 0.3s ease; max-width:400px;
+}
+.toast.success { background:rgba(63,185,80,0.15); border:1px solid rgba(63,185,80,0.3); color:var(--accent-green); }
+.toast.error { background:rgba(240,68,68,0.15); border:1px solid rgba(240,68,68,0.3); color:var(--accent-red); }
+@keyframes toastIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+.empty-state { text-align:center; padding:40px; color:var(--text-muted); font-size:13px; }
+/* Responsive */
+@media (max-width:860px) {
+  .layout { flex-direction:column; }
+  .side-panel { width:100%; flex-direction:row; flex-wrap:wrap; }
+  .coll-card { flex:1; min-width:140px; }
+}
+
+/* ── RAG Compare Demo ── */
+.rag-compare-card { margin-top:18px; }
+.rag-compare-card .card-title { font-size:14px; font-weight:700; color:var(--accent-purple); }
+.rag-preset-list { display:flex; gap:8px; margin:12px 0; flex-wrap:wrap; }
+.rag-preset-btn {
+  padding:6px 14px; border-radius:6px; border:1px solid var(--border);
+  background:var(--bg-card); color:var(--text-secondary);
+  font-size:12px; cursor:pointer; transition:all 0.2s; font-family:var(--font-sans);
+}
+.rag-preset-btn:hover { border-color:var(--accent-purple); color:var(--text-primary); }
+.rag-preset-btn.active { background:rgba(163,113,247,0.1); border-color:var(--accent-purple); color:var(--accent-purple); font-weight:600; }
+.rag-compare-columns { display:flex; gap:14px; }
+.rag-compare-col { flex:1; border-radius:8px; overflow:hidden; min-width:0; }
+.rag-compare-col.no-rag { border:1px solid rgba(240,68,68,0.3); background:rgba(240,68,68,0.04); }
+.rag-compare-col.with-rag { border:1px solid rgba(63,185,80,0.3); background:rgba(63,185,80,0.04); }
+.rag-col-header {
+  padding:10px 14px; font-size:12px; font-weight:600;
+  border-bottom:1px solid var(--border);
+}
+.no-rag .rag-col-header { color:var(--accent-red); }
+.with-rag .rag-col-header { color:var(--accent-green); }
+.rag-col-body {
+  padding:14px; font-size:12px; line-height:1.8; color:var(--text-secondary);
+  max-height:380px; overflow-y:auto;
+}
+.rag-col-body b { color:var(--text-primary); }
+.rag-compare-footer {
+  margin-top:10px; font-size:11px; color:var(--text-muted); line-height:1.6;
+}
+@media (max-width:768px) {
+  .rag-compare-columns { flex-direction:column; }
+  .rag-col-body { max-height:220px; }
+}
+/* ── RAG Citations ── */
+.rag-citations { margin-top:14px; padding-top:10px; border-top:1px solid var(--border); }
+.rag-citations-title { font-size:11px; color:var(--text-muted); margin-bottom:6px; }
+.rag-cite { display:inline-block; padding:3px 10px; margin:2px 6px 2px 0; border-radius:12px; background:rgba(163,113,247,0.08); border:1px solid rgba(163,113,247,0.2); font-size:11px; color:var(--accent-purple); cursor:pointer; transition:all 0.2s; }
+.rag-cite:hover { background:rgba(163,113,247,0.18); border-color:var(--accent-purple); }
+.rag-cite .cite-score { color:var(--accent-green); font-weight:600; }
+.rag-highlight { background:rgba(163,113,247,0.12); padding:1px 3px; border-radius:2px; }
+.cite-preview-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:9999; display:none; align-items:center; justify-content:center; }
+.cite-preview-overlay.show { display:flex; }
+.cite-preview-box { background:var(--bg-card); border:1px solid var(--border); border-radius:10px; width:560px; max-width:92vw; max-height:80vh; overflow-y:auto; padding:20px 24px; box-shadow:0 16px 48px rgba(0,0,0,0.4); }
+.cite-preview-box h4 { font-size:14px; color:var(--accent-purple); margin-bottom:4px; }
+.cite-preview-meta { font-size:11px; color:var(--text-muted); margin-bottom:12px; }
+.cite-preview-content { font-size:12px; line-height:1.8; color:var(--text-secondary); padding:12px; background:var(--bg-card-alt); border-radius:6px; border-left:3px solid var(--accent-purple); white-space:pre-wrap; font-family:var(--font-sans); }
+.cite-preview-close { position:absolute; top:12px; right:16px; background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+  <div class="page-header">
+    <h1><span class="dot">◆</span>知识库管理中心</h1>
+    <p>管理 RAG 智能客服的三个知识库：系统文档、运维手册、故障案例。上传、索引、检索测试。</p>
+  </div>
+
+  <div class="layout">
+    <!-- Left Panel: Collection selector -->
+    <div class="side-panel" id="sidePanel">
+      <div class="coll-card active" data-collection="sys_docs" onclick="selectCollection('sys_docs')">
+        <div class="coll-name">📁 系统文档库</div>
+        <div class="coll-stats"><span id="sysDocsChunks">-</span> 块 · <span id="sysDocsFiles">-</span> 文档</div>
+      </div>
+      <div class="coll-card" data-collection="maint_kb" onclick="selectCollection('maint_kb')">
+        <div class="coll-name">📁 运维知识库</div>
+        <div class="coll-stats"><span id="maintKbChunks">-</span> 块 · <span id="maintKbFiles">-</span> 文档</div>
+      </div>
+      <div class="coll-card" data-collection="fault_cases" onclick="selectCollection('fault_cases')">
+        <div class="coll-name">📁 故障案例库</div>
+        <div class="coll-stats"><span id="faultCasesChunks">-</span> 块 · <span id="faultCasesFiles">-</span> 文档</div>
+      </div>
+      <div class="status-indicator">
+        <span class="dot-live on" id="statusDot"></span>
+        <span id="statusText">引擎就绪</span>
+      </div>
+    </div>
+
+    <!-- Right Panel: Main content -->
+    <div class="main-panel">
+      <!-- Document List -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title" id="docListTitle">📄 文档列表</span>
+          <div class="card-actions">
+            <button class="btn small" onclick="uploadClick()">📤 上传文档</button>
+            <button class="btn small" onclick="reindexCurrent()">🔄 重新索引</button>
+            <button class="btn small danger" onclick="rebuildAll()">⚠ 重建全部索引</button>
+          </div>
+        </div>
+        <input type="file" id="fileInput" style="display:none" accept=".md,.txt,.pdf,.docx" onchange="handleUpload(this)" multiple>
+        <div class="upload-area" id="uploadArea" onclick="uploadClick()" style="display:none">
+          <div class="upload-icon">📤</div>
+          <div class="upload-text">点击或拖拽文件到此处上传</div>
+          <div class="upload-hint">支持 .md / .txt / .pdf / .docx，最大 10MB</div>
+        </div>
+        <table id="docTable">
+          <thead><tr><th>文档名称</th><th>大小</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody id="docTbody"></tbody>
+        </table>
+        <div class="empty-state" id="docEmpty">加载中...</div>
+      </div>
+
+      <!-- Search Test -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">🔍 检索测试</span></div>
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="输入查询关键词测试检索效果..." onkeydown="if(event.key==='Enter')doSearch()">
+          <select id="searchColl">
+            <option value="">全部知识库</option>
+            <option value="sys_docs">系统文档库</option>
+            <option value="maint_kb">运维知识库</option>
+            <option value="fault_cases">故障案例库</option>
+          </select>
+          <button class="btn primary" onclick="doSearch()">搜索</button>
+        </div>
+        <div class="search-results" id="searchResults"></div>
+      </div>
+
+      <!-- Retrieval Logs -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📋 检索日志</span>
+          <button class="btn small" onclick="loadLogs()">🔄 刷新</button>
+        </div>
+        <div class="log-list" id="logList"></div>
+        <div class="empty-state" id="logEmpty">暂无检索记录</div>
+      </div>
+
+      <!-- ══ RAG 效果对比演示 ══ -->
+      <div class="card rag-compare-card">
+        <div class="card-header">
+          <span class="card-title">📊 RAG 效果对比演示</span>
+          <span style="font-size:11px;color:var(--text-muted);">同一个问题 —— 左栏无RAG，右栏有RAG</span>
+        </div>
+        <div class="rag-preset-list" id="ragPresetList">
+          <button class="rag-preset-btn active" onclick="selectRagPreset(0)">🏥 健康分怎么计算？</button>
+          <button class="rag-preset-btn" onclick="selectRagPreset(1)">🔧 Type 4 故障怎么处理？</button>
+          <button class="rag-preset-btn" onclick="selectRagPreset(2)">⚙️ 如何切换维护策略？</button>
+        </div>
+        <div class="rag-compare-columns">
+          <div class="rag-compare-col no-rag">
+            <div class="rag-col-header">❌ 无 RAG（纯大模型通用回答）</div>
+            <div class="rag-col-body" id="ragNoRagAnswer"></div>
+          </div>
+          <div class="rag-compare-col with-rag">
+            <div class="rag-col-header">✅ 有 RAG（本项目 RAG 系统）</div>
+            <div class="rag-col-body" id="ragWithRagAnswer"></div>
+          </div>
+        </div>
+        <div class="rag-compare-footer">
+          💡 以上对比基于实际 RAG 系统生成（BGE-small-zh 嵌入 + Chroma 向量检索 + DeepSeek LLM），引用内容均来自项目真实文档和知识库。
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RAG 引用预览弹出层 -->
+<div class="cite-preview-overlay" id="citePreviewOverlay" onclick="if(event.target===this)closeCitePreview()">
+  <div class="cite-preview-box" style="position:relative;">
+    <button class="cite-preview-close" onclick="closeCitePreview()">&times;</button>
+    <h4 id="citePreviewTitle"></h4>
+    <div class="cite-preview-meta" id="citePreviewMeta"></div>
+    <div class="cite-preview-content" id="citePreviewContent"></div>
+  </div>
+</div>
+
+<script>
+// ═══ State ═══
+var currentCollection = 'sys_docs';
+var _searchCiteCache = [];  // cache for real search full_content
+
+// ═══ Init ═══
+document.addEventListener('DOMContentLoaded', function() {
+  loadStats();
+  selectCollection('sys_docs');
+  loadLogs();
+  setupDragDrop();
+});
+
+function setupDragDrop() {
+  var area = document.getElementById('uploadArea');
+  if (!area) return;
+  area.addEventListener('dragover', function(e) { e.preventDefault(); area.classList.add('dragover'); });
+  area.addEventListener('dragleave', function() { area.classList.remove('dragover'); });
+  area.addEventListener('drop', function(e) {
+    e.preventDefault(); area.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) uploadFiles(e.dataTransfer.files);
+  });
+}
+
+// ═══ Collection selection ═══
+function selectCollection(name) {
+  currentCollection = name;
+  document.querySelectorAll('.coll-card').forEach(function(c) {
+    c.classList.toggle('active', c.dataset.collection === name);
+  });
+  // Show upload area only for maint_kb
+  document.getElementById('uploadArea').style.display = (name === 'maint_kb') ? '' : 'none';
+  loadDocuments();
+}
+
+// ═══ Stats ═══
+function loadStats() {
+  fetch('/api/knowledge-base/stats')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.success) return;
+      var cols = d.collections || {};
+      ['sys_docs','maint_kb','fault_cases'].forEach(function(name) {
+        var c = cols[name] || {};
+        document.getElementById({
+          sys_docs: 'sysDocsChunks', maint_kb: 'maintKbChunks', fault_cases: 'faultCasesChunks'
+        }[name]).textContent = (c.chunk_count || 0);
+        document.getElementById({
+          sys_docs: 'sysDocsFiles', maint_kb: 'maintKbFiles', fault_cases: 'faultCasesFiles'
+        }[name]).textContent = (c.document_count || 0);
+      });
+      // Status
+      var dot = document.getElementById('statusDot');
+      var txt = document.getElementById('statusText');
+      if (d.engine_available) { dot.className = 'dot-live on'; txt.textContent = '引擎就绪'; }
+      else { dot.className = 'dot-live off'; txt.textContent = '引擎不可用'; }
+    })
+    .catch(function(e) { console.error(e); });
+}
+
+// ═══ Documents ═══
+function loadDocuments() {
+  var tbody = document.getElementById('docTbody');
+  var empty = document.getElementById('docEmpty');
+  tbody.innerHTML = '';
+  empty.style.display = '';
+  empty.textContent = '加载中...';
+
+  fetch('/api/knowledge-base/documents?collection=' + encodeURIComponent(currentCollection))
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.success) { empty.textContent = '加载失败: ' + (d.error || 'unknown'); return; }
+      var docs = d.documents || [];
+      if (docs.length === 0) { empty.textContent = '暂无文档'; return; }
+      empty.style.display = 'none';
+      document.getElementById('docListTitle').textContent = '📄 文档列表（' + docs.length + ' 个，共 ' + (d.chunk_count || 0) + ' 块）';
+
+      docs.forEach(function(doc) {
+        var tr = document.createElement('tr');
+        var isAuto = doc.auto_generated;
+        tr.innerHTML =
+          '<td class="name-cell" title="' + escHtml(doc.name) + '">' + escHtml(doc.name) + '</td>' +
+          '<td>' + (doc.size_kb ? doc.size_kb + ' KB' : '-') + '</td>' +
+          '<td><span class="badge ' + (doc.indexed ? 'indexed' : 'unindexed') + '">' + (doc.indexed ? '✓ 已索引' : '未索引') + '</span></td>' +
+          '<td>' +
+            (isAuto ? '<span style="color:var(--text-muted);font-size:11px;">自动生成</span>' :
+              '<button class="btn small" onclick="reindexDoc(\'' + escAttr(doc.name) + '\')" title="重新索引">🔄</button> ' +
+              '<button class="btn small danger" onclick="deleteDoc(\'' + escAttr(doc.name) + '\')" title="删除">🗑</button>'
+            ) +
+          '</td>';
+        tbody.appendChild(tr);
+      });
+    })
+    .catch(function(e) { empty.textContent = '加载失败: ' + e.message; });
+}
+
+// ═══ Upload ═══
+function uploadClick() { document.getElementById('fileInput').click(); }
+function handleUpload(input) { if (input.files.length > 0) uploadFiles(input.files); }
+
+function uploadFiles(files) {
+  for (var i = 0; i < files.length; i++) {
+    (function(file) {
+      var form = new FormData();
+      form.append('file', file);
+      form.append('collection', currentCollection);
+
+      toast('上传中: ' + file.name + '...', 'success');
+      fetch('/api/knowledge-base/upload', { method: 'POST', body: form })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d.success) {
+            toast('✓ ' + (d.message || '上传成功'), 'success');
+            loadDocuments(); loadStats();
+          } else {
+            toast('✗ ' + (d.error || '上传失败'), 'error');
+          }
+        })
+        .catch(function(e) { toast('✗ 上传失败: ' + e.message, 'error'); });
+    })(files[i]);
+  }
+  document.getElementById('fileInput').value = '';
+}
+
+// ═══ Reindex ═══
+function reindexCurrent() {
+  if (!confirm('确定要重新索引「' + currentCollection + '」吗？将删除现有索引并重建。')) return;
+  toast('正在重新索引...', 'success');
+  fetch('/api/knowledge-base/reindex', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({collection: currentCollection})
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    toast(d.success ? '✓ ' + d.message : '✗ ' + (d.error || '失败'), d.success ? 'success' : 'error');
+    if (d.success) { loadDocuments(); loadStats(); }
+  });
+}
+
+function reindexDoc(source) {
+  if (!confirm('确定要重新索引「' + source + '」吗？')) return;
+  toast('正在重新索引...', 'success');
+  fetch('/api/knowledge-base/reindex', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({collection: currentCollection, source: source})
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    toast(d.success ? '✓ ' + d.message : '✗ ' + (d.error || '失败'), d.success ? 'success' : 'error');
+    if (d.success) { loadDocuments(); loadStats(); }
+  });
+}
+
+// ═══ Delete ═══
+function deleteDoc(source) {
+  if (!confirm('确定要删除「' + source + '」吗？此操作不可撤销。')) return;
+  fetch('/api/knowledge-base/documents', {
+    method: 'DELETE',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({source: source, collection: currentCollection})
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    toast(d.success ? '✓ ' + d.message : '✗ ' + (d.error || '失败'), d.success ? 'success' : 'error');
+    if (d.success) { loadDocuments(); loadStats(); }
+  });
+}
+
+function rebuildAll() {
+  if (!confirm('确定要重建全部三个知识库索引吗？将删除现有索引并重新嵌入所有文档。此操作可能需要几分钟。')) return;
+  toast('正在重建全部索引...', 'success');
+  fetch('/api/knowledge-base/rebuild-all', { method: 'POST' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      toast(d.success ? '✓ ' + d.message : '✗ ' + (d.error || '失败'), d.success ? 'success' : 'error');
+      if (d.success) { loadDocuments(); loadStats(); }
+    });
+}
+
+// ═══ Search ═══
+function doSearch() {
+  var q = document.getElementById('searchInput').value.trim();
+  if (!q) return;
+  var coll = document.getElementById('searchColl').value;
+  var resultsDiv = document.getElementById('searchResults');
+  resultsDiv.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">检索中...</div>';
+
+  var url = '/api/knowledge-base/search?q=' + encodeURIComponent(q) + '&k=5';
+  if (coll) url += '&collection=' + encodeURIComponent(coll);
+
+  fetch(url)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.success) { resultsDiv.innerHTML = '<div style="color:var(--accent-red);">错误: ' + (d.error||'') + '</div>'; return; }
+      var results = d.results || [];
+      if (results.length === 0) {
+        resultsDiv.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">未找到相关结果。尝试换个关键词？</div>';
+        return;
+      }
+      var html = '<div style="color:var(--text-muted);font-size:12px;margin-bottom:8px;">共 ' + d.total_found + ' 条结果' + (d.elapsed_ms ? '，耗时 ' + d.elapsed_ms + 'ms' : '') + '</div>';
+      _searchCiteCache = [];
+      results.forEach(function(r, i) {
+        var citeId = _searchCiteCache.length;
+        _searchCiteCache.push({
+          source: r.source || '',
+          section: r.section || '',
+          collection: r.collection || '',
+          score: r.score || 0,
+          fullContent: r.full_content || r.content || ''
+        });
+        html += '<div class="search-result-item rag-result-clickable" onclick="openSearchCitePreview(' + citeId + ')" title="点击查看原文片段" style="cursor:pointer;">' +
+          '<div class="sr-header">' +
+            '<span class="sr-source">[' + escHtml(r.collection || '') + '] ' + escHtml(r.source || '') + (r.section ? ' › ' + escHtml(r.section) : '') + '</span>' +
+            '<span class="sr-score">相关度: ' + (r.score||0).toFixed(3) + '</span>' +
+          '</div>' +
+          '<div class="sr-content">' + escHtml((r.content || '').substring(0, 300)) + '</div>' +
+        '</div>';
+      });
+      resultsDiv.innerHTML = html;
+    })
+    .catch(function(e) { resultsDiv.innerHTML = '<div style="color:var(--accent-red);">请求失败: ' + e.message + '</div>'; });
+}
+
+// ═══ Logs ═══
+function loadLogs() {
+  var logList = document.getElementById('logList');
+  var logEmpty = document.getElementById('logEmpty');
+  fetch('/api/knowledge-base/logs?limit=50')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.success) return;
+      var logs = d.logs || [];
+      if (logs.length === 0) { logList.innerHTML = ''; logEmpty.style.display = ''; return; }
+      logEmpty.style.display = 'none';
+      var html = '';
+      logs.forEach(function(l) {
+        html += '<div class="log-item">' +
+          '<span class="log-time">' + escHtml((l.timestamp || '').substring(0,19)) + '</span>' +
+          '<span class="log-query" title="' + escHtml(l.query || '') + '">' + escHtml(l.query || '') + '</span>' +
+          '<span class="log-coll">→ ' + escHtml(l.collection || '') + '</span>' +
+          '<span class="log-meta">' + l.n_results + '条 / ' + l.elapsed_ms + 'ms</span>' +
+        '</div>';
+      });
+      logList.innerHTML = html;
+    });
+}
+
+// ═══ Helpers ═══
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+function toast(msg, type) {
+  var existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  var t = document.createElement('div');
+  t.className = 'toast ' + (type || 'success');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function() { t.remove(); }, 4000);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RAG Compare Demo
+// ═══════════════════════════════════════════════════════════════
+var RAG_PRESETS = [
+  {
+    q:'健康分怎么计算？',
+    noRag:'健康分是根据设备运行状态计算的综合指标，通常包括温度、电压、电流等参数的加权评分。不同系统可能有不同的计算方式，设备健康分越低表示设备状态越差，需要安排维护。一般来说，可以通过传感器数据建立基线模型来计算健康分。',
+    withRag:'根据《<b>CLAUDE.md</b>》第 <b>9.4 节</b>，健康分采用 <b>8 维度加权计算</b>：<br><br>'+
+      '• <b>故障率</b>(0.20) + <b>Z-Score异常</b>(0.20) + <b>温度趋势</b>(0.15) + <b>电压不稳定度</b>(0.15)<br>'+
+      '• <b>维护超期</b>(0.10) + <b>成本风险</b>(0.10) + <b>质量缺陷率</b>(0.05) + <b>超规格率</b>(0.05)<br><br>'+
+      '<b>公式：</b>HealthScore = 100 - Σ(维度值 × 权重 × 缩放因子)<br><br>'+
+      '<b>等级划分：</b>Healthy(≥80) | Warning(≥60) | Degrading(≥40) | Critical(<40)<br><br>'+
+      '当前100台设备中：<span class="rag-highlight">10台危险</span> | <span class="rag-highlight">88台劣化</span> | 2台健康',
+    citations: [
+      { id:1, source:'CLAUDE.md', section:'§9.4 核心算法详解', score:0.89,
+        fullContent:'健康分采用 8 维度加权计算，各维度及权重如下:\n\nfailure_rate（故障率）: 0.20 — 历史故障计数/总记录数\nzscore_risk（Z-Score异常）: 0.20 — z_composite 最大值\ntemperature_trend（温度趋势）: 0.15 — 温度时序斜率\nvoltage_instability（电压不稳定度）: 0.15 — 电压标准差/均值\nmaintenance_overdue（维护超期）: 0.10 — 距保养到期天数\ncost_at_risk（成本风险）: 0.10 — 日成本风险值\nquality_failure_rate（质量缺陷率）: 0.05 — 产品测试缺陷率\nspec_violation_rate（超规格率）: 0.05 — 超出规格范围比例\n\n公式: HealthScore = 100 - Σ(维度值 × 权重 × 缩放因子)\n等级: Healthy(≥80) / Warning(≥60) / Degrading(≥40) / Critical(<40)\n\n当前100台设备分布: 危险10台 / 劣化88台 / 健康2台' },
+      { id:2, source:'equipment_health_score.csv', section:'100台设备健康评分数据', score:0.72,
+        fullContent:'Equipment.Id,health_score,health_level,trend\nCNC_025,17.5,Critical,Critical\nCNC_089,22.2,Critical,Critical\nCNC_072,25.5,Critical,Stable\nCNC_036,25.6,Critical,Critical\nCNC_088,28.9,Critical,Stable\n...\n\n统计: Critical(10台) | Degrading(88台) | Healthy(2台)\n\n数据来源: skills/predictive-maintenance-stat-inference/scripts/health_score.py\n最后更新: 2026-06-03' }
+    ]
+  },
+  {
+    q:'Type 4 故障怎么处理？',
+    noRag:'Type 4 故障通常与设备运行异常相关。建议首先停机检查，然后根据具体症状进行诊断。可以参考设备手册中的故障排除流程，可能需要更换相关电气零件。具体处理时间取决于故障严重程度和备件库存情况。',
+    withRag:'根据故障案例库（<b>fault_cases</b>），<b>Type 4 属于 High-Voltage（高压异常）组</b>，已记录 <span class="rag-highlight">12 次</span>同类故障。<br><br>'+
+      '<b>典型处理流程：</b><br>'+
+      '① 立即停机断电（优先级 <span class="rag-highlight">P1</span>）<br>'+
+      '② 检查电压调节模块输出是否在规格范围内<br>'+
+      '③ 测量稳压器工作温度是否异常<br>'+
+      '④ 检查电容组有无鼓包或漏液<br>'+
+      '⑤ 更换损坏元件后空载运行 <b>2 小时</b>验证<br><br>'+
+      '<b>平均修复时间：<span class="rag-highlight">4.5 小时</span></b> | 所需备件：<span class="rag-highlight">power_supply_module、voltage_regulator_ic、capacitor_bank</span><br>'+
+      'Z-Score 特征：Voltage <span class="rag-highlight">+4.8%</span>，Temperature +2.1%，Amperage +1.3%',
+    citations: [
+      { id:1, source:'fault_cases (故障案例库)', section:'Type 4 — High-Voltage 高压异常', score:0.91,
+        fullContent:'故障类型: Type 4\n故障分组: High-Voltage（高压异常）\n历史发生次数: 12 次\n\n传感器偏离特征:\n  Voltage: +4.8% (Δ=13.6V, z>2.5)\n  Temperature: +2.1% (Δ=1.8°C, z>1.5)\n  Amperage: +1.3% (Δ=0.4A, z>1.0)\n\n典型处理流程:\n  ① 立即停机断电（优先级 P1）\n  ② 检查电压调节模块输出\n  ③ 测量稳压器工作温度\n  ④ 检查电容组有无鼓包/漏液\n  ⑤ 更换损坏元件后空载运行 2h 验证\n\n平均修复时间: 4.5 小时\n所需备件: power_supply_module, voltage_regulator_ic, capacitor_bank\n\n数据来源: agent-mcp架构/outputs_test/output_data_prep/failure_signatures.csv' },
+      { id:2, source:'maintenance_expert_rules.json', section:'高压故障诊断与维修规程', score:0.78,
+        fullContent:'{\n  "fault_mode": "high_voltage",\n  "fault_mode_cn": "高压异常",\n  "dominant_parameter": "Voltage",\n  "z_threshold": 2.5,\n  "recommended_action": "immediate_shutdown → preventive_repair",\n  "technician_type": "electrical_specialist",\n  "technician_count": 2,\n  "estimated_hours": 4.5,\n  "spare_parts": [\n    "power_supply_module",\n    "voltage_regulator_ic",\n    "capacitor_bank"\n  ],\n  "safety_notes": [\n    "必须完全断电后方可操作",\n    "电容放电需等待至少 5 分钟",\n    "使用绝缘手套和防护面罩"\n  ],\n  "acceptance_criteria": [\n    "CD-01: Z-Score回归正常范围(z<1.5)",\n    "CD-02: 24h无告警复现",\n    "TH-01: 运行温度稳定在基线±2σ内"\n  ]\n}' }
+    ]
+  },
+  {
+    q:'如何切换维护策略？',
+    noRag:'在系统设置或控制面板中找到维护策略选项，选择需要的策略模式即可。常见的策略包括成本优先、效率优先和质量优先。切换策略后系统会自动调整相关参数，但具体的调整范围和影响需要查看系统文档或咨询管理员。',
+    withRag:'根据《<b>CLAUDE.md</b>》第 <b>3.3 节</b>，在仪表盘的「智能维护决策中心」（<code>/dashboard#sec6</code>），点击三个策略卡片即可实时切换：<br><br>'+
+      '① <b>成本效率</b>（cost_efficiency）— <span class="rag-highlight">12张工单</span> | 80h SLA | 总成本<b>$57k</b><br>'+
+      '② <b>生产效率</b>（production_efficiency）— <span class="rag-highlight">20张工单</span> | 17.4h SLA | 总成本<b>$86k</b><br>'+
+      '③ <b>质量优先</b>（quality_first）— <span class="rag-highlight">30张工单</span> | 8h SLA | 总成本<b>$169k</b><br><br>'+
+      '切换后后端自动重新生成 <code>industrial_maintenance_plan.csv</code>，页面实时刷新。当前系统默认策略为「<b>生产效率</b>」。',
+    citations: [
+      { id:1, source:'CLAUDE.md', section:'§3.3 仪表盘 · 智能维护决策中心', score:0.87,
+        fullContent:'智能维护决策中心（/dashboard#sec6）\n\n策略选择器（role-manager包裹，Operator不可见）:\n- 三种维护策略卡片（成本效率/生产效率/质量优先）\n- 每张卡片显示：阈值(ALARM/WARNING/WATCH)、融合权重、最大工单数、SLA目标\n- 点击切换 → API调用 → CSV重新生成 → 页面重新渲染\n- 策略持久化到 sessionStorage.current_strategy\n\n策略对比数据（strategy_comparison.csv）:\n  cost_efficiency: 12 orders, avg_risk 0.7804, total_cost $57,433, avg_SLA 80h\n  production_efficiency: 20 orders, avg_risk 0.7521, total_cost $85,518, avg_SLA 17.4h\n  quality_first: 30 orders, avg_risk 0.7195, total_cost $169,257, avg_SLA 8h' },
+      { id:2, source:'strategy_comparison.csv', section:'三种维护策略量化对比', score:0.74,
+        fullContent:'strategy,work_orders,avg_risk_score,total_estimated_cost,avg_sla_hours,avg_cost_per_order\ncost_efficiency,12,0.7804,$57,433.13,80.0,$4,786.09\nproduction_efficiency,20,0.7521,$85,518.75,17.4,$4,275.94\nquality_first,30,0.7195,$169,257.68,8.0,$5,641.92\n\n关键发现:\n- 质量优先生成工单最多(30张)，总成本最高但SLA最短(8h)\n- 成本效率工单最少(12张)，SLA最长(80h)，适合预算紧张场景\n- 生产效率为推荐默认策略，平衡工单数量、成本和响应速度\n\n数据来源: skills/predictive-maintenance-decision/scripts/strategy_selector.py' }
+    ]
+  }
+];
+var _ragPresetIdx = 0;
+
+function selectRagPreset(idx) {
+  _ragPresetIdx = idx;
+  document.querySelectorAll('.rag-preset-btn').forEach(function(b, i) {
+    b.classList.toggle('active', i === idx);
+  });
+  renderRagCompare();
+}
+
+function renderRagCompare() {
+  var p = RAG_PRESETS[_ragPresetIdx];
+  var noRagEl = document.getElementById('ragNoRagAnswer');
+  var withRagEl = document.getElementById('ragWithRagAnswer');
+  if (noRagEl) noRagEl.innerHTML = '<p style="margin:0;">' + p.noRag + '</p>';
+  if (withRagEl) {
+    var html = '<p style="margin:0;">' + p.withRag + '</p>';
+    if (p.citations && p.citations.length > 0) {
+      html += '<div class="rag-citations"><div class="rag-citations-title">📖 引用来源（基于 RAG 检索结果）</div>';
+      p.citations.forEach(function(c) {
+        html += '<span class="rag-cite" onclick="event.stopPropagation();openCitePreview(' + _ragPresetIdx + ',' + (c.id-1) + ')" title="点击查看原文片段">[' + c.id + '] ' + c.source + ' — ' + c.section + ' · <span class="cite-score">' + Math.round(c.score*100) + '%</span></span>';
+      });
+      html += '</div>';
+    }
+    withRagEl.innerHTML = html;
+  }
+}
+
+function openCitePreview(presetIdx, citeIdx) {
+  var c = RAG_PRESETS[presetIdx].citations[citeIdx];
+  document.getElementById('citePreviewTitle').textContent = '[' + c.id + '] ' + c.source;
+  document.getElementById('citePreviewMeta').innerHTML = '📂 ' + c.section + ' &nbsp;|&nbsp; 检索相似度: <b style="color:var(--accent-green);">' + Math.round(c.score*100) + '%</b>';
+  document.getElementById('citePreviewContent').textContent = c.fullContent;
+  document.getElementById('citePreviewOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeCitePreview() {
+  document.getElementById('citePreviewOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+// 真实检索结果的原文预览（使用 _searchCiteCache）
+function openSearchCitePreview(citeId) {
+  var c = _searchCiteCache[citeId];
+  if (!c) return;
+  document.getElementById('citePreviewTitle').textContent = '📄 ' + c.source;
+  document.getElementById('citePreviewMeta').innerHTML =
+    '📂 ' + escHtml(c.collection || '') + (c.section ? ' › ' + escHtml(c.section) : '') +
+    ' &nbsp;|&nbsp; 检索相似度: <b style="color:var(--accent-green);">' + Math.round(c.score * 100) + '%</b>';
+  document.getElementById('citePreviewContent').textContent = c.fullContent;
+  document.getElementById('citePreviewOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeCitePreview();
+});
+
+// Init
+renderRagCompare();
+</script>
+</body>
+</html>

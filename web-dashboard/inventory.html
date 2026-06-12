@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>备件库存管理 — 工业智能运维</title>
+<script src="/shared/role-check.js"></script>
+<script src="/shared/theme-init.js"></script>
+<style>
+:root {
+  --bg: #080a0d;--bg-surface: #0e1117;--bg-card: #141820;--bg-card-alt: #181d26;
+  --bg-input: #0c0f15;--border: #1c2230;--border-light: #242b38;
+  --text: #e6ebf2;--text-secondary: #8e9aab;--text-muted: #5a6474;
+  --cyan: #00c9a0;--amber: #f0a030;--red: #f04444;--blue: #4d94ff;--green: #3fb950;--purple: #a371f7;
+  --radius: 3px;--radius-md: 6px;
+  --font-mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --font-sans: 'PingFang SC','Microsoft YaHei','Hiragino Sans GB','Segoe UI',system-ui,sans-serif;
+}
+[data-theme="light"] {
+  --bg: #f5f7fa;--bg-surface: #fff;--bg-card: #fff;--bg-card-alt: #f8f9fb;
+  --bg-input: #f0f2f5;--border: #e2e6ed;--border-light: #eef0f4;
+  --text: #1a1d26;--text-secondary: #4a5568;--text-muted: #8a94a6;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
+body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(0,201,160,0.04),transparent),radial-gradient(ellipse 60% 40% at 80% 80%,rgba(77,148,255,0.03),transparent)}
+.header{background:var(--bg-surface);border-bottom:1px solid var(--border);padding:16px 24px}
+.header-inner{max-width:1300px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.header-title{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px}
+.header-title .dot{color:var(--cyan)}
+.content{max-width:1300px;margin:0 auto;padding:20px 24px}
+
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px}
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 16px;text-align:center}
+.stat-card .v{font-size:22px;font-weight:700;font-family:var(--font-mono)}
+.stat-card .l{font-size:11px;color:var(--text-muted);margin-top:2px}
+
+.section{margin-bottom:24px}
+.section h3{font-size:14px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-bar{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.btn{padding:8px 16px;border-radius:var(--radius);font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);font-family:var(--font-sans);transition:all 0.2s}
+.btn:hover{color:var(--text);border-color:var(--cyan);background:rgba(0,201,160,0.08)}
+.btn.primary{background:rgba(0,201,160,0.1);border-color:rgba(0,201,160,0.25);color:var(--cyan)}
+.btn.danger{color:var(--red);border-color:rgba(240,68,68,0.25)}
+.btn.small{padding:4px 10px;font-size:11px}
+
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:8px 10px;color:var(--text-muted);font-weight:500;border-bottom:1px solid var(--border);background:var(--bg-surface);position:sticky;top:0}
+td{padding:8px 10px;border-bottom:1px solid var(--border-light);color:var(--text-secondary)}
+tr:hover td{background:rgba(255,255,255,0.015)}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:600}
+.badge.ok{background:rgba(63,185,80,0.1);color:var(--green)}
+.badge.low{background:rgba(240,160,48,0.1);color:var(--amber)}
+.badge.out{background:rgba(240,68,68,0.1);color:var(--red)}
+.badge.info{background:rgba(77,148,255,0.08);color:var(--blue)}
+.badge.purple{background:rgba(163,113,247,0.08);color:var(--purple)}
+
+.alert-row td{background:rgba(240,68,68,0.04)}
+.alert-row:hover td{background:rgba(240,68,68,0.08)}
+
+.procurement-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 18px;margin-bottom:8px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.procurement-card .pc-status{font-weight:600;font-size:12px}
+.procurement-card .pc-part{font-family:var(--font-mono);font-size:14px;font-weight:600}
+.procurement-card .pc-info{font-size:11px;color:var(--text-muted)}
+.procurement-card .pc-actions{margin-left:auto;display:flex;gap:6px}
+
+.loading{text-align:center;padding:40px;color:var(--text-muted)}
+.error{background:rgba(240,68,68,0.08);border:1px solid rgba(240,68,68,0.2);border-radius:var(--radius);padding:12px;color:var(--red);font-size:12px;margin-bottom:16px;display:none}
+
+@media(max-width:768px){.procurement-card{flex-direction:column;align-items:flex-start}.pc-actions{margin-left:0}}
+html[data-role="operator"] .role-manager:not(.role-operator){display:none!important}
+</style>
+</head>
+<body>
+
+<div class="header role-manager">
+  <div class="header-inner">
+    <div class="header-title"><span class="dot">◆</span> 备件库存管理</div>
+    <div style="font-size:12px;color:var(--text-muted)">库存数据: inventory_snapshot.csv</div>
+  </div>
+</div>
+
+<div class="content role-manager">
+  <div class="error" id="error"></div>
+
+  <!-- Stats -->
+  <div class="stats-row" id="stats-row"><div class="loading">加载中...</div></div>
+
+  <!-- Stock Table -->
+  <div class="section">
+    <h3>📦 库存总览</h3>
+    <div class="section-bar">
+      <button class="btn primary" onclick="loadAll()">⟳ 刷新</button>
+      <button class="btn" onclick="initInventory()">🔄 重新初始化</button>
+    </div>
+    <div id="stock-table"><div class="loading">加载中...</div></div>
+  </div>
+
+  <!-- Procurement Orders -->
+  <div class="section">
+    <h3>📋 采购订单</h3>
+    <div class="section-bar">
+      <button class="btn primary" onclick="generateOrders()">+ 自动生成采购单</button>
+    </div>
+    <div id="procurement-list"><div class="loading">加载中...</div></div>
+  </div>
+
+  <!-- Logs -->
+  <div class="section">
+    <h3>📝 库存变动日志</h3>
+    <div id="log-table"><div class="loading">加载中...</div></div>
+  </div>
+</div>
+
+<script src="/shared/navbar.js"></script>
+<script>
+var PART_CN = {
+  rotor_assembly:'转子总成',bearing_kit:'轴承套件',seal_kit:'密封套件',lubrication_kit:'润滑套件',
+  'o-ring_set':'O型密封圈组',cooling_fan_assembly:'散热风扇总成',thermal_paste:'导热硅脂',
+  temperature_sensor_pt100:'PT100温度传感器',heat_sink_assembly:'散热器总成',
+  power_supply_module:'电源模块',voltage_regulator_ic:'稳压器IC',capacitor_bank:'电容器组',
+  motor_driver_module:'电机驱动模块',current_sensor_hall:'霍尔电流传感器',power_cable_set:'电源线套件',
+  fastener_kit:'紧固件套件',cleaning_kit:'清洁套件'
+};
+function cn(n){return PART_CN[n]||n}
+
+async function loadAll(){await Promise.all([loadStock(),loadProcurement(),loadLogs()])}
+async function loadStock(){
+  try{
+    var r=await fetch('/api/inventory/stock'),d=await r.json();
+    var s=d.stock||{},parts=s.parts||[],inv=d.raw_inventory||[];
+    // Stats
+    var low=s.low_count||0,totalShort=s.total_shortage||0,totalCost=0;
+    parts.forEach(function(p){totalCost+=p.current_stock*p.unit_cost});
+    document.getElementById('stats-row').innerHTML=
+      '<div class="stat-card"><div class="v">'+s.total_parts+'</div><div class="l">备件种类</div></div>'+
+      '<div class="stat-card"><div class="v" style="color:'+(low>0?'var(--amber)':'var(--green)')+';">'+low+'</div><div class="l">库存不足</div></div>'+
+      '<div class="stat-card"><div class="v" style="color:'+(totalShort>0?'var(--red)':'var(--text)')+';">'+totalShort+'</div><div class="l">总缺口(件)</div></div>'+
+      '<div class="stat-card"><div class="v">$'+totalCost.toFixed(0)+'</div><div class="l">库存总值</div></div>';
+    // Table
+    var h='<table><tr><th>零件</th><th>型号</th><th>库存</th><th>安全库存</th><th>需求</th><th>缺口</th><th>单价</th><th>状态</th><th>供应商</th><th>操作</th></tr>';
+    parts.forEach(function(p){
+      var cls=p.status==='out'?'alert-row':'',sc=p.status==='ok'?'ok':p.status==='low'?'low':'out';
+      h+='<tr class="'+cls+'"><td><b>'+cn(p.part_name)+'</b><br><span style="font-size:10px;color:var(--text-muted)">'+p.part_name+'</span></td>';
+      h+='<td>'+p.part_number+'</td>';
+      h+='<td style="font-family:var(--font-mono);font-weight:600;cursor:pointer;" title="点击修改库存" onclick="editStock(\''+p.part_name+'\','+p.current_stock+')">'+p.current_stock+' ✎</td>';
+      h+='<td>'+p.safety_stock+'</td><td>'+p.demand+'</td>';
+      h+='<td style="color:'+(p.shortage>0?'var(--red)':'var(--text)')+';">'+(p.shortage>0?'<b>'+p.shortage+'</b>':'0')+'</td>';
+      h+='<td>$'+p.unit_cost+'</td>';
+      h+='<td><span class="badge '+sc+'">'+p.status_label+'</span></td>';
+      h+='<td style="font-size:11px">'+p.supplier+'</td>';
+      h+='<td style="white-space:nowrap">';
+      h+='<button class="btn small" onclick="quickAdjust(\''+p.part_name+'\',1)" title="+1">+1</button> ';
+      h+='<button class="btn small" onclick="quickAdjust(\''+p.part_name+'\',-1)" title="-1">-1</button> ';
+      h+='<button class="btn small" onclick="quickAdjust(\''+p.part_name+'\',5)" title="+5">+5</button> ';
+      h+='<button class="btn small danger" onclick="quickAdjust(\''+p.part_name+'\',-5)" title="-5">-5</button>';
+      h+='</td></tr>';
+    });
+    h+='</table>';
+    document.getElementById('stock-table').innerHTML=h
+  }catch(e){document.getElementById('stock-table').innerHTML='<div class="loading">加载失败</div>'}
+}
+
+async function loadProcurement(){
+  try{
+    var r=await fetch('/api/inventory/procurement'),d=await r.json(),orders=d.orders||[];
+    if(orders.length===0){document.getElementById('procurement-list').innerHTML='<div style="text-align:center;padding:30px;color:var(--text-muted)">暂无采购订单 | 点击"自动生成采购单"创建</div>';return}
+    var h='';
+    orders.forEach(function(o){
+      var sc=o.status==='已入库'?'ok':o.status==='已到货'?'info':o.status==='运输中'?'purple':'low';
+      h+='<div class="procurement-card">';
+      h+='<span class="badge '+sc+'">'+o.status+'</span>';
+      h+='<span class="pc-part">'+cn(o.part_name)+'</span>';
+      h+='<span class="pc-info">×'+o.quantity_ordered+' | $'+o.total_cost+' | '+o.supplier+'</span>';
+      h+='<span class="pc-info">订单日:'+o.order_date+' | 预计到货:'+o.expected_arrival+'</span>';
+      h+='<div class="pc-actions">';
+      h+='<select onchange="setOrderStatus(\''+o.order_id+'\',this.value)" style="padding:6px 12px;border-radius:var(--radius);font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);outline:none;font-family:var(--font-sans);">';
+      ['申请中','已下单','运输中','已到货','已入库'].forEach(function(s){
+        h+='<option value="'+s+'"'+(o.status===s?' selected':'')+'>'+s+'</option>';
+      });
+      h+='</select>';
+      if(o.status!=='已入库')h+=' <button class="btn small primary" onclick="setOrderStatus(\''+o.order_id+'\',\'已入库\')">确认入库</button>';
+      h+='</div></div>';
+    });
+    document.getElementById('procurement-list').innerHTML=h
+  }catch(e){document.getElementById('procurement-list').innerHTML='<div class="loading">加载失败</div>'}
+}
+
+async function loadLogs(){
+  try{
+    var r=await fetch('/api/inventory/logs'),d=await r.json(),logs=d.logs||[];
+    if(logs.length===0){document.getElementById('log-table').innerHTML='<div style="text-align:center;padding:20px;color:var(--text-muted)">暂无变动记录</div>';return}
+    var h='<table><tr><th>时间</th><th>零件</th><th>变动</th><th>原因</th><th>新库存</th></tr>';
+    logs.forEach(function(l){
+      var color=l.change_qty>0?'var(--green)':'var(--red)',sign=l.change_qty>0?'+':'';
+      h+='<tr><td>'+(l.created_at||'').substring(0,19)+'</td><td>'+cn(l.part_name)+'</td>';
+      h+='<td style="color:'+color+';font-weight:600;">'+sign+l.change_qty+'</td>';
+      h+='<td>'+l.reason+'</td><td>'+l.new_stock+'</td></tr>';
+    });
+    h+='</table>';document.getElementById('log-table').innerHTML=h
+  }catch(e){document.getElementById('log-table').innerHTML='<div class="loading">加载失败</div>'}
+}
+
+async function initInventory(){
+  try{
+    await fetch('/api/inventory/stock');
+    await loadAll();
+    showMsg('库存已重新初始化')
+  }catch(e){showMsg('初始化失败: '+e.message)}
+}
+async function generateOrders(){
+  try{
+    var r=await fetch('/api/inventory/procurement/generate',{method:'POST'}),d=await r.json();
+    showMsg(d.generated>0?'已生成 '+d.generated+' 张采购单':'库存充足，无需采购');
+    await loadAll()
+  }catch(e){showMsg('生成失败: '+e.message)}
+}
+async function setOrderStatus(oid,newStatus){
+  try{
+    var r=await fetch('/api/inventory/procurement/update-status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({order_id:oid,status:newStatus})});
+    var d=await r.json();
+    if(d.success){
+      showMsg(newStatus==='已入库'?'已入库，库存自动更新':('状态更新: '+newStatus));
+      await loadAll();
+    }else{showMsg('更新失败: '+(d.error||''))}
+  }catch(e){showMsg('操作失败')}
+}
+function showMsg(m){var e=document.getElementById('error');e.style.display='block';e.textContent=m;setTimeout(function(){e.style.display='none'},4000)}
+
+async function quickAdjust(partName, delta) {
+  try {
+    var r = await fetch('/api/inventory/adjust', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({part_name: partName, delta: delta})
+    });
+    var d = await r.json();
+    if (d.success) {
+      showMsg(cn(partName) + ': ' + d.old_stock + ' -> ' + d.new_stock + ' (' + (delta > 0 ? '+' : '') + delta + ')');
+      await loadAll();
+    } else {
+      showMsg('调整失败: ' + (d.detail || 'error'));
+    }
+  } catch(e) { showMsg('网络错误'); }
+}
+
+function editStock(partName, currentStock) {
+  var val = prompt('修改 ' + cn(partName) + ' 库存量（当前: ' + currentStock + '）\n输入新数值：', currentStock);
+  if (val === null) return;
+  var newVal = parseInt(val);
+  if (isNaN(newVal) || newVal < 0) { showMsg('请输入有效的非负整数'); return; }
+  fetch('/api/inventory/adjust', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({part_name: partName, new_stock: newVal})
+  }).then(function(r){ return r.json() }).then(function(d){
+    if (d.success) { showMsg(cn(partName) + ': ' + d.old_stock + ' -> ' + d.new_stock); loadAll(); }
+    else { showMsg('修改失败: ' + (d.detail || 'error')); }
+  }).catch(function(){ showMsg('网络错误'); });
+}
+
+document.addEventListener('DOMContentLoaded',loadAll)
+</script>
+</body>
+</html>

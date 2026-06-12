@@ -4,7 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>工业智能运维助手 — AI Assistant</title>
-<script src="/shared/navbar.js?v=20260519"></script>
+<script src="/shared/role-check.js"></script>
+<script src="/shared/theme-init.js"></script>
+<script src="/shared/navbar.js?v=20260530"></script>
+<script src="/shared/role-switcher.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <style>
@@ -36,7 +39,33 @@
   --font-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
   --font-sans: 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', 'Segoe UI', system-ui, sans-serif;
   --transition: 0.2s cubic-bezier(0.33, 1, 0.68, 1);
+
+
+/* ═══════════════════════════════════════════════════════════
+   LIGHT THEME — Clean Industrial
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="light"] {
+  --bg-root: #f4f6f9;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-alt: #f0f2f5;
+  --bg-input: #ffffff;
+  --border: #dde1e7;
+  --border-light: #e4e8ef;
+  --border-accent: #c4cdd9;
+  --text-primary: #1a1d26;
+  --text-secondary: #4a5568;
+  --text-muted: #7a8498;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.10);
 }
+[data-theme="light"] body::before {
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.006) 2px, rgba(0,0,0,0.006) 4px),
+    radial-gradient(ellipse at 20% 0%, rgba(0,156,130,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(200,130,30,0.04) 0%, transparent 50%);
+}
+
 
 * { margin:0; padding:0; box-sizing:border-box; }
 
@@ -301,6 +330,13 @@ body::before {
   border-top: 1px solid rgba(240,160,48,0.1);
 }
 .tool-card.open .tool-card-body { display: block; }
+/* RAG tool card — purple tint for knowledge retrieval */
+.tool-card.rag-tool {
+  background: rgba(163,113,247,0.05);
+  border: 1px solid rgba(163,113,247,0.2);
+}
+.tool-card.rag-tool .tool-card-header { color: var(--accent-purple); }
+.tool-card.rag-tool .tool-card-body { border-top: 1px solid rgba(163,113,247,0.1); }
 .tool-card-body pre {
   background: var(--bg-input);
   padding: 8px; border-radius: var(--radius);
@@ -382,6 +418,228 @@ body::before {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   SIDEBAR
+   ═══════════════════════════════════════════════════════════════ */
+.chat-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width 0.3s cubic-bezier(0.33, 1, 0.68, 1),
+              border-right 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+}
+.sidebar.collapsed {
+  width: 0;
+  border-right-color: transparent;
+}
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.sidebar-header-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.sidebar-toggle {
+  background: none;
+  border: 1px solid var(--border-light);
+  color: var(--text-muted);
+  width: 26px; height: 26px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+.sidebar-toggle:hover {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  background: rgba(0,201,160,0.05);
+}
+.sidebar-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sidebar-list::-webkit-scrollbar {
+  width: 3px;
+}
+.sidebar-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-list::-webkit-scrollbar-thumb {
+  background: var(--border-light);
+  border-radius: 2px;
+}
+.sidebar-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all var(--transition);
+  border: 1px solid transparent;
+  text-align: left;
+  background: none;
+  font-family: var(--font-sans);
+  width: 100%;
+}
+.sidebar-item:hover {
+  background: var(--bg-card);
+  border-color: var(--border-light);
+}
+.sidebar-item:active {
+  background: rgba(0,201,160,0.06);
+  border-color: rgba(0,201,160,0.2);
+}
+.sidebar-item-num {
+  width: 20px; height: 20px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border-light);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 1px;
+}
+.sidebar-item:hover .sidebar-item-num {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+.sidebar-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.sidebar-item-q {
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sidebar-item-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sidebar-item:hover .sidebar-item-q {
+  color: var(--accent-cyan);
+}
+.sidebar-collapsed-tab {
+  display: none;
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+}
+.sidebar.collapsed + .chat-container .sidebar-collapsed-tab,
+.chat-layout:has(.sidebar.collapsed) .sidebar-collapsed-tab {
+  display: flex;
+}
+.sidebar-expand-btn {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-left: none;
+  color: var(--text-muted);
+  width: 28px; height: 56px;
+  border-radius: 0 6px 6px 0;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+  writing-mode: vertical-rl;
+  letter-spacing: 2px;
+}
+.sidebar-expand-btn:hover {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  background: rgba(0,201,160,0.05);
+}
+.sidebar-mobile-btn {
+  display: none;
+  background: none;
+  border: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  width: 30px; height: 30px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 16px;
+  align-items: center; justify-content: center;
+  transition: all var(--transition);
+}
+.sidebar-mobile-btn:hover {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed; left: 0; top: 52px; bottom: 0;
+    z-index: 200;
+    width: 260px;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+    box-shadow: var(--shadow-lg);
+  }
+  .sidebar.collapsed {
+    width: 260px;
+    border-right: 1px solid var(--border);
+    transform: translateX(-100%);
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  .sidebar-mobile-overlay {
+    display: none;
+    position: fixed; inset: 0; top: 52px; z-index: 199;
+    background: rgba(0,0,0,0.5);
+  }
+  .sidebar.mobile-open ~ .sidebar-mobile-overlay {
+    display: block;
+  }
+  .sidebar-mobile-btn {
+    display: flex;
+  }
+  .sidebar-toggle {
+    display: none;
+  }
+  .sidebar-expand-tab {
+    display: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
    ERROR
    ═══════════════════════════════════════════════════════════════ */
 .error-banner {
@@ -448,6 +706,151 @@ body::before {
 .msg-report-dl:hover {
   box-shadow: 0 0 16px rgba(0,201,160,0.4);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Role-based visibility
+   ═══════════════════════════════════════════════════════════════ */
+html[data-role="operator"] .role-manager:not(.role-operator) { display: none !important; }
+html[data-role="operator"] .role-developer:not(.role-operator) { display: none !important; }
+html[data-role="manager"] .role-operator:not(.role-manager) { display: none !important; }
+html[data-role="manager"] .role-developer:not(.role-manager) { display: none !important; }
+
+/* Role-aware sidebar sections */
+.sidebar-role-label {
+  font-size: 9px; text-transform: uppercase; letter-spacing: 1px;
+  padding: 8px 14px 4px; color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+.sidebar-role-label.role-operator { color: var(--accent-cyan); }
+.sidebar-role-label.role-manager { color: var(--accent-amber); }
+
+/* RAG cite preview overlay */
+.rag-result-clickable {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.rag-result-clickable:hover {
+  background: rgba(163,113,247,0.08) !important;
+}
+.cite-preview-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 9999;
+  display: none; align-items: center; justify-content: center;
+}
+.cite-preview-overlay.show { display: flex; }
+.cite-preview-box {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 10px; width: 600px; max-width: 92vw; max-height: 80vh;
+  overflow-y: auto; padding: 20px 24px; box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+  position: relative;
+}
+.cite-preview-box h4 { font-size: 14px; color: var(--accent-purple); margin-bottom: 4px; }
+.cite-preview-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 12px; }
+.cite-preview-content {
+  font-size: 12px; line-height: 1.8; color: var(--text-secondary);
+  padding: 12px; background: var(--bg-card-alt); border-radius: 6px;
+  border-left: 3px solid var(--accent-purple); white-space: pre-wrap;
+  font-family: var(--font-sans);
+}
+.cite-preview-close {
+  position: absolute; top: 12px; right: 16px;
+  background: none; border: none; color: var(--text-muted);
+  font-size: 18px; cursor: pointer;
+}
+.cite-preview-actions {
+  display: flex; gap: 8px; margin-top: 14px;
+}
+.cite-preview-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 6px; font-size: 12px; cursor: pointer;
+  font-family: var(--font-sans); text-decoration: none;
+  border: 1px solid var(--border-light); background: var(--bg-card-alt);
+  color: var(--text-secondary); transition: all var(--transition);
+}
+.cite-preview-btn:hover {
+  border-color: var(--accent-purple);
+  color: var(--accent-purple);
+  background: rgba(163,113,247,0.06);
+}
+.cite-preview-btn.primary {
+  background: var(--accent-purple);
+  color: #fff; border-color: var(--accent-purple);
+}
+.cite-preview-btn.primary:hover {
+  box-shadow: 0 0 12px rgba(163,113,247,0.3);
+}
+.cite-preview-full-doc {
+  margin-top: 14px; padding: 12px;
+  background: var(--bg-input); border-radius: 6px;
+  border-left: 3px solid var(--accent-purple);
+  font-size: 12px; line-height: 1.8; color: var(--text-secondary);
+  max-height: 400px; overflow-y: auto; white-space: pre-wrap;
+  font-family: var(--font-sans); display: none;
+}
+.cite-preview-full-doc.show { display: block; }
+
+/* RAG citation references at end of answer */
+.rag-cite-block {
+  margin-top: 16px; padding: 14px 16px;
+  background: rgba(163,113,247,0.04);
+  border: 1px solid rgba(163,113,247,0.15);
+  border-radius: 8px; font-size: 12px;
+}
+.rag-cite-block-header {
+  color: var(--accent-purple); font-weight: 700; font-size: 13px;
+  margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+}
+.rag-cite-item {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 7px 10px; margin: 4px 0;
+  border-radius: var(--radius); cursor: pointer;
+  transition: all var(--transition);
+  border: 1px solid transparent;
+  color: var(--text-secondary); line-height: 1.6;
+}
+.rag-cite-item:hover {
+  background: rgba(163,113,247,0.08);
+  border-color: rgba(163,113,247,0.2);
+  color: var(--text-primary);
+}
+.rag-cite-num {
+  flex-shrink: 0; width: 20px; height: 20px;
+  border-radius: 4px; background: rgba(163,113,247,0.12);
+  color: var(--accent-purple); font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono);
+}
+.rag-cite-source { color: var(--text-primary); font-weight: 600; }
+.rag-cite-section { color: var(--text-secondary); }
+.rag-cite-score {
+  font-size: 11px; color: var(--accent-green); font-family: var(--font-mono);
+  flex-shrink: 0; margin-left: auto;
+}
+
+/* Purple highlight for RAG-sourced content */
+mark.rag-sourced {
+  background: rgba(163,113,247,0.15);
+  color: #c9a0ff;
+  padding: 1px 4px; border-radius: 2px;
+  border-bottom: 1px dashed rgba(163,113,247,0.35);
+  cursor: help;
+}
+[data-theme="light"] mark.rag-sourced {
+  background: rgba(140,80,220,0.12);
+  color: #6b30c0;
+  border-bottom-color: rgba(140,80,220,0.4);
+}
+
+/* RAG badge at top of answer */
+.rag-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; margin-bottom: 12px;
+  background: rgba(163,113,247,0.08);
+  border: 1px solid rgba(163,113,247,0.18);
+  border-radius: 6px; font-size: 12px;
+  color: var(--accent-purple); font-weight: 600;
+}
+.rag-badge-icon { font-size: 14px; }
+
 </style>
 </head>
 <body>
@@ -462,12 +865,152 @@ body::before {
       工业智能运维助手
     </a>
     <div class="header-right">
+      <button class="sidebar-mobile-btn" id="sidebarMobileToggle" title="推荐问题">&#9776;</button>
       <span class="status-dot" id="statusDot"></span>
       <span id="statusText">就绪</span>
-      <a class="back-link" href="/">← 返回仪表盘</a>
+      <a class="back-link" href="/">&larr; 返回仪表盘</a>
     </div>
   </div>
 </div>
+
+<div class="chat-layout">
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <span class="sidebar-header-title">&#128203; 推荐问题</span>
+    <button class="sidebar-toggle" id="sidebarToggle" title="折叠侧边栏">&lang;</button>
+  </div>
+  <div class="sidebar-list">
+    <div class="sidebar-role-label role-operator">🔧 运维工程师常用</div>
+    <button class="sidebar-item role-operator" data-question="当前哪些设备风险最高？">
+      <span class="sidebar-item-num">1</span>
+      <span class="sidebar-item-text">
+        <span class="sidebar-item-q">当前哪些设备风险最高？</span>
+        <span class="sidebar-item-sub">全局告警态势 &middot; 优先级排序 &middot; 预估成本</span>
+      </span>
+    </button>
+    <button class="sidebar-item role-developer" data-question="为什么4个传感器参数不够用？系统的预测瓶颈是什么？">
+      <span class="sidebar-item-num">2</span>
+      <span class="sidebar-item-text">
+        <span class="sidebar-item-q">为什么4个传感器参数不够用？</span>
+        <span class="sidebar-item-sub">系统核心发现 &middot; Youden's J &middot; 传感器缺口</span>
+      </span>
+    </button>
+    <button class="sidebar-item role-operator" data-question="帮我分析 CNC_042 为什么风险高？根因是什么？">
+      <span class="sidebar-item-num">3</span>
+      <span class="sidebar-item-text">
+        <span class="sidebar-item-q">帮我分析 CNC_042 的根因</span>
+        <span class="sidebar-item-sub">单设备深度诊断 &middot; 根因假设 &middot; 检查建议</span>
+      </span>
+    </button>
+    <button class="sidebar-item role-operator" data-question="展示 CNC_036 最近24小时温度变化趋势">
+      <span class="sidebar-item-num">4</span>
+      <span class="sidebar-item-text">
+        <span class="sidebar-item-q">展示 CNC_036 温度变化趋势</span>
+        <span class="sidebar-item-sub">时序数据 &middot; ECharts图表 &middot; 异常标记</span>
+      </span>
+    </button>
+    <button class="sidebar-item role-operator" data-question="对比 CNC_001 和 CNC_036，哪台设备更稳定？">
+      <span class="sidebar-item-num">5</span>
+      <span class="sidebar-item-text">
+        <span class="sidebar-item-q">对比 CNC_001 和 CNC_036</span>
+        <span class="sidebar-item-sub">横向对比 &middot; 故障率 &middot; 稳定性判定</span>
+      </span>
+    </button>
+    <div class="sidebar-role-label role-manager role-manager">📊 生产管理者常用</div>
+    <button class="sidebar-item role-manager" data-question="如果加装振动传感器，投资回报率是多少？">
+      <span class="sidebar-item-num">6</span>
+      <span class="sidebar-item-text">
+        <span class="sidebar-item-q">加装振动传感器投资回报率？</span>
+        <span class="sidebar-item-sub">三阶段ROI &middot; Youden's J提升 &middot; 回本周期</span>
+      </span>
+    </button>
+    <button class="sidebar-item role-manager" data-question="帮我生成一份高风险设备报告">
+      <span class="sidebar-item-num">7</span>
+      <span class="sidebar-item-text">
+        <span class="sidebar-item-q">帮我生成高风险设备报告</span>
+        <span class="sidebar-item-sub">自动报告 &middot; HTML/PDF &middot; 多步编排</span>
+      </span>
+    </button>
+    <button class="sidebar-item" data-question="系统预测能提前多久发现故障？漏报率是多少？">
+      <span class="sidebar-item-num">8</span>
+      <span class="sidebar-item-text">
+        <span class="sidebar-item-q">系统预测能力如何验证？</span>
+        <span class="sidebar-item-sub">三层回测 &middot; 预警提前量 &middot; 漏报率</span>
+      </span>
+    </button>
+    <button class="sidebar-item role-manager" data-question="三种维护策略有什么区别？我应该怎么选？">
+      <span class="sidebar-item-num">9</span>
+      <span class="sidebar-item-text">
+        <span class="sidebar-item-q">三种维护策略怎么选？</span>
+        <span class="sidebar-item-sub">成本效率 vs 生产效率 vs 质量优先</span>
+      </span>
+    </button>
+    <button class="sidebar-item role-operator" data-question="健康分最低的设备有哪些？它们的主要问题是什么？">
+      <span class="sidebar-item-num">10</span>
+      <span class="sidebar-item-text">
+        <span class="sidebar-item-q">健康分最低的设备有哪些？</span>
+        <span class="sidebar-item-sub">健康度排名 &middot; 主要问题 &middot; 趋势分类</span>
+      </span>
+    </button>
+    <button class="sidebar-item" data-question="当前哪些设备剩余使用寿命(RUL)最短？它们还能用多久？">
+      <span class="sidebar-item-num">11</span>
+      <span class="sidebar-item-text">
+        <span class="sidebar-item-q">RUL预测：设备还能用多久？</span>
+        <span class="sidebar-item-sub">剩余使用寿命 &middot; 退化速率 &middot; 置信区间</span>
+      </span>
+    </button>
+    <div class="sidebar-role-label">📚 系统使用 &amp; 知识问答</div>
+    <button class="sidebar-item" data-question="健康分是怎么计算的？8个维度分别是什么？">
+      <span class="sidebar-item-num">12</span>
+      <span class="sidebar-item-text">
+        <span class="sidebar-item-q">健康分是怎么计算的？</span>
+        <span class="sidebar-item-sub">8维度权重 &middot; 计算公式 &middot; 知识库检索</span>
+      </span>
+    </button>
+    <button class="sidebar-item" data-question="三种维护策略有什么区别？我应该怎么选？">
+      <span class="sidebar-item-num">13</span>
+      <span class="sidebar-item-text">
+        <span class="sidebar-item-q">三种维护策略有什么区别？</span>
+        <span class="sidebar-item-sub">成本效率 vs 生产效率 vs 质量优先 &middot; 知识库</span>
+      </span>
+    </button>
+    <button class="sidebar-item" data-question="设备基线溯源有哪三种类型？怎么查看？">
+      <span class="sidebar-item-num">14</span>
+      <span class="sidebar-item-text">
+        <span class="sidebar-item-q">基线溯源有哪三种类型？</span>
+        <span class="sidebar-item-sub">健康分溯源 &middot; Z-Score溯源 &middot; 成本风险溯源</span>
+      </span>
+    </button>
+    <button class="sidebar-item" data-question="CNC机床轴承更换步骤是什么？需要什么工具？">
+      <span class="sidebar-item-num">15</span>
+      <span class="sidebar-item-text">
+        <span class="sidebar-item-q">CNC轴承更换步骤是什么？</span>
+        <span class="sidebar-item-sub">运维知识库 &middot; 维修步骤 &middot; 备件清单</span>
+      </span>
+    </button>
+    <button class="sidebar-item" data-question="Type 4高压型故障怎么处理？有什么历史案例？">
+      <span class="sidebar-item-num">16</span>
+      <span class="sidebar-item-text">
+        <span class="sidebar-item-q">Type 4高压故障怎么处理？</span>
+        <span class="sidebar-item-sub">故障案例库 &middot; 历史经验 &middot; 处理方案</span>
+      </span>
+    </button>
+    <button class="sidebar-item" data-question="如何切换维护策略？角色权限怎么切换？">
+      <span class="sidebar-item-num">17</span>
+      <span class="sidebar-item-text">
+        <span class="sidebar-item-q">如何切换维护策略和角色？</span>
+        <span class="sidebar-item-sub">系统操作 &middot; 策略切换 &middot; 权限管理</span>
+      </span>
+    </button>
+  </div>
+</aside>
+
+<div class="sidebar-expand-tab" id="sidebarExpandTab" style="display:none;">
+  <button class="sidebar-expand-btn" onclick="expandSidebar()" title="展开侧边栏">推荐问题</button>
+</div>
+
+<div class="sidebar-mobile-overlay" id="sidebarMobileOverlay"></div>
 
 <!-- ═══════════════════════════════════════════════════════════════
      CHAT AREA
@@ -475,18 +1018,9 @@ body::before {
 <div class="chat-container">
   <div class="messages" id="messages">
     <div class="welcome" id="welcome">
-      <div class="welcome-icon">&#9881;</div>
+      <div class="welcome-icon" id="welcome-icon">&#9881;</div>
       <h2>工业智能运维助手</h2>
-      <p>我可以帮您查询设备状态、分析异常原因、生成维护建议。基于真实MCP工具和DeepSeek推理引擎。</p>
-      <div class="quick-questions">
-        <button class="quick-btn" data-question="CNC_036 最近24小时温度波动">CNC_036 最近24小时温度波动</button>
-        <button class="quick-btn" data-question="哪个设备风险最高？">哪个设备风险最高？</button>
-        <button class="quick-btn" data-question="为什么 CNC_042 风险高？">为什么 CNC_042 风险高？</button>
-        <button class="quick-btn" data-question="哪些设备存在 thermal drift？">哪些设备存在 thermal drift？</button>
-        <button class="quick-btn" data-question="当前最需要维护的设备有哪些？">当前最需要维护的设备有哪些？</button>
-        <button class="quick-btn" data-question="maintenance work order 是什么？">maintenance work order 是什么？</button>
-        <button class="quick-btn" data-question="系统的预测瓶颈是什么？">系统的预测瓶颈是什么？</button>
-      </div>
+      <p id="welcome-text">我可以帮您查询设备状态、分析异常原因、生成维护建议。基于真实MCP工具和DeepSeek推理引擎。</p>
     </div>
   </div>
 
@@ -505,6 +1039,22 @@ body::before {
       </button>
     </div>
     <div class="input-hint">基于 DeepSeek + MCP Tool Calling · 所有分析通过真实工业数据完成</div>
+  </div>
+</div>
+</div>
+
+<!-- RAG 原文引用预览弹出层 -->
+<div class="cite-preview-overlay" id="ragCitePreviewOverlay" onclick="if(event.target===this)closeRagCitePreview()">
+  <div class="cite-preview-box">
+    <button class="cite-preview-close" onclick="closeRagCitePreview()">&times;</button>
+    <h4 id="ragCitePreviewTitle"></h4>
+    <div class="cite-preview-meta" id="ragCitePreviewMeta"></div>
+    <div class="cite-preview-content" id="ragCitePreviewContent"></div>
+    <div class="cite-preview-full-doc" id="ragCitePreviewFullDoc"></div>
+    <div class="cite-preview-actions">
+      <button class="cite-preview-btn primary" id="ragCitePreviewViewDocBtn" onclick="onViewFullDoc()">📄 查看完整文档</button>
+      <button class="cite-preview-btn" onclick="closeRagCitePreview()">关闭</button>
+    </div>
   </div>
 </div>
 
@@ -529,7 +1079,11 @@ let messages = [];          // conversation history for API
 let isStreaming = false;
 let currentAssistantMsg = null;
 let currentToolCards = [];
+let _ragCiteCache = [];     // global cache for RAG full_content lookup (tool cards)
+let _ragCitations = [];    // citations from pre-retrieval (displayed at answer end)
 
+// ═══════════════════════════════════════════════════════════════
+// RAG 原文预览 — global functions
 // ═══════════════════════════════════════════════════════════════
 // LOCALSTORAGE — persist chat history across page navigation
 // ═══════════════════════════════════════════════════════════════
@@ -615,15 +1169,61 @@ function handleKeyDown(e) {
 console.log('[init] handleKeyDown defined');
 
 // ═══════════════════════════════════════════════════════════════
-// QUICK QUESTIONS
+// SIDEBAR — collapse/expand + question click
 // ═══════════════════════════════════════════════════════════════
-document.querySelectorAll('.quick-btn').forEach(btn => {
+const sidebar = document.getElementById('sidebar');
+const sidebarToggle = document.getElementById('sidebarToggle');
+const sidebarExpandTab = document.getElementById('sidebarExpandTab');
+let sidebarCollapsed = false;
+
+function collapseSidebar() {
+  sidebar.classList.add('collapsed');
+  sidebarExpandTab.style.display = 'flex';
+  sidebarCollapsed = true;
+}
+
+function expandSidebar() {
+  sidebar.classList.remove('collapsed');
+  sidebarExpandTab.style.display = 'none';
+  sidebarCollapsed = false;
+}
+
+sidebarToggle.addEventListener('click', () => {
+  if (sidebarCollapsed) {
+    expandSidebar();
+  } else {
+    collapseSidebar();
+  }
+});
+
+// Sidebar question items — same behavior as quick-btn
+document.querySelectorAll('.sidebar-item').forEach(btn => {
   btn.addEventListener('click', () => {
     const q = btn.getAttribute('data-question');
     chatInput.value = q;
     sendMessage();
+    // On mobile, close sidebar after selecting
+    if (window.innerWidth <= 768) {
+      sidebar.classList.remove('mobile-open');
+    }
   });
 });
+
+// Mobile: hamburger button in header
+const mobileToggle = document.getElementById('sidebarMobileToggle');
+if (mobileToggle) {
+  mobileToggle.addEventListener('click', () => {
+    sidebar.classList.toggle('mobile-open');
+  });
+}
+
+// Mobile overlay click to close
+const mobileOverlay = document.getElementById('sidebarMobileOverlay');
+if (mobileOverlay) {
+  mobileOverlay.addEventListener('click', () => {
+    sidebar.classList.remove('mobile-open');
+  });
+}
 
 // ═══════════════════════════════════════════════════════════════
 // SEND MESSAGE — SSE streaming with buffered markdown rendering
@@ -644,6 +1244,9 @@ async function sendMessage() {
 
   currentAssistantMsg = addAssistantPlaceholder();
   currentToolCards = [];
+  _ragCiteCache = [];
+  _ragCitations = [];
+  _currentCiteData = null;
 
   isStreaming = true;
   sendBtn.disabled = true;
@@ -711,6 +1314,12 @@ async function sendMessage() {
 
 function handleSSEEvent(event, onText) {
   switch (event.type) {
+    case 'rag_citations':
+      // Store citations from RAG pre-retrieval for rendering at answer end
+      _ragCitations = event.citations || [];
+      console.log('[rag] received', _ragCitations.length, 'citations');
+      break;
+
     case 'text_delta':
       appendTextToAssistant(currentAssistantMsg, event.text);
       onText(event.text);
@@ -746,8 +1355,15 @@ function handleSSEEvent(event, onText) {
 
     case 'done':
       flushRender(currentAssistantMsg);
+      // Apply RAG citation rendering and purple highlights
+      if (_ragCitations.length > 0) {
+        applyRagHighlighting(currentAssistantMsg, _ragCitations);
+        renderRagCitations(currentAssistantMsg, _ragCitations);
+      }
       finalizeAssistantMsg(currentAssistantMsg);
       setStatus('ready', '就绪');
+      // Clear citations for next turn
+      _ragCitations = [];
       break;
   }
 }
@@ -886,13 +1502,21 @@ function addToolCard(msgDiv, toolName, args) {
   const dots = content.querySelector('.typing-dots');
   if (dots) dots.remove();
 
-  const card = document.createElement('div');
-  card.className = 'tool-card open';
+  // Detect RAG tools for special styling
+  var isRagTool = toolName === 'search_system_docs' || toolName === 'search_maintenance_kb' || toolName === 'search_fault_cases';
+  var toolLabel = toolName;
+  var toolIcon = '&#9881;';  // gear
+  if (toolName === 'search_system_docs') { toolLabel = '检索系统文档'; toolIcon = '&#128218;'; }
+  else if (toolName === 'search_maintenance_kb') { toolLabel = '检索运维知识库'; toolIcon = '&#128295;'; }
+  else if (toolName === 'search_fault_cases') { toolLabel = '检索故障案例库'; toolIcon = '&#128269;'; }
+
+  var card = document.createElement('div');
+  card.className = 'tool-card open' + (isRagTool ? ' rag-tool' : '');
   card.id = 'tool-' + Date.now();
   card.innerHTML = `
     <div class="tool-card-header" onclick="this.parentElement.classList.toggle('open')">
-      <span class="tool-card-icon">&#9881;</span>
-      <span>调用工具：${escapeHtml(toolName)}</span>
+      <span class="tool-card-icon">${toolIcon}</span>
+      <span>调用工具：${escapeHtml(toolLabel)}</span>
       <span style="margin-left:auto;font-size:10px;opacity:0.6;">&#9660;</span>
     </div>
     <div class="tool-card-body">
@@ -907,13 +1531,276 @@ function addToolCard(msgDiv, toolName, args) {
 
 function updateLastToolCard(msgDiv, toolName, summary) {
   if (currentToolCards.length === 0) return;
-  const card = currentToolCards[currentToolCards.length - 1];
-  const resultEl = card.querySelector('.tool-result');
-  if (resultEl) {
-    resultEl.innerHTML = `<div style="margin-top:4px;color:var(--text-muted);">结果：</div>
-      <pre style="max-height:120px;">${escapeHtml(summary)}</pre>`;
+  var card = currentToolCards[currentToolCards.length - 1];
+  var resultEl = card.querySelector('.tool-result');
+  if (!resultEl) return;
+
+  // Try to parse RAG results for pretty display
+  var isRagTool = toolName === 'search_system_docs' || toolName === 'search_maintenance_kb' || toolName === 'search_fault_cases';
+  if (isRagTool) {
+    try {
+      var data = JSON.parse(summary);
+      var results = data.results || [];
+      if (results.length > 0) {
+        var html = '<div style="margin-top:4px;color:var(--text-muted);">结果：找到 ' + data.total_found + ' 条相关内容</div>';
+        for (var i = 0; i < Math.min(results.length, 5); i++) {
+          var r = results[i];
+          // Store full_content in global cache for preview on click
+          var citeId = _ragCiteCache.length;
+          _ragCiteCache.push({
+            source: r.source || '',
+            section: r.section || '',
+            score: r.score || 0,
+            fullContent: r.full_content || r.content || '',
+            collection: r.collection || ''
+          });
+          html += '<div class="rag-result-clickable" onclick="openRagCitePreview(' + citeId + ')" title="点击查看原文片段"';
+          html += ' style="margin-top:6px;padding:6px 8px;background:var(--bg-input);border-radius:var(--radius);font-size:11px;">';
+          html += '<div style="color:var(--accent-purple);font-size:10px;margin-bottom:3px;">';
+          html += '📄 ' + escapeHtml(r.source || '') + (r.section ? ' › ' + escapeHtml(r.section) : '');
+          html += ' <span style="color:var(--text-muted);">相关度: ' + (r.score || 0).toFixed(2) + '</span>';
+          html += '</div>';
+          html += '<div style="color:var(--text-secondary);line-height:1.5;">' + escapeHtml((r.content || '').substring(0, 200)) + '</div>';
+          html += '</div>';
+        }
+        resultEl.innerHTML = html;
+        return;
+      }
+    } catch(e) { /* fall through to raw display */ }
   }
+
+  // Default: raw text display
+  resultEl.innerHTML = '<div style="margin-top:4px;color:var(--text-muted);">结果：</div>' +
+    '<pre style="max-height:120px;">' + escapeHtml(summary) + '</pre>';
   scrollToBottom();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RAG Cite Preview — open full chunk content in modal
+// ═══════════════════════════════════════════════════════════════
+var _currentCiteData = null;  // stores {source, collection} for "view full doc"
+
+function openRagCitePreview(citeId) {
+  var c = _ragCiteCache[citeId];
+  if (!c) return;
+  _currentCiteData = { source: c.source, section: c.section, collection: c.collection || '' };
+
+  document.getElementById('ragCitePreviewTitle').textContent = '📄 ' + (c.source || '未知文档');
+  document.getElementById('ragCitePreviewMeta').innerHTML =
+    '📂 ' + escapeHtml(c.section || '(无章节)') +
+    ' &nbsp;|&nbsp; 检索相似度: <b style="color:var(--accent-green);">' + Math.round(c.score * 100) + '%</b>';
+  document.getElementById('ragCitePreviewContent').textContent = c.fullContent || '(无预览内容)';
+
+  // Reset full doc view
+  var fullDoc = document.getElementById('ragCitePreviewFullDoc');
+  if (fullDoc) { fullDoc.classList.remove('show'); fullDoc.textContent = ''; }
+  var viewBtn = document.getElementById('ragCitePreviewViewDocBtn');
+  if (viewBtn) { viewBtn.textContent = '📄 查看完整文档'; viewBtn.disabled = false; }
+
+  document.getElementById('ragCitePreviewOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function onViewFullDoc() {
+  if (!_currentCiteData) return;
+  loadFullDocument(_currentCiteData.source, _currentCiteData.collection);
+}
+function closeRagCitePreview() {
+  document.getElementById('ragCitePreviewOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+  // Hide full document panel
+  var fullDoc = document.getElementById('ragCitePreviewFullDoc');
+  if (fullDoc) { fullDoc.classList.remove('show'); fullDoc.textContent = ''; }
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeRagCitePreview();
+});
+
+// Fetch and display full document content
+var _fullDocCache = {};  // cache for full document content
+async function loadFullDocument(source, collection) {
+  var fullDocEl = document.getElementById('ragCitePreviewFullDoc');
+  if (!fullDocEl) return;
+
+  // Toggle if already loaded
+  if (fullDocEl.classList.contains('show')) {
+    fullDocEl.classList.remove('show');
+    document.getElementById('ragCitePreviewViewDocBtn').textContent = '📄 查看完整文档';
+    return;
+  }
+
+  // Check cache
+  var cacheKey = collection + '::' + source;
+  if (_fullDocCache[cacheKey]) {
+    fullDocEl.textContent = _fullDocCache[cacheKey];
+    fullDocEl.classList.add('show');
+    document.getElementById('ragCitePreviewViewDocBtn').textContent = '📄 收起完整文档';
+    return;
+  }
+
+  // Show loading
+  fullDocEl.textContent = '加载中...';
+  fullDocEl.classList.add('show');
+  document.getElementById('ragCitePreviewViewDocBtn').textContent = '📄 加载中...';
+  document.getElementById('ragCitePreviewViewDocBtn').disabled = true;
+
+  try {
+    var url = '/api/knowledge-base/document-content?source=' + encodeURIComponent(source)
+            + '&collection=' + encodeURIComponent(collection);
+    var resp = await fetch(url);
+    var data = await resp.json();
+    if (data.success && data.content) {
+      _fullDocCache[cacheKey] = data.content;
+      // Truncate very long documents for preview
+      var content = data.content;
+      if (content.length > 8000) {
+        content = content.substring(0, 8000)
+          + '\n\n... (文档过长，已截断前 8000 字符。'
+          + '共 ' + (data.size_kb || '?') + ' KB)';
+      }
+      fullDocEl.textContent = content;
+      document.getElementById('ragCitePreviewViewDocBtn').textContent = '📄 收起完整文档';
+    } else {
+      fullDocEl.textContent = data.message || data.error || '无法加载文档';
+      document.getElementById('ragCitePreviewViewDocBtn').textContent = '📄 查看完整文档';
+    }
+  } catch (e) {
+    fullDocEl.textContent = '加载失败: ' + e.message;
+    document.getElementById('ragCitePreviewViewDocBtn').textContent = '📄 查看完整文档';
+  }
+  document.getElementById('ragCitePreviewViewDocBtn').disabled = false;
+}
+
+// Render citation references at the end of a RAG-assisted answer
+function renderRagCitations(msgDiv, citations) {
+  if (!msgDiv || !citations || citations.length === 0) return;
+  var content = msgDiv.querySelector('.msg-content');
+  if (!content) return;
+
+  // Build citation block HTML
+  var html = '<div class="rag-cite-block">';
+  html += '<div class="rag-cite-block-header">📚 参考了 ' + citations.length + ' 篇知识库文档</div>';
+  for (var i = 0; i < citations.length; i++) {
+    var c = citations[i];
+    var citeId = _ragCiteCache.length;
+    _ragCiteCache.push({
+      source: c.source || '',
+      section: c.section || '',
+      score: c.score || 0,
+      fullContent: c.full_content || '',
+      collection: c.collection || ''
+    });
+    var sourceName = (c.source || '未知文档').replace(/\\/g, '/').split('/').pop() || c.source;
+    var sectionInfo = c.section ? ' · ' + escapeHtml(c.section) : '';
+    var scorePct = Math.round((c.score || 0) * 100);
+    html += '<div class="rag-cite-item" onclick="openRagCitePreview(' + citeId + ')" title="点击查看原文片段">';
+    html += '<span class="rag-cite-num">' + (i + 1) + '</span>';
+    html += '<span class="rag-cite-source">' + escapeHtml(sourceName) + '</span>';
+    html += '<span class="rag-cite-section">' + sectionInfo + '</span>';
+    html += '<span class="rag-cite-score">相似度 ' + scorePct + '%</span>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // Insert before tool cards
+  var lastToolCard = content.querySelector('.tool-card:last-of-type');
+  var citeBlock = document.createElement('div');
+  citeBlock.innerHTML = html;
+  if (lastToolCard) {
+    lastToolCard.insertAdjacentElement('afterend', citeBlock.firstElementChild);
+  } else {
+    content.appendChild(citeBlock.firstElementChild);
+  }
+}
+
+// Apply purple highlighting to phrases from RAG citations found in the answer.
+// Uses a safe DOM text-node walk to avoid breaking HTML structure.
+function applyRagHighlighting(msgDiv, citations) {
+  if (!msgDiv || !citations || citations.length === 0) return;
+  var textEl = msgDiv.querySelector('.assistant-text');
+  if (!textEl) return;
+
+  // Add RAG badge at the top of the answer
+  var badgeHtml = '<div class="rag-badge"><span class="rag-badge-icon">📚</span>本回答基于知识库检索生成 · ' + citations.length + ' 篇参考文档</div>';
+  textEl.insertAdjacentHTML('afterbegin', badgeHtml);
+
+  // Collect distinctive phrases from citation content (15-60 chars, must contain Chinese)
+  var phrases = [];
+  var seen = {};
+  for (var i = 0; i < citations.length; i++) {
+    var content = citations[i].full_content || citations[i].content_snippet || '';
+    if (!content) continue;
+    var sentences = content.split(/[。！？\n;；]/);
+    for (var j = 0; j < sentences.length; j++) {
+      var phrase = sentences[j].trim();
+      if (phrase.length < 15 || phrase.length > 60) continue;
+      if (seen[phrase]) continue;
+      if (!/[一-鿿]/.test(phrase)) continue;
+      seen[phrase] = true;
+      phrases.push(phrase);
+    }
+  }
+  if (phrases.length === 0) return;
+  // Sort by length descending — longer phrases are more distinctive
+  phrases.sort(function(a, b) { return b.length - a.length; });
+
+  // Walk text nodes in the assistant-text element and apply highlights
+  var maxHighlights = 6;
+  var replaced = 0;
+  _highlightInTextNodes(textEl, phrases, maxHighlights, replaced);
+}
+
+// Recursively walk text nodes and highlight phrases
+function _highlightInTextNodes(node, phrases, maxHighlights, replaced) {
+  if (replaced >= maxHighlights) return replaced;
+  if (!node) return replaced;
+
+  if (node.nodeType === 3) {  // Text node
+    var text = node.textContent;
+    for (var i = 0; i < phrases.length && replaced < maxHighlights; i++) {
+      var phrase = phrases[i];
+      if (phrase.length < 15) continue;
+      // Use a substring for matching (avoid regex escape issues)
+      var searchStr = phrase.substring(0, Math.min(phrase.length, 35));
+      var idx = text.indexOf(searchStr);
+      if (idx >= 0) {
+        // Split the text node: [before] [highlight] [after]
+        var before = text.substring(0, idx);
+        var match = text.substring(idx, idx + searchStr.length);
+        var after = text.substring(idx + searchStr.length);
+
+        var parent = node.parentNode;
+        var beforeNode = document.createTextNode(before);
+        var mark = document.createElement('mark');
+        mark.className = 'rag-sourced';
+        mark.textContent = match;
+        var afterNode = document.createTextNode(after);
+
+        parent.insertBefore(beforeNode, node);
+        parent.insertBefore(mark, node);
+        parent.insertBefore(afterNode, node);
+        parent.removeChild(node);
+
+        replaced++;
+        // Continue searching in the after text node
+        return _highlightInTextNodes(afterNode, phrases, maxHighlights, replaced);
+      }
+    }
+    return replaced;
+  }
+
+  // Element node — walk children (skip <mark> and <script>/<style>)
+  if (node.nodeType === 1) {
+    var tag = node.tagName.toLowerCase();
+    if (tag === 'mark' || tag === 'script' || tag === 'style' || tag === 'code' || tag === 'pre') {
+      return replaced;
+    }
+    var children = Array.from(node.childNodes);
+    for (var k = 0; k < children.length && replaced < maxHighlights; k++) {
+      replaced = _highlightInTextNodes(children[k], phrases, maxHighlights, replaced);
+    }
+  }
+  return replaced;
 }
 
 function finalizeAssistantMsg(msgDiv) {
@@ -1197,6 +2084,66 @@ function escapeHtml(text) {
 }
 
 console.log('[init] all functions defined, script loaded successfully');
+
+// ── URL preset: ?prompt=xxx auto-fills and sends ──
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var preset = params.get('prompt');
+  if (preset && chatInput) {
+    // URLSearchParams already decodes, no need for decodeURIComponent
+    chatInput.value = preset;
+    chatInput.style.height = 'auto';
+    chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
+    // Delay slightly to ensure DOM is fully ready
+    setTimeout(function() { sendMessage(); }, 500);
+  }
+})();
 </script>
+
+<!-- Role-based sidebar filter -->
+<script>
+(function() {
+  var role = sessionStorage.getItem('user_role') || 'developer';
+  if (role === 'developer') return;
+  var list = document.querySelector('.sidebar-list');
+  if (!list) return;
+  var items = list.querySelectorAll('.sidebar-item');
+  var labels = list.querySelectorAll('.sidebar-role-label');
+  var n = 0;
+  labels.forEach(function(l) {
+    if (role === 'operator') l.style.display = l.classList.contains('role-operator') ? '' : 'none';
+    else if (role === 'manager') l.style.display = l.classList.contains('role-manager') ? '' : 'none';
+  });
+  items.forEach(function(item) {
+    var op = item.classList.contains('role-operator');
+    var mg = item.classList.contains('role-manager');
+    var dv = item.classList.contains('role-developer');
+    var show = false;
+    if (role === 'operator') show = op || (!mg && !dv);
+    else if (role === 'manager') show = mg || (!op && !dv);
+    if (show) {
+      item.style.display = '';
+      n++;
+      var nm = item.querySelector('.sidebar-item-num');
+      if (nm) nm.textContent = n;
+    } else {
+      item.style.display = 'none';
+    }
+  });
+  // Update welcome message for role
+  var icon = document.getElementById('welcome-icon');
+  var text = document.getElementById('welcome-text');
+  if (icon && text) {
+    if (role === 'operator') {
+      icon.innerHTML = '&#9881;';
+      text.textContent = '我可以帮您查询设备状态、分析异常原因、生成维护建议。基于真实MCP工具和DeepSeek推理引擎。';
+    } else if (role === 'manager') {
+      icon.innerHTML = '&#128202;';
+      text.textContent = '我可以帮您分析运维成本效益、对比维护策略、评估传感器投资回报。基于真实MCP工具和DeepSeek推理引擎。';
+    }
+  }
+})();
+</script>
+
 </body>
 </html>

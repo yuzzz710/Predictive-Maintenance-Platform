@@ -1,6 +1,6 @@
 {
-  "data_dir": "C:\\Users\\yuzzz\\Desktop\\\u82d7\u5703\u676f\\git5\\\u539f\u59cb\u6570\u636e\u96c6",
-  "output_dir": "C:\\Users\\yuzzz\\Desktop\\\u82d7\u5703\u676f\\git5\\agent-mcp\u67b6\u6784\\outputs_test\\output_data_prep",
+  "data_dir": "C:\\Users\\yuzzz\\Desktop\\\u82d7\u5703\u676f\\\u534a\u51b3\u8d5bv1\\\u539f\u59cb\u6570\u636e\u96c6",
+  "output_dir": "C:\\Users\\yuzzz\\Desktop\\\u82d7\u5703\u676f\\\u534a\u51b3\u8d5bv1\\agent-mcp\u67b6\u6784\\outputs_test\\output_data_prep",
   "files": {
     "z_scores": "z_scores.csv",
     "cost_risk_matrix": "cost_risk_matrix.csv",

@@ -1,0 +1,433 @@
+{
+  "strategy_positions": {
+    "cost_efficiency": {
+      "cost": 57433.13,
+      "orders": 12,
+      "alarms": 4,
+      "warnings": 8,
+      "downtime_hours": 40.2,
+      "quality_risk": 3459.45,
+      "label": "成本效率",
+      "color": "#3fb950"
+    },
+    "production_efficiency": {
+      "cost": 85518.75,
+      "orders": 20,
+      "alarms": 17,
+      "warnings": 3,
+      "downtime_hours": 67.0,
+      "quality_risk": 14702.67,
+      "label": "生产效率",
+      "color": "#4d94ff"
+    },
+    "quality_first": {
+      "cost": 169257.68,
+      "orders": 30,
+      "alarms": 30,
+      "warnings": 0,
+      "downtime_hours": 100.5,
+      "quality_risk": 25945.9,
+      "label": "质量优先",
+      "color": "#a371f7"
+    }
+  },
+  "cost_downtime_frontier": [
+    {
+      "cost": 40203.0,
+      "downtime_hours": 100.5,
+      "pareto_rank": 1
+    },
+    {
+      "cost": 50887.0,
+      "downtime_hours": 97.5,
+      "pareto_rank": 2
+    },
+    {
+      "cost": 61572.0,
+      "downtime_hours": 94.5,
+      "pareto_rank": 3
+    },
+    {
+      "cost": 72256.0,
+      "downtime_hours": 91.5,
+      "pareto_rank": 4
+    },
+    {
+      "cost": 82940.0,
+      "downtime_hours": 88.4,
+      "pareto_rank": 5
+    },
+    {
+      "cost": 93624.0,
+      "downtime_hours": 85.4,
+      "pareto_rank": 6
+    },
+    {
+      "cost": 104308.0,
+      "downtime_hours": 82.4,
+      "pareto_rank": 7
+    },
+    {
+      "cost": 114992.0,
+      "downtime_hours": 79.4,
+      "pareto_rank": 8
+    },
+    {
+      "cost": 125677.0,
+      "downtime_hours": 76.4,
+      "pareto_rank": 9
+    },
+    {
+      "cost": 136361.0,
+      "downtime_hours": 73.4,
+      "pareto_rank": 10
+    },
+    {
+      "cost": 147045.0,
+      "downtime_hours": 70.3,
+      "pareto_rank": 11
+    },
+    {
+      "cost": 157729.0,
+      "downtime_hours": 67.3,
+      "pareto_rank": 12
+    },
+    {
+      "cost": 168413.0,
+      "downtime_hours": 64.3,
+      "pareto_rank": 13
+    },
+    {
+      "cost": 179097.0,
+      "downtime_hours": 61.3,
+      "pareto_rank": 14
+    },
+    {
+      "cost": 189782.0,
+      "downtime_hours": 58.3,
+      "pareto_rank": 15
+    },
+    {
+      "cost": 200466.0,
+      "downtime_hours": 55.3,
+      "pareto_rank": 16
+    },
+    {
+      "cost": 211150.0,
+      "downtime_hours": 52.3,
+      "pareto_rank": 17
+    },
+    {
+      "cost": 221834.0,
+      "downtime_hours": 49.2,
+      "pareto_rank": 18
+    },
+    {
+      "cost": 232518.0,
+      "downtime_hours": 46.2,
+      "pareto_rank": 19
+    },
+    {
+      "cost": 243202.0,
+      "downtime_hours": 43.2,
+      "pareto_rank": 20
+    },
+    {
+      "cost": 253887.0,
+      "downtime_hours": 40.2,
+      "pareto_rank": 21
+    }
+  ],
+  "cost_quality_frontier": [
+    {
+      "cost": 40203.0,
+      "quality_risk": 25945.9,
+      "pareto_rank": 1
+    },
+    {
+      "cost": 50887.0,
+      "quality_risk": 25297.25,
+      "pareto_rank": 2
+    },
+    {
+      "cost": 61572.0,
+      "quality_risk": 24648.6,
+      "pareto_rank": 3
+    },
+    {
+      "cost": 72256.0,
+      "quality_risk": 23999.96,
+      "pareto_rank": 4
+    },
+    {
+      "cost": 82940.0,
+      "quality_risk": 23351.31,
+      "pareto_rank": 5
+    },
+    {
+      "cost": 93624.0,
+      "quality_risk": 22702.66,
+      "pareto_rank": 6
+    },
+    {
+      "cost": 104308.0,
+      "quality_risk": 22054.01,
+      "pareto_rank": 7
+    },
+    {
+      "cost": 114992.0,
+      "quality_risk": 21405.37,
+      "pareto_rank": 8
+    },
+    {
+      "cost": 125677.0,
+      "quality_risk": 20756.72,
+      "pareto_rank": 9
+    },
+    {
+      "cost": 136361.0,
+      "quality_risk": 20108.07,
+      "pareto_rank": 10
+    },
+    {
+      "cost": 147045.0,
+      "quality_risk": 19459.43,
+      "pareto_rank": 11
+    },
+    {
+      "cost": 157729.0,
+      "quality_risk": 18810.78,
+      "pareto_rank": 12
+    },
+    {
+      "cost": 168413.0,
+      "quality_risk": 18162.13,
+      "pareto_rank": 13
+    },
+    {
+      "cost": 179097.0,
+      "quality_risk": 17513.48,
+      "pareto_rank": 14
+    },
+    {
+      "cost": 189782.0,
+      "quality_risk": 16864.84,
+      "pareto_rank": 15
+    },
+    {
+      "cost": 200466.0,
+      "quality_risk": 16216.19,
+      "pareto_rank": 16
+    },
+    {
+      "cost": 211150.0,
+      "quality_risk": 15567.54,
+      "pareto_rank": 17
+    },
+    {
+      "cost": 221834.0,
+      "quality_risk": 14918.89,
+      "pareto_rank": 18
+    },
+    {
+      "cost": 232518.0,
+      "quality_risk": 14270.25,
+      "pareto_rank": 19
+    },
+    {
+      "cost": 243202.0,
+      "quality_risk": 13621.6,
+      "pareto_rank": 20
+    },
+    {
+      "cost": 253887.0,
+      "quality_risk": 12972.95,
+      "pareto_rank": 21
+    }
+  ],
+  "pareto_3d_points": [
+    {
+      "cost": 40203.0,
+      "downtime_hours": 100.5,
+      "quality_risk": 25945.9,
+      "label": "Pareto-1",
+      "type": "frontier"
+    },
+    {
+      "cost": 50887.0,
+      "downtime_hours": 97.5,
+      "quality_risk": 25297.25,
+      "label": "Pareto-2",
+      "type": "frontier"
+    },
+    {
+      "cost": 61572.0,
+      "downtime_hours": 94.5,
+      "quality_risk": 24648.6,
+      "label": "Pareto-3",
+      "type": "frontier"
+    },
+    {
+      "cost": 72256.0,
+      "downtime_hours": 91.5,
+      "quality_risk": 23999.96,
+      "label": "Pareto-4",
+      "type": "frontier"
+    },
+    {
+      "cost": 82940.0,
+      "downtime_hours": 88.4,
+      "quality_risk": 23351.31,
+      "label": "Pareto-5",
+      "type": "frontier"
+    },
+    {
+      "cost": 93624.0,
+      "downtime_hours": 85.4,
+      "quality_risk": 22702.66,
+      "label": "Pareto-6",
+      "type": "frontier"
+    },
+    {
+      "cost": 104308.0,
+      "downtime_hours": 82.4,
+      "quality_risk": 22054.01,
+      "label": "Pareto-7",
+      "type": "frontier"
+    },
+    {
+      "cost": 114992.0,
+      "downtime_hours": 79.4,
+      "quality_risk": 21405.37,
+      "label": "Pareto-8",
+      "type": "frontier"
+    },
+    {
+      "cost": 125677.0,
+      "downtime_hours": 76.4,
+      "quality_risk": 20756.72,
+      "label": "Pareto-9",
+      "type": "frontier"
+    },
+    {
+      "cost": 136361.0,
+      "downtime_hours": 73.4,
+      "quality_risk": 20108.07,
+      "label": "Pareto-10",
+      "type": "frontier"
+    },
+    {
+      "cost": 147045.0,
+      "downtime_hours": 70.3,
+      "quality_risk": 19459.43,
+      "label": "Pareto-11",
+      "type": "frontier"
+    },
+    {
+      "cost": 157729.0,
+      "downtime_hours": 67.3,
+      "quality_risk": 18810.78,
+      "label": "Pareto-12",
+      "type": "frontier"
+    },
+    {
+      "cost": 168413.0,
+      "downtime_hours": 64.3,
+      "quality_risk": 18162.13,
+      "label": "Pareto-13",
+      "type": "frontier"
+    },
+    {
+      "cost": 179097.0,
+      "downtime_hours": 61.3,
+      "quality_risk": 17513.48,
+      "label": "Pareto-14",
+      "type": "frontier"
+    },
+    {
+      "cost": 189782.0,
+      "downtime_hours": 58.3,
+      "quality_risk": 16864.84,
+      "label": "Pareto-15",
+      "type": "frontier"
+    },
+    {
+      "cost": 200466.0,
+      "downtime_hours": 55.3,
+      "quality_risk": 16216.19,
+      "label": "Pareto-16",
+      "type": "frontier"
+    },
+    {
+      "cost": 211150.0,
+      "downtime_hours": 52.3,
+      "quality_risk": 15567.54,
+      "label": "Pareto-17",
+      "type": "frontier"
+    },
+    {
+      "cost": 221834.0,
+      "downtime_hours": 49.2,
+      "quality_risk": 14918.89,
+      "label": "Pareto-18",
+      "type": "frontier"
+    },
+    {
+      "cost": 232518.0,
+      "downtime_hours": 46.2,
+      "quality_risk": 14270.25,
+      "label": "Pareto-19",
+      "type": "frontier"
+    },
+    {
+      "cost": 243202.0,
+      "downtime_hours": 43.2,
+      "quality_risk": 13621.6,
+      "label": "Pareto-20",
+      "type": "frontier"
+    },
+    {
+      "cost": 253887.0,
+      "downtime_hours": 40.2,
+      "quality_risk": 12972.95,
+      "label": "Pareto-21",
+      "type": "frontier"
+    },
+    {
+      "cost": 57433.0,
+      "downtime_hours": 40.2,
+      "quality_risk": 3459.45,
+      "label": "成本效率",
+      "type": "strategy",
+      "color": "#3fb950",
+      "orders": 12
+    },
+    {
+      "cost": 85519.0,
+      "downtime_hours": 67.0,
+      "quality_risk": 14702.67,
+      "label": "生产效率",
+      "type": "strategy",
+      "color": "#4d94ff",
+      "orders": 20
+    },
+    {
+      "cost": 169258.0,
+      "downtime_hours": 100.5,
+      "quality_risk": 25945.9,
+      "label": "质量优先",
+      "type": "strategy",
+      "color": "#a371f7",
+      "orders": 30
+    }
+  ],
+  "metadata": {
+    "method": "epsilon_constraint",
+    "n_frontier_points": 21,
+    "objectives": [
+      "cost",
+      "downtime_hours",
+      "quality_risk"
+    ]
+  }
+}

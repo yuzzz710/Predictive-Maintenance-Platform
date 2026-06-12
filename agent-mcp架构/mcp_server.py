@@ -22,6 +22,7 @@ MCP Server: Predictive Maintenance — Agent-MCP 预测性维护系统
 import sys, os, subprocess, time, json
 from pathlib import Path
 from typing import Optional
+import pandas as pd
 
 SKILLS_BASE = Path(__file__).resolve().parent
 if str(SKILLS_BASE) not in sys.path:
@@ -186,26 +187,66 @@ def explain_predictability_limit() -> dict:
 # Helpers
 # ══════════════════════════════════════════════════════════════════════
 
-def _run_script(skill_dir_name: str, args: list) -> dict:
-    """Run a skill's scripts/run.py via subprocess, return structured result."""
+# ── Resilience configuration ──
+MCP_MAX_RETRIES = 3
+MCP_TIMEOUT_SECONDS = 300
+
+
+def _run_script(skill_dir_name: str, args: list,
+                max_retries: int = None, timeout: int = None) -> dict:
+    """Run a skill's scripts/run.py via subprocess with retry + timeout.
+
+    Retries up to max_retries times on failure (exit code != 0 or timeout).
+    Returns structured result with retry_count and degraded status.
+    """
+    if max_retries is None:
+        max_retries = MCP_MAX_RETRIES
+    if timeout is None:
+        timeout = MCP_TIMEOUT_SECONDS
+
     script = SKILLS_BASE / skill_dir_name / "scripts" / "run.py"
     if not script.exists():
-        return {"success": False, "error": f"Script not found: {script}"}
+        return {"success": False, "error": f"Script not found: {script}",
+                "retry_count": 0, "status": "SCRIPT_MISSING"}
 
     cmd = [sys.executable, str(script)] + args
-    start = time.time()
-    try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
-        duration = round(time.time() - start, 2)
-        return {
-            "success": proc.returncode == 0,
-            "exit_code": proc.returncode,
-            "duration_seconds": duration,
-            "stdout_tail": _tail(proc.stdout, 20),
-            "stderr_tail": proc.stderr.strip()[-500:] if proc.stderr else "",
-        }
-    except subprocess.TimeoutExpired:
-        return {"success": False, "error": "Timeout after 600s", "duration_seconds": 600}
+    last_result = None
+
+    for attempt in range(1, max_retries + 1):
+        start = time.time()
+        try:
+            proc = subprocess.run(cmd, capture_output=True, text=True,
+                                  timeout=timeout)
+            duration = round(time.time() - start, 2)
+            result = {
+                "success": proc.returncode == 0,
+                "exit_code": proc.returncode,
+                "duration_seconds": duration,
+                "retry_count": attempt - 1,
+                "stdout_tail": _tail(proc.stdout, 20),
+                "stderr_tail": proc.stderr.strip()[-500:] if proc.stderr else "",
+            }
+            if proc.returncode == 0:
+                result["status"] = "OK"
+                return result
+            last_result = result
+        except subprocess.TimeoutExpired:
+            duration = round(time.time() - start, 2)
+            last_result = {
+                "success": False,
+                "error": f"Timeout after {timeout}s",
+                "duration_seconds": duration,
+                "retry_count": attempt - 1,
+                "status": "TIMEOUT",
+            }
+
+    # All retries exhausted
+    if last_result:
+        last_result["retry_count"] = max_retries
+        last_result["status"] = last_result.get("status", "EXHAUSTED")
+        return last_result
+    return {"success": False, "error": "Unknown failure", "retry_count": max_retries,
+            "status": "EXHAUSTED"}
 
 
 def _tail(text: str, n: int) -> str:
@@ -424,12 +465,16 @@ def generate_decision(
     output_dir: str = "./outputs/output_decision",
     streaming: bool = False,
     max_orders: int = 20,
+    strategy: str = "production_efficiency",
 ) -> dict:
-    """【Step 4 - 最终】决策引擎：4 层决策架构 → 6 种动作类型 → 优先级工单 + 成本节约估算。
+    """【Step 4 - 最终】决策引擎：4 层决策架构 + 5 层工业扩展 → 工单 + 工业维护计划。
 
     多信号融合权重: stat_anomaly=0.40, ml_density=0.25, cost_risk=0.25, trend=0.10。
     依赖: 前序步骤全部完成后调用。
-    输出: maintenance_work_orders.csv（最终产物）, decision_summary.json, maintenance_report.txt
+    输出: maintenance_work_orders.csv, industrial_maintenance_plan.csv（22 列工业级工单）,
+          spare_parts_plan.csv, technician_schedule.csv, downtime_schedule.csv,
+          strategy_comparison.csv, maintenance_acceptance_rules.json
+    strategy: cost_efficiency | production_efficiency | quality_first
     """
     args = [
         "--data-dir", data_dir,
@@ -444,11 +489,13 @@ def generate_decision(
     if streaming:
         args.append("--streaming")
     args.extend(["--max-orders", str(max_orders)])
+    args.extend(["--strategy", strategy])
 
     result = _run_script("predictive-maintenance-decision", args)
 
     work_orders = []
     total_count = 0
+    industrial_count = 0
     report_text = ""
     if result["success"]:
         od = output_dir
@@ -456,6 +503,9 @@ def generate_decision(
         work_orders = _read_csv_preview(wo_path, 10)
         if Path(wo_path).exists():
             total_count = len(pd.read_csv(wo_path))
+        ip_path = Path(od) / "industrial_maintenance_plan.csv"
+        if ip_path.exists():
+            industrial_count = len(pd.read_csv(ip_path))
         rp = Path(od) / "maintenance_report.txt"
         if rp.exists():
             report_text = rp.read_text(encoding="utf-8")[:3000]
@@ -466,10 +516,112 @@ def generate_decision(
         "output_dir": output_dir,
         "duration_seconds": result["duration_seconds"],
         "work_orders_count": total_count,
+        "industrial_orders_count": industrial_count,
         "work_orders": work_orders,
         "report": report_text,
         "stdout_tail": result["stdout_tail"],
         "error": result.get("error", "") or result.get("stderr_tail", ""),
+    }
+
+
+# ══════════════════════════════════════════════════════════════════════
+# Tool 8: RUL Prediction — Remaining Useful Life
+# ══════════════════════════════════════════════════════════════════════
+
+@mcp.tool()
+def get_rul_prediction(
+    equipment_id: Optional[str] = None,
+    stat_dir: str = "./outputs/output_stat_inference",
+) -> dict:
+    """查询设备的剩余使用寿命(RUL)预测。
+
+    基于健康分退化轨迹外推，返回各设备的RUL天数、置信区间、退化速率、
+    健康分投影等。RUL不可用时自动标注原因（无退化信号/数据不足）。
+
+    equipment_id: 设备ID（如 CNC_042），不传则返回全部设备的RUL概览
+    stat_dir: stat-inference 输出目录，需包含 rul_degradation.csv 和 rul_summary.json
+    """
+    import json as _json
+
+    rul_path = os.path.join(stat_dir, "rul_degradation.csv")
+    summary_path = os.path.join(stat_dir, "rul_summary.json")
+
+    if not os.path.exists(rul_path):
+        return {
+            "tool": "get_rul_prediction",
+            "status": "unavailable",
+            "error": f"rul_degradation.csv not found in {stat_dir}. "
+                     f"Run stat-inference without --skip-rul first.",
+        }
+
+    rul_df = pd.read_csv(rul_path)
+    summary = {}
+    if os.path.exists(summary_path):
+        with open(summary_path, "r", encoding="utf-8") as f:
+            summary = _json.load(f)
+
+    if equipment_id:
+        # Single machine query
+        match = rul_df[rul_df["Equipment.Id"] == equipment_id]
+        if len(match) == 0:
+            return {
+                "tool": "get_rul_prediction",
+                "status": "not_found",
+                "equipment_id": equipment_id,
+                "error": f"Equipment {equipment_id} not found in RUL data",
+            }
+        row = match.iloc[0]
+        return {
+            "tool": "get_rul_prediction",
+            "status": "success",
+            "equipment_id": equipment_id,
+            "rul": {
+                "rul_steps": None if pd.isna(row["rul_steps"]) else float(row["rul_steps"]),
+                "rul_hours": None if pd.isna(row["rul_hours"]) else float(row["rul_hours"]),
+                "rul_ci_lower_hours": float(row["rul_ci_lower_hours"]),
+                "rul_ci_upper_hours": float(row["rul_ci_upper_hours"]),
+                "health_score_current": float(row["health_score_current"]),
+                "health_score_projected_7d": None if pd.isna(row["health_score_projected_7d"]) else float(row["health_score_projected_7d"]),
+                "health_score_projected_14d": None if pd.isna(row["health_score_projected_14d"]) else float(row["health_score_projected_14d"]),
+                "degradation_rate_per_day": float(row["degradation_rate_per_day"]),
+                "model_type": str(row["model_type"]),
+                "r_squared": float(row["r_squared"]),
+                "trend": str(row["trend"]),
+                "status": str(row["status"]),
+                "status_reason": str(row["status_reason"]),
+                "warnings": str(row["warnings"]) if pd.notna(row["warnings"]) else "",
+            },
+        }
+
+    # All machines overview
+    n_available = int((rul_df["status"] == "ok").sum())
+    n_no_degradation = int((rul_df["status"] == "no_degradation").sum())
+    n_insufficient = int((rul_df["status"] == "insufficient_data").sum())
+
+    # Top 10 most urgent (shortest RUL)
+    available = rul_df[rul_df["status"] == "ok"].head(10)
+    urgent_list = []
+    for _, row in available.iterrows():
+        urgent_list.append({
+            "equipment_id": str(row["Equipment.Id"]),
+            "rul_hours": None if pd.isna(row["rul_hours"]) else round(float(row["rul_hours"]), 1),
+            "health_score_current": float(row["health_score_current"]),
+            "trend": str(row["trend"]),
+            "degradation_rate_per_day": float(row["degradation_rate_per_day"]),
+        })
+
+    return {
+        "tool": "get_rul_prediction",
+        "status": "success",
+        "summary": summary,
+        "overview": {
+            "total_machines": len(rul_df),
+            "rul_available": n_available,
+            "no_degradation_signal": n_no_degradation,
+            "insufficient_data": n_insufficient,
+            "coverage_rate": round(n_available / len(rul_df), 3) if len(rul_df) > 0 else 0,
+        },
+        "most_urgent": urgent_list,
     }
 
 
@@ -486,11 +638,13 @@ def run_predictive_maintenance(
     model: str = "v1",
     streaming: bool = False,
     max_orders: int = 20,
+    strategy: str = "production_efficiency",
 ) -> dict:
     """【全流程一键运行】自动按 DAG 编排: data-prep → stat+ml(并行) → diagnosis → decision。
 
     内置降级: ML 不可用时自动走 stat-only 路径。
     推荐快速体验时使用此 Tool；需要精细控制时使用上述 5 个独立 Tool。
+    strategy: cost_efficiency | production_efficiency | quality_first
     """
     agent = PredictiveMaintenanceAgent(
         data_dir=data_dir,
@@ -500,20 +654,28 @@ def run_predictive_maintenance(
         model_version=model,
         streaming=streaming,
         max_orders=max_orders,
+        strategy=strategy,
     )
     result: PipelineResult = agent.run()
 
     wo_preview = []
+    industrial_preview = []
     wo_path = Path(result.final_output_dir) / "maintenance_work_orders.csv"
     if wo_path.exists():
         import pandas as pd
         wo_df = pd.read_csv(wo_path)
         wo_preview = wo_df.head(10).to_dict(orient="records")
+    ip_path = Path(result.final_output_dir) / "industrial_maintenance_plan.csv"
+    if ip_path.exists():
+        import pandas as pd
+        ip_df = pd.read_csv(ip_path)
+        industrial_preview = ip_df.head(5).to_dict(orient="records")
 
     return {
         "status": result.summary,
         "work_orders_count": result.work_orders_count,
         "work_orders_preview": wo_preview,
+        "industrial_plan_preview": industrial_preview,
         "output_dir": result.final_output_dir,
         "step_statuses": {r.skill_name: r.status.value for r in result.steps},
         "total_duration_seconds": result.total_duration,

@@ -27,35 +27,35 @@ from enum import Enum
 # Configuration
 # ==============================================================================
 
-SKILLS_BASE = Path(__file__).resolve().parent
+SKILLS_BASE = Path(__file__).resolve().parent.parent  # project root
 
 SKILLS = {
     "data_prep": {
-        "dir": SKILLS_BASE / "predictive-maintenance-data-prep",
+        "dir": SKILLS_BASE / "skills" / "predictive-maintenance-data-prep",
         "script": "scripts/run.py",
         "required": True,
         "depends_on": [],
     },
     "stat_inference": {
-        "dir": SKILLS_BASE / "predictive-maintenance-stat-inference",
+        "dir": SKILLS_BASE / "skills" / "predictive-maintenance-stat-inference",
         "script": "scripts/run.py",
         "required": True,
         "depends_on": ["data_prep"],
     },
     "ml_inference": {
-        "dir": SKILLS_BASE / "predictive-maintenance-ml-inference",
+        "dir": SKILLS_BASE / "skills" / "predictive-maintenance-ml-inference",
         "script": "scripts/run.py",
         "required": False,
         "depends_on": ["data_prep"],
     },
     "diagnosis": {
-        "dir": SKILLS_BASE / "predictive-maintenance-diagnosis",
+        "dir": SKILLS_BASE / "skills" / "predictive-maintenance-diagnosis",
         "script": "scripts/run.py",
         "required": False,
         "depends_on": ["data_prep", "stat_inference", "ml_inference"],
     },
     "decision": {
-        "dir": SKILLS_BASE / "predictive-maintenance-decision",
+        "dir": SKILLS_BASE / "skills" / "predictive-maintenance-decision",
         "script": "scripts/run.py",
         "required": True,
         "depends_on": ["data_prep", "stat_inference", "ml_inference", "diagnosis"],
@@ -80,6 +80,14 @@ class StepStatus(Enum):
     SUCCESS = "success"
     FAILED = "failed"
     SKIPPED = "skipped"
+
+
+class DegradationMode(Enum):
+    """Pipeline degradation: automatic fallback on component failure."""
+    FULL = "FULL"                    # ML + Stat + Rule (all components)
+    STAT_ONLY = "STAT_ONLY"          # Stat + Rule (ML unavailable)
+    RULE_ONLY = "RULE_ONLY"          # Threshold-based only (stat unavailable)
+    EMERGENCY = "EMERGENCY"          # Bare-minimum work orders from raw data
 
 
 @dataclass
@@ -126,7 +134,10 @@ class PredictiveMaintenanceAgent:
     def __init__(self, data_dir: str, output_base: str,
                  skip_ml: bool = False, skip_diagnosis: bool = False,
                  model_version: str = "v1", streaming: bool = False,
-                 max_orders: int = 20):
+                 max_orders: int = 20,
+                 max_budget: float = 0,
+                 strategy: str = "production_efficiency",
+                 dashboard_data: str = ""):
         self.data_dir = Path(data_dir).resolve()
         self.output_base = Path(output_base).resolve()
         self.skip_ml = skip_ml
@@ -134,6 +145,11 @@ class PredictiveMaintenanceAgent:
         self.model_version = model_version
         self.streaming = streaming
         self.max_orders = max_orders
+        self.max_budget = max_budget
+        self.strategy = strategy
+        self.dashboard_data = Path(dashboard_data) if dashboard_data else None
+        self.enable_shap = False  # Will be set by main()
+        self.degradation_mode = DegradationMode.FULL  # Start optimistic
 
         self.output_dirs: Dict[str, Path] = {}
         self.results: List[StepResult] = []
@@ -181,8 +197,8 @@ class PredictiveMaintenanceAgent:
         cmd = [sys.executable, str(script_path)]
 
         if skill_key == "data_prep":
-            # data-prep 使用位置参数: python run.py <data_dir> <output_dir>
-            cmd.extend([str(self.data_dir), str(output_dir)])
+    # 统一使用命名参数（与其它技能保持一致）
+            cmd.extend(["--data-dir", str(self.data_dir), "--output-dir", str(output_dir)])
         else:
             # 其他技能使用 --data-dir / --output-dir
             cmd.extend(["--data-dir", str(self.data_dir)])
@@ -203,6 +219,8 @@ class PredictiveMaintenanceAgent:
             if self.streaming:
                 cmd.append("--streaming")
             cmd.extend(["--max-orders", str(self.max_orders)])
+            cmd.extend(["--max-budget", str(self.max_budget)])
+            cmd.extend(["--strategy", self.strategy])
         if skill_key == "diagnosis":
             cmd.append("--skip-predictability")
 
@@ -277,6 +295,7 @@ class PredictiveMaintenanceAgent:
         print(f"Skip Diag:    {self.skip_diagnosis}")
         print(f"Model:        {self.model_version}")
         print(f"Streaming:    {self.streaming}")
+        print(f"Strategy:     {self.strategy}")
         print()
 
         # ── Phase 1: Data Preparation ──
@@ -286,8 +305,13 @@ class PredictiveMaintenanceAgent:
         step = self._run_skill("data_prep")
         self.results.append(step)
         if step.status != StepStatus.SUCCESS:
-            print("[ABORT] data-prep failed. Pipeline cannot continue.")
+            # DEGRADE → EMERGENCY: no baselines, no stats — raw sensor flags only
+            self.degradation_mode = DegradationMode.EMERGENCY
+            print(f"[DEGRADE] data-prep failed → {self.degradation_mode.value}")
+            self._run_emergency()
+            self._write_degradation_status()
             result.steps = self.results
+            result.final_output_dir = str(self.output_dirs.get("decision", ""))
             result.summary = self._build_summary(result)
             return result
 
@@ -297,18 +321,19 @@ class PredictiveMaintenanceAgent:
         print("-" * 40)
 
         parallel_tasks = ["stat_inference"]
-        if not self.skip_ml:
-            ml_available = self._check_ml_deps()
-            if ml_available:
-                parallel_tasks.append("ml_inference")
-            else:
-                print("[FALLBACK] ML dependencies not available. Using stat-only path.")
-                step = StepResult(
-                    skill_name="ml_inference",
-                    status=StepStatus.SKIPPED,
-                    error_message="ML dependencies not installed (xgboost/torch)",
-                )
-                self.results.append(step)
+        if self.skip_ml:
+            self.degradation_mode = DegradationMode.STAT_ONLY
+        elif not self._check_ml_deps():
+            self.degradation_mode = DegradationMode.STAT_ONLY
+            print(f"[FALLBACK] ML unavailable → {self.degradation_mode.value}")
+            step = StepResult(
+                skill_name="ml_inference",
+                status=StepStatus.SKIPPED,
+                error_message="ML dependencies not installed (xgboost/torch)",
+            )
+            self.results.append(step)
+        else:
+            parallel_tasks.append("ml_inference")
 
         with ThreadPoolExecutor(max_workers=2) as executor:
             futures = {
@@ -321,8 +346,13 @@ class PredictiveMaintenanceAgent:
 
         stat_step = next((r for r in self.results if r.skill_name == "stat_inference"), None)
         if not stat_step or stat_step.status != StepStatus.SUCCESS:
-            print("[ABORT] stat-inference failed. Pipeline cannot continue.")
+            # DEGRADE → RULE_ONLY: stat unavailable, use raw sensor thresholds
+            self.degradation_mode = DegradationMode.RULE_ONLY
+            print(f"[DEGRADE] stat-inference failed → {self.degradation_mode.value}")
+            self._run_rule_only()
+            self._write_degradation_status()
             result.steps = self.results
+            result.final_output_dir = str(self.output_dirs.get("decision", ""))
             result.summary = self._build_summary(result)
             return result
 
@@ -341,6 +371,17 @@ class PredictiveMaintenanceAgent:
         step = self._run_skill("decision")
         self.results.append(step)
 
+        if step.status != StepStatus.SUCCESS:
+            # DEGRADE → RULE_ONLY: decision engine failed, fallback to thresholds
+            self.degradation_mode = DegradationMode.RULE_ONLY
+            print(f"[DEGRADE] decision failed → {self.degradation_mode.value}")
+            self._run_rule_only()
+            self._write_degradation_status()
+            result.steps = self.results
+            result.final_output_dir = str(self.output_dirs.get("decision", ""))
+            result.summary = self._build_summary(result)
+            return result
+
         # ── Finalize ──
         result.steps = self.results
         result.end_time = datetime.now().isoformat()
@@ -356,9 +397,314 @@ class PredictiveMaintenanceAgent:
             except Exception:
                 result.work_orders_count = -1
 
+        # ── Phase 5: SHAP Post-Process (optional, explainability layer) ──
+        if self.enable_shap:
+            self._run_shap_postprocess()
+
+        # ── Sync dashboard data ──
+        self._write_degradation_status()
+        if self.dashboard_data and self.dashboard_data.exists():
+            self._sync_dashboard_data()
+
         result.summary = self._build_summary(result)
         self._print_summary(result)
         return result
+
+    def _run_shap_postprocess(self):
+        """Run SHAP post-processing directly (not via subprocess)."""
+        print("\n" + "-" * 40)
+        print("Phase 5/5: SHAP Alert Attribution (post-process)")
+        print("-" * 40)
+
+        # Add diagnosis scripts to path for direct import
+        diag_scripts = str(SKILLS["diagnosis"]["dir"] / "scripts")
+        if diag_scripts not in sys.path:
+            sys.path.insert(0, diag_scripts)
+
+        try:
+            from shap_postprocess import run_shap_postprocess
+
+            prep_dir = str(self.output_dirs.get("data_prep", self.output_base / "output_data_prep"))
+            stat_dir = str(self.output_dirs.get("stat_inference", self.output_base / "output_stat_inference"))
+            decision_dir = str(self.output_dirs.get("decision", self.output_base / "output_decision"))
+
+            run_shap_postprocess(
+                prep_dir=prep_dir,
+                stat_dir=stat_dir,
+                decision_dir=decision_dir,
+                strategy=self.strategy,
+                output_dir=decision_dir,
+            )
+
+            step = StepResult(
+                skill_name="shap_attribution",
+                status=StepStatus.SUCCESS,
+                output_dir=decision_dir,
+                duration_seconds=0.0,
+            )
+        except Exception as e:
+            print(f"  [WARN] SHAP post-process failed: {e}")
+            import traceback
+            traceback.print_exc()
+            step = StepResult(
+                skill_name="shap_attribution",
+                status=StepStatus.FAILED,
+                error_message=str(e),
+            )
+
+        self.results.append(step)
+
+    def _run_rule_only(self):
+        """RULE_ONLY mode: generate work orders from raw sensor thresholds.
+        No z-scores, no ML, no cost matrix — only voltage/current/temperature
+        threshold checks against per-machine baselines from raw log data.
+        """
+        print("\n" + "!" * 40)
+        print("[DEGRADE] RULE_ONLY — threshold-based maintenance")
+        print("!" * 40)
+        import pandas as pd
+
+        log_path = self.data_dir / "MACHINE_LOG_DATA._2025.csv"
+        df = pd.read_csv(log_path)
+        machines = sorted(df["Equipment.Id"].unique())
+
+        orders = []
+        for mid in machines:
+            mdata = df[df["Equipment.Id"] == mid]
+            recent = mdata.tail(5)  # last 5 readings
+
+            # Simple thresholds aligned with project's known ranges
+            v_mean = recent["Op.Voltage"].mean()
+            a_mean = recent["Op.Amperage"].mean()
+            t_mean = recent["Op.Temperature"].mean()
+
+            # Threshold checks (matching failure signature ranges from EDA)
+            flags = []
+            urgency = 0
+            if v_mean > 210 or v_mean < 150:
+                flags.append("电压超出安全范围")
+                urgency += 30
+            if a_mean > 35:
+                flags.append("电流偏高")
+                urgency += 25
+            if t_mean > 95:
+                flags.append("温度过高")
+                urgency += 25
+            if t_mean > 80 and a_mean > 30:
+                flags.append("温度-电流联合偏高")
+                urgency += 10
+
+            if urgency >= 25:
+                action = "preventive_repair" if urgency >= 55 else "schedule_inspection"
+                orders.append({
+                    "priority": 0,
+                    "machine_id": mid,
+                    "alert_level": "ALARM" if urgency >= 55 else "WARNING",
+                    "action_type": action,
+                    "cost_at_risk": 0.0,
+                    "urgency_score": min(urgency, 100),
+                    "recommended_window_days": 1 if urgency >= 55 else 3,
+                    "expected_savings": 0.0,
+                    "maintenance_suggestion": "RULE_ONLY: " + "; ".join(flags),
+                })
+
+        # Sort and cap
+        orders.sort(key=lambda o: o["urgency_score"], reverse=True)
+        orders = orders[:self.max_orders]
+        for i, o in enumerate(orders):
+            o["priority"] = i + 1
+
+        decision_dir = self.output_base / "output_decision"
+        decision_dir.mkdir(parents=True, exist_ok=True)
+        self.output_dirs["decision"] = decision_dir
+
+        wo_path = decision_dir / "maintenance_work_orders.csv"
+        pd.DataFrame(orders).to_csv(wo_path, index=False, encoding="utf-8")
+        print(f"  Rule-only work orders: {len(orders)} → {wo_path}")
+        return decision_dir
+
+    def _run_emergency(self):
+        """EMERGENCY mode: absolute minimum — flag machines with extreme readings.
+        No baselines, no thresholds — just flag top-N machines by raw sensor
+        deviation from population mean.
+        """
+        print("\n" + "!" * 40)
+        print("[DEGRADE] EMERGENCY — bare-minimum work orders")
+        print("!" * 40)
+        import pandas as pd
+
+        log_path = self.data_dir / "MACHINE_LOG_DATA._2025.csv"
+        df = pd.read_csv(log_path)
+
+        orders = []
+        for mid, grp in df.groupby("Equipment.Id"):
+            recent = grp.tail(5)
+            v_std = recent["Op.Voltage"].std()
+            a_std = recent["Op.Amperage"].std()
+            t_std = recent["Op.Temperature"].std()
+            # Simple volatility score — higher = more unstable
+            volatility = v_std / 200 + a_std / 30 + t_std / 90
+            if volatility > 0.15:
+                orders.append({
+                    "priority": 0,
+                    "machine_id": mid,
+                    "alert_level": "WARNING",
+                    "action_type": "increase_monitoring",
+                    "cost_at_risk": 0.0,
+                    "urgency_score": min(int(volatility * 100), 100),
+                    "recommended_window_days": 7,
+                    "expected_savings": 0.0,
+                    "maintenance_suggestion": "EMERGENCY: 设备传感器波动异常，建议人工复查",
+                })
+
+        orders.sort(key=lambda o: o["urgency_score"], reverse=True)
+        orders = orders[:self.max_orders]
+        for i, o in enumerate(orders):
+            o["priority"] = i + 1
+
+        decision_dir = self.output_base / "output_decision"
+        decision_dir.mkdir(parents=True, exist_ok=True)
+        self.output_dirs["decision"] = decision_dir
+
+        em_path = decision_dir / "emergency_work_orders.csv"
+        pd.DataFrame(orders).to_csv(em_path, index=False, encoding="utf-8")
+        print(f"  Emergency work orders: {len(orders)} → {em_path}")
+        return decision_dir
+
+    def _write_degradation_status(self):
+        """Write degradation mode to a small JSON file for dashboard consumption."""
+        status_path = self.output_base / "output_decision" / "degradation_status.json"
+        status_path.parent.mkdir(parents=True, exist_ok=True)
+        import json
+        status = {
+            "mode": self.degradation_mode.value,
+            "label": {
+                "FULL": "全功能模式 (ML+统计+规则)",
+                "STAT_ONLY": "统计降级模式 (统计+规则)",
+                "RULE_ONLY": "规则降级模式 (阈值判定)",
+                "EMERGENCY": "应急模式 (基础告警)",
+            }.get(self.degradation_mode.value, self.degradation_mode.value),
+            "components": {
+                "ml_available": self.degradation_mode in (DegradationMode.FULL,),
+                "stat_available": self.degradation_mode in (DegradationMode.FULL, DegradationMode.STAT_ONLY),
+                "rule_available": True,
+            },
+        }
+        with open(status_path, "w", encoding="utf-8") as f:
+            json.dump(status, f, ensure_ascii=False, indent=2)
+        # Also sync to dashboard data if configured
+        if self.dashboard_data and self.dashboard_data.exists():
+            import shutil
+            shutil.copy2(str(status_path),
+                         str(self.dashboard_data / "degradation_status.json"))
+
+    def _sync_dashboard_data(self):
+        """Copy industrial plan CSVs from decision/stat/data-prep output to dashboard data dir."""
+        import shutil
+
+        decision_dir = self.output_dirs.get("decision")
+        stat_dir = self.output_dirs.get("stat_inference")
+        prep_dir = self.output_dirs.get("data_prep")
+
+        # Files from decision output
+        decision_files = [
+            "industrial_maintenance_plan.csv",
+            "technician_schedule.csv",
+            "spare_parts_plan.csv",
+            "strategy_comparison.csv",
+            "downtime_schedule.csv",
+            "optimization_comparison.csv",
+            "maintenance_schedule_optimized.csv",
+            "scheduling_comparison.json",
+            "inventory_policy_optimized.csv",
+            "pareto_frontier.json",
+            "maintenance_decision_report.csv",
+            "maintenance_acceptance_rules.json",
+            "sensor_upgrade_plan.csv",
+            "sensor_roi_analysis.csv",
+            "sensor_phase_summary.csv",
+            "shap_dashboard.json",
+            "degradation_status.json",
+        ]
+
+        # Files from stat-inference output
+        stat_files = [
+            "quality_cost_chain.csv",
+            "alert_summary.csv",
+            "equipment_health_score.csv",
+            "stat_inference_summary.json",
+            "rul_degradation.csv",
+            "rul_summary.json",
+            "health_score_timeseries.csv",
+        ]
+
+        # Backtest files (in stat-inference output subdirectory)
+        backtest_files = [
+            "backtest/backtest_summary.json",
+            "backtest/backtest_lead_time_summary.csv",
+            "backtest/backtest_by_fault_group.csv",
+            "backtest/backtest_walk_forward.csv",
+            "backtest/backtest_point_in_time.csv",
+            "backtest/backtest_point_in_time_summary.csv",
+            "backtest/backtest_events_Warning.csv",
+            "backtest/backtest_lead_time_distribution.png",
+            "backtest/backtest_walk_forward.png",
+        ]
+
+        # Files from data-prep output (baseline CSVs for dashboard sections 1-2)
+        prep_files = [
+            "z_scores.csv",
+            "cost_risk_matrix.csv",
+            "failure_signatures.csv",
+            "variance_decomposition.csv",
+            "hotelling_t2.csv",
+            "machine_clusters.csv",
+            "baseline_stats.csv",
+        ]
+
+        # Dashboard name mappings (source → dashboard filename)
+        renames = {
+            "failure_signatures.csv": "failure_sig.csv",
+            "cost_risk_matrix.csv": "cost_risk.csv",
+            "hotelling_t2.csv": "t2_results.csv",
+            "maintenance_work_orders.csv": "work_orders.csv",
+            "variance_decomposition.csv": "variance_decomp.csv",
+        }
+
+        copied = 0
+        for src_dir, file_list in [
+            (decision_dir, decision_files),
+            (stat_dir, stat_files),
+            (prep_dir, prep_files),
+        ]:
+            if not src_dir:
+                continue
+            for fname in file_list:
+                src = Path(src_dir) / fname
+                if not src.exists():
+                    continue
+                dst_name = renames.get(fname, fname)
+                dst = self.dashboard_data / dst_name
+                shutil.copy2(src, dst)
+                copied += 1
+
+        # Sync backtest files (from stat_dir/backtest/ subdirectory)
+        if stat_dir:
+            bt_dir = Path(stat_dir) / "backtest"
+            if bt_dir.exists():
+                for fname in backtest_files:
+                    # Strip "backtest/" prefix for source path
+                    rel_name = fname.replace("backtest/", "")
+                    src = bt_dir / rel_name
+                    if not src.exists():
+                        continue
+                    # Keep "backtest_" prefix in dashboard data dir
+                    dst = self.dashboard_data / rel_name
+                    shutil.copy2(src, dst)
+                    copied += 1
+
+        if copied:
+            print(f"\n[DASHBOARD] Synced {copied} files to {self.dashboard_data}")
 
     def _check_ml_deps(self) -> bool:
         """检查 ML 依赖是否可用。"""
@@ -396,6 +742,7 @@ class PredictiveMaintenanceAgent:
                 r.status in (StepStatus.SUCCESS, StepStatus.SKIPPED)
                 for r in result.steps
             ) else "partial",
+            "degradation_mode": self.degradation_mode.value,
             "step_statuses": statuses,
             "step_durations_seconds": durations,
             "total_duration_seconds": result.total_duration,
@@ -466,6 +813,15 @@ Examples:
                         help="Enable continuous confirmation in decision engine")
     parser.add_argument("--max-orders", type=int, default=20,
                         help="Max work orders per cycle (default: 20)")
+    parser.add_argument("--max-budget", type=float, default=0,
+                        help="Max preventive maintenance budget in USD (0=unlimited)")
+    parser.add_argument("--strategy", default="production_efficiency",
+                        choices=["cost_efficiency", "production_efficiency", "quality_first"],
+                        help="Maintenance strategy (default: production_efficiency)")
+    parser.add_argument("--dashboard-data", default="",
+                        help="Path to web-dashboard/data/ for auto-sync of industrial CSVs")
+    parser.add_argument("--shap", action="store_true",
+                        help="Enable SHAP-based alert attribution post-processing")
     args = parser.parse_args()
 
     agent = PredictiveMaintenanceAgent(
@@ -476,7 +832,11 @@ Examples:
         model_version=args.model,
         streaming=args.streaming,
         max_orders=args.max_orders,
+        max_budget=args.max_budget,
+        strategy=args.strategy,
+        dashboard_data=args.dashboard_data,
     )
+    agent.enable_shap = args.shap
 
     result = agent.run()
 

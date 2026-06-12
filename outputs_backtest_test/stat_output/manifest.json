@@ -1,0 +1,16 @@
+{
+  "prep_dir": "C:\\Users\\yuzzz\\Desktop\\\u82d7\u5703\u676f\\\u534a\u51b3\u8d5bv1\\web-dashboard\\data",
+  "output_dir": "C:\\Users\\yuzzz\\Desktop\\\u82d7\u5703\u676f\\\u534a\u51b3\u8d5bv1\\outputs_backtest_test\\stat_output",
+  "files": {
+    "z_threshold_sweep": "z_threshold_sweep.csv",
+    "t2_results": "t2_results.csv",
+    "failure_signature_analysis": "failure_signature_analysis.csv",
+    "alert_summary": "alert_summary.csv",
+    "stat_inference_summary": "stat_inference_summary.json",
+    "backtest_summary": "backtest/backtest_summary.json",
+    "backtest_lead_time_summary": "backtest/backtest_lead_time_summary.csv",
+    "backtest_by_fault_group": "backtest/backtest_by_fault_group.csv",
+    "backtest_walk_forward": "backtest/backtest_walk_forward.csv",
+    "backtest_point_in_time": "backtest/backtest_point_in_time.csv"
+  }
+}

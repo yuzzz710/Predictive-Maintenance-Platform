@@ -1,0 +1,4 @@
+threshold,total_events,detected_events,missed_events_count,avg_lead_time_minutes,median_lead_time_minutes,miss_rate,detection_rate
+Watch,147,117,30,23.6,14.0,0.2041,0.7959
+Warning,147,63,84,37.1,42.0,0.5714,0.4286
+Alarm,147,25,122,49.3,56.0,0.8299,0.1701

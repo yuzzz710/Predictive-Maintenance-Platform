@@ -1,11 +1,13 @@
 {
-  "prep_dir": "C:\\Users\\yuzzz\\Desktop\\\u82d7\u5703\u676f\\git5\\agent-mcp\u67b6\u6784\\outputs_test\\output_data_prep",
-  "output_dir": "C:\\Users\\yuzzz\\Desktop\\\u82d7\u5703\u676f\\git5\\agent-mcp\u67b6\u6784\\outputs_test\\output_stat_inference",
+  "prep_dir": "C:\\Users\\yuzzz\\Desktop\\\u82d7\u5703\u676f\\\u534a\u51b3\u8d5bv1\\agent-mcp\u67b6\u6784\\outputs_test\\output_data_prep",
+  "output_dir": "C:\\Users\\yuzzz\\Desktop\\\u82d7\u5703\u676f\\\u534a\u51b3\u8d5bv1\\agent-mcp\u67b6\u6784\\outputs_test\\output_stat_inference",
   "files": {
     "z_threshold_sweep": "z_threshold_sweep.csv",
     "t2_results": "t2_results.csv",
     "failure_signature_analysis": "failure_signature_analysis.csv",
     "alert_summary": "alert_summary.csv",
-    "stat_inference_summary": "stat_inference_summary.json"
+    "stat_inference_summary": "stat_inference_summary.json",
+    "equipment_health_score": "equipment_health_score.csv",
+    "quality_cost_chain": "quality_cost_chain.csv"
   }
 }

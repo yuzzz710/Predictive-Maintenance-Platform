@@ -1,0 +1,31 @@
+{
+  "chain1": {
+    "max_lift": 1.226,
+    "max_lift_from": "中期保养(35-70d)",
+    "max_lift_to": "参数不稳定",
+    "max_lift_ci_lower": 0.4507,
+    "max_lift_ci_upper": 0.7751,
+    "n_machines": 100,
+    "n_product_data": 15,
+    "note": "S→Q环节仅15台, CI较宽"
+  },
+  "chain2": {
+    "total_effect": -0.0119,
+    "total_ci_lower": -0.0626,
+    "total_ci_upper": 0.0384,
+    "indirect_effect": -0.0017,
+    "indirect_ci_lower": -0.0129,
+    "indirect_ci_upper": 0.0057,
+    "mediation_pct": 14.4,
+    "mediation_pct_ci_lower": 0.2,
+    "mediation_pct_ci_upper": 346.6,
+    "n_bootstrap": 5000
+  },
+  "cross_features": {
+    "热-压耦合风险": 0.0366,
+    "质量-成本暴露": 0.1818,
+    "维护-故障累积": 0.3689,
+    "参数CV均值(原)": -0.1132,
+    "成本风险(原)": -0.0007
+  }
+}

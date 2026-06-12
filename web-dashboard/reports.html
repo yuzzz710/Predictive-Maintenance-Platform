@@ -1,10 +1,13 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Report History — Industrial AI Copilot</title>
-<script src="/shared/navbar.js?v=20260519"></script>
+<title>报告历史 — 工业AI助手</title>
+<script src="/shared/role-check.js"></script>
+<script src="/shared/theme-init.js"></script>
+<script src="/shared/navbar.js?v=20260530"></script>
+<script src="/shared/role-switcher.js"></script>
 <style>
 /* ═══════════════════════════════════════════════════════════════
    DESIGN TOKENS — Industrial Precision
@@ -35,6 +38,45 @@
   --font-sans: 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', 'Segoe UI', system-ui, sans-serif;
   --transition: 0.2s cubic-bezier(0.33, 1, 0.68, 1);
 }
+
+
+/* ═══════════════════════════════════════════════════════════
+   LIGHT THEME — Clean Industrial
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="light"] {
+  --bg-root: #f4f6f9;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-alt: #f0f2f5;
+  --bg-input: #ffffff;
+  --border: #dde1e7;
+  --border-light: #e4e8ef;
+  --border-accent: #c4cdd9;
+  --text-primary: #1a1d26;
+  --text-secondary: #4a5568;
+  --text-muted: #7a8498;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.10);
+}
+[data-theme="light"] body::before {
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.006) 2px, rgba(0,0,0,0.006) 4px),
+    radial-gradient(ellipse at 20% 0%, rgba(0,156,130,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(200,130,30,0.04) 0%, transparent 50%);
+}
+[data-theme="light"] .report-table tbody tr:hover {
+  background: rgba(0,0,0,0.02);
+}
+[data-theme="light"] .filter-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%237a8498'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+}
+[data-theme="light"] .search-box .search-icon {
+  color: var(--text-muted);
+}
+[data-theme="light"] .sort-btn:hover {
+  background: rgba(0,0,0,0.04);
+}
+
 
 * { margin:0; padding:0; box-sizing:border-box; }
 
@@ -289,6 +331,37 @@ body::before {
 .btn-download:disabled {
   opacity: 0.3; cursor: not-allowed; pointer-events: none;
 }
+.btn-pdf-done {
+  background: rgba(63,185,80,0.06);
+  border-color: rgba(63,185,80,0.15);
+  color: var(--accent-green);
+}
+.btn-pdf-done:hover { background: rgba(63,185,80,0.12); }
+.btn-pdf-gen {
+  background: rgba(240,160,48,0.05);
+  border-color: rgba(240,160,48,0.15);
+  color: var(--accent-amber);
+}
+.btn-pdf-gen:hover { background: rgba(240,160,48,0.12); }
+.btn-delete {
+  background: rgba(240,68,68,0.05);
+  border-color: rgba(240,68,68,0.15);
+  color: var(--accent-red);
+}
+.btn-delete:hover { background: rgba(240,68,68,0.12); }
+.btn-open-folder {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(99,102,241,0.06);
+  border: 1px solid rgba(99,102,241,0.15);
+  border-radius: var(--radius-md);
+  color: var(--accent-purple); font-size: 12px;
+  padding: 0 14px; height: 36px;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.btn-open-folder:hover { background: rgba(163,113,247,0.12); }
 
 /* ═══════════════════════════════════════════════════════════════
    LOADING / EMPTY / ERROR STATES
@@ -331,6 +404,13 @@ body::before {
   .report-table tbody td:nth-child(3) { display: none; }
   .page-header h1 { font-size: 18px; }
 }
+
+/* ═══ Role visibility ═══ */
+html[data-role="operator"] .role-manager:not(.role-operator) { display: none !important; }
+html[data-role="operator"] .role-developer:not(.role-operator) { display: none !important; }
+html[data-role="manager"] .role-operator:not(.role-manager) { display: none !important; }
+html[data-role="manager"] .role-developer:not(.role-manager) { display: none !important; }
+
 </style>
 </head>
 <body>
@@ -339,9 +419,11 @@ body::before {
      PAGE HEADER
      ═══════════════════════════════════════════════════════════════ -->
 <div class="page-header">
-  <h1>&#128196; Report History</h1>
-  <p class="subtitle">generated reports archive — view or download past analysis results</p>
+  <h1>&#128196; 报告历史</h1>
+  <p class="subtitle">生成报告存档 — 查看或下载历史分析结果</p>
 </div>
+
+
 
 <!-- ═══════════════════════════════════════════════════════════════
      STATS ROW (populated by JS)
@@ -354,22 +436,25 @@ body::before {
 <div class="toolbar">
   <div class="search-box">
     <span class="search-icon">&#128269;</span>
-    <input type="text" id="searchInput" placeholder="Search by filename or type..." autocomplete="off">
+    <input type="text" id="searchInput" placeholder="搜索文件名或类型..." autocomplete="off">
   </div>
   <select class="filter-select" id="typeFilter">
-    <option value="all">All Types</option>
-    <option value="weekly">Weekly</option>
-    <option value="risk">Risk</option>
-    <option value="device">Device</option>
-    <option value="thermal">Thermal</option>
-    <option value="general">General</option>
+    <option value="all">全部类型</option>
+    <option value="weekly">周报</option>
+    <option value="risk">风险</option>
+    <option value="device">设备</option>
+    <option value="thermal">温度</option>
+    <option value="general">通用</option>
   </select>
   <button class="sort-btn" id="sortBtn" data-sort="time-desc">
-    <span id="sortLabel">Newest First</span>
+    <span id="sortLabel">最新优先</span>
     <span class="arrow">&#9660;</span>
   </button>
   <button class="refresh-btn" id="refreshBtn">
-    <span>&#8635;</span> Refresh
+    <span>&#8635;</span> 刷新
+  </button>
+  <button class="btn-open-folder" id="openFolderBtn">
+    <span>&#128193;</span> 打开PDF文件夹
   </button>
 </div>
 
@@ -381,6 +466,63 @@ body::before {
 <!-- ═══════════════════════════════════════════════════════════════
      SCRIPTS
      ═══════════════════════════════════════════════════════════════ -->
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   DYNAMIC THEME SYNC — intercept navbar toggle for instant switch
+   ═══════════════════════════════════════════════════════════════ */
+(function initDynamicTheme() {
+  // Listen for theme changes from other tabs
+  window.addEventListener('storage', function(e) {
+    if (e.key === 'dashboard-theme') {
+      if (e.newValue === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+      updateThemeButtonIcon();
+    }
+  });
+
+  // Intercept navbar theme button to switch dynamically (no page reload)
+  function interceptThemeToggle() {
+    var btn = document.getElementById('gn-theme-btn');
+    if (!btn) {
+      // Navbar might not be created yet, retry
+      setTimeout(interceptThemeToggle, 50);
+      return;
+    }
+    // Remove navbar's click listener by cloning the button
+    var newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+    // Add our own dynamic toggle
+    newBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      var current = document.documentElement.getAttribute('data-theme');
+      var next = (current === 'light') ? 'dark' : 'light';
+      if (next === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+      try { localStorage.setItem('dashboard-theme', next); } catch(ex) {}
+      updateThemeButtonIcon();
+    });
+    // Ensure correct initial icon
+    updateThemeButtonIcon();
+  }
+
+  function updateThemeButtonIcon() {
+    var btn = document.getElementById('gn-theme-btn');
+    if (!btn) return;
+    var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+    btn.innerHTML = isDark ? '☀ 浅色' : '☾ 深色';
+  }
+
+  // Start intercepting after a short delay to let navbar create the button
+  setTimeout(interceptThemeToggle, 10);
+})();
+</script>
+
 <script>
 (function () {
   var reports = [];
@@ -396,6 +538,7 @@ body::before {
   var sortBtn = document.getElementById('sortBtn');
   var sortLabel = document.getElementById('sortLabel');
   var refreshBtn = document.getElementById('refreshBtn');
+  var openFolderBtn = document.getElementById('openFolderBtn');
 
   // ── Fetch reports ──
   function fetchReports() {
@@ -410,7 +553,7 @@ body::before {
         renderAll();
       })
       .catch(function (err) {
-        showError('Failed to load reports: ' + err.message);
+        showError('加载报告失败: ' + err.message);
       });
   }
 
@@ -436,26 +579,38 @@ body::before {
     statsRow.innerHTML =
       '<div class="stat-card">' +
         '<div class="stat-icon cyan">&#128196;</div>' +
-        '<div><div class="stat-value">' + total + '</div><div class="stat-label">Total Reports</div></div>' +
+        '<div><div class="stat-value">' + total + '</div><div class="stat-label">报告总数</div></div>' +
       '</div>' +
       '<div class="stat-card">' +
         '<div class="stat-icon blue">&#9881;</div>' +
-        '<div><div class="stat-value">' + types + '</div><div class="stat-label">Report Types</div></div>' +
+        '<div><div class="stat-value">' + types + '</div><div class="stat-label">报告类型</div></div>' +
       '</div>' +
       '<div class="stat-card">' +
         '<div class="stat-icon amber">&#128190;</div>' +
-        '<div><div class="stat-value">' + (totalSize / 1024).toFixed(1) + ' MB</div><div class="stat-label">Total Size</div></div>' +
+        '<div><div class="stat-value">' + (totalSize / 1024).toFixed(1) + ' MB</div><div class="stat-label">总大小</div></div>' +
       '</div>' +
       '<div class="stat-card">' +
         '<div class="stat-icon purple">&#128462;</div>' +
-        '<div><div class="stat-value">' + hasPdf + '</div><div class="stat-label">With PDF</div></div>' +
+        '<div><div class="stat-value">' + hasPdf + '</div><div class="stat-label">含PDF</div></div>' +
       '</div>';
   }
 
   // ── Table ──
   function renderTable() {
     // Filter
-    var filtered = reports.filter(function (r) {
+    // Role-based report type filter
+  var ROLE_REPORT_TYPES = {
+    operator: ['device', 'thermal', 'parts_summary', 'work_order'],
+    manager: ['weekly', 'risk', 'health_critical', 'sensor_advisory'],
+    developer: null
+  };
+  var role = sessionStorage.getItem('user_role') || 'developer';
+  var allowedTypes = ROLE_REPORT_TYPES[role];
+
+  var filtered = reports.filter(function (r) {
+      // Role filter
+      if (allowedTypes && allowedTypes.indexOf(r.report_type) === -1) return false;
+      // Existing filters
       if (currentFilter !== 'all' && r.report_type !== currentFilter) return false;
       if (searchQuery) {
         var q = searchQuery.toLowerCase();
@@ -473,26 +628,26 @@ body::before {
         tableContainer.innerHTML =
           '<div class="state-box">' +
             '<div class="state-icon">&#128464;</div>' +
-            '<div class="state-title">No Reports Yet</div>' +
-            '<div class="state-desc">Generated reports will appear here. Run the report generator to create your first report.</div>' +
+            '<div class="state-title">暂无报告</div>' +
+            '<div class="state-desc">生成的报告将显示在此处。运行报告生成器来创建第一份报告。</div>' +
           '</div>';
       } else {
         tableContainer.innerHTML =
           '<div class="state-box">' +
             '<div class="state-icon">&#128269;</div>' +
-            '<div class="state-title">No Matching Reports</div>' +
-            '<div class="state-desc">Try adjusting your search or filter criteria.</div>' +
+            '<div class="state-title">无匹配报告</div>' +
+            '<div class="state-desc">请尝试调整搜索或筛选条件。</div>' +
           '</div>';
       }
       return;
     }
 
     var html = '<table class="report-table"><thead><tr>' +
-      '<th class="sorted" data-sort="name">Name <span class="th-sort">&#9650;&#9660;</span></th>' +
-      '<th data-sort="type">Type <span class="th-sort">&#9650;&#9660;</span></th>' +
-      '<th data-sort="size">Size <span class="th-sort">&#9650;&#9660;</span></th>' +
-      '<th data-sort="time">Modified <span class="th-sort">&#9650;&#9660;</span></th>' +
-      '<th>Actions</th>' +
+      '<th class="sorted" data-sort="name">名称 <span class="th-sort">&#9650;&#9660;</span></th>' +
+      '<th data-sort="type">类型 <span class="th-sort">&#9650;&#9660;</span></th>' +
+      '<th data-sort="size">大小 <span class="th-sort">&#9650;&#9660;</span></th>' +
+      '<th data-sort="time">修改时间 <span class="th-sort">&#9650;&#9660;</span></th>' +
+      '<th>操作</th>' +
       '</tr></thead><tbody>';
 
     filtered.forEach(function (r) {
@@ -514,15 +669,16 @@ body::before {
             '<span class="filename-text">' + escHtml(r.filename) + '</span>' +
           '</div>' +
         '</td>' +
-        '<td><span class="type-badge ' + r.report_type + '">' + r.report_type + '</span></td>' +
+        '<td><span class="type-badge ' + r.report_type + '">' + typeLabel(r.report_type) + '</span></td>' +
         '<td><span class="size-cell">' + sizeStr + '</span></td>' +
         '<td><span class="time-cell">' + timeStr + '</span></td>' +
         '<td>' +
           '<div class="actions-cell">' +
-            '<a class="btn btn-view" href="' + r.html_url + '" target="_blank" rel="noopener">&#128065; View</a>' +
+            '<a class="btn btn-view" href="' + r.html_url + '" target="_blank" rel="noopener">&#128065; 查看</a>' +
             (r.pdf_url
-              ? '<a class="btn btn-download" href="' + r.pdf_url + '" download>&#128229; PDF</a>'
-              : '<span class="btn btn-download" disabled>&#128229; PDF</span>') +
+              ? '<a class="btn btn-pdf-done" href="' + r.pdf_url + '" download>&#9989; 已生成 PDF</a>'
+              : '<button class="btn btn-pdf-gen btn-generate-pdf" data-filename="' + escHtml(r.filename) + '">&#128229; 生成 PDF</button>') +
+            ' <button class="btn btn-delete" data-filename="' + escHtml(r.filename) + '">&#128465; 删除</button>' +
           '</div>' +
         '</td>' +
       '</tr>';
@@ -539,6 +695,22 @@ body::before {
         cycleSort(sortKey);
         renderTable();
         updateSortLabel();
+      });
+    });
+
+    // Bind PDF generation buttons
+    var pdfBtns = tableContainer.querySelectorAll('.btn-generate-pdf');
+    pdfBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        generatePdf(btn);
+      });
+    });
+
+    // Bind delete buttons
+    var delBtns = tableContainer.querySelectorAll('.btn-delete');
+    delBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        deleteReport(btn.getAttribute('data-filename'));
       });
     });
 
@@ -581,16 +753,16 @@ body::before {
 
   function updateSortLabel() {
     var map = {
-      'time-desc': 'Newest First',
-      'time-asc': 'Oldest First',
-      'name-asc': 'Name A-Z',
-      'name-desc': 'Name Z-A',
-      'type-asc': 'Type A-Z',
-      'type-desc': 'Type Z-A',
-      'size-asc': 'Smallest',
-      'size-desc': 'Largest'
+      'time-desc': '最新优先',
+      'time-asc': '最早优先',
+      'name-asc': '名称 A-Z',
+      'name-desc': '名称 Z-A',
+      'type-asc': '类型 A-Z',
+      'type-desc': '类型 Z-A',
+      'size-asc': '最小',
+      'size-desc': '最大'
     };
-    sortLabel.textContent = map[currentSort] || 'Newest First';
+    sortLabel.textContent = map[currentSort] || '最新优先';
   }
 
   // ── Helpers ──
@@ -605,6 +777,64 @@ body::before {
     return y + '-' + m + '-' + day + ' ' + h + ':' + min;
   }
 
+  function typeLabel(t) {
+    var map = { weekly: '周报', risk: '风险', device: '设备', thermal: '温度', general: '通用' };
+    return map[t] || t;
+  }
+
+  function generatePdf(btn) {
+    var filename = btn.getAttribute('data-filename');
+    var origText = btn.innerHTML;
+    btn.innerHTML = '&#8635; 生成中...';
+    btn.disabled = true;
+
+    fetch('/api/reports/generate-pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: filename }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (result) {
+        if (result.success) {
+          var link = document.createElement('a');
+          link.className = 'btn btn-pdf-done';
+          link.href = result.pdf_url;
+          link.download = '';
+          link.innerHTML = '&#9989; 已生成 PDF';
+          btn.parentNode.replaceChild(link, btn);
+        } else {
+          btn.innerHTML = origText;
+          btn.disabled = false;
+          alert('PDF 生成失败: ' + (result.error || '未知错误'));
+        }
+      })
+      .catch(function (err) {
+        btn.innerHTML = origText;
+        btn.disabled = false;
+        alert('PDF 生成失败: ' + err.message);
+      });
+  }
+
+  function deleteReport(filename) {
+    if (!confirm('确认删除报告: ' + filename + '？\n（对应的 PDF 也会被删除）')) return;
+    fetch('/api/reports/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: filename }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (result) {
+        if (result.success) {
+          fetchReports(); // Re-fetch from server + re-render
+        } else {
+          alert('删除失败: ' + (result.error || '未知错误'));
+        }
+      })
+      .catch(function (err) {
+        alert('删除失败: ' + err.message);
+      });
+  }
+
   function escHtml(str) {
     var div = document.createElement('div');
     div.appendChild(document.createTextNode(str));
@@ -615,7 +845,7 @@ body::before {
     tableContainer.innerHTML =
       '<div class="state-box">' +
         '<div class="loading-spinner"></div>' +
-        '<div class="state-desc" style="margin-top:12px">Loading reports...</div>' +
+        '<div class="state-desc" style="margin-top:12px">加载报告中...</div>' +
       '</div>';
     statsRow.innerHTML = '';
   }
@@ -624,7 +854,7 @@ body::before {
     tableContainer.innerHTML =
       '<div class="state-box">' +
         '<div class="state-icon">&#9888;</div>' +
-        '<div class="state-title">Error</div>' +
+        '<div class="state-title">错误</div>' +
         '<div class="state-desc">' + escHtml(msg) + '</div>' +
       '</div>';
   }
@@ -652,6 +882,19 @@ body::before {
 
   refreshBtn.addEventListener('click', function () {
     fetchReports();
+  });
+
+  openFolderBtn.addEventListener('click', function () {
+    fetch('/api/reports/open-pdfs-folder', { method: 'POST' })
+      .then(function (r) { return r.json(); })
+      .then(function (result) {
+        if (!result.success) {
+          alert('无法打开文件夹: ' + result.path);
+        }
+      })
+      .catch(function (err) {
+        alert('请求失败: ' + err.message);
+      });
   });
 
   // ── Init ──

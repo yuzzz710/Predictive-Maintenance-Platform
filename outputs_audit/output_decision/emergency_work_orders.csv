@@ -1,0 +1,21 @@
+priority,machine_id,alert_level,action_type,cost_at_risk,urgency_score,recommended_window_days,expected_savings,maintenance_suggestion
+1,CNC_001,WARNING,increase_monitoring,0.0,28,7,0.0,EMERGENCY: 设备传感器波动异常，建议人工复查
+2,CNC_002,WARNING,increase_monitoring,0.0,28,7,0.0,EMERGENCY: 设备传感器波动异常，建议人工复查
+3,CNC_040,WARNING,increase_monitoring,0.0,25,7,0.0,EMERGENCY: 设备传感器波动异常，建议人工复查
+4,CNC_080,WARNING,increase_monitoring,0.0,24,7,0.0,EMERGENCY: 设备传感器波动异常，建议人工复查
+5,CNC_013,WARNING,increase_monitoring,0.0,23,7,0.0,EMERGENCY: 设备传感器波动异常，建议人工复查
+6,CNC_025,WARNING,increase_monitoring,0.0,23,7,0.0,EMERGENCY: 设备传感器波动异常，建议人工复查
+7,CNC_089,WARNING,increase_monitoring,0.0,23,7,0.0,EMERGENCY: 设备传感器波动异常，建议人工复查
+8,CNC_092,WARNING,increase_monitoring,0.0,23,7,0.0,EMERGENCY: 设备传感器波动异常，建议人工复查
+9,CNC_019,WARNING,increase_monitoring,0.0,22,7,0.0,EMERGENCY: 设备传感器波动异常，建议人工复查
+10,CNC_074,WARNING,increase_monitoring,0.0,22,7,0.0,EMERGENCY: 设备传感器波动异常，建议人工复查
+11,CNC_093,WARNING,increase_monitoring,0.0,22,7,0.0,EMERGENCY: 设备传感器波动异常，建议人工复查
+12,CNC_031,WARNING,increase_monitoring,0.0,21,7,0.0,EMERGENCY: 设备传感器波动异常，建议人工复查
+13,CNC_016,WARNING,increase_monitoring,0.0,20,7,0.0,EMERGENCY: 设备传感器波动异常，建议人工复查
+14,CNC_017,WARNING,increase_monitoring,0.0,20,7,0.0,EMERGENCY: 设备传感器波动异常，建议人工复查
+15,CNC_044,WARNING,increase_monitoring,0.0,20,7,0.0,EMERGENCY: 设备传感器波动异常，建议人工复查
+16,CNC_065,WARNING,increase_monitoring,0.0,20,7,0.0,EMERGENCY: 设备传感器波动异常，建议人工复查
+17,CNC_067,WARNING,increase_monitoring,0.0,20,7,0.0,EMERGENCY: 设备传感器波动异常，建议人工复查
+18,CNC_027,WARNING,increase_monitoring,0.0,19,7,0.0,EMERGENCY: 设备传感器波动异常，建议人工复查
+19,CNC_046,WARNING,increase_monitoring,0.0,19,7,0.0,EMERGENCY: 设备传感器波动异常，建议人工复查
+20,CNC_005,WARNING,increase_monitoring,0.0,18,7,0.0,EMERGENCY: 设备传感器波动异常，建议人工复查

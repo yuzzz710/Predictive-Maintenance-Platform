@@ -1,0 +1,172 @@
+{
+  "n_total_machines": 100,
+  "n_with_quality_data": 15,
+  "n_estimated": 85,
+  "correlations": [
+    {
+      "parameter": "电压",
+      "quality_metric": "不合格率",
+      "spearman_r": 0.397,
+      "p_value": 0.1423,
+      "significant": false,
+      "n_machines": 15
+    },
+    {
+      "parameter": "电压",
+      "quality_metric": "规格违规率",
+      "spearman_r": 0.397,
+      "p_value": 0.1423,
+      "significant": false,
+      "n_machines": 15
+    },
+    {
+      "parameter": "温度",
+      "quality_metric": "不合格率",
+      "spearman_r": 0.291,
+      "p_value": 0.293,
+      "significant": false,
+      "n_machines": 15
+    },
+    {
+      "parameter": "温度",
+      "quality_metric": "规格违规率",
+      "spearman_r": 0.291,
+      "p_value": 0.293,
+      "significant": false,
+      "n_machines": 15
+    },
+    {
+      "parameter": "电流",
+      "quality_metric": "不合格率",
+      "spearman_r": 0.597,
+      "p_value": 0.0187,
+      "significant": true,
+      "n_machines": 15
+    },
+    {
+      "parameter": "电流",
+      "quality_metric": "规格违规率",
+      "spearman_r": 0.597,
+      "p_value": 0.0187,
+      "significant": true,
+      "n_machines": 15
+    },
+    {
+      "parameter": "转速",
+      "quality_metric": "不合格率",
+      "spearman_r": 0.035,
+      "p_value": 0.9017,
+      "significant": false,
+      "n_machines": 15
+    },
+    {
+      "parameter": "转速",
+      "quality_metric": "规格违规率",
+      "spearman_r": 0.035,
+      "p_value": 0.9017,
+      "significant": false,
+      "n_machines": 15
+    }
+  ],
+  "anomaly_groups": [
+    {
+      "z_group": "低异常",
+      "z_range": "-1–1.5",
+      "n_machines": 23,
+      "n_with_quality_data": 2,
+      "avg_quality_failure_rate": 1.7778,
+      "avg_daily_cost_risk": 3680.09,
+      "avg_fault_probability": 0.7522
+    },
+    {
+      "z_group": "中异常",
+      "z_range": "1.5–2.5",
+      "n_machines": 70,
+      "n_with_quality_data": 10,
+      "avg_quality_failure_rate": 0.9667,
+      "avg_daily_cost_risk": 3445.88,
+      "avg_fault_probability": 0.707
+    },
+    {
+      "z_group": "高异常",
+      "z_range": "2.5–99",
+      "n_machines": 7,
+      "n_with_quality_data": 3,
+      "avg_quality_failure_rate": 1.1852,
+      "avg_daily_cost_risk": 3771.71,
+      "avg_fault_probability": 0.781
+    }
+  ],
+  "top10_annual_quality_cost_risk": [
+    {
+      "machine_id": "CNC_085",
+      "annual_quality_cost_risk": 2351079.756,
+      "quality_data_source": "estimated",
+      "z_anomaly_group": "低异常"
+    },
+    {
+      "machine_id": "CNC_034",
+      "annual_quality_cost_risk": 2285218.353,
+      "quality_data_source": "estimated",
+      "z_anomaly_group": "中异常"
+    },
+    {
+      "machine_id": "CNC_087",
+      "annual_quality_cost_risk": 2269424.0,
+      "quality_data_source": "estimated",
+      "z_anomaly_group": "中异常"
+    },
+    {
+      "machine_id": "CNC_064",
+      "annual_quality_cost_risk": 2227570.18,
+      "quality_data_source": "estimated",
+      "z_anomaly_group": "中异常"
+    },
+    {
+      "machine_id": "CNC_036",
+      "annual_quality_cost_risk": 2199645.344,
+      "quality_data_source": "measured",
+      "z_anomaly_group": "低异常"
+    },
+    {
+      "machine_id": "CNC_025",
+      "annual_quality_cost_risk": 2073655.155,
+      "quality_data_source": "measured",
+      "z_anomaly_group": "高异常"
+    },
+    {
+      "machine_id": "CNC_033",
+      "annual_quality_cost_risk": 2029984.0000000002,
+      "quality_data_source": "estimated",
+      "z_anomaly_group": "中异常"
+    },
+    {
+      "machine_id": "CNC_012",
+      "annual_quality_cost_risk": 2006696.9999999998,
+      "quality_data_source": "estimated",
+      "z_anomaly_group": "中异常"
+    },
+    {
+      "machine_id": "CNC_067",
+      "annual_quality_cost_risk": 1995364.2974999999,
+      "quality_data_source": "estimated",
+      "z_anomaly_group": "高异常"
+    },
+    {
+      "machine_id": "CNC_013",
+      "annual_quality_cost_risk": 1974589.8480000002,
+      "quality_data_source": "estimated",
+      "z_anomaly_group": "中异常"
+    }
+  ],
+  "total_annual_quality_cost_risk": 128573378.24,
+  "strongest_param_quality_link": {
+    "parameter": "电流",
+    "quality_metric": "不合格率",
+    "spearman_r": 0.597,
+    "p_value": 0.0187,
+    "significant": true,
+    "n_machines": 15
+  },
+  "method_note": "质量缺陷率基于15台有产品数据的设备实测，85台为基于z-score的工程估算(±30%)。成本风险 = 日产量 × 单件成本 × 故障概率，覆盖全部100台设备。"
+}

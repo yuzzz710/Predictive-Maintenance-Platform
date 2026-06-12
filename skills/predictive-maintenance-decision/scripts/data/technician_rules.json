@@ -1,0 +1,65 @@
+{
+  "rules": [
+    {
+      "condition": {"action_type": "immediate_shutdown"},
+      "assign": {"type": "senior_technician", "count": 3, "priority": 0},
+      "reasoning": "Emergency shutdown requires senior team lead + 2 technicians"
+    },
+    {
+      "condition": {"primary_pattern": "voltage_drift", "risk_level": "ALARM"},
+      "assign": {"type": "electrical_specialist", "count": 2, "priority": 1},
+      "reasoning": "Voltage drift at ALARM level requires electrical specialist for PSU diagnosis"
+    },
+    {
+      "condition": {"primary_pattern": "thermal_buildup", "risk_level": "ALARM"},
+      "assign": {"type": "thermal_specialist", "count": 2, "priority": 1},
+      "reasoning": "Thermal buildup at ALARM level requires thermal specialist for cooling system"
+    },
+    {
+      "condition": {"primary_pattern": "combined_degradation", "risk_level": "ALARM"},
+      "assign": {"type": "senior_technician", "count": 2, "priority": 1},
+      "reasoning": "Combined degradation at ALARM requires senior technician for multi-system diagnosis"
+    },
+    {
+      "condition": {"primary_pattern": "power_anomaly", "risk_level": "ALARM"},
+      "assign": {"type": "electrical_specialist", "count": 2, "priority": 1},
+      "reasoning": "Power anomaly at ALARM requires electrical specialist for motor driver diagnosis"
+    },
+    {
+      "condition": {"primary_pattern": "voltage_drift"},
+      "assign": {"type": "electrical_specialist", "count": 1, "priority": 2},
+      "reasoning": "Voltage issues require electrical domain expertise"
+    },
+    {
+      "condition": {"primary_pattern": "thermal_buildup"},
+      "assign": {"type": "thermal_specialist", "count": 1, "priority": 2},
+      "reasoning": "Thermal issues require cooling system expertise"
+    },
+    {
+      "condition": {"primary_pattern": "power_anomaly"},
+      "assign": {"type": "electrical_specialist", "count": 1, "priority": 2},
+      "reasoning": "Power anomalies require electrical domain expertise"
+    },
+    {
+      "condition": {"primary_pattern": "combined_degradation"},
+      "assign": {"type": "senior_technician", "count": 1, "priority": 2},
+      "reasoning": "Multi-parameter degradation requires senior diagnostic skills"
+    },
+    {
+      "condition": {"risk_tier": "High"},
+      "assign": {"type": "senior_technician", "count": 1, "priority": 2},
+      "reasoning": "High-criticality machines always get senior technician"
+    },
+    {
+      "condition": {"action_type": "preventive_repair"},
+      "assign": {"type": "senior_technician", "count": 1, "priority": 3},
+      "reasoning": "Preventive repairs require experienced technician for component replacement"
+    },
+    {
+      "condition": {"action_type": "schedule_inspection"},
+      "assign": {"type": "junior_technician", "count": 1, "priority": 4},
+      "reasoning": "Scheduled inspections can be performed by junior technicians"
+    }
+  ],
+  "default": {"type": "junior_technician", "count": 1}
+}

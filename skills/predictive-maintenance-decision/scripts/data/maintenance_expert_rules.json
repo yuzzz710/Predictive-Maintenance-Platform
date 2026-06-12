@@ -1,0 +1,504 @@
+{
+  "_description": "工业维护专家规则库 — 故障诊断模式 → 排查步骤/安全提醒/验证方法。用于生成式工单的LLM Prompt注入。",
+  "voltage_drift": {
+    "pattern_desc": "电压参数持续偏离设备基线，z_voltage > 2.0 或电压趋势斜率 > 0.02/步",
+    "common_causes": [
+      {
+        "cause": "电源模块(PSU)老化，输出电压漂移",
+        "probability": "高",
+        "evidence": "电压漂移呈渐进趋势，斜率>0.02/步，无其他参数异常"
+      },
+      {
+        "cause": "稳压电路电容衰减（ESR升高）",
+        "probability": "中",
+        "evidence": "电压波动率(CV)同步升高，z_voltage出现间歇性尖峰"
+      },
+      {
+        "cause": "输入母线电压不稳定",
+        "probability": "低",
+        "evidence": "多台设备同时出现电压异常，或电压偏移呈突发性而非渐进性"
+      },
+      {
+        "cause": "电压传感器故障（读数偏移）",
+        "probability": "低",
+        "evidence": "电压读数与电流/温度变化不一致，物理上不可能的组合"
+      }
+    ],
+    "inspection_steps": [
+      {
+        "priority": "P0",
+        "step": "断开设备电源，执行锁定/挂牌(LOTO)程序",
+        "tool": "安全锁具、挂牌标签",
+        "duration": "2min",
+        "safety": "必须执行，不可跳过",
+        "criterion": "确认设备完全断电，电容放电指示灯熄灭"
+      },
+      {
+        "priority": "P1",
+        "step": "测量电源模块输出端直流电压，对比铭牌额定值",
+        "tool": "数字万用表（CAT III 600V以上）",
+        "duration": "5min",
+        "criterion": "电压偏差 < ±5% 额定值",
+        "detail": "在电源模块输出端子测量，空载和带载各测一次"
+      },
+      {
+        "priority": "P1",
+        "step": "目视检查电源板电容外观（鼓包/漏液/变色/裂纹），使用ESR表测量关键滤波电容等效串联电阻",
+        "tool": "ESR表、强光手电筒、放大镜",
+        "duration": "10min",
+        "criterion": "ESR < 标称值 × 2，外观无异常",
+        "detail": "重点检查4700μF/63V电解电容，记录ESR值"
+      },
+      {
+        "priority": "P2",
+        "step": "使用示波器检查电源输出端纹波电压",
+        "tool": "数字示波器（100MHz带宽以上）",
+        "duration": "5min",
+        "criterion": "纹波电压 < 50mVpp（峰峰值）",
+        "detail": "AC耦合模式，20MHz带宽限制开启，探头×1"
+      },
+      {
+        "priority": "P2",
+        "step": "检查输入侧三相电源电压平衡度",
+        "tool": "钳形万用表",
+        "duration": "5min",
+        "criterion": "三相电压不平衡度 < 3%",
+        "detail": "在设备主开关进线端测量L1-L2、L2-L3、L3-L1"
+      },
+      {
+        "priority": "P3",
+        "step": "检查所有电源接线端子紧固情况",
+        "tool": "扭力螺丝刀、红外热像仪（可选）",
+        "duration": "8min",
+        "criterion": "端子无松动、无过热变色痕迹",
+        "detail": "按扭矩规格逐一检查并紧固"
+      }
+    ],
+    "parts_and_tools": {
+      "likely_parts": [
+        {"name": "电源模块", "part_number": "PSM-24V-500W", "qty": 1, "unit_cost": 450.0},
+        {"name": "稳压IC", "part_number": "VR-LM317", "qty": 2, "unit_cost": 12.0},
+        {"name": "电容组（滤波）", "part_number": "CAP-4700UF-63V", "qty": 1, "unit_cost": 65.0}
+      ],
+      "required_tools": [
+        "数字万用表（CAT III）",
+        "ESR表",
+        "数字示波器（100MHz+）",
+        "绝缘手套（Class 0）",
+        "安全锁具套装",
+        "防静电手环",
+        "扭力螺丝刀",
+        "强光手电筒"
+      ]
+    },
+    "safety_notes": [
+      "⚠ 断开电源后等待 ≥ 3分钟，确保直流母线电容完全放电",
+      "⚠ 使用 CAT III 600V 及以上等级的测量仪表",
+      "⚠ 全程佩戴绝缘手套（Class 0）和防静电手环",
+      "⚠ 双人作业制度：一人操作、一人监护",
+      "⚠ 测量前确认万用表档位正确（直流电压档），表笔绝缘完好",
+      "⚠ 更换电容前对电容单独放电（使用放电电阻，禁止直接短接）"
+    ],
+    "verification_after_repair": [
+      {
+        "id": "VD-V01",
+        "method": "电压稳定性验证",
+        "detail": "设备重新上电后，监测SCADA电压读数20分钟，计算CV%",
+        "criterion": "电压在 [V_nominal-5%, V_nominal+5%] 范围内持续20分钟，CV < 维修前 × 0.8",
+        "duration": "20分钟"
+      },
+      {
+        "id": "VD-V02",
+        "method": "Z-Score恢复验证",
+        "detail": "维修后连续采集30个数据点，计算z_voltage",
+        "criterion": "z_voltage < 1.5 持续30个采样点",
+        "duration": "~30分钟"
+      },
+      {
+        "id": "VD-V03",
+        "method": "满载运行测试",
+        "detail": "设备满载运行10分钟，监测电压读数",
+        "criterion": "满载下电压偏差 < ±5%，无异常跳变",
+        "duration": "10分钟"
+      }
+    ]
+  },
+  "thermal_buildup": {
+    "pattern_desc": "温度参数持续升高，z_temperature > 2.0 或温度超过P95阈值",
+    "common_causes": [
+      {
+        "cause": "散热风扇故障或风道堵塞",
+        "probability": "高",
+        "evidence": "温度呈单调上升趋势，无其他参数同时异常"
+      },
+      {
+        "cause": "导热硅脂/散热膏老化干裂",
+        "probability": "中",
+        "evidence": "温度偏高但风扇转速正常，热成像显示局部热点"
+      },
+      {
+        "cause": "环境温度过高或通风不良",
+        "probability": "中",
+        "evidence": "多台设备同时出现温升，且有昼夜周期规律"
+      },
+      {
+        "cause": "轴承磨损导致摩擦发热",
+        "probability": "低",
+        "evidence": "温度升高伴随转子转速波动或异常噪音"
+      }
+    ],
+    "inspection_steps": [
+      {
+        "priority": "P0",
+        "step": "断开设备电源，执行锁定/挂牌(LOTO)程序",
+        "tool": "安全锁具、挂牌标签",
+        "duration": "2min",
+        "safety": "必须执行。注意设备表面可能高温，等待冷却后再接触",
+        "criterion": "确认设备断电，表面温度 < 40°C 后方可接触"
+      },
+      {
+        "priority": "P1",
+        "step": "检查散热风扇运转状态（目视+听诊），清洁风扇叶片和进风口滤网",
+        "tool": "压缩空气罐、软毛刷、吸尘器",
+        "duration": "8min",
+        "criterion": "风扇转动顺畅无卡滞，无异响，滤网无积尘堵塞",
+        "detail": "手动拨动扇叶检查轴承是否顺滑"
+      },
+      {
+        "priority": "P1",
+        "step": "使用红外热成像仪扫描设备关键部位（电源模块/驱动器/CPU散热器/轴承座）",
+        "tool": "红外热成像仪",
+        "duration": "5min",
+        "criterion": "无局部热点（ΔT < 15°C vs 环境），各部位温度分布均匀",
+        "detail": "保存热成像图作为维修前后对比依据"
+      },
+      {
+        "priority": "P2",
+        "step": "检查并清洁散热片/散热器翅片，必要时更换导热硅脂",
+        "tool": "导热硅脂、清洁剂（异丙醇）、无尘布、刮刀",
+        "duration": "15min",
+        "criterion": "散热片表面清洁，导热硅脂均匀覆盖无干裂",
+        "detail": "旧硅脂用异丙醇彻底清除后再涂新硅脂"
+      },
+      {
+        "priority": "P2",
+        "step": "检查冷却风扇供电电压和PWM控制信号",
+        "tool": "数字万用表、逻辑分析仪（可选）",
+        "duration": "5min",
+        "criterion": "供电电压正常，PWM信号占空比随温度变化",
+        "detail": "对比正常设备的风扇控制特性"
+      },
+      {
+        "priority": "P3",
+        "step": "检查机柜通风环境：进出风口间距、空调出风温度、滤网更换周期",
+        "tool": "温湿度计",
+        "duration": "5min",
+        "criterion": "环境温度 < 35°C，进出风口间距 > 30cm",
+        "detail": "记录当前环境温湿度作为基线"
+      }
+    ],
+    "parts_and_tools": {
+      "likely_parts": [
+        {"name": "散热风扇总成", "part_number": "CF-200-01", "qty": 1, "unit_cost": 180.0},
+        {"name": "导热硅脂", "part_number": "TP-50G", "qty": 1, "unit_cost": 25.0},
+        {"name": "温度传感器PT100", "part_number": "TS-PT100", "qty": 1, "unit_cost": 95.0},
+        {"name": "散热片总成", "part_number": "HS-300", "qty": 1, "unit_cost": 320.0}
+      ],
+      "required_tools": [
+        "红外热成像仪",
+        "数字万用表",
+        "压缩空气罐",
+        "异丙醇（清洁剂）",
+        "无尘布",
+        "导热硅脂 + 涂覆刮刀",
+        "软毛刷",
+        "温湿度计",
+        "绝缘手套",
+        "安全锁具"
+      ]
+    },
+    "safety_notes": [
+      "⚠ 维修前确认设备已断电且表面冷却（< 40°C），防止烫伤",
+      "⚠ 使用压缩空气时佩戴护目镜，防止碎屑飞溅",
+      "⚠ 导热硅脂仅使用指定型号，过量涂抹反而降低散热效果",
+      "⚠ 清洁散热片时注意不损伤翅片，变形翅片影响气流",
+      "⚠ 更换风扇后确认风向正确（通常为向机柜外排风）"
+    ],
+    "verification_after_repair": [
+      {
+        "id": "TH-V01",
+        "method": "温度恢复验证",
+        "detail": "设备运行30分钟，监测PT100温度读数",
+        "criterion": "温度恢复至设备基线 [μ-1σ, μ+1σ] 范围内，z_temperature < 1.5",
+        "duration": "30分钟"
+      },
+      {
+        "id": "TH-V02",
+        "method": "冷却效率测试",
+        "detail": "满载运行10分钟，使用热成像仪扫描关键部位",
+        "criterion": "满载ΔT ≤ 15°C，无局部热点",
+        "duration": "10分钟"
+      },
+      {
+        "id": "TH-V03",
+        "method": "趋势稳定性验证",
+        "detail": "维修后24小时内监控温度趋势斜率",
+        "criterion": "温度趋势斜率 |slope| < 0.05，连续10个以上观测点",
+        "duration": "24小时（在线监测）"
+      }
+    ]
+  },
+  "power_anomaly": {
+    "pattern_desc": "电压和电流同时异常，或功率因数异常。z_voltage > 1.5 且 z_amperage > 1.5",
+    "common_causes": [
+      {
+        "cause": "电机驱动器输出级故障（IGBT/MOSFET老化）",
+        "probability": "高",
+        "evidence": "电压和电流同时偏离基线，电流波形可能畸变"
+      },
+      {
+        "cause": "负载机械卡滞或过载",
+        "probability": "中",
+        "evidence": "电流升高但电压正常，转子转速下降"
+      },
+      {
+        "cause": "绕组匝间短路初期",
+        "probability": "中",
+        "evidence": "电流异常增大，三相不平衡度升高"
+      },
+      {
+        "cause": "供电线路接触不良（接线端子松动/氧化）",
+        "probability": "低",
+        "evidence": "电压间歇性跌落，电流伴随波动"
+      }
+    ],
+    "inspection_steps": [
+      {
+        "priority": "P0",
+        "step": "断开设备电源，执行锁定/挂牌(LOTO)，确认主回路和驱动回路均已断电",
+        "tool": "安全锁具、万用表（验电）",
+        "duration": "3min",
+        "safety": "大电容储能！断电后等待 ≥ 5分钟",
+        "criterion": "万用表确认所有端子电压为0V"
+      },
+      {
+        "priority": "P1",
+        "step": "使用钳形表测量电机三相电流，计算不平衡度；使用兆欧表测量绕组对地绝缘电阻",
+        "tool": "钳形万用表、兆欧表（500V）",
+        "duration": "12min",
+        "criterion": "三相电流不平衡度 < 10%，绝缘电阻 > 1MΩ",
+        "detail": "分别在电机接线盒和驱动器输出端测量，排除电缆问题"
+      },
+      {
+        "priority": "P1",
+        "step": "使用示波器检查电机驱动器输出端电压/电流波形",
+        "tool": "数字示波器（100MHz+）+ 高压差分探头 + 电流探头",
+        "duration": "10min",
+        "criterion": "波形纯净，无明显谐波畸变，THD < 5%",
+        "detail": "对比驱动器手册中的标准输出波形"
+      },
+      {
+        "priority": "P2",
+        "step": "手动盘动电机轴，检查机械负载是否有卡滞或异常阻力",
+        "tool": "手动盘车工具",
+        "duration": "5min",
+        "criterion": "转动顺畅无卡滞、无异响",
+        "detail": "断电后等待电容放电完成再操作"
+      },
+      {
+        "priority": "P2",
+        "step": "检查所有动力接线端子，逐一紧固并检查热缩管/绝缘状态",
+        "tool": "扭力螺丝刀、红外热像仪",
+        "duration": "8min",
+        "criterion": "端子扭矩合格，无氧化变色，绝缘完好",
+        "detail": "重点检查驱动器输出端子、电机接线盒、主开关触点"
+      },
+      {
+        "priority": "P3",
+        "step": "测量直流母线电压，检查整流桥和母线电容状态",
+        "tool": "数字万用表、ESR表",
+        "duration": "8min",
+        "criterion": "母线电压在额定范围内，纹波 < 5%",
+        "detail": "测量母线电容容量和ESR"
+      }
+    ],
+    "parts_and_tools": {
+      "likely_parts": [
+        {"name": "电机驱动器模块", "part_number": "MD-750W-V3", "qty": 1, "unit_cost": 680.0},
+        {"name": "电流传感器", "part_number": "CS-50A-HALL", "qty": 1, "unit_cost": 120.0},
+        {"name": "直流母线电容", "part_number": "DC-CAP-10000UF-400V", "qty": 1, "unit_cost": 180.0},
+        {"name": "IGBT模块", "part_number": "IGBT-1200V-50A", "qty": 1, "unit_cost": 350.0}
+      ],
+      "required_tools": [
+        "钳形万用表",
+        "兆欧表（500V）",
+        "数字示波器 + 高压差分探头 + 电流探头",
+        "ESR表",
+        "扭力螺丝刀",
+        "红外热像仪",
+        "手动盘车工具",
+        "绝缘手套（Class 0）",
+        "安全锁具"
+      ]
+    },
+    "safety_notes": [
+      "⚠ 变频器/驱动器断电后直流母线电容储有高压！等待 ≥ 5分钟并验电",
+      "⚠ 使用高压差分探头测量驱动器输出，禁止使用普通探头",
+      "⚠ 兆欧表测试时断开所有电子设备连接，防止高压损坏控制电路",
+      "⚠ 电机接线盒打开前确认断电，盒内可能有残留电荷",
+      "⚠ 双人作业：涉及高压测量时必须两人在场"
+    ],
+    "verification_after_repair": [
+      {
+        "id": "PA-V01",
+        "method": "三相电流平衡验证",
+        "detail": "设备运行15分钟后测量三相电流",
+        "criterion": "三相电流不平衡度 < 10%，各相电流在额定范围内",
+        "duration": "15分钟"
+      },
+      {
+        "id": "PA-V02",
+        "method": "驱动器输出波形验证",
+        "detail": "示波器检查驱动器输出波形",
+        "criterion": "输出波形纯净，THD < 5%，无异常尖峰",
+        "duration": "5分钟"
+      },
+      {
+        "id": "PA-V03",
+        "method": "满载运行验证",
+        "detail": "设备满载运行15分钟，监测电流、温度",
+        "criterion": "电流稳定在额定范围，温度无异常上升",
+        "duration": "15分钟"
+      }
+    ]
+  },
+  "combined_degradation": {
+    "pattern_desc": "两个及以上参数同时偏离基线，z_composite > 2.0。多系统综合退化。",
+    "common_causes": [
+      {
+        "cause": "设备整体老化（多年运行，多个子系统同步退化）",
+        "probability": "高",
+        "evidence": "多项参数同时呈渐进趋势，无单一突发性变化"
+      },
+      {
+        "cause": "环境因素导致系统性异常（高温高湿/粉尘/振动）",
+        "probability": "中",
+        "evidence": "同一区域多台设备出现类似多参数偏移"
+      },
+      {
+        "cause": "上次维修不当导致连锁反应",
+        "probability": "低",
+        "evidence": "维修后短时间内多参数恶化"
+      }
+    ],
+    "inspection_steps": [
+      {
+        "priority": "P0",
+        "step": "执行完整LOTO程序。通知生产主管设备进入全面诊断状态",
+        "tool": "安全锁具、LOTO登记表",
+        "duration": "5min",
+        "safety": "多系统诊断耗时较长（预计2-4小时），需提前协调生产计划",
+        "criterion": "所有能源回路已隔离并挂牌"
+      },
+      {
+        "priority": "P1",
+        "step": "按诊断模式顺序排查：先电压（电气安全）→ 再温度（热管理）→ 后电流/功率 → 最后机械",
+        "tool": "综合诊断工具包（万用表+示波器+热成像仪+兆欧表）",
+        "duration": "40-60min",
+        "criterion": "各子系统逐一评估，记录所有异常发现",
+        "detail": "严格按顺序排查，不可跳过。前一项未排除不可进入下一项"
+      },
+      {
+        "priority": "P1",
+        "step": "全面检查所有电气连接和接线端子",
+        "tool": "扭力螺丝刀、红外热像仪、放大镜",
+        "duration": "15min",
+        "criterion": "所有端子紧固、无氧化、无过热痕迹",
+        "detail": "从主开关 → PSU → 驱动器 → 电机 → 传感器的完整电气链路"
+      },
+      {
+        "priority": "P2",
+        "step": "运行设备自诊断程序（如有），或逐项功能测试",
+        "tool": "设备维护终端/诊断软件",
+        "duration": "15min",
+        "criterion": "所有自检项通过或记录失败项",
+        "detail": "记录所有错误代码，按手册查找对应故障"
+      },
+      {
+        "priority": "P2",
+        "step": "更换已确认劣化的部件，按单一模式修复后重新评估",
+        "tool": "按具体故障模式配备",
+        "duration": "30-90min",
+        "criterion": "修复后相关参数恢复正常，再继续排查下一异常",
+        "detail": "逐项修复，修一项验一项，避免同时更换多个部件后无法判断根因"
+      },
+      {
+        "priority": "P3",
+        "step": "更新设备维护档案，记录本次所有诊断发现和更换部件",
+        "tool": "维护管理系统/电子表格",
+        "duration": "10min",
+        "criterion": "档案完整记录，含更换部件型号/序列号/日期",
+        "detail": "为后续故障预测和备件管理提供数据"
+      }
+    ],
+    "parts_and_tools": {
+      "likely_parts": [
+        {"name": "综合备件包（根据诊断结果确定）", "part_number": "TBD", "qty": "待定", "unit_cost": "待定"},
+        {"name": "可能需电源模块", "part_number": "PSM-24V-500W", "qty": 1, "unit_cost": 450.0},
+        {"name": "可能需散热风扇", "part_number": "CF-200-01", "qty": 1, "unit_cost": 180.0},
+        {"name": "可能需电机驱动器", "part_number": "MD-750W-V3", "qty": 1, "unit_cost": 680.0}
+      ],
+      "required_tools": [
+        "综合诊断工具包：",
+        "  数字万用表（CAT III）",
+        "  数字示波器（100MHz+）+ 差分探头",
+        "  红外热成像仪",
+        "  兆欧表（500V）",
+        "  ESR表",
+        "  钳形万用表",
+        "绝缘手套（Class 0）",
+        "防静电手环",
+        "安全锁具套装",
+        "扭力螺丝刀套装"
+      ]
+    },
+    "safety_notes": [
+      "⚠ 综合诊断涉及多系统高压和高热，严格遵循LOTO程序",
+      "⚠ 诊断耗时可能2-4小时，提前协调生产停机窗口",
+      "⚠ 涉及多个子系统，每检查一个子系统后恢复安全状态再进入下一个",
+      "⚠ 更换部件时逐项进行，修一项、验一项，不可批量更换",
+      "⚠ 至少双人作业，涉及高压测量时需电气专业技术人员在场",
+      "⚠ 诊断过程中发现的任何安全隐患（如裸露导线、烧焦痕迹）立即升级处理"
+    ],
+    "verification_after_repair": [
+      {
+        "id": "CD-V01",
+        "method": "全参数恢复验证",
+        "detail": "设备运行1小时，监测4项参数（V/A/T/RPM）",
+        "criterion": "z_composite < 2.0 持续60分钟，所有单项z-score < 1.5",
+        "duration": "60分钟"
+      },
+      {
+        "id": "CD-V02",
+        "method": "转速稳定性验证",
+        "detail": "30分钟内监测RPM方差",
+        "criterion": "RPM CV < 1% 持续30分钟",
+        "duration": "30分钟"
+      },
+      {
+        "id": "CD-V03",
+        "method": "24小时在线监测",
+        "detail": "维修后24小时SCADA连续监测，确认无告警复现",
+        "criterion": "24小时内alert_level为NORMAL，无任何参数异常",
+        "duration": "24小时"
+      },
+      {
+        "id": "CD-V04",
+        "method": "生产质量验证",
+        "detail": "维修后首件产品通过质检",
+        "criterion": "产品测试通过率 ≥ 维修前周均值",
+        "duration": "按生产节拍"
+      }
+    ]
+  }
+}

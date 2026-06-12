@@ -1,0 +1,22 @@
+# requirements-optional.txt
+# ==============================================================================
+# 智能设备预测性维护 — 可选依赖（PDF报告导出 / ONNX推理）
+# Python 要求: 3.10+
+#
+# 安装方式:
+#   pip install -r requirements-optional.txt
+#
+# 说明: 所有包均 try/except 包裹，缺失时自动降级不影响核心功能。
+#   - weasyprint:    PDF报告首选方案（需要 GTK3 运行时）
+#   - pdfkit:        PDF报告备选（需要 wkhtmltopdf 系统安装）
+#   - xhtml2pdf:     PDF报告最轻量方案（纯Python，CSS支持有限）
+#   - onnxruntime:   ONNX推理引擎（替代PyTorch，体积仅~15MB）
+# ==============================================================================
+
+# ── PDF 报告导出（三选一即可，按推荐度排序） ──
+weasyprint>=60.0
+# pdfkit>=1.0.0
+# xhtml2pdf>=0.2.0
+
+# ── ONNX 推理（可选，替代 PyTorch） ──
+# onnxruntime>=1.15.0

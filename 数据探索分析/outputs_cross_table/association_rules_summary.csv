@@ -1,0 +1,5 @@
+rule_id,rule_name,method,statistic,p_value,significant,finding
+R1,保养周期→参数稳定性,Spearman ρ,0.075,0.4556,False,Spearman ρ=0.075
+R2,故障类型→成本损失,Kruskal-Wallis,1.55,0.4612,False,"High-Voltage组日均产值$5,327"
+R3,参数异常→产品缺陷率,Pearson + Spearman,-0.065,0.8191,False,Spearman ρ=-0.062
+R4,维护周期→故障概率,Pearson r,-0.092,0.3642,False,r=-0.092

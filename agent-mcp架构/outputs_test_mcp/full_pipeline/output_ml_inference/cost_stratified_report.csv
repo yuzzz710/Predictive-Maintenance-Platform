@@ -1,4 +1,0 @@
-cost_group,n_samples,precision,recall,f2,auc
-high_cost (>=P90),50,0.5200,1.0000,0.8442,0.4183
-mid_cost (P50-P90),200,0.6080,1.0000,0.8858,0.4404
-low_cost (<P50),249,0.5783,1.0000,0.8727,0.5229

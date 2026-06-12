@@ -1,0 +1,36 @@
+{
+  "data_dir": "C:\\Users\\yuzzz\\Desktop\\苗圃杯\\半决赛v1\\原始数据集",
+  "prep_dir": "C:\\Users\\yuzzz\\Desktop\\苗圃杯\\半决赛v1\\agent-mcp架构\\outputs\\output_data_prep",
+  "output_dir": "C:\\Users\\yuzzz\\Desktop\\苗圃杯\\半决赛v1\\agent-mcp架构\\outputs\\output_decision",
+  "strategy": "quality_first",
+  "files": {
+    "decision_report": "maintenance_decision_report.csv",
+    "work_orders": "maintenance_work_orders.csv",
+    "text_report": "maintenance_report.txt",
+    "decision_summary": "decision_summary.json",
+    "industrial_plan": "industrial_maintenance_plan.csv",
+    "spare_parts_plan": "spare_parts_plan.csv",
+    "technician_schedule": "technician_schedule.csv",
+    "downtime_schedule": "downtime_schedule.csv",
+    "strategy_comparison": "strategy_comparison.csv",
+    "acceptance_rules": "maintenance_acceptance_rules.json",
+    "sensor_upgrade_plan": "sensor_upgrade_plan.csv",
+    "sensor_roi_analysis": "sensor_roi_analysis.csv",
+    "sensor_phase_summary": "sensor_phase_summary.csv"
+  },
+  "summary": {
+    "n_machines_evaluated": 100,
+    "alert_distribution": {
+      "ALARM": 9,
+      "WARNING": 51,
+      "WATCH": 40,
+      "NORMAL": 0
+    },
+    "n_work_orders": 62,
+    "n_industrial_orders": 30,
+    "strategy": "quality_first",
+    "n_spare_parts_rows": 93,
+    "n_technician_assignments": 30,
+    "n_downtime_slots": 30
+  }
+}

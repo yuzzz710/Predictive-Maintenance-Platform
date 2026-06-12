@@ -1,7 +1,7 @@
 @echo off
-chcp 65001 >nul
+chcp 65001 >nul 2>nul
 echo ============================================
-echo 智能设备预测性维护 - AI Gateway
+echo Predictive Maintenance - AI Gateway
 echo Dashboard + DeepSeek AI Assistant
 echo ============================================
 echo.

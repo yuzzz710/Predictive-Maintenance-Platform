@@ -1,0 +1,31 @@
+{
+  "pipeline_status": "complete",
+  "degradation_mode": "STAT_ONLY",
+  "step_statuses": {
+    "data_prep": "success",
+    "stat_inference": "success",
+    "decision": "success"
+  },
+  "step_durations_seconds": {
+    "data_prep": 2.2,
+    "stat_inference": 2.1,
+    "decision": 0.6
+  },
+  "total_duration_seconds": 4.9,
+  "work_orders_count": 20,
+  "decision_summary": {
+    "n_machines_evaluated": 100,
+    "alert_distribution": {
+      "ALARM": 9,
+      "WARNING": 51,
+      "WATCH": 40,
+      "NORMAL": 0
+    },
+    "n_work_orders": 20,
+    "n_industrial_orders": 20,
+    "strategy": "production_efficiency",
+    "n_spare_parts_rows": 76,
+    "n_technician_assignments": 20,
+    "n_downtime_slots": 20
+  }
+}
