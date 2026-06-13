@@ -164,9 +164,9 @@ function openPanel(mid, m) {
 
   var panelMid = document.getElementById('panel-mid');
   if (panelMid) panelMid.textContent = mid;
-  var levelColor = {'Healthy':'var(--green)','Warning':'var(--amber)','Degrading':'#b8860b','Critical':'var(--red)'};
+  var levelColor = {'Healthy':'var(--accent-green)','Warning':'var(--accent-amber)','Degrading':'#b8860b','Critical':'var(--accent-red)'};
   var lc = levelColor[h.health_level] || 'var(--text-muted)';
-  var alertTag = wo ? ('<span style="color:'+(wo.alert_level==='ALARM'?'var(--red)':'var(--amber)')+';font-weight:700;">'+wo.alert_level+'</span>') : '无工单';
+  var alertTag = wo ? ('<span style="color:'+(wo.alert_level==='ALARM'?'var(--accent-red)':'var(--accent-amber)')+';font-weight:700;">'+wo.alert_level+'</span>') : '无工单';
 
   var panelSubtitle = document.getElementById('panel-subtitle');
   if (panelSubtitle) panelSubtitle.innerHTML =
@@ -174,7 +174,7 @@ function openPanel(mid, m) {
 
   var html = '';
   html += '<div class="panel-section">';
-  html += '<h3><span class="dot" style="background:var(--cyan);"></span>关键指标</h3>';
+  html += '<h3><span class="dot" style="background:var(--accent-cyan);"></span>关键指标</h3>';
   html += '<div class="stat-row">';
   html += '<div class="stat-item"><div class="stat-label">健康评分</div><div class="stat-value" style="color:'+lc+'">'+h.health_score+'</div></div>';
   html += '<div class="stat-item"><div class="stat-label">故障率</div><div class="stat-value">'+(h.failure_rate*100).toFixed(1)+'%</div></div>';
@@ -184,7 +184,7 @@ function openPanel(mid, m) {
 
   if (sh && sh.key_anomaly_signals && sh.key_anomaly_signals.length > 0) {
     html += '<div class="panel-section">';
-    html += '<h3><span class="dot" style="background:var(--amber);"></span>关键异常信号</h3>';
+    html += '<h3><span class="dot" style="background:var(--accent-amber);"></span>关键异常信号</h3>';
     sh.key_anomaly_signals.forEach(function(s) {
       var badge = (s.severity||0) > 2 ? '\u{1F534}' : (s.severity||0) > 1 ? '\u{1F7E1}' : '\u{1F7E2}';
       html += '<div class="signal-item">';
@@ -198,11 +198,11 @@ function openPanel(mid, m) {
 
   if (sh && sh.top_contributors && sh.top_contributors.length > 0) {
     html += '<div class="panel-section">';
-    html += '<h3><span class="dot" style="background:var(--purple);"></span>SHAP 归因分析</h3>';
+    html += '<h3><span class="dot" style="background:var(--accent-purple);"></span>SHAP 归因分析</h3>';
     html += '<div style="font-size:12px;line-height:1.7;margin-bottom:8px;">'+sh.natural_summary+'</div>';
     html += '<button class="shap-explore-btn-open" onclick="event.stopPropagation();openShapExploration();">\u{1F50D} 交互式探索：查看单一特征对所有100台设备的影响</button>';
     sh.top_contributors.slice(0,5).forEach(function(c) {
-      var dirColor = c.contribution > 0 ? 'var(--red)' : 'var(--green)';
+      var dirColor = c.contribution > 0 ? 'var(--accent-red)' : 'var(--accent-green)';
       var arrow = c.contribution > 0 ? '↑' : '↓';
       html += '<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;">';
       html += '<span>'+c.feature+' <span style="color:var(--text-muted);">('+c.category_label+')</span></span>';
@@ -214,7 +214,7 @@ function openPanel(mid, m) {
 
   if (wo) {
     html += '<div class="panel-section">';
-    html += '<h3><span class="dot" style="background:var(--red);"></span>维护工单</h3>';
+    html += '<h3><span class="dot" style="background:var(--accent-red);"></span>维护工单</h3>';
     html += '<div class="stat-row">';
     html += '<div class="stat-item"><div class="stat-label">优先级</div><div class="stat-value">#'+wo.priority+'</div></div>';
     html += '<div class="stat-item"><div class="stat-label">动作</div><div class="stat-value" style="font-size:14px;">'+wo.action_type+'</div></div>';
@@ -233,7 +233,7 @@ function openPanel(mid, m) {
 
   if (sh && sh.inspection_checklist && sh.inspection_checklist.length > 0) {
     html += '<div class="panel-section">';
-    html += '<h3><span class="dot" style="background:var(--cyan);"></span>建议排查清单</h3>';
+    html += '<h3><span class="dot" style="background:var(--accent-cyan);"></span>建议排查清单</h3>';
     sh.inspection_checklist.forEach(function(item, i) {
       html += '<div class="checklist-item"><span class="idx">'+(i+1)+'.</span> '+item+'</div>';
     });
@@ -247,7 +247,7 @@ function openPanel(mid, m) {
   var strategy = sessionStorage.getItem('current_strategy') || 'production_efficiency';
   var strategyLabels = { cost_efficiency: '成本效率', production_efficiency: '生产效率', quality_first: '质量优先' };
   html += '<div class="panel-section">';
-  html += '<button id="btn-add-tracking" style="width:100%;padding:10px;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid var(--cyan);background:rgba(0,201,160,0.1);color:var(--cyan);font-family:var(--font-sans);transition:all 0.2s;" onclick="addToTracking(\''+mid+'\')">+ 加入工单跟踪（'+ (strategyLabels[strategy] || strategy) +'）</button>';
+  html += '<button id="btn-add-tracking" style="width:100%;padding:10px;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid var(--accent-cyan);background:rgba(0,201,160,0.1);color:var(--accent-cyan);font-family:var(--font-sans);transition:all 0.2s;" onclick="addToTracking(\''+mid+'\')">+ 加入工单跟踪（'+ (strategyLabels[strategy] || strategy) +'）</button>';
   html += '</div>';
 
   var panelBody = document.getElementById('panel-body');
@@ -286,13 +286,13 @@ function addToTracking(machineId) {
       if (d.success) {
         btn.textContent = d.transferred ? '已转移到当前策略' : '已加入工单跟踪';
         btn.style.background = 'rgba(63,185,80,0.1)';
-        btn.style.borderColor = 'var(--green)';
-        btn.style.color = 'var(--green)';
+        btn.style.borderColor = 'var(--accent-green)';
+        btn.style.color = 'var(--accent-green)';
       } else if (d.same_strategy) {
         btn.textContent = '已在跟踪中';
         btn.style.background = 'rgba(240,160,48,0.1)';
-        btn.style.borderColor = 'var(--amber)';
-        btn.style.color = 'var(--amber)';
+        btn.style.borderColor = 'var(--accent-amber)';
+        btn.style.color = 'var(--accent-amber)';
       } else if (d.different_strategy) {
         var oldLabel = strategyLabels[d.old_strategy] || d.old_strategy;
         var newLabel = strategyLabels[strategy] || strategy;
@@ -357,10 +357,10 @@ function buildHealthTrace(mid, h, b) {
     { label: '超规格率', w: 0.05, v: parseFloat(h.spec_violation_rate) || 0, raw: ((parseFloat(h.spec_violation_rate) || 0) * 100).toFixed(1) + '%' }
   ];
   dims.sort(function(a, b) { return (b.w * b.v) - (a.w * a.v); });
-  var html = '<p>该设备健康分仅 <b style="color:var(--red)">' + score.toFixed(0) + '</b> 分（满分100），判定为<b>"' + (h.health_level || '--') + '"</b>级别，主要由以下因素驱动：</p>';
+  var html = '<p>该设备健康分仅 <b style="color:var(--accent-red)">' + score.toFixed(0) + '</b> 分（满分100），判定为<b>"' + (h.health_level || '--') + '"</b>级别，主要由以下因素驱动：</p>';
   dims.forEach(function(d, i) {
     var contrib = (d.w * d.v).toFixed(2);
-    var colors = ['var(--red)', 'var(--red)', 'var(--amber)', 'var(--text-muted)'];
+    var colors = ['var(--accent-red)', 'var(--accent-red)', 'var(--accent-amber)', 'var(--text-muted)'];
     html += '<div class="trace-item"><span class="ti-label">' + d.label + '（权重' + (d.w * 100).toFixed(0) + '%）</span><span class="ti-val">' + d.raw + ' → 贡献 ' + contrib + '</span></div>';
     html += '<div class="trace-bar-wrap"><div class="trace-bar-fill" style="width:' + Math.min(100, parseFloat(contrib) / 10 * 100) + '%;background:' + colors[Math.min(i, 3)] + '"></div></div>';
   });
@@ -437,8 +437,8 @@ function renderShapScatter() {
   var stats = document.getElementById('shap-explore-stats');
   if (stats) stats.innerHTML =
     '<span>设备数: <b>' + nTotal + '</b></span>' +
-    '<span style="color:var(--red);">风险↑ <b>' + nPositive + '</b></span>' +
-    '<span style="color:var(--green);">风险↓ <b>' + nNegative + '</b></span>' +
+    '<span style="color:var(--accent-red);">风险↑ <b>' + nPositive + '</b></span>' +
+    '<span style="color:var(--accent-green);">风险↓ <b>' + nNegative + '</b></span>' +
     '<span>均值贡献: <b>' + (meanContrib > 0 ? '+' : '') + meanContrib.toFixed(4) + '</b></span>';
 
   var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
