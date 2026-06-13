@@ -8,9 +8,11 @@
 
 ## 一、设计方向
 
-- **浅色模式**：macOS 明亮毛玻璃（灰白渐变底 + 半透白卡片 + 柔和阴影 + 蓝色系强调）
-- **深色模式**：macOS 深色毛玻璃（深黑底 + 半透黑卡片 + 软对比 + 克制点缀色）
-- **配色策略**：保留工业语义色（青=健康/信息、琥珀=警告、红=危险、紫=SHAP），降低饱和度 ~30% 以符合 Apple 克制风格
+- **整体风格**：iOS 26 极致透明渐变玻璃（glassmorphism 2.0）—— 高透明度 + 强模糊 + 环境光晕 + 内高光
+- **板块原则**：页面中每个独立内容板块（KPI卡片、图表容器、表格、工单卡、过滤栏等）都做成独立的透明磨砂玻璃卡片，像冰块漂浮在背景上，透过玻璃可见下层光晕
+- **浅色模式**：浅灰渐变底 + 多层环境光晕 + 极高透明度(28-40%)白色玻璃 + 强模糊(30-50px)
+- **深色模式**：纯黑底 + 柔和光晕 + 半透明(30-35%)深灰玻璃 + 强模糊(40-50px)
+- **配色策略**：保留工业语义色（青=健康/信息、琥珀=警告、红=危险、紫=SHAP），降低饱和度以符合克制风格
 
 ---
 
@@ -54,20 +56,29 @@
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
   --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.6);
 
-  /* 圆角 */
-  --radius-sm: 8px;
-  --radius: 10px;
-  --radius-md: 12px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
+  /* 圆角（iOS 26 大圆角） */
+  --radius-sm: 10px;
+  --radius: 14px;
+  --radius-md: 18px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
 
-  /* 毛玻璃（深色） */
-  --glass-bg-card: rgba(44, 44, 46, 0.7);
-  --glass-bg-header: rgba(28, 28, 30, 0.85);
-  --glass-bg-modal: rgba(44, 44, 46, 0.92);
-  --glass-bg-sidebar: rgba(28, 28, 30, 0.85);
-  --glass-blur: blur(24px) saturate(180%);
-  --glass-blur-light: blur(14px) saturate(150%);
+  /* 毛玻璃（深色 — 高透明 + 强模糊） */
+  --glass-bg-card: rgba(44, 44, 46, 0.35);
+  --glass-bg-header: rgba(28, 28, 30, 0.4);
+  --glass-bg-modal: rgba(44, 44, 46, 0.55);
+  --glass-bg-sidebar: rgba(28, 28, 30, 0.5);
+  --glass-blur: blur(45px) saturate(220%);
+  --glass-blur-light: blur(30px) saturate(200%);
+  --glass-blur-strong: blur(55px) saturate(240%);
+
+  /* 玻璃边框 */
+  --glass-border: 0.5px solid rgba(255, 255, 255, 0.10);
+  --glass-border-light: 0.5px solid rgba(255, 255, 255, 0.14);
+
+  /* 内高光（iOS 26 标志性效果） */
+  --glass-highlight: inset 0 0.5px 0 rgba(255, 255, 255, 0.08);
+  --glass-highlight-strong: inset 0 0.5px 0 rgba(255, 255, 255, 0.14);
 
   /* 字体 */
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', 'Segoe UI', system-ui, sans-serif;
@@ -119,22 +130,88 @@
   --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.10);
   --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.14);
 
-  --glass-bg-card: rgba(255, 255, 255, 0.72);
-  --glass-bg-header: rgba(250, 250, 250, 0.8);
-  --glass-bg-modal: rgba(255, 255, 255, 0.88);
-  --glass-bg-sidebar: rgba(250, 250, 250, 0.85);
-  --glass-blur: blur(20px) saturate(180%);
-  --glass-blur-light: blur(12px) saturate(150%);
+  --glass-bg-card: rgba(255, 255, 255, 0.38);
+  --glass-bg-header: rgba(250, 250, 250, 0.45);
+  --glass-bg-modal: rgba(255, 255, 255, 0.55);
+  --glass-bg-sidebar: rgba(250, 250, 250, 0.5);
+  --glass-blur: blur(40px) saturate(220%);
+  --glass-blur-light: blur(30px) saturate(200%);
+  --glass-blur-strong: blur(50px) saturate(240%);
+
+  /* 玻璃边框 */
+  --glass-border: 0.5px solid rgba(255, 255, 255, 0.5);
+  --glass-border-light: 0.5px solid rgba(255, 255, 255, 0.65);
+
+  /* 内高光 */
+  --glass-highlight: inset 0 0.5px 0 rgba(255, 255, 255, 0.6);
+  --glass-highlight-strong: inset 0 0.5px 0 rgba(255, 255, 255, 0.85);
 }
 ```
 
-### 2.3 移除的旧设计元素
+### 2.3 板块级玻璃化原则（核心）
 
-- ~~`body::before` 大气径向渐变背景~~ → 纯色 `var(--bg-root)`
+**每个独立的业务内容板块都做成独立的 iOS 26 透明磨砂玻璃卡片**。这包括但不限于：
+
+- KPI 统计卡片、图表容器、数据表格
+- 工单卡片、设备网格卡片、策略选择器
+- 过滤/搜索栏、Tab 切换栏、分页器
+- 侧滑面板、弹窗、确认框
+- 每个 sec 内的每个子区块
+
+**统一玻璃卡片类** `.glass-card`：
+
+```css
+.glass-card {
+  background: var(--glass-bg-card);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm), var(--glass-highlight);
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+.glass-card:hover {
+  box-shadow: var(--shadow-md), var(--glass-highlight);
+  transform: translateY(-1px);
+}
+/* 嵌套玻璃卡片增加层次感 */
+.glass-card .glass-card {
+  background: rgba(255, 255, 255, 0.25); /* 浅色嵌套更透明 */
+  backdrop-filter: var(--glass-blur-light);
+  border-radius: var(--radius-md);
+}
+```
+
+**页面背景要求**：必须有渐变光晕，否则透明玻璃看不出效果。
+
+```css
+body {
+  background: var(--bg-root);
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  /* 多层径向渐变光晕 — 让透明玻璃展现层次 */
+  background:
+    radial-gradient(ellipse 80% 60% at 30% 20%, rgba(90,200,184,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 70% 60%, rgba(100,181,246,0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 80%, rgba(179,136,235,0.04) 0%, transparent 60%);
+}
+[data-theme="light"] body::before {
+  background:
+    radial-gradient(ellipse 80% 60% at 30% 20%, rgba(90,200,184,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 70% 60%, rgba(100,181,246,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 80%, rgba(179,136,235,0.05) 0%, transparent 60%);
+}
+```
+
+### 2.4 移除的旧设计元素
+
+- ~~`body::before` 大气径向渐变背景~~ → 改为多层柔光光晕
 - ~~`body::after` 扫描线叠加~~ → 移除
-- ~~`--radius: 3px` 工业锐角~~ → 统一 10-14px 大圆角
+- ~~`--radius: 3px` 工业锐角~~ → 统一 18-28px 大圆角
 - ~~3D Keycap 效果~~ → 毛玻璃卡片替代
-- ~~粗实色 `--border: #1c2230`~~ → 0.5px 半透明边框
+- ~~粗实色 `--border: #1c2230`~~ → 0.5px 半透明边框 + 内高光
 
 ---
 
