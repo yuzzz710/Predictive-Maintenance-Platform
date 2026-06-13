@@ -64,7 +64,7 @@ body {
 .cell:hover { transform: translateY(-2px) scale(1.04); box-shadow: var(--shadow-md); z-index: 10; }
 .cell.healthy  { background: rgba(48,209,88,0.70); }
 .cell.warning  { background: rgba(255,210,30,0.70); }
-.cell.degrading { background: rgba(255,80,20,0.75); }
+.cell.degrading { background: rgba(255,130,20,0.75); }
 .cell.critical { background: rgba(255,69,58,0.80); }
 
 .cell.has-wo { animation: keycapPulse 2s ease-in-out infinite; }
@@ -98,7 +98,7 @@ body {
 }
 .stats-bar b { color: var(--text-primary); }
 .stats-bar .st-critical { color: var(--accent-red); }
-.stats-bar .st-degrading { color: rgba(255,80,20,0.90); }
+.stats-bar .st-degrading { color: rgba(255,130,20,0.90); }
 .stats-bar .st-warning { color: rgba(255,210,30,0.90); }
 .stats-bar .st-wo { color: var(--accent-red); }
 .stats-bar .st-healthy { color: var(--accent-green); }
@@ -302,7 +302,7 @@ body {
   <div class="grid-legend">
     <span><span class="legend-dot" style="background:rgba(48,209,88,0.70);border:0.5px solid rgba(48,209,88,0.7);"></span> 健康</span>
     <span><span class="legend-dot" style="background:rgba(255,210,30,0.70);border:0.5px solid rgba(255,210,30,0.7);"></span> 警告</span>
-    <span><span class="legend-dot" style="background:rgba(255,80,20,0.75);border:0.5px solid rgba(255,80,20,0.7);"></span> 退化</span>
+    <span><span class="legend-dot" style="background:rgba(255,130,20,0.75);border:0.5px solid rgba(255,130,20,0.7);"></span> 退化</span>
     <span><span class="legend-dot" style="background:rgba(255,69,58,0.80);border:0.5px solid rgba(255,69,58,0.7);"></span> 高危</span>
     <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;box-shadow:0 0 8px rgba(255,69,58,0.8);margin-right:4px;background:rgba(255,69,58,0.80);"></span> 开放工单</span>
     <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;box-shadow:0 0 10px rgba(255,179,64,0.5);margin-right:4px;background:transparent;border:0.5px solid rgba(255,179,64,0.4);"></span> Top 3 风险</span>

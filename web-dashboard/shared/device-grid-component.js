@@ -166,7 +166,7 @@ function openPanel(mid, m) {
 
   var panelMid = document.getElementById('panel-mid');
   if (panelMid) panelMid.textContent = mid;
-  var levelColor = {'Healthy':'var(--accent-green)','Warning':'var(--accent-amber)','Degrading':'#b8860b','Critical':'var(--accent-red)'};
+  var levelColor = {'Healthy':'var(--accent-green)','Warning':'var(--accent-amber)','Degrading':'#ff8214','Critical':'var(--accent-red)'};
   var lc = levelColor[h.health_level] || 'var(--text-secondary)';
   var alertTag = wo ? ('<span style="color:'+(wo.alert_level==='ALARM'?'var(--accent-red)':'var(--accent-amber)')+';font-weight:700;">'+wo.alert_level+'</span>') : '无工单';
 
@@ -447,7 +447,7 @@ function renderShapScatter() {
   var textPrimary = isDark ? '#f5f5f7' : '#1d1d1f';
   var textSecondary = isDark ? '#aeaeb2' : '#6e6e73';
   var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-  var levelColor = { 'Healthy': '#30d158', 'Warning': '#ffd21e', 'Degrading': '#ff5014', 'Critical': '#ff453a' };
+  var levelColor = { 'Healthy': '#30d158', 'Warning': '#ffd21e', 'Degrading': '#ff8214', 'Critical': '#ff453a' };
 
   var dom = document.getElementById('chart-shap-scatter');
   if (!dom) return;
