@@ -459,7 +459,7 @@
       '<div class="gn-inner">' +
       '<a class="gn-logo" href="/">' +
       '<span class="gn-logo-dot"></span>' +
-      '<span class="gn-logo-text">工业智能运维平台</span>' +
+      '<span class="gn-logo-text">鹰眼-工业智能运维平台</span>' +
       '</a>' +
       '<div class="gn-links">' + buildLinksHtml() + '</div>' +
       '<div class="gn-mode-badge" id="gn-mode-badge">全功能</div>' +
