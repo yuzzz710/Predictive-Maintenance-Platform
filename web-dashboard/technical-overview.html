@@ -2321,12 +2321,12 @@ function togglePhase(id) {
 // Chart Color Palette
 // ═══════════════════════════════════════════════════════════════
 var C = {
-  cyan: '#66d9c8', amber: '#ffb340', red: '#ff453a', blue: '#6db5f9',
-  green: '#30d158', purple: '#bf5af2', pink: '#ff6482',
-  border: 'rgba(255,255,255,0.12)', borderLight: 'rgba(255,255,255,0.08)', borderAccent: 'rgba(255,255,255,0.35)',
-  textPrimary: '#f5f5f7', textSecondary: '#98989d', textMuted: '#636366',
-  bgCard: 'rgba(44,44,46,0.35)', bgCardAlt: 'rgba(58,58,60,0.25)', bgInput: 'rgba(44,44,46,0.30)',
-  bgRoot: '#000000', bgSurface: '#1c1c1e'
+  cyan: '#00897b', amber: '#e65100', red: '#c62828', blue: '#1565c0',
+  green: '#2e7d32', purple: '#6a1b9a', pink: '#ad1457',
+  border: 'rgba(0,0,0,0.12)', borderLight: 'rgba(0,0,0,0.06)', borderAccent: 'rgba(0,0,0,0.35)',
+  textPrimary: '#1d1d1f', textSecondary: '#4a4a4d', textMuted: '#6e6e73',
+  bgCard: 'rgba(255,255,255,0.70)', bgCardAlt: 'rgba(255,255,255,0.50)', bgInput: 'rgba(255,255,255,0.80)',
+  bgRoot: '#f2f2f7', bgSurface: '#ffffff'
 };
 
 function tooltipCfg() {
@@ -2425,7 +2425,7 @@ function tooltipCfg() {
       edgeSymbol: ['none', 'arrow'],
       edgeSymbolSize: 7,
       lineStyle: { color: C.borderAccent, width: 1.5, curveness: 0.15, opacity: 1.0 },
-      label: { show: true, color: C.textPrimary, fontSize: 10, fontWeight: 500, formatter: function(p) { return p.name; } },
+      label: { show: true, color: C.textPrimary, fontSize: 9, fontWeight: 600, formatter: function(p) { var n=p.name; return n.length>10?n.substring(0,9)+'..':n; } },
       categories: [
         { name: '数据层', itemStyle: { color: C.bgCard } },
         { name: '流水线层', itemStyle: { color: C.bgCard } },
@@ -2591,7 +2591,7 @@ function tooltipCfg() {
       edgeSymbol: ['none', 'arrow'],
       edgeSymbolSize: 7,
       lineStyle: { color: C.borderAccent, width: 1.5, curveness: 0.2, opacity: 1.0 },
-      label: { show: true, color: C.textPrimary, fontSize: 10, fontWeight: 500 },
+      label: { show: true, color: C.textPrimary, fontSize: 9, fontWeight: 600 },
       categories: categories,
       data: nodes,
       links: edges
@@ -2663,7 +2663,7 @@ function tooltipCfg() {
       edgeSymbol: ['none', 'arrow'],
       edgeSymbolSize: 7,
       lineStyle: { color: C.borderAccent, width: 1.5, curveness: 0.15, opacity: 1.0 },
-      label: { show: true, color: C.textPrimary, fontSize: 10, fontWeight: 500 },
+      label: { show: true, color: C.textPrimary, fontSize: 9, fontWeight: 600 },
       categories: categories,
       data: nodes,
       links: edges
