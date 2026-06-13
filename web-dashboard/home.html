@@ -533,9 +533,10 @@ html[data-role="developer"] .role-manager-header { display: none !important; }
   backdrop-filter:var(--glass-blur-strong); -webkit-backdrop-filter:var(--glass-blur-strong);
   border:0.5px solid var(--glass-border);
   border-radius:var(--radius-xl);
-  z-index:3001;overflow-y:auto;
+  z-index:3001;overflow-y:auto;display:none;
   box-shadow:var(--shadow-xl),var(--glass-highlight-strong);
 }
+.trace-panel.open{display:block;}
 .trace-header{
   position:sticky;top:0;z-index:10;
   background:var(--glass-bg-header);
@@ -2236,7 +2237,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeTrace()
 init();
 </script>
 <div class="trace-overlay" id="trace-overlay" onclick="closeTrace()"></div>
-<div class="trace-panel" id="trace-panel" style="display:none">
+<div class="trace-panel" id="trace-panel">
   <div class="trace-header">
     <div style="font-size:16px;font-weight:700;" id="trace-title">基线溯源</div>
     <button class="trace-close" onclick="closeTrace()">&times;</button>

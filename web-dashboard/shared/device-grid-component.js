@@ -327,6 +327,12 @@ function showTrace(type, mid) {
   if (type === 'health') {
     title = mid + ' 健康分: ' + ((h && h.health_score) || '--') + '（' + ((h && h.health_level) || '--') + '）';
     body = buildHealthTrace(mid, h, b);
+  } else if (type === 'zscore') {
+    title = mid + ' Z-Score 溯源分析';
+    body = buildZScoreTrace(mid, z, b);
+  } else if (type === 'risk') {
+    title = mid + ' 成本风险溯源';
+    body = buildRiskTrace(mid, h);
   }
   var titleEl = document.getElementById('trace-title');
   var bodyEl = document.getElementById('trace-body');
@@ -387,6 +393,50 @@ function nlHealth(h) {
   else if (t === 'Degrading') p.push('指标持续下降趋势，需要在近期内安排维护');
   else if (t === 'Warning') p.push('个别指标有轻微恶化迹象，建议增加监测频率');
   return '自然语言解读：' + p.join('。') + '。';
+}
+
+function buildZScoreTrace(mid, z, b) {
+  if (!z) return '<p style="color:var(--text-secondary)">Z-Score数据不可用</p>';
+  var html = '<p>基于<b>逐设备统计基线</b>（μ±σ），计算电压/电流/温度三参数Z-Score异常值。</p>';
+  html += '<table class="trace-table"><tr><th>参数</th><th>当前值</th><th>基线均值(μ)</th><th>标准差(σ)</th><th>Z-Score</th></tr>';
+  var params = [
+    { key: 'voltage', label: '电压', unit: 'V' },
+    { key: 'amperage', label: '电流', unit: 'A' },
+    { key: 'temperature', label: '温度', unit: '°C' }
+  ];
+  params.forEach(function(p) {
+    var cv = z[p.key + '_value'] || '--';
+    var mu = z[p.key + '_mean'] || '--';
+    var sd = z[p.key + '_std'] || '--';
+    var zs = z[p.key + '_zscore'] || '--';
+    var cls = parseFloat(zs) > 2 ? 'hl' : '';
+    html += '<tr><td>' + p.label + '</td><td>' + cv + ' ' + p.unit + '</td><td>' + (typeof mu === 'number' ? mu.toFixed(2) : mu) + '</td><td>' + (typeof sd === 'number' ? sd.toFixed(2) : sd) + '</td><td class="'+cls+'">' + (typeof zs === 'number' ? zs.toFixed(2) : zs) + '</td></tr>';
+  });
+  html += '</table>';
+  var combined = parseFloat(z.combined_zscore) || 0;
+  html += '<p>综合Z-Score: <b style="color:' + (combined > 2 ? 'var(--accent-red)' : combined > 1.5 ? 'var(--accent-amber)' : 'var(--accent-green)') + '">' + combined.toFixed(2) + '</b></p>';
+  if (b) {
+    var bq = { stable: '稳定', sparse: '稀疏', cold_start: '冷启动' };
+    html += '<p>基线质量: <b>' + (bq[b.baseline_quality] || b.baseline_quality || '--') + '</b></p>';
+  }
+  html += '<div class="trace-note">Z>2.0触发告警 | 告警精确率83.9% | 逐设备基线确保设备间差异不被忽略</div>';
+  return html;
+}
+
+function buildRiskTrace(mid, h) {
+  if (!h) return '<p style="color:var(--text-secondary)">成本风险数据不可用</p>';
+  var costAtRisk = parseFloat(h.cost_at_risk) || 0;
+  var failureRate = parseFloat(h.failure_rate) || 0;
+  var html = '<p>成本风险 = <b>故障概率</b> × <b>单件成本</b> × <b>日产量</b></p>';
+  html += '<div class="trace-item"><span class="ti-label">故障率</span><span class="ti-val">' + (failureRate * 100).toFixed(1) + '%</span></div>';
+  html += '<div class="trace-item"><span class="ti-label">日成本风险</span><span class="ti-val">$' + (costAtRisk / 1000).toFixed(1) + 'k/天</span></div>';
+  html += '<div class="trace-item"><span class="ti-label">健康评分</span><span class="ti-val">' + h.health_score + '</span></div>';
+  if (costAtRisk > 5000) {
+    html += '<div class="trace-note">⚠ 日成本风险超过$5k/天，建议优先安排维护以降低运营损失。</div>';
+  } else {
+    html += '<div class="trace-note">成本风险处于可控范围，按计划维护即可。</div>';
+  }
+  return html;
 }
 
 // ── SHAP interactive exploration ──
