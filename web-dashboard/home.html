@@ -1313,10 +1313,11 @@ async function init() {
   });
 
   // Stats
-  var counts = { healthy:0, degrading:0, critical:0, wo:0 };
+  var counts = { healthy:0, warning:0, degrading:0, critical:0, wo:0 };
   Object.values(machineMap).forEach(function(m) {
     var level = m.health.health_level || '';
-    if (level === 'Healthy' || level === 'Warning') counts.healthy++;
+    if (level === 'Healthy') counts.healthy++;
+    else if (level === 'Warning') counts.warning++;
     else if (level === 'Degrading') counts.degrading++;
     else if (level === 'Critical') counts.critical++;
     if (m.workOrder) counts.wo++;
@@ -1456,10 +1457,11 @@ function animateCount(el, target, duration, opts) {
 
 // ── Helper: recalulate header stats from machineMap ──
 function updateHeaderStats() {
-  var counts = { healthy: 0, degrading: 0, critical: 0, wo: 0 };
+  var counts = { healthy: 0, warning: 0, degrading: 0, critical: 0, wo: 0 };
   Object.values(machineMap).forEach(function(m) {
     var level = (m.health && m.health.health_level) || '';
-    if (level === 'Healthy' || level === 'Warning') counts.healthy++;
+    if (level === 'Healthy') counts.healthy++;
+    else if (level === 'Warning') counts.warning++;
     else if (level === 'Degrading') counts.degrading++;
     else if (level === 'Critical') counts.critical++;
     if (m.workOrder) counts.wo++;
