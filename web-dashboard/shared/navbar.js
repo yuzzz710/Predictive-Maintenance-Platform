@@ -337,6 +337,12 @@
     '#global-nav .gn-role-toggle .gn-role-dot {',
     '  width:6px; height:6px; border-radius:50%; flex-shrink:0;',
     '}',
+    '#global-nav .gn-mode-badge {',
+    '  margin: 8px 14px 0; padding: 8px 0; text-align: center;',
+    '  font-size: 13px; font-weight: 700; letter-spacing: 0.5px;',
+    '  color: var(--accent-green);',
+    '  border-top: 0.5px solid var(--border);',
+    '}',
     '#global-nav .gn-badge {',
     '  font-size:11px; padding:5px 10px; border-radius:8px; text-align:center;',
     '  font-family:var(--font-mono); font-weight:700;',
@@ -456,6 +462,7 @@
       '<span class="gn-logo-text">工业智能运维</span>' +
       '</a>' +
       '<div class="gn-links">' + buildLinksHtml() + '</div>' +
+      '<div class="gn-mode-badge" id="gn-mode-badge">全功能</div>' +
       '<div class="gn-right">' +
       '<div class="gn-role-toggle" id="gn-role-toggle" title="点击切换角色">' +
       '<span class="gn-role-dot" id="gn-role-dot"></span>' +
@@ -530,13 +537,13 @@
       function updateStatus(data) {
         var dot = document.getElementById('gn-status-dot');
         var text = document.getElementById('gn-status-text');
-        if (!dot || !text) return;
+        var badge = document.getElementById('gn-mode-badge');
         var mode = (data && data.mode) || 'FULL';
-        var colors = { FULL: '#3fb950', STAT_ONLY: '#f0a030', RULE_ONLY: '#f0883e', EMERGENCY: '#f04444' };
+        var colors = { FULL: '#30d158', STAT_ONLY: '#ffb340', RULE_ONLY: '#ff8214', EMERGENCY: '#ff453a' };
         var labels = { FULL: '全功能运行', STAT_ONLY: '仅统计模式', RULE_ONLY: '仅规则模式', EMERGENCY: '紧急模式' };
-        dot.style.background = colors[mode] || colors.FULL;
-        dot.style.boxShadow = '0 0 6px ' + (colors[mode] || colors.FULL);
-        text.textContent = labels[mode] || labels.FULL;
+        if (dot) { dot.style.background = colors[mode] || colors.FULL; dot.style.boxShadow = '0 0 6px ' + (colors[mode] || colors.FULL); }
+        if (text) text.textContent = labels[mode] || labels.FULL;
+        if (badge) { badge.textContent = labels[mode] || labels.FULL; badge.style.color = colors[mode] || colors.FULL; }
       }
 
       function showDetail(data) {
