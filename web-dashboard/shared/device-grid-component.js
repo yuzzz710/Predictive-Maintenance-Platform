@@ -165,7 +165,7 @@ function openPanel(mid, m) {
   var panelMid = document.getElementById('panel-mid');
   if (panelMid) panelMid.textContent = mid;
   var levelColor = {'Healthy':'var(--accent-green)','Warning':'var(--accent-amber)','Degrading':'#b8860b','Critical':'var(--accent-red)'};
-  var lc = levelColor[h.health_level] || 'var(--text-muted)';
+  var lc = levelColor[h.health_level] || 'var(--text-secondary)';
   var alertTag = wo ? ('<span style="color:'+(wo.alert_level==='ALARM'?'var(--accent-red)':'var(--accent-amber)')+';font-weight:700;">'+wo.alert_level+'</span>') : '无工单';
 
   var panelSubtitle = document.getElementById('panel-subtitle');
@@ -190,7 +190,7 @@ function openPanel(mid, m) {
       html += '<div class="signal-item">';
       html += '<span class="signal-badge">'+badge+'</span>';
       html += '<div><b>'+s.feature_label+'</b> ('+s.value_label+')<br>';
-      html += '<span style="color:var(--text-muted);">'+s.explanation+'</span></div>';
+      html += '<span style="color:var(--text-secondary);">'+s.explanation+'</span></div>';
       html += '</div>';
     });
     html += '</div>';
@@ -205,7 +205,7 @@ function openPanel(mid, m) {
       var dirColor = c.contribution > 0 ? 'var(--accent-red)' : 'var(--accent-green)';
       var arrow = c.contribution > 0 ? '↑' : '↓';
       html += '<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;">';
-      html += '<span>'+c.feature+' <span style="color:var(--text-muted);">('+c.category_label+')</span></span>';
+      html += '<span>'+c.feature+' <span style="color:var(--text-secondary);">('+c.category_label+')</span></span>';
       html += '<span style="color:'+dirColor+';font-family:monospace;">'+arrow+' '+(c.contribution>0?'+':'')+c.contribution.toFixed(3)+'</span>';
       html += '</div>';
     });
@@ -220,7 +220,7 @@ function openPanel(mid, m) {
     html += '<div class="stat-item"><div class="stat-label">动作</div><div class="stat-value" style="font-size:14px;">'+wo.action_type+'</div></div>';
     html += '<div class="stat-item"><div class="stat-label">紧急度</div><div class="stat-value">'+wo.urgency_score+'</div></div>';
     html += '</div>';
-    html += '<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">建议窗口: '+wo.window_days+'天 &nbsp;|&nbsp; 预期节省: $'+wo.expected_savings.toFixed(0)+'</div>';
+    html += '<div style="font-size:11px;color:var(--text-secondary);margin-top:6px;">建议窗口: '+wo.window_days+'天 &nbsp;|&nbsp; 预期节省: $'+wo.expected_savings.toFixed(0)+'</div>';
     if (wo.top_risk_factor_1) {
       html += '<div style="font-size:11px;margin-top:8px;padding:8px;background:var(--bg-card);border-radius:4px;line-height:1.6;">';
       html += '<b>根因:</b> '+wo.top_risk_factor_1+'<br>';
@@ -241,13 +241,13 @@ function openPanel(mid, m) {
   }
 
   if (!sh && !wo) {
-    html += '<div class="panel-section"><div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">该设备无活跃工单，SHAP 数据不可用。<br>如需归因分析，请运行 Pipeline 并启用 --shap。</div></div>';
+    html += '<div class="panel-section"><div style="text-align:center;color:var(--text-secondary);padding:20px;font-size:13px;">该设备无活跃工单，SHAP 数据不可用。<br>如需归因分析，请运行 Pipeline 并启用 --shap。</div></div>';
   }
 
   var strategy = sessionStorage.getItem('current_strategy') || 'production_efficiency';
   var strategyLabels = { cost_efficiency: '成本效率', production_efficiency: '生产效率', quality_first: '质量优先' };
   html += '<div class="panel-section">';
-  html += '<button id="btn-add-tracking" style="width:100%;padding:10px;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid var(--accent-cyan);background:rgba(0,201,160,0.1);color:var(--accent-cyan);font-family:var(--font-sans);transition:all 0.2s;" onclick="addToTracking(\''+mid+'\')">+ 加入工单跟踪（'+ (strategyLabels[strategy] || strategy) +'）</button>';
+  html += '<button id="btn-add-tracking" style="width:100%;padding:10px;border-radius:10px;font-size:13px;cursor:pointer;border:0.5px solid var(--glass-border);background:rgba(102,217,200,0.08);color:var(--accent-cyan);font-family:var(--font-sans);transition:all 0.2s;" onclick="addToTracking(\''+mid+'\')">+ 加入工单跟踪（'+ (strategyLabels[strategy] || strategy) +'）</button>';
   html += '</div>';
 
   var panelBody = document.getElementById('panel-body');
@@ -344,7 +344,7 @@ function closeTrace() {
 }
 
 function buildHealthTrace(mid, h, b) {
-  if (!h) return '<p style="color:var(--text-muted)">健康分数据不可用</p>';
+  if (!h) return '<p style="color:var(--text-secondary)">健康分数据不可用</p>';
   var score = parseFloat(h.health_score) || 0;
   var dims = [
     { label: '故障率', w: 0.20, v: parseFloat(h.failure_rate) || 0, raw: ((parseFloat(h.failure_rate) || 0) * 100).toFixed(1) + '%' },
@@ -360,7 +360,7 @@ function buildHealthTrace(mid, h, b) {
   var html = '<p>该设备健康分仅 <b style="color:var(--accent-red)">' + score.toFixed(0) + '</b> 分（满分100），判定为<b>"' + (h.health_level || '--') + '"</b>级别，主要由以下因素驱动：</p>';
   dims.forEach(function(d, i) {
     var contrib = (d.w * d.v).toFixed(2);
-    var colors = ['var(--accent-red)', 'var(--accent-red)', 'var(--accent-amber)', 'var(--text-muted)'];
+    var colors = ['var(--accent-red)', 'var(--accent-red)', 'var(--accent-amber)', 'var(--text-secondary)'];
     html += '<div class="trace-item"><span class="ti-label">' + d.label + '（权重' + (d.w * 100).toFixed(0) + '%）</span><span class="ti-val">' + d.raw + ' → 贡献 ' + contrib + '</span></div>';
     html += '<div class="trace-bar-wrap"><div class="trace-bar-fill" style="width:' + Math.min(100, parseFloat(contrib) / 10 * 100) + '%;background:' + colors[Math.min(i, 3)] + '"></div></div>';
   });
