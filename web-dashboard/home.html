@@ -887,12 +887,6 @@ html[data-demo="true"] .demo-hud { display: flex; }
   <!-- Operator / Developer header -->
   <div class="role-operator" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;width:100%;">
     <h1><span>◆</span> 设备健康状态总览</h1>
-    <div class="header-stats">
-      <span>健康: <b id="stat-healthy">--</b></span>
-      <span>退化: <b id="stat-degrading">--</b></span>
-      <span>高危: <b id="stat-critical">--</b></span>
-      <span>工单: <b id="stat-wo">--</b></span>
-    </div>
     <span class="mode-badge" id="mode-badge" style="background:rgba(0,201,160,0.1);color:var(--accent-cyan);border-color:rgba(0,201,160,0.2);">执行视图</span>
     <button class="btn-fi role-developer" id="btn-fi" onclick="openFixture()" title="一键模拟完整故障→告警→诊断→工单→派工→验收流程">⚡ 故障注入演示</button>
     <button class="btn-demo-start" id="btn-demo-start" onclick="DemoMode.start()" title="7分钟黄金演示路径">🎬 演示模式</button>
@@ -1282,10 +1276,11 @@ async function init() {
     else if (level === 'Critical') counts.critical++;
     if (m.workOrder) counts.wo++;
   });
-  document.getElementById('stat-healthy').textContent = counts.healthy;
-  document.getElementById('stat-degrading').textContent = counts.degrading;
-  document.getElementById('stat-critical').textContent = counts.critical;
-  document.getElementById('stat-wo').textContent = counts.wo;
+  var el;
+  el = document.getElementById('stat-healthy'); if (el) el.textContent = counts.healthy;
+  el = document.getElementById('stat-degrading'); if (el) el.textContent = counts.degrading;
+  el = document.getElementById('stat-critical'); if (el) el.textContent = counts.critical;
+  el = document.getElementById('stat-wo'); if (el) el.textContent = counts.wo;
 
   // Degradation mode badge
   fetch('data/degradation_status.json').then(function(r){return r.ok?r.json():null;}).then(function(s){
