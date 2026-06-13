@@ -287,9 +287,15 @@
     '  0%,100% { box-shadow:0 0 8px rgba(102,217,200,0.4),0 0 20px rgba(102,217,200,0.15); }',
     '  50% { box-shadow:0 0 14px rgba(102,217,200,0.7),0 0 30px rgba(102,217,200,0.3); }',
     '}',
-    '#global-nav .gn-logo-text {',
-    '  font-size:16px; font-weight:700; color:var(--text-primary); letter-spacing:-0.3px;',
-    '  font-family:var(--font-mono);',
+    '#global-nav .gn-logo-brand {',
+    '  font-size:24px; font-weight:800; color:var(--text-primary); letter-spacing:4px;',
+    '  font-family:"STXingkai","华文行楷","KaiTi","楷体",var(--font-sans);',
+    '  background:linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);',
+    '  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;',
+    '}',
+    '#global-nav .gn-logo-sub {',
+    '  font-size:10px; font-weight:500; color:var(--text-muted); letter-spacing:1px;',
+    '  font-family:var(--font-sans);',
     '}',
     '#global-nav .gn-links {',
     '  display:flex; flex-direction:column; gap:1px; padding:4px 10px;',
@@ -426,7 +432,7 @@
     '  #global-nav .gn-links, #global-nav .gn-right { display:none; }',
     '}',
     '@media (max-width:520px) {',
-    '  #global-nav .gn-logo-text { display:none; }',
+    '  #global-nav .gn-logo-sub { display:none; }',
     '}',
   ].join('\n');
 
@@ -459,7 +465,10 @@
       '<div class="gn-inner">' +
       '<a class="gn-logo" href="/">' +
       '<span class="gn-logo-dot"></span>' +
-      '<span class="gn-logo-text">鹰眼-工业智能运维平台</span>' +
+      '<div style="display:flex;flex-direction:column;line-height:1.1;">' +
+      '<span class="gn-logo-brand">鹰眼</span>' +
+      '<span class="gn-logo-sub">工业智能运维平台</span>' +
+      '</div>' +
       '</a>' +
       '<div class="gn-links">' + buildLinksHtml() + '</div>' +
       '<div class="gn-mode-badge" id="gn-mode-badge">全功能</div>' +
