@@ -373,7 +373,8 @@ html[data-role="developer"] .role-manager-header { display: none !important; }
   margin-bottom: 16px;
 }
 .mgr-health-bar .bar-critical { background: var(--accent-red); }
-.mgr-health-bar .bar-degrading { background: var(--accent-amber); }
+.mgr-health-bar .bar-degrading { background: #ff8214; }
+.mgr-health-bar .bar-warning { background: var(--accent-amber); }
 .mgr-health-bar .bar-healthy { background: var(--accent-green); }
 .mgr-health-legend {
   display: flex; gap: 16px; font-size: 11px; color: var(--text-secondary);
@@ -1044,11 +1045,13 @@ html[data-demo="true"] .demo-hud { display: flex; }
       <div class="mgr-health-bar" id="mgr-health-bar">
         <div class="bar-critical" style="flex:0.10;"></div>
         <div class="bar-degrading" style="flex:0.88;"></div>
+        <div class="bar-warning" style="flex:0.02;"></div>
         <div class="bar-healthy" style="flex:0.02;"></div>
       </div>
       <div class="mgr-health-legend">
-        <span><span class="ld" style="background:var(--accent-red);"></span> 危险: <b id="mgr-crit-num">--</b>台</span>
-        <span><span class="ld" style="background:var(--accent-amber);"></span> 劣化: <b id="mgr-deg-num">--</b>台</span>
+        <span><span class="ld" style="background:var(--accent-red);"></span> 高危: <b id="mgr-crit-num">--</b>台</span>
+        <span><span class="ld" style="background:#ff8214;"></span> 退化: <b id="mgr-deg-num">--</b>台</span>
+        <span><span class="ld" style="background:var(--accent-amber);"></span> 警告: <b id="mgr-warn-num">--</b>台</span>
         <span><span class="ld" style="background:var(--accent-green);"></span> 健康: <b id="mgr-hlth-num">--</b>台</span>
       </div>
     </div>
@@ -1174,12 +1177,13 @@ async function initManagerDashboard() {
     var workOrderData = await loadCSV('data/maintenance_work_orders.csv');
 
     // Count health levels
-    var crit = 0, deg = 0, hlth = 0;
+    var crit = 0, deg = 0, warn = 0, hlth = 0;
     var topRisks = [];
     healthData.forEach(function(r) {
       var level = r.health_level || '';
       if (level === 'Critical') crit++;
       else if (level === 'Degrading') deg++;
+      else if (level === 'Warning') warn++;
       else hlth++;
       var mid = r['Equipment.Id'] || r.machine_id || '';
       var costRisk = parseFloat(r.cost_at_risk) || 0;
@@ -1207,14 +1211,16 @@ async function initManagerDashboard() {
     animateCount(document.getElementById('mgr-savings'), savingsK, 1500, {prefix: '$', suffix: 'k', isMoney: true});
     document.getElementById('mgr-crit-num').textContent = crit;
     document.getElementById('mgr-deg-num').textContent = deg;
+    document.getElementById('mgr-warn-num').textContent = warn;
     document.getElementById('mgr-hlth-num').textContent = hlth;
 
     // Update health bar
-    var total = crit + deg + hlth || 1;
+    var total = crit + deg + warn + hlth || 1;
     var bar = document.getElementById('mgr-health-bar');
     bar.innerHTML =
       '<div class=\"bar-critical\" style=\"flex:' + (crit/total).toFixed(2) + ';\"></div>' +
       '<div class=\"bar-degrading\" style=\"flex:' + (deg/total).toFixed(2) + ';\"></div>' +
+      '<div class=\"bar-warning\" style=\"flex:' + (warn/total).toFixed(2) + ';\"></div>' +
       '<div class=\"bar-healthy\" style=\"flex:' + (hlth/total).toFixed(2) + ';\"></div>';
 
     // Top risks table
