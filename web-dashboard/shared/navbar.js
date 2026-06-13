@@ -288,7 +288,7 @@
     '  50% { box-shadow:0 0 14px rgba(102,217,200,0.7),0 0 30px rgba(102,217,200,0.3); }',
     '}',
     '#global-nav .gn-logo-text {',
-    '  font-size:13px; font-weight:700; color:var(--text-primary); letter-spacing:-0.3px;',
+    '  font-size:16px; font-weight:700; color:var(--text-primary); letter-spacing:-0.3px;',
     '  font-family:var(--font-mono);',
     '}',
     '#global-nav .gn-links {',
@@ -459,7 +459,7 @@
       '<div class="gn-inner">' +
       '<a class="gn-logo" href="/">' +
       '<span class="gn-logo-dot"></span>' +
-      '<span class="gn-logo-text">工业智能运维</span>' +
+      '<span class="gn-logo-text">工业智能运维平台</span>' +
       '</a>' +
       '<div class="gn-links">' + buildLinksHtml() + '</div>' +
       '<div class="gn-mode-badge" id="gn-mode-badge">全功能</div>' +
