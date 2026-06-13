@@ -424,18 +424,48 @@ html[data-role="developer"] .role-manager-header { display: none !important; }
   backdrop-filter: var(--glass-blur-light); -webkit-backdrop-filter: var(--glass-blur-light);
   border: 0.5px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  padding: var(--space-md);
+  padding: 18px 16px;
   box-shadow: var(--shadow-sm), var(--glass-highlight);
   transition: all var(--transition);
-  text-align: center;
+  text-align: center; position: relative; overflow: hidden;
 }
+.ops-stat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  border-radius: 3px 3px 0 0;
+}
+.ops-stat-card.card-cyan::before { background: var(--accent-cyan); }
+.ops-stat-card.card-red::before { background: var(--accent-red); }
+.ops-stat-card.card-blue::before { background: var(--accent-blue); }
+.ops-stat-card.card-amber::before { background: var(--accent-amber); }
 .ops-stat-card:hover {
   box-shadow: var(--shadow-md), var(--glass-highlight);
   transform: translateY(-2px);
 }
-.ops-stat-val { font-size: 24px; font-weight: 700; font-family: var(--font-mono); }
-.ops-stat-lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
-.ops-stat-sub { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
+.ops-stat-val { font-size: 28px; font-weight: 700; font-family: var(--font-mono); letter-spacing: -0.5px; }
+.ops-stat-lbl { font-size: 11px; color: var(--text-secondary); font-weight: 500; margin-top: 4px; }
+.ops-stat-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+/* Health distribution bar */
+.health-distro { max-width: 1400px; margin: 0 auto 14px; padding: 0 24px; }
+.health-distro-bar {
+  display: flex; height: 10px; border-radius: 5px; overflow: hidden;
+  margin-bottom: 6px;
+}
+.health-distro-bar .hd-seg { transition: width 0.6s ease; }
+.health-distro-bar .hd-healthy { background: var(--accent-green); }
+.health-distro-bar .hd-warning { background: var(--accent-amber); }
+.health-distro-bar .hd-degrading { background: #ff8214; }
+.health-distro-bar .hd-critical { background: var(--accent-red); }
+.health-distro-legend {
+  display: flex; gap: 20px; font-size: 11px; color: var(--text-secondary);
+  flex-wrap: wrap; justify-content: center;
+}
+.health-distro-legend b { color: var(--text-primary); }
+.health-risk-summary {
+  text-align: center; font-size: 12px; color: var(--text-secondary);
+  padding: 4px 0 0;
+}
+.health-risk-summary b { color: var(--accent-red); }
 
 /* 2x5 emergency device grid */
 .ops-section-title {
@@ -911,26 +941,38 @@ html[data-demo="true"] .demo-hud { display: flex; }
 <div class="ops-dashboard">
   <!-- Stats Row -->
   <div class="ops-stats-row">
-    <div class="ops-stat-card">
+    <div class="ops-stat-card card-cyan">
       <div class="ops-stat-val" style="color:var(--accent-cyan);" id="ops-healthy-pct" data-trace="health">--</div>
       <div class="ops-stat-lbl">设备健康率</div>
       <div class="ops-stat-sub" id="ops-healthy-sub">--</div>
     </div>
-    <div class="ops-stat-card">
+    <div class="ops-stat-card card-red">
       <div class="ops-stat-val" style="color:var(--accent-red);" id="ops-critical-count" data-trace="health">--</div>
       <div class="ops-stat-lbl">高危设备</div>
       <div class="ops-stat-sub">需立即处理</div>
     </div>
-    <div class="ops-stat-card">
+    <div class="ops-stat-card card-blue">
       <div class="ops-stat-val" style="color:var(--accent-blue);" id="ops-accuracy">83.9%</div>
       <div class="ops-stat-lbl">告警精确率</div>
       <div class="ops-stat-sub">Z-Score z>2.0</div>
     </div>
-    <div class="ops-stat-card">
+    <div class="ops-stat-card card-amber">
       <div class="ops-stat-val" style="color:var(--accent-amber);" id="ops-today-wos">--</div>
       <div class="ops-stat-lbl">今日待维护</div>
       <div class="ops-stat-sub" id="ops-today-sub">--</div>
     </div>
+  </div>
+
+  <!-- Health Distribution Bar -->
+  <div class="health-distro">
+    <div class="health-distro-bar" id="health-distro-bar">
+      <div class="hd-seg hd-healthy" style="width:0%"></div>
+      <div class="hd-seg hd-warning" style="width:0%"></div>
+      <div class="hd-seg hd-degrading" style="width:0%"></div>
+      <div class="hd-seg hd-critical" style="width:0%"></div>
+    </div>
+    <div class="health-distro-legend" id="health-distro-legend"></div>
+    <div class="health-risk-summary" id="health-risk-summary"></div>
   </div>
 
   <!-- 2x5 Emergency Device Grid -->
@@ -1430,21 +1472,37 @@ function updateHeaderStats() {
 async function initOperatorDashboard(healthData, workOrderData) {
   try {
     // Stats — align with grid header counting logic
-    var crit = 0, deg = 0, hlth = 0, totalWOs = workOrderData.length;
+    var crit = 0, deg = 0, warn = 0, hlth = 0, totalWOs = workOrderData.length, totalCostRisk = 0;
     healthData.forEach(function(r) {
       var level = r.health_level || '';
       if (level === 'Critical') crit++;
       else if (level === 'Degrading') deg++;
-      else if (level === 'Healthy' || level === 'Warning') hlth++;
+      else if (level === 'Warning') warn++;
+      else if (level === 'Healthy') hlth++;
+      totalCostRisk += parseFloat(r.cost_at_risk) || 0;
     });
 
-    var total = crit + deg + hlth || 1;
-    var healthyPct = ((hlth/total)*100).toFixed(0);
+    var total = crit + deg + warn + hlth || 1;
+    var healthyPct = (((hlth + warn)/total)*100).toFixed(0);
     animateCount(document.getElementById('ops-healthy-pct'), healthyPct, 1500, {isPercent: true, suffix: '%'});
-    document.getElementById('ops-healthy-sub').textContent = hlth + ' 健康 / ' + deg + ' 退化 / ' + crit + ' 高危';
+    document.getElementById('ops-healthy-sub').textContent = hlth + ' 健康 / ' + warn + ' 警告 / ' + deg + ' 退化 / ' + crit + ' 高危';
     animateCount(document.getElementById('ops-critical-count'), crit, 1500, {suffix: ' 台'});
     animateCount(document.getElementById('ops-today-wos'), totalWOs, 1500, {suffix: ' 张'});
     document.getElementById('ops-today-sub').textContent = '活跃维护工单';
+
+    // Health distribution bar
+    var distBar = document.getElementById('health-distro-bar');
+    if (distBar) {
+      distBar.innerHTML =
+        '<div class="hd-seg hd-healthy" style="width:' + (hlth/total*100).toFixed(1) + '%"></div>' +
+        '<div class="hd-seg hd-warning" style="width:' + (warn/total*100).toFixed(1) + '%"></div>' +
+        '<div class="hd-seg hd-degrading" style="width:' + (deg/total*100).toFixed(1) + '%"></div>' +
+        '<div class="hd-seg hd-critical" style="width:' + (crit/total*100).toFixed(1) + '%"></div>';
+    }
+    var leg = document.getElementById('health-distro-legend');
+    if (leg) leg.innerHTML = '<span>🟢 健康 <b>' + hlth + '</b></span><span>🟡 警告 <b>' + warn + '</b></span><span>🟠 退化 <b>' + deg + '</b></span><span>🔴 高危 <b>' + crit + '</b></span>';
+    var riskSum = document.getElementById('health-risk-summary');
+    if (riskSum) riskSum.innerHTML = '日成本风险合计 <b>$' + (totalCostRisk/1000).toFixed(0) + 'k</b>，覆盖 <b>100</b> 台 CNC 数控机床';
 
     // Sort work orders by priority
     var sortedWOs = workOrderData.slice().sort(function(a, b) {
