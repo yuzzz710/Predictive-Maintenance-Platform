@@ -1061,6 +1061,7 @@ class IndustrialMaintenanceEngine(MaintenanceDecisionEngine):
         from spare_parts_planner import SparePartsPlanner
         from downtime_optimizer import DowntimeOptimizer
         from acceptance_validator import AcceptanceValidator
+        from maintenance_scheduler import MaintenanceScheduler
 
         self._ms = MaintenanceStrategy
         self._strat_enum = self._ms(strategy)
@@ -1081,6 +1082,9 @@ class IndustrialMaintenanceEngine(MaintenanceDecisionEngine):
         self.parts_planner = SparePartsPlanner()
         self.downtime_optimizer = DowntimeOptimizer(self.strategy_selector.config)
         self.acceptance_validator = AcceptanceValidator()
+        # Enable batch merging for cost_efficiency strategy (merge_downtime=True)
+        _use_merge = self._strat_enum.value == 'cost_efficiency'
+        self.scheduler = MaintenanceScheduler(horizon_days=14, merge_batch=_use_merge)
 
         # Load health scores
         self.health_scores: Dict[str, float] = {}
@@ -1137,7 +1141,52 @@ class IndustrialMaintenanceEngine(MaintenanceDecisionEngine):
         df = pd.DataFrame(rows)
         if "anomaly_score" in df.columns and len(df) > 0:
             df = df.sort_values("anomaly_score", ascending=False).reset_index(drop=True)
+
+        # Post-process: apply MaintenanceScheduler for globally optimized schedule
+        df = self._patch_with_schedule(df, ref_date)
+
         return df
+
+    def _patch_with_schedule(self, plan_df: pd.DataFrame,
+                             ref_date) -> pd.DataFrame:
+        """
+        Post-process plan_df: run MaintenanceScheduler and backfill scheduled_day,
+        downtime_start, and recommended_downtime_window with optimized values.
+
+        The original DowntimeOptimizer rule-based windows are preserved as fallback
+        for any machines the scheduler cannot place (indicated by scheduled_day=-1).
+        """
+        if plan_df.empty:
+            return plan_df
+
+        schedule_df = self.scheduler.schedule(plan_df, ref_date)
+
+        for _, sched_row in schedule_df.iterrows():
+            mid = str(sched_row["machine_id"])
+            mask = plan_df["machine_id"] == mid
+            if mask.any():
+                idx = plan_df[mask].index[0]
+                day = int(sched_row["scheduled_day"])
+                new_start = (ref_date + pd.Timedelta(days=day)).strftime("%Y-%m-%d %H:%M:%S")
+                plan_df.at[idx, "scheduled_day"] = day
+                plan_df.at[idx, "downtime_start"] = new_start
+                # Map day offset to descriptive window (overrides rule-based)
+                if day == 0:
+                    plan_df.at[idx, "recommended_downtime_window"] = "immediate"
+                elif day <= 2:
+                    plan_df.at[idx, "recommended_downtime_window"] = "night"
+                elif day <= 5:
+                    plan_df.at[idx, "recommended_downtime_window"] = "weekend"
+                else:
+                    plan_df.at[idx, "recommended_downtime_window"] = "scheduled"
+
+        # Explicit fallback: any row still at scheduled_day=-1 keeps DowntimeOptimizer values.
+        # The original window/downtime_start are preserved from _build_industrial_row().
+        unplaced = (plan_df["scheduled_day"] == -1).sum()
+        if unplaced > 0:
+            print(f"  [Scheduler] {unplaced} orders unplaced — keeping DowntimeOptimizer fallback")
+
+        return plan_df
 
     def _build_industrial_row(self, entry: dict, reference_date,
                                rank: int) -> dict:
@@ -1229,11 +1278,20 @@ class IndustrialMaintenanceEngine(MaintenanceDecisionEngine):
         # ── Health Score ──
         hs = self.health_scores.get(mid, 50.0)
 
+        # ── Trend score (degradation rate) for scheduler deadline projection ──
+        trend_slopes = [
+            abs(float(s.get("voltage_trend_slope", 0))),
+            abs(float(s.get("temp_trend_slope", 0))),
+            abs(float(s.get("amperage_trend_slope", 0))),
+        ]
+        trend_score = max(trend_slopes) if max(trend_slopes) > 0 else 0.01
+
         # ── Assemble ──
         return {
             "machine_id": mid,
             "anomaly_score": round(risk, 4),
             "health_score": hs,
+            "trend_score": round(trend_score, 6),
             "maintenance_priority": mp,
             "maintenance_strategy": cfg.strategy.value,
             "predicted_risk": level.name,
@@ -1247,6 +1305,7 @@ class IndustrialMaintenanceEngine(MaintenanceDecisionEngine):
             "estimated_duration_hours": round(hours, 1),
             "recommended_downtime_window": window.value,
             "downtime_start": str(dts),
+            "scheduled_day": -1,
             "production_impact": round(prod_impact, 2),
             "estimated_cost": round(total_cost, 2),
             "acceptance_standard": acc_text,

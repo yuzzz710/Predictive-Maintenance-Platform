@@ -145,6 +145,15 @@ async def home():
     return FileResponse(BASE_DIR / "index.html")
 
 
+@app.get("/device-grid")
+async def device_grid():
+    """Serve the standalone 10x10 device health grid."""
+    html = BASE_DIR / "device-grid.html"
+    if html.exists():
+        return FileResponse(html)
+    return HTMLResponse("<h1>device-grid.html not found</h1>", status_code=404)
+
+
 @app.get("/dashboard")
 async def index():
     """Serve the main dashboard."""

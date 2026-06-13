@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 
 from .config import DASHBOARD_DATA
 from .rag_engine import (
-    ensure_initialized, get_stats, search, search_all,
+    ensure_initialized, get_stats, search, search_all, search_with_tier,
     index_single_file, delete_document, rebuild_all,
     get_retrieval_logs, KB_DIR, MAINT_KB_DIR, COLLECTION_NAMES,
 )
@@ -357,6 +357,30 @@ async def kb_rebuild_all():
             "total_chunks": total,
             "message": f"已重建全部知识库：sys_docs={counts.get('sys_docs',0)}块, maint_kb={counts.get('maint_kb',0)}块, fault_cases={counts.get('fault_cases',0)}块，共{total}块。",
         })
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+
+@router.post("/degrade-test")
+async def kb_degrade_test(req: Request):
+    """Run search across all 3 embedding tiers for comparison."""
+    try:
+        body = await req.json()
+        query = body.get("query", "").strip()
+        if not query:
+            return JSONResponse({"success": False, "error": "query is required"}, status_code=400)
+        ensure_initialized()
+        results = []
+        for tier in ["bge_local", "deepseek_api", "tfidf_fallback"]:
+            r = search_with_tier(query, tier, k=5)
+            results.append({
+                "tier": tier,
+                "total_found": r.get("total_found", 0),
+                "results": r.get("results", [])[:5],
+                "elapsed_ms": r.get("elapsed_ms", 0),
+                "note": r.get("note", ""),
+            })
+        return JSONResponse({"success": True, "query": query, "results": results})
     except Exception as e:
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 

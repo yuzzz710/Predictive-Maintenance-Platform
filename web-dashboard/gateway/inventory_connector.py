@@ -115,24 +115,29 @@ def _compute_demand() -> Dict[str, int]:
 
 
 def init_inventory() -> int:
-    """Auto-generate initial inventory: stock = demand × 2, safety_stock = demand."""
+    """Auto-generate inventory from ALL catalog parts (not just demand-driven).
+    Parts with demand: stock = demand × 2.  Parts without demand: stock = 0, safety = 5."""
     demand = _compute_demand()
-    if not demand:
-        print("[inventory] No demand data, skipping init")
-        return 0
-
     parts_list = _load_catalog()
     catalog_map = {p["name"]: p for p in parts_list}
+    if not catalog_map:
+        print("[inventory] No catalog data, skipping init")
+        return 0
 
     rows = []
-    for name, qty_needed in sorted(demand.items()):
-        cat = catalog_map.get(name, {})
-        safety = max(qty_needed, 5)
+    for name, cat in sorted(catalog_map.items()):
+        qty_needed = demand.get(name, 0)
+        if qty_needed > 0:
+            safety = max(qty_needed, 5)
+            current_stock = qty_needed * 2
+        else:
+            safety = 5
+            current_stock = 0
         rows.append({
             "part_name": name,
             "part_number": cat.get("part_number", ""),
             "unit_cost": cat.get("unit_cost", 0),
-            "current_stock": qty_needed * 2,  # Initial: double the demand
+            "current_stock": current_stock,
             "safety_stock": safety,
             "reorder_point": safety,
             "supplier": SUPPLIERS.get(name, "通用供应商"),
@@ -200,16 +205,18 @@ def check_stock(part_name: str = "") -> Dict:
     results = []
     for item in inventory:
         name = item["part_name"]
-        needed = demand.get(name, 0)
+        needed = max(demand.get(name, 0), 1)  # minimum demand = 1 for stocked parts
         stock = item["current_stock"]
-        shortage = max(0, needed - stock)
+        safety = item["safety_stock"]
+        # Shortage = max(demand gap, safety gap) so zero-demand zero-stock parts are counted
+        shortage = max(0, max(needed, safety) - stock)
 
-        if shortage == 0:
-            status = "ok"
-        elif stock > item["safety_stock"]:
+        if stock <= 0:
+            status = "out"
+        elif stock < safety:
             status = "low"
         else:
-            status = "out"
+            status = "ok"
 
         results.append({
             "part_name": name,

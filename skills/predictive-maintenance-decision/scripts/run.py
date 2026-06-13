@@ -334,6 +334,17 @@ def main():
     # ── OR Optimization: Knapsack vs Greedy Comparison ──
     print(f"\n[OR] Generating knapsack optimization comparison...")
     strat_sel = industrial_engine.strategy_selector
+
+    # Auto-calculate dynamic budget if no explicit override
+    effective_budget = getattr(strat_sel, '_or_max_budget', 0) or strat_sel.config.max_budget
+    if not getattr(strat_sel, '_or_max_budget', 0) and effective_budget > 0:
+        dynamic_budget = strat_sel.calculate_dynamic_budget(plan_df)
+        strat_sel._or_max_budget = dynamic_budget
+        effective_budget = dynamic_budget
+        print(f"  Dynamic budget: ${effective_budget:,.0f} (computed from P1+P2 cost_at_risk)")
+
+    print(f"  Effective budget: ${effective_budget:,.0f}  |  Max orders: {strat_sel.config.max_orders}")
+
     # Build risk-scored candidates from plan_df (has risk_score and cost data)
     or_comparison = strat_sel.generate_optimization_comparison(plan_df, strat_sel.config)
     if or_comparison:
@@ -345,13 +356,17 @@ def main():
         or_path = os.path.join(output_dir, "optimization_comparison.csv")
         or_df.to_csv(or_path, index=False, encoding="utf-8")
         print(f"OR optimization comparison: {len(or_df)} metrics → {or_path}")
+        if or_comparison.get("risk_improvement_pct", 0) > 0:
+            print(f"  DP improves risk reduction by {or_comparison['risk_improvement_pct']}% over greedy")
+        else:
+            print(f"  Budget utilization: {or_comparison.get('budget_utilization_pct', 0):.1f}%")
     else:
-        print("OR optimization comparison: skipped (budget not set, use --max-budget > 0 to enable)")
+        print("OR optimization comparison: skipped (no candidates)")
 
     # ── OR Optimization: Maintenance Scheduling (14-day rolling window) ──
     print(f"\n[Scheduler] Generating optimized 14-day maintenance schedule...")
     from maintenance_scheduler import MaintenanceScheduler
-    scheduler = MaintenanceScheduler(horizon_days=14)
+    scheduler = MaintenanceScheduler(horizon_days=14, merge_batch=(args.strategy == 'cost_efficiency'))
     schedule_df = scheduler.schedule(plan_df)
     sched_path = os.path.join(output_dir, "maintenance_schedule_optimized.csv")
     schedule_df.to_csv(sched_path, index=False, encoding="utf-8")

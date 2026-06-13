@@ -4,10 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>工业智能运维助手 — AI Assistant</title>
+<link rel="stylesheet" href="/shared/sidebar.css?v=3">
 <script src="/shared/role-check.js"></script>
 <script src="/shared/theme-init.js"></script>
-<script src="/shared/navbar.js?v=20260530"></script>
+<script src="/shared/navbar.js?v=3"></script>
 <script src="/shared/role-switcher.js"></script>
+<script src="/shared/demo-mode.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <style>
@@ -39,7 +41,7 @@
   --font-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
   --font-sans: 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', 'Segoe UI', system-ui, sans-serif;
   --transition: 0.2s cubic-bezier(0.33, 1, 0.68, 1);
-
+}
 
 /* ═══════════════════════════════════════════════════════════
    LIGHT THEME — Clean Industrial
@@ -431,16 +433,17 @@ body::before {
   width: 260px;
   flex-shrink: 0;
   background: var(--bg-surface);
-  border-right: 1px solid var(--border);
+  border-left: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  order: 2;
   transition: width 0.3s cubic-bezier(0.33, 1, 0.68, 1),
-              border-right 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+              border-left 0.3s cubic-bezier(0.33, 1, 0.68, 1);
 }
 .sidebar.collapsed {
   width: 0;
-  border-right-color: transparent;
+  border-left-color: transparent;
 }
 .sidebar-header {
   display: flex;
@@ -559,86 +562,33 @@ body::before {
 }
 .sidebar-collapsed-tab {
   display: none;
-  position: absolute;
-  left: 0; top: 50%;
+  position: fixed;
+  right: 0; top: 50%;
   transform: translateY(-50%);
   z-index: 10;
 }
-.sidebar.collapsed + .chat-container .sidebar-collapsed-tab,
 .chat-layout:has(.sidebar.collapsed) .sidebar-collapsed-tab {
   display: flex;
 }
 .sidebar-expand-btn {
   background: var(--bg-surface);
   border: 1px solid var(--border);
-  border-left: none;
+  border-right: none;
   color: var(--text-muted);
-  width: 28px; height: 56px;
-  border-radius: 0 6px 6px 0;
+  width: 32px; height: 64px;
+  border-radius: 8px 0 0 8px;
   cursor: pointer;
-  font-size: 12px;
-  display: flex; align-items: center; justify-content: center;
-  transition: all var(--transition);
-  writing-mode: vertical-rl;
-  letter-spacing: 2px;
+  font-size: 11px;
+  font-weight: 500;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  transition: all 0.2s ease;
+  box-shadow: -2px 0 12px rgba(0,0,0,0.1);
 }
 .sidebar-expand-btn:hover {
-  border-color: var(--accent-cyan);
+  background: var(--bg-card);
   color: var(--accent-cyan);
-  background: rgba(0,201,160,0.05);
-}
-.sidebar-mobile-btn {
-  display: none;
-  background: none;
-  border: 1px solid var(--border-light);
-  color: var(--text-secondary);
-  width: 30px; height: 30px;
-  border-radius: var(--radius);
-  cursor: pointer;
-  font-size: 16px;
-  align-items: center; justify-content: center;
-  transition: all var(--transition);
-}
-.sidebar-mobile-btn:hover {
   border-color: var(--accent-cyan);
-  color: var(--accent-cyan);
 }
-@media (max-width: 768px) {
-  .sidebar {
-    position: fixed; left: 0; top: 52px; bottom: 0;
-    z-index: 200;
-    width: 260px;
-    transform: translateX(-100%);
-    transition: transform 0.3s cubic-bezier(0.33, 1, 0.68, 1);
-    box-shadow: var(--shadow-lg);
-  }
-  .sidebar.collapsed {
-    width: 260px;
-    border-right: 1px solid var(--border);
-    transform: translateX(-100%);
-  }
-  .sidebar.mobile-open {
-    transform: translateX(0);
-  }
-  .sidebar-mobile-overlay {
-    display: none;
-    position: fixed; inset: 0; top: 52px; z-index: 199;
-    background: rgba(0,0,0,0.5);
-  }
-  .sidebar.mobile-open ~ .sidebar-mobile-overlay {
-    display: block;
-  }
-  .sidebar-mobile-btn {
-    display: flex;
-  }
-  .sidebar-toggle {
-    display: none;
-  }
-  .sidebar-expand-tab {
-    display: none !important;
-  }
-}
-
 /* ═══════════════════════════════════════════════════════════════
    ERROR
    ═══════════════════════════════════════════════════════════════ */
@@ -720,7 +670,14 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
   font-size: 9px; text-transform: uppercase; letter-spacing: 1px;
   padding: 8px 14px 4px; color: var(--text-muted);
   font-family: var(--font-mono);
+  display: flex; align-items: center; gap: 6px;
 }
+.sidebar-role-label::before {
+  content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+  background: var(--text-muted);
+}
+.sidebar-role-label.role-operator::before { background: var(--accent-cyan); }
+.sidebar-role-label.role-manager::before { background: var(--accent-amber); }
 .sidebar-role-label.role-operator { color: var(--accent-cyan); }
 .sidebar-role-label.role-manager { color: var(--accent-amber); }
 
@@ -851,6 +808,150 @@ mark.rag-sourced {
 }
 .rag-badge-icon { font-size: 14px; }
 
+/* ── Agent Decision Log Panel ── */
+.agent-log-btn {
+  position: fixed; bottom: 24px; right: 24px; z-index: 1100;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--bg-card); border: 1px solid var(--border);
+  color: var(--text-secondary); cursor: pointer; font-size: 18px;
+  display: none; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-lg); transition: all 0.2s;
+}
+.agent-log-btn.show { display: flex; }
+.agent-log-btn:hover { border-color: var(--accent-purple); color: var(--accent-purple); }
+.agent-log-btn .agent-log-badge {
+  position: absolute; top: -4px; right: -4px;
+  min-width: 18px; height: 18px; border-radius: 9px;
+  background: var(--accent-purple); color: #fff;
+  font-size: 10px; font-weight: 700; display: flex;
+  align-items: center; justify-content: center;
+  font-family: var(--font-mono);
+}
+
+.agent-log-overlay {
+  position: fixed; inset: 0; z-index: 1095;
+  background: rgba(0,0,0,0.3); display: none;
+}
+.agent-log-overlay.show { display: block; }
+
+.agent-log-panel {
+  position: fixed; bottom: 80px; right: 24px; z-index: 1101;
+  width: 420px; max-height: 520px; display: none; flex-direction: column;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+.agent-log-panel.show { display: flex; }
+.agent-log-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; background: var(--bg-card-alt);
+  border-bottom: 1px solid var(--border);
+  cursor: move; user-select: none;
+}
+.agent-log-header-title {
+  font-size: 14px; font-weight: 700; color: var(--text-primary);
+  display: flex; align-items: center; gap: 8px;
+}
+.agent-log-stats {
+  display: flex; gap: 12px; font-size: 11px; color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+.agent-log-stats .ok { color: var(--accent-green); }
+.agent-log-stats .err { color: var(--accent-red); }
+.agent-log-close {
+  width: 28px; height: 28px; border-radius: 6px; border: none;
+  background: transparent; color: var(--text-muted); cursor: pointer;
+  font-size: 16px; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.agent-log-close:hover { background: var(--bg-input); color: var(--text-primary); }
+
+.agent-log-body {
+  flex: 1; overflow-y: auto; padding: 12px 18px;
+}
+.agent-log-empty {
+  text-align: center; padding: 40px 20px; color: var(--text-muted);
+  font-size: 13px;
+}
+.agent-log-timeline { position: relative; padding-left: 24px; }
+.agent-log-timeline::before {
+  content: ''; position: absolute; left: 8px; top: 4px; bottom: 4px;
+  width: 2px; background: var(--border);
+}
+.agent-log-step {
+  position: relative; margin-bottom: 16px;
+  padding: 10px 14px; background: var(--bg-card-alt);
+  border-radius: 8px; border: 1px solid var(--border-light);
+}
+.agent-log-step::before {
+  content: ''; position: absolute; left: -20px; top: 14px;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent-purple); border: 2px solid var(--bg-card);
+  z-index: 1;
+}
+.agent-log-step.success::before { background: var(--accent-green); }
+.agent-log-step.error::before { background: var(--accent-red); }
+.agent-log-step-num {
+  font-size: 10px; font-weight: 700; color: var(--accent-purple);
+  font-family: var(--font-mono); margin-bottom: 4px;
+}
+.agent-log-step-name {
+  font-size: 13px; font-weight: 600; color: var(--text-primary);
+  margin-bottom: 2px;
+}
+.agent-log-step-reason {
+  font-size: 11px; color: var(--text-muted); line-height: 1.5;
+}
+.agent-log-step-latency {
+  font-size: 10px; color: var(--text-muted); margin-top: 4px;
+  font-family: var(--font-mono);
+}
+
+/* ── RAG Tier Badge ── */
+.rag-tier-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 12px;
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  font-family: var(--font-mono);
+  transition: all 0.3s;
+  border: 1px solid transparent;
+}
+.rag-tier-badge.tier-bge {
+  color: var(--accent-green); border-color: rgba(63,185,80,0.25);
+  background: rgba(63,185,80,0.06);
+}
+.rag-tier-badge.tier-deepseek {
+  color: var(--accent-amber); border-color: rgba(240,160,48,0.25);
+  background: rgba(240,160,48,0.06);
+}
+.rag-tier-badge.tier-tfidf {
+  color: var(--accent-red); border-color: rgba(240,68,68,0.25);
+  background: rgba(240,68,68,0.06);
+}
+.rag-tier-tooltip {
+  position: fixed; top: 70px; right: 120px; z-index: 2000;
+  width: 320px; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 18px; box-shadow: var(--shadow-lg);
+  display: none; font-size: 12px; color: var(--text-secondary); line-height: 1.7;
+}
+.rag-tier-tooltip.show { display: block; }
+.rag-tier-tooltip h4 {
+  font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;
+}
+.rag-tier-tooltip .tier-row {
+  display: flex; align-items: center; gap: 8px; padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.rag-tier-tooltip .tier-row:last-child { border-bottom: none; }
+.rag-tier-tooltip .tier-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.rag-tier-tooltip .tier-dot.bge { background: var(--accent-green); }
+.rag-tier-tooltip .tier-dot.deepseek { background: var(--accent-amber); }
+.rag-tier-tooltip .tier-dot.tfidf { background: var(--accent-red); }
+.rag-tier-tooltip .tier-name { font-weight: 600; color: var(--text-primary); }
+.rag-tier-tooltip .tier-latency { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-left: auto; }
+
 </style>
 </head>
 <body>
@@ -868,6 +969,7 @@ mark.rag-sourced {
       <button class="sidebar-mobile-btn" id="sidebarMobileToggle" title="推荐问题">&#9776;</button>
       <span class="status-dot" id="statusDot"></span>
       <span id="statusText">就绪</span>
+      <span class="rag-tier-badge" id="ragTierBadge" title="RAG 嵌入层级 · 点击查看降级说明" onclick="toggleRagTierTooltip()">🔹 BGE</span>
       <a class="back-link" href="/">&larr; 返回仪表盘</a>
     </div>
   </div>
@@ -877,11 +979,16 @@ mark.rag-sourced {
 
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-header">
-    <span class="sidebar-header-title">&#128203; 推荐问题</span>
-    <button class="sidebar-toggle" id="sidebarToggle" title="折叠侧边栏">&lang;</button>
+    <span class="sidebar-header-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h0"/></svg>
+      推荐问题
+    </span>
+    <button class="sidebar-toggle" id="sidebarToggle" title="折叠侧边栏">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="12"/><line x1="6" y1="12" x2="18" y2="18"/></svg>
+    </button>
   </div>
   <div class="sidebar-list">
-    <div class="sidebar-role-label role-operator">🔧 运维工程师常用</div>
+    <div class="sidebar-role-label role-operator">运维工程师常用</div>
     <button class="sidebar-item role-operator" data-question="当前哪些设备风险最高？">
       <span class="sidebar-item-num">1</span>
       <span class="sidebar-item-text">
@@ -917,7 +1024,7 @@ mark.rag-sourced {
         <span class="sidebar-item-sub">横向对比 &middot; 故障率 &middot; 稳定性判定</span>
       </span>
     </button>
-    <div class="sidebar-role-label role-manager role-manager">📊 生产管理者常用</div>
+    <div class="sidebar-role-label role-manager role-manager">生产管理者常用</div>
     <button class="sidebar-item role-manager" data-question="如果加装振动传感器，投资回报率是多少？">
       <span class="sidebar-item-num">6</span>
       <span class="sidebar-item-text">
@@ -960,7 +1067,7 @@ mark.rag-sourced {
         <span class="sidebar-item-sub">剩余使用寿命 &middot; 退化速率 &middot; 置信区间</span>
       </span>
     </button>
-    <div class="sidebar-role-label">📚 系统使用 &amp; 知识问答</div>
+    <div class="sidebar-role-label">系统使用 &amp; 知识问答</div>
     <button class="sidebar-item" data-question="健康分是怎么计算的？8个维度分别是什么？">
       <span class="sidebar-item-num">12</span>
       <span class="sidebar-item-text">
@@ -1006,8 +1113,11 @@ mark.rag-sourced {
   </div>
 </aside>
 
-<div class="sidebar-expand-tab" id="sidebarExpandTab" style="display:none;">
-  <button class="sidebar-expand-btn" onclick="expandSidebar()" title="展开侧边栏">推荐问题</button>
+<div class="sidebar-collapsed-tab" id="sidebarExpandTab" style="display:none;">
+  <button class="sidebar-expand-btn" onclick="expandSidebar()" title="展开推荐问题">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M21 21l-6-6"/><path d="M15 3h6v6"/></svg>
+  </button>
 </div>
 
 <div class="sidebar-mobile-overlay" id="sidebarMobileOverlay"></div>
@@ -1327,10 +1437,12 @@ function handleSSEEvent(event, onText) {
 
     case 'tool_call':
       addToolCard(currentAssistantMsg, event.name, event.arguments);
+      agentLogAddCall(event.name, event.arguments);
       break;
 
     case 'tool_result':
       updateLastToolCard(currentAssistantMsg, event.name, event.summary);
+      agentLogMarkDone(event.name);
       break;
 
     case 'tool_result_text':
@@ -2085,6 +2197,193 @@ function escapeHtml(text) {
 
 console.log('[init] all functions defined, script loaded successfully');
 
+// ── RAG Tier Badge ──
+(function initRagTierBadge() {
+  var badge = document.getElementById('ragTierBadge');
+  if (!badge) return;
+
+  // Create tooltip
+  var tooltip = document.createElement('div');
+  tooltip.className = 'rag-tier-tooltip';
+  tooltip.id = 'ragTierTooltip';
+  tooltip.innerHTML =
+    '<h4>🔬 RAG 三级嵌入降级</h4>' +
+    '<div class="tier-row"><span class="tier-dot bge"></span><span class="tier-name">BGE-small-zh 本地模型</span><span class="tier-latency">~15ms</span></div>' +
+    '<div class="tier-row"><span class="tier-dot deepseek"></span><span class="tier-name">DeepSeek Embedding API</span><span class="tier-latency">~300ms</span></div>' +
+    '<div class="tier-row"><span class="tier-dot tfidf"></span><span class="tier-name">TF-IDF 字符Bigram</span><span class="tier-latency">~5ms</span></div>' +
+    '<p style="margin-top:10px;font-size:11px;color:var(--text-muted);">当前活跃层级以彩色高亮标记。系统在模型不可用时<strong>自动降级</strong>，确保任何条件下都可检索。</p>';
+  document.body.appendChild(tooltip);
+
+  function updateBadge(data) {
+    if (!data) return;
+    var tier = data.embedding_tier || 'tfidf_fallback';
+    var latency = data.embedding_latency_ms || 0;
+    var config = {
+      'bge_local': { icon: '🔹', label: 'BGE 本地', cls: 'tier-bge' },
+      'deepseek_api': { icon: '🔸', label: 'DeepSeek API', cls: 'tier-deepseek' },
+      'tfidf_fallback': { icon: '🔻', label: 'TF-IDF', cls: 'tier-tfidf' }
+    };
+    var c = config[tier] || config['tfidf_fallback'];
+    badge.textContent = c.icon + ' ' + c.label + (latency > 0 ? ' · ' + latency + 'ms' : '');
+    badge.className = 'rag-tier-badge ' + c.cls;
+    badge.title = 'RAG: ' + c.label + (latency > 0 ? ' (' + latency + 'ms)' : '') + ' · 点击查看三级降级说明';
+  }
+
+  window.toggleRagTierTooltip = function() {
+    var isOpen = tooltip.classList.contains('show');
+    if (isOpen) {
+      tooltip.classList.remove('show');
+    } else {
+      tooltip.classList.add('show');
+      // Auto-hide after 5s
+      setTimeout(function() { tooltip.classList.remove('show'); }, 5000);
+    }
+  };
+
+  // Close tooltip on outside click
+  document.addEventListener('click', function(e) {
+    if (!tooltip.classList.contains('show')) return;
+    if (e.target !== badge && !badge.contains(e.target) && e.target !== tooltip && !tooltip.contains(e.target)) {
+      tooltip.classList.remove('show');
+    }
+  });
+
+  // Fetch stats periodically
+  function fetchStats() {
+    fetch('/api/knowledge-base/stats').then(function(r) { return r.ok ? r.json() : null; }).then(function(data) {
+      if (data) updateBadge(data);
+    }).catch(function() {});
+  }
+  fetchStats();
+  setInterval(fetchStats, 30000); // Every 30s
+})();
+
+// ── Agent Decision Log ──
+var _agentLogCalls = [];
+var _agentLogStartTimes = {};
+var _agentLogTotalMs = 0;
+
+var TOOL_REASONS = {
+  'query_device_status': '查询设备实时状态（健康分/告警/工单）',
+  'query_alert_list': '获取当前告警列表，评估全局风险态势',
+  'query_fault_history': '检索设备历史故障记录，辅助模式识别',
+  'query_sensor_trend': '拉取传感器时序数据，分析参数演变趋势',
+  'compare_devices': '多设备横向对比，识别异常簇群',
+  'diagnose_root_cause': '基于SHAP归因执行根因分析',
+  'query_work_orders': '查询活跃工单状态，评估维护负载',
+  'run_data_prep_pipeline': '触发数据准备流水线（300s超时）',
+  'run_full_pipeline': '运行完整预测性维护流水线',
+  'search_system_docs': '检索系统文档，获取操作指南或技术参考',
+  'search_maintenance_kb': '检索运维知识库，匹配维护SOP和最佳实践',
+  'search_fault_cases': '检索故障案例库，查找相似历史故障的解决方案'
+};
+
+function agentLogAddCall(name, args) {
+  _agentLogCalls.push({ name: name, args: args, done: false, error: false, startTime: Date.now() });
+  _agentLogStartTimes[name + '_' + (_agentLogCalls.length - 1)] = Date.now();
+  updateAgentLogUI();
+}
+
+function agentLogMarkDone(name) {
+  // Mark the last matching undone call as done
+  for (var i = _agentLogCalls.length - 1; i >= 0; i--) {
+    if (_agentLogCalls[i].name === name && !_agentLogCalls[i].done) {
+      var key = name + '_' + i;
+      var elapsed = Date.now() - (_agentLogStartTimes[key] || Date.now());
+      _agentLogCalls[i].done = true;
+      _agentLogCalls[i].latencyMs = elapsed;
+      _agentLogTotalMs += elapsed;
+      updateAgentLogUI();
+      return;
+    }
+  }
+}
+
+function updateAgentLogUI() {
+  var btn = document.getElementById('agentLogBtn');
+  var badge = document.getElementById('agentLogBadge');
+  var count = _agentLogCalls.length;
+  if (count > 0 && btn) {
+    btn.classList.add('show');
+    if (badge) { badge.style.display = 'flex'; badge.textContent = count; }
+  }
+
+  var doneCount = _agentLogCalls.filter(function(c) { return c.done; }).length;
+  var errCount = _agentLogCalls.filter(function(c) { return c.error; }).length;
+  var okEl = document.getElementById('agentLogOk');
+  var errEl = document.getElementById('agentLogErr');
+  var msEl = document.getElementById('agentLogTotalMs');
+  if (okEl) okEl.textContent = doneCount;
+  if (errEl) errEl.textContent = errCount;
+  if (msEl) msEl.textContent = _agentLogTotalMs + 'ms';
+
+  renderAgentLogTimeline();
+}
+
+function renderAgentLogTimeline() {
+  var timeline = document.getElementById('agentLogTimeline');
+  var empty = document.getElementById('agentLogEmpty');
+  if (!timeline) return;
+  if (_agentLogCalls.length === 0) {
+    timeline.style.display = 'none';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  timeline.style.display = 'block';
+
+  var html = '';
+  _agentLogCalls.forEach(function(c, i) {
+    var reason = TOOL_REASONS[c.name] || '执行工具调用';
+    var statusClass = c.error ? 'error' : (c.done ? 'success' : '');
+    var statusIcon = c.error ? '✕' : (c.done ? '✓' : '⋯');
+    var latencyStr = c.latencyMs ? (c.latencyMs + 'ms') : '处理中...';
+    html += '<div class="agent-log-step ' + statusClass + '">' +
+      '<div class="agent-log-step-num">' + statusIcon + ' Step ' + (i + 1) + ' / ' + _agentLogCalls.length + '</div>' +
+      '<div class="agent-log-step-name">' + c.name + '</div>' +
+      '<div class="agent-log-step-reason">' + reason + '</div>' +
+      '<div class="agent-log-step-latency">⏱ ' + latencyStr + '</div>' +
+      '</div>';
+  });
+  timeline.innerHTML = html;
+}
+
+function agentLogReset() {
+  _agentLogCalls = [];
+  _agentLogStartTimes = {};
+  _agentLogTotalMs = 0;
+  var btn = document.getElementById('agentLogBtn');
+  if (btn) btn.classList.remove('show');
+  updateAgentLogUI();
+  // Close panel if open
+  var panel = document.getElementById('agentLogPanel');
+  var overlay = document.getElementById('agentLogOverlay');
+  if (panel) panel.classList.remove('show');
+  if (overlay) overlay.classList.remove('show');
+}
+
+function toggleAgentLog() {
+  var panel = document.getElementById('agentLogPanel');
+  var overlay = document.getElementById('agentLogOverlay');
+  if (!panel || !overlay) return;
+  var isOpen = panel.classList.contains('show');
+  if (isOpen) {
+    panel.classList.remove('show');
+    overlay.classList.remove('show');
+  } else {
+    panel.classList.add('show');
+    overlay.classList.add('show');
+    renderAgentLogTimeline();
+  }
+}
+
+// Reset agent log on new conversation
+var _origSendMessage = sendMessage;
+sendMessage = function() {
+  agentLogReset();
+  return _origSendMessage.apply(this, arguments);
+};
+
 // ── URL preset: ?prompt=xxx auto-fills and sends ──
 (function() {
   var params = new URLSearchParams(window.location.search);
@@ -2144,6 +2443,30 @@ console.log('[init] all functions defined, script loaded successfully');
   }
 })();
 </script>
+
+<!-- Agent Decision Log -->
+<button class="agent-log-btn" id="agentLogBtn" onclick="toggleAgentLog()" title="Agent决策日志">
+  🧠
+  <span class="agent-log-badge" id="agentLogBadge" style="display:none;">0</span>
+</button>
+<div class="agent-log-overlay" id="agentLogOverlay" onclick="toggleAgentLog()"></div>
+<div class="agent-log-panel" id="agentLogPanel">
+  <div class="agent-log-header" id="agentLogHeader">
+    <span class="agent-log-header-title">🧠 Agent 决策日志</span>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="agent-log-stats">
+        <span>调用: <span class="ok" id="agentLogOk">0</span></span>
+        <span>失败: <span class="err" id="agentLogErr">0</span></span>
+        <span>总耗时: <span id="agentLogTotalMs">0ms</span></span>
+      </div>
+      <button class="agent-log-close" onclick="toggleAgentLog()">✕</button>
+    </div>
+  </div>
+  <div class="agent-log-body" id="agentLogBody">
+    <div class="agent-log-empty" id="agentLogEmpty">本次对话尚未调用工具</div>
+    <div class="agent-log-timeline" id="agentLogTimeline" style="display:none;"></div>
+  </div>
+</div>
 
 </body>
 </html>

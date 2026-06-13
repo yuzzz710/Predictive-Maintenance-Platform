@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>备件库存管理 — 工业智能运维</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="/shared/sidebar.css?v=3">
 <script src="/shared/role-check.js"></script>
 <script src="/shared/theme-init.js"></script>
 <style>
@@ -12,9 +14,10 @@
   --bg-input: #0c0f15;--border: #1c2230;--border-light: #242b38;
   --text: #e6ebf2;--text-secondary: #8e9aab;--text-muted: #5a6474;
   --cyan: #00c9a0;--amber: #f0a030;--red: #f04444;--blue: #4d94ff;--green: #3fb950;--purple: #a371f7;
-  --radius: 3px;--radius-md: 6px;
+  --radius: 3px;--radius-md: 6px;--radius-lg: 10px;
   --font-mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
   --font-sans: 'PingFang SC','Microsoft YaHei','Hiragino Sans GB','Segoe UI',system-ui,sans-serif;
+  --spacing-xs: 4px;--spacing-sm: 8px;--spacing-md: 16px;--spacing-lg: 24px;
 }
 [data-theme="light"] {
   --bg: #f5f7fa;--bg-surface: #fff;--bg-card: #fff;--bg-card-alt: #f8f9fb;
@@ -65,10 +68,32 @@ tr:hover td{background:rgba(255,255,255,0.015)}
 .procurement-card .pc-info{font-size:11px;color:var(--text-muted)}
 .procurement-card .pc-actions{margin-left:auto;display:flex;gap:6px}
 
+/* Purchase suggestion card (from OR inventory optimization) */
+.purchase-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.purchase-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.purchase-card:hover{border-color:var(--purple);background:rgba(163,113,247,0.03)}
+.purchase-card .pu-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:8px;font-size:10px;font-weight:600;white-space:nowrap}
+.purchase-card .pu-badge.pu-urgent{background:rgba(240,68,68,0.12);color:var(--red)}
+.purchase-card .pu-badge.pu-normal{background:rgba(77,148,255,0.1);color:var(--blue)}
+.purchase-card .pu-part{font-family:var(--font-mono);font-size:14px;font-weight:600;min-width:120px}
+.purchase-card .pu-detail{font-size:11px;color:var(--text-secondary);display:flex;flex-direction:column;gap:2px}
+.purchase-card .pu-detail span{color:var(--text-muted)}
+.purchase-card .pu-cost{font-family:var(--font-mono);font-size:15px;font-weight:700;color:var(--purple);margin-left:auto;text-align:right}
+.purchase-card .pu-cost small{font-size:10px;color:var(--text-muted);display:block;font-weight:400}
+
+/* Risk indicator bar */
+.risk-bar-track{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;min-width:60px}
+.risk-bar-fill{height:100%;border-radius:2px;transition:width 0.5s ease}
+
 .loading{text-align:center;padding:40px;color:var(--text-muted)}
 .error{background:rgba(240,68,68,0.08);border:1px solid rgba(240,68,68,0.2);border-radius:var(--radius);padding:12px;color:var(--red);font-size:12px;margin-bottom:16px;display:none}
+.empty-state{text-align:center;padding:24px;color:var(--text-muted);background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);font-size:13px;line-height:1.8}
 
-@media(max-width:768px){.procurement-card{flex-direction:column;align-items:flex-start}.pc-actions{margin-left:0}}
+@media(max-width:768px){
+  .procurement-card,.purchase-card{flex-direction:column;align-items:flex-start}
+  .purchase-grid{grid-template-columns:1fr}
+  .pc-actions,.pu-cost{margin-left:0}
+}
 html[data-role="operator"] .role-manager:not(.role-operator){display:none!important}
 </style>
 </head>
@@ -76,7 +101,7 @@ html[data-role="operator"] .role-manager:not(.role-operator){display:none!import
 
 <div class="header role-manager">
   <div class="header-inner">
-    <div class="header-title"><span class="dot">◆</span> 备件库存管理</div>
+    <div class="header-title"><span class="dot">&diams;</span> 备件库存管理</div>
     <div style="font-size:12px;color:var(--text-muted)">库存数据: inventory_snapshot.csv</div>
   </div>
 </div>
@@ -87,19 +112,74 @@ html[data-role="operator"] .role-manager:not(.role-operator){display:none!import
   <!-- Stats -->
   <div class="stats-row" id="stats-row"><div class="loading">加载中...</div></div>
 
+  <!-- Inventory Optimization Dashboard -->
+  <div class="section">
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+        <rect x="3" y="12" width="3" height="9" rx="1"/><rect x="10" y="7" width="3" height="14" rx="1"/><rect x="17" y="3" width="3" height="18" rx="1"/>
+      </svg>
+      (s,S) 库存策略可视化
+    </h3>
+        <!-- Row 1: Gap Chart (full width) -->
+    <div class="chart-card" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:4px;">当前库存 vs 目标库存(S) &mdash; 缺口对比</div>
+      <div style="font-size:10px;color:var(--text-muted);margin-bottom:12px;">柱高 = 当前库存(实际) &middot; 紫色线 = (s,S)策略目标值 &middot; 红色区域 = 缺口</div>
+      <div id="chart-gap-container"><canvas id="chart-inv-gap" style="max-height:360px;"></canvas></div>
+      <div id="chart-gap-empty" style="display:none;" class="empty-state">暂无库存策略数据。<br>请运行流水线生成 inventory_policy_optimized.csv</div>
+    </div>
+    <!-- Row 2: Risk Donut (left) + Risk Top 5 (right) -->
+    <div class="chart-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="chart-card" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;">
+        <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:12px;">缺货风险分布</div>
+        <canvas id="chart-risk-donut" style="max-height:280px;"></canvas>
+      </div>
+      <div class="chart-card" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;">
+        <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">缺货风险 Top 5</div>
+        <div id="risk-top5"></div>
+      </div>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:var(--text-muted);line-height:1.6;">
+      数据源: inventory_policy_optimized.csv &middot;
+      缺货成本 = 紧急采购溢价(&times;2.5) + 停机等待($200/天) &middot;
+      z<sub>&alpha;</sub> 按策略联动 (0.85&rarr;1.04 / 0.92&rarr;1.41 / 0.98&rarr;2.05)
+    </div>
+  </div>
+
+  <!-- Purchase Suggestions (from (s,S) optimization) -->
+  <div class="section">
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+      </svg>
+      采购建议 &mdash; 基于 (s,S) 最优策略
+    </h3>
+    <div id="purchase-suggestions"><div class="loading">加载中...</div></div>
+    <div id="purchase-empty" style="display:none;" class="empty-state">当前库存均高于重订货点(s)，暂无需采购的备件。</div>
+  </div>
+
   <!-- Stock Table -->
   <div class="section">
-    <h3>📦 库存总览</h3>
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+        <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+      </svg>
+      库存总览
+    </h3>
     <div class="section-bar">
-      <button class="btn primary" onclick="loadAll()">⟳ 刷新</button>
-      <button class="btn" onclick="initInventory()">🔄 重新初始化</button>
+      <button class="btn primary" onclick="loadAll()">&#x21BB; 刷新</button>
+      <button class="btn" onclick="initInventory()">&#x21BB; 重新初始化</button>
     </div>
     <div id="stock-table"><div class="loading">加载中...</div></div>
   </div>
 
   <!-- Procurement Orders -->
   <div class="section">
-    <h3>📋 采购订单</h3>
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+      </svg>
+      采购订单
+    </h3>
     <div class="section-bar">
       <button class="btn primary" onclick="generateOrders()">+ 自动生成采购单</button>
     </div>
@@ -108,12 +188,17 @@ html[data-role="operator"] .role-manager:not(.role-operator){display:none!import
 
   <!-- Logs -->
   <div class="section">
-    <h3>📝 库存变动日志</h3>
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+        <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+      </svg>
+      库存变动日志
+    </h3>
     <div id="log-table"><div class="loading">加载中...</div></div>
   </div>
 </div>
 
-<script src="/shared/navbar.js"></script>
+<script src="/shared/navbar.js?v=3"></script>
 <script>
 var PART_CN = {
   rotor_assembly:'转子总成',bearing_kit:'轴承套件',seal_kit:'密封套件',lubrication_kit:'润滑套件',
@@ -125,12 +210,316 @@ var PART_CN = {
 };
 function cn(n){return PART_CN[n]||n}
 
-async function loadAll(){await Promise.all([loadStock(),loadProcurement(),loadLogs()])}
+// Risk level color map (semantic tokens)
+var RISK_COLORS = {
+  critical: {fill:'rgba(240,68,68,0.7)',stroke:'var(--red)',text:'严重',cls:'out'},
+  high: {fill:'rgba(240,160,48,0.7)',stroke:'var(--amber)',text:'高',cls:'low'},
+  medium: {fill:'rgba(77,148,255,0.6)',stroke:'var(--blue)',text:'中',cls:'info'},
+  low: {fill:'rgba(63,185,80,0.5)',stroke:'var(--green)',text:'低',cls:'ok'}
+};
+
+async function loadAll(){await Promise.all([loadStock(),loadProcurement(),loadLogs()]);loadPolicyCharts();}
+
+// ── (s,S) Policy Charts: Gap + Risk + Top5 + Purchase Suggestions ──
+var _policyRows = []; // cached for re-render
+
+// Recompute stockout_risk per row based on real warehouse stock vs s (reorder) / S (target)
+function recomputeRisk(rows) {
+  rows.forEach(function(r){
+    var cur = r.real_stock || 0;
+    var s = parseFloat(r.reorder_point_s) || 0;
+    var S = parseFloat(r.target_stock_S) || 0;
+    if (cur <= 0) {
+      r.stockout_risk = 'critical';
+      r.stockout_probability = 0.95;
+    } else if (cur < s) {
+      r.stockout_risk = 'high';
+      r.stockout_probability = 0.75;
+    } else if (cur < S) {
+      r.stockout_risk = 'medium';
+      r.stockout_probability = 0.30;
+    } else {
+      r.stockout_risk = 'low';
+      r.stockout_probability = 0.05;
+    }
+    // Recompute annual stockout cost from real shortage cost
+    var unitCost = parseFloat(r.unit_cost) || 0;
+    var shortageCost = 2.5 * unitCost + 200 * parseFloat(r.lead_time_days || 3);
+    r.annual_stockout_cost_est = Math.round(shortageCost * 365 * (r.stockout_probability || 0));
+  });
+}
+
+async function loadPolicyCharts(){
+  try{
+    // Fetch BOTH data sources in parallel: policy CSV (s,S targets) + stock API (real inventory)
+    var [policyResp, stockResp] = await Promise.all([
+      fetch('data/inventory_policy_optimized.csv'),
+      fetch('/api/inventory/stock')
+    ]);
+
+    // ── Parse policy CSV (s,S model parameters) ──
+    if (!policyResp.ok) throw new Error('Policy CSV HTTP ' + policyResp.status);
+    var text = await policyResp.text();
+    if (!text.trim()) throw new Error('Empty policy CSV');
+    var lines = text.trim().split('\n');
+    var headers = lines[0].split(',');
+    var rows = [];
+    for (var i = 1; i < lines.length; i++) {
+      var vals = lines[i].split(',');
+      var obj = {};
+      headers.forEach(function(h,j){ obj[h.trim()] = vals[j]; });
+      rows.push(obj);
+    }
+    if (rows.length === 0) throw new Error('No data rows');
+
+    // ── Parse stock API response (real warehouse stock) ──
+    var stockMap = {};
+    if (stockResp.ok) {
+      try {
+        var stockJson = await stockResp.json();
+        var stockParts = (stockJson.stock || {}).parts || [];
+        stockParts.forEach(function(p){
+          stockMap[p.part_name] = parseInt(p.current_stock) || 0;
+        });
+      } catch(e) { console.log('Stock API parse fallback:', e.message); }
+    }
+
+    // ── MERGE: replace fake current_stock_est with real warehouse stock ──
+    rows.forEach(function(r){
+      r.real_stock = stockMap.hasOwnProperty(r.part_name) ? stockMap[r.part_name] : 0;
+    });
+    recomputeRisk(rows);
+    _policyRows = rows;
+
+    // ── Render all components ──
+    renderGapChart(rows);
+    renderRiskDonut(rows);
+    renderRiskTop5(rows);
+    renderPurchaseSuggestions(rows);
+
+  } catch(e) {
+    console.log('Policy charts unavailable:', e.message);
+    document.getElementById('chart-gap-container').style.display = 'none';
+    document.getElementById('chart-gap-empty').style.display = 'block';
+    document.getElementById('chart-risk-donut').parentElement.innerHTML =
+      '<div class="empty-state">库存策略数据未生成。<br>请运行: python agent_orchestrator.py --dashboard-data ../web-dashboard/data</div>';
+    document.getElementById('risk-top5').innerHTML = '';
+    document.getElementById('purchase-suggestions').innerHTML =
+      '<div class="empty-state">等待 inventory_policy_optimized.csv 数据...</div>';
+  }
+}
+
+function renderGapChart(rows) {
+  var labels = rows.map(function(r){ return cn(r.part_name) || r.part_name; });
+  var currentData = rows.map(function(r){ return r.real_stock || 0; });
+  var targetData = rows.map(function(r){ return parseFloat(r.target_stock_S) || 0; });
+  // Gap = max(0, target - current) — only show deficit
+  var gapData = rows.map(function(r){
+    var cur = r.real_stock || 0;
+    var tgt = parseFloat(r.target_stock_S) || 0;
+    return Math.max(0, tgt - cur);
+  });
+  var sData = rows.map(function(r){ return parseFloat(r.reorder_point_s) || 0; });
+
+  var ctx = document.getElementById('chart-inv-gap');
+  // Destroy previous chart instance if re-rendering
+  if (ctx._chartInstance) ctx._chartInstance.destroy();
+
+  ctx._chartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: '当前库存(实际)', data: currentData,
+          backgroundColor: currentData.map(function(v,i){ return v < targetData[i] ? 'rgba(240,160,48,0.55)' : 'rgba(63,185,80,0.45)'; }),
+          borderColor: currentData.map(function(v,i){ return v < targetData[i] ? 'var(--amber)' : 'var(--green)'; }),
+          borderWidth: 1, borderRadius: 2 },
+        { label: '目标库存(S)', data: targetData, type: 'line',
+          borderColor: 'var(--purple)', backgroundColor: 'transparent', borderWidth: 2, borderDash: [4,3],
+          pointRadius: 3, pointBackgroundColor: 'var(--purple)', tension: 0.2 },
+        { label: '重订货点(s)', data: sData, type: 'line',
+          borderColor: 'var(--amber)', backgroundColor: 'transparent', borderWidth: 1.2, borderDash: [2,4],
+          pointRadius: 2, pointBackgroundColor: 'var(--amber)', tension: 0.2 },
+        { label: '缺口(需补货)', data: gapData,
+          backgroundColor: 'rgba(240,68,68,0.35)', borderColor: 'var(--red)', borderWidth: 1, borderRadius: 2 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#8e9aab', font: { size: 10 }, usePointStyle: true, padding: 16 } },
+        tooltip: {
+          backgroundColor: '#141820', titleColor: '#e6ebf2',
+          bodyColor: '#8e9aab', borderColor: '#1c2230', borderWidth: 1,
+          callbacks: {
+            label: function(ctx){ return ctx.dataset.label + ': ' + parseFloat(ctx.raw).toFixed(1) + ' 件'; }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#8e9aab', font: { size: 9 }, maxRotation: 60 }, grid: { display: false } },
+        y: { ticks: { color: '#8e9aab', font: { size: 10 } }, grid: { color: '#1c2230' },
+             title: { display: true, text: '件', color: '#8e9aab', font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+function renderRiskDonut(rows) {
+  var riskCounts = { critical: 0, high: 0, medium: 0, low: 0 };
+  rows.forEach(function(r){
+    var level = (r.stockout_risk || '').trim();
+    if (riskCounts.hasOwnProperty(level)) riskCounts[level]++;
+  });
+  var total = riskCounts.critical + riskCounts.high + riskCounts.medium + riskCounts.low;
+  var ctx = document.getElementById('chart-risk-donut');
+  if (ctx._chartInstance) ctx._chartInstance.destroy();
+
+  ctx._chartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['严重', '高', '中', '低'],
+      datasets: [{
+        data: [riskCounts.critical, riskCounts.high, riskCounts.medium, riskCounts.low],
+        backgroundColor: ['rgba(240,68,68,0.7)','rgba(240,160,48,0.7)','rgba(77,148,255,0.6)','rgba(63,185,80,0.5)'],
+        borderColor: ['var(--red)','var(--amber)','var(--blue)','var(--green)'],
+        borderWidth: 1.5, hoverBorderWidth: 2.5
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '60%',
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#8e9aab', font: { size: 10 }, padding: 12, usePointStyle: true } },
+        tooltip: {
+          backgroundColor: '#141820', titleColor: '#e6ebf2',
+          bodyColor: '#8e9aab', borderColor: '#1c2230', borderWidth: 1,
+          callbacks: {
+            label: function(ctx){ var pct = total > 0 ? (ctx.raw / total * 100).toFixed(0) : 0; return ctx.label + ': ' + ctx.raw + ' 件 (' + pct + '%)'; }
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderRiskTop5(rows) {
+  // Sort by stockout risk severity then by suggested order quantity
+  var sorted = rows.slice().sort(function(a,b){
+    var order = {critical:0,high:1,medium:2,low:3};
+    var ra = order[a.stockout_risk] !== undefined ? order[a.stockout_risk] : 3;
+    var rb = order[b.stockout_risk] !== undefined ? order[b.stockout_risk] : 3;
+    if (ra !== rb) return ra - rb;
+    return (parseInt(b.suggested_order_qty)||0) - (parseInt(a.suggested_order_qty)||0);
+  });
+  var top5 = sorted.slice(0, 5);
+
+  if (top5.length === 0) {
+    document.getElementById('risk-top5').innerHTML = '';
+    return;
+  }
+
+  var html = '<table><tr><th>零件</th><th>风险</th><th>缺货概率</th><th>年缺货成本</th><th>建议采购</th></tr>';
+  top5.forEach(function(r){
+    var risk = r.stockout_risk || 'low';
+    var rc = RISK_COLORS[risk] || RISK_COLORS.low;
+    var prob = parseFloat(r.stockout_probability || 0);
+    var annualCost = parseFloat(r.annual_stockout_cost_est || 0);
+    var orderQty = parseInt(r.suggested_order_qty) || 0;
+    html += '<tr>' +
+      '<td><b>' + cn(r.part_name) + '</b><br><span style="font-size:10px;color:var(--text-muted);">' + r.part_number + '</span></td>' +
+      '<td><span class="badge ' + rc.cls + '">' + rc.text + '</span></td>' +
+      '<td>' + (prob * 100).toFixed(0) + '%</td>' +
+      '<td style="color:' + (annualCost > 5000 ? 'var(--red)' : 'var(--text-secondary)') + ';font-family:var(--font-mono);">$' + annualCost.toFixed(0) + '</td>' +
+      '<td style="color:' + (orderQty > 0 ? 'var(--purple)' : 'var(--text-muted)') + ';font-weight:600;">' + (orderQty > 0 ? orderQty + ' 件' : '&mdash;') + '</td>' +
+      '</tr>';
+  });
+  html += '</table>';
+  document.getElementById('risk-top5').innerHTML = html;
+}
+
+function renderPurchaseSuggestions(rows) {
+  // Parts where real stock is below reorder point (derived from snapshot API, not model estimate)
+  var needsOrder = rows.filter(function(r){
+    var cur = r.real_stock || 0;
+    var s = parseFloat(r.reorder_point_s) || 0;
+    // Suggest purchase if current stock <= reorder point, or suggested_order_qty > 0
+    return cur <= s || (parseInt(r.suggested_order_qty) || 0) > 0;
+  }).sort(function(a,b){
+    // Urgency: critical/high first, then by gap size
+    var order = {critical:0,high:1,medium:2,low:3};
+    var ra = order[a.stockout_risk] !== undefined ? order[a.stockout_risk] : 3;
+    var rb = order[b.stockout_risk] !== undefined ? order[b.stockout_risk] : 3;
+    if (ra !== rb) return ra - rb;
+    var gapA = Math.max(0, parseFloat(a.target_stock_S||0) - (a.real_stock || 0));
+    var gapB = Math.max(0, parseFloat(b.target_stock_S||0) - (b.real_stock || 0));
+    return gapB - gapA;
+  });
+
+  var container = document.getElementById('purchase-suggestions');
+  var emptyEl = document.getElementById('purchase-empty');
+
+  if (needsOrder.length === 0) {
+    container.style.display = 'none';
+    emptyEl.style.display = 'block';
+    return;
+  }
+  container.style.display = 'block';
+  emptyEl.style.display = 'none';
+
+  var html = '<div class="purchase-grid">';
+  needsOrder.forEach(function(r){
+    var risk = r.stockout_risk || 'low';
+    var rc = RISK_COLORS[risk] || RISK_COLORS.low;
+    var cur = r.real_stock || 0;
+    var s = parseFloat(r.reorder_point_s) || 0;
+    var S = parseFloat(r.target_stock_S) || 0;
+    var orderQty = Math.max(0, Math.round(S - cur));  // real gap from warehouse stock
+    var eoq = parseFloat(r.eoq) || 0;
+    var unitCost = parseFloat(r.unit_cost) || 0;
+    var totalCost = orderQty * unitCost;
+    var isUrgent = risk === 'critical' || risk === 'high';
+
+    var gap = Math.max(0, S - cur);
+    var fillPct = S > 0 ? Math.min(100, cur / S * 100) : 0;
+
+    html += '<div class="purchase-card">' +
+      '<span class="pu-badge ' + (isUrgent ? 'pu-urgent' : 'pu-normal') + '">' +
+        (isUrgent ? '&#x26A0; 紧急补货' : '&#x21E7; 建议采购') +
+      '</span>' +
+      '<span class="pu-part">' + cn(r.part_name) + '</span>' +
+      '<span class="pu-detail">' +
+        '<span>当前库存: <b>' + cur + '</b> &rarr; 目标: <b>' + S + '</b> (缺口: <b style="color:var(--red);">' + gap.toFixed(0) + '</b>)</span>' +
+        '<span>重订货点(s): ' + s.toFixed(1) + ' &middot; EOQ: ' + eoq.toFixed(1) + ' &middot; ' + r.part_number + '</span>' +
+      '</span>' +
+      '<div class="risk-bar-track" title="库存充盈率 ' + fillPct.toFixed(0) + '%">' +
+        '<div class="risk-bar-fill" style="width:' + fillPct + '%;background:' + (fillPct < 30 ? 'var(--red)' : fillPct < 60 ? 'var(--amber)' : 'var(--green)') + ';"></div>' +
+      '</div>' +
+      '<span class="pu-cost">$' + totalCost.toFixed(0) +
+        '<small>采购 ' + orderQty + ' 件 &times; $' + unitCost.toFixed(0) + '/件</small>' +
+      '</span>' +
+    '</div>';
+  });
+  html += '</div>'; // close purchase-grid
+
+  // Summary stats row
+  var totalOrderCost = needsOrder.reduce(function(s,r){ return s + (parseInt(r.suggested_order_qty)||0) * (parseFloat(r.unit_cost)||0); }, 0);
+  var totalItems = needsOrder.reduce(function(s,r){ return s + (parseInt(r.suggested_order_qty)||0); }, 0);
+  html += '<div style="display:flex;gap:16px;padding:10px 18px;background:var(--bg-card-alt);border-radius:var(--radius);margin-top:8px;font-size:12px;color:var(--text-secondary);flex-wrap:wrap;">' +
+    '<span>建议采购 <b style="color:var(--text);">' + needsOrder.length + '</b> 种备件</span>' +
+    '<span>共 <b style="color:var(--text);">' + totalItems + '</b> 件</span>' +
+    '<span>预估总成本 <b style="color:var(--purple);">$' + totalOrderCost.toFixed(0) + '</b></span>' +
+    '</div>';
+
+  container.innerHTML = html;
+}
+
+// ── Existing functions (unchanged) ──
+
 async function loadStock(){
   try{
     var r=await fetch('/api/inventory/stock'),d=await r.json();
     var s=d.stock||{},parts=s.parts||[],inv=d.raw_inventory||[];
-    // Stats
     var low=s.low_count||0,totalShort=s.total_shortage||0,totalCost=0;
     parts.forEach(function(p){totalCost+=p.current_stock*p.unit_cost});
     document.getElementById('stats-row').innerHTML=
@@ -138,13 +527,12 @@ async function loadStock(){
       '<div class="stat-card"><div class="v" style="color:'+(low>0?'var(--amber)':'var(--green)')+';">'+low+'</div><div class="l">库存不足</div></div>'+
       '<div class="stat-card"><div class="v" style="color:'+(totalShort>0?'var(--red)':'var(--text)')+';">'+totalShort+'</div><div class="l">总缺口(件)</div></div>'+
       '<div class="stat-card"><div class="v">$'+totalCost.toFixed(0)+'</div><div class="l">库存总值</div></div>';
-    // Table
     var h='<table><tr><th>零件</th><th>型号</th><th>库存</th><th>安全库存</th><th>需求</th><th>缺口</th><th>单价</th><th>状态</th><th>供应商</th><th>操作</th></tr>';
     parts.forEach(function(p){
       var cls=p.status==='out'?'alert-row':'',sc=p.status==='ok'?'ok':p.status==='low'?'low':'out';
       h+='<tr class="'+cls+'"><td><b>'+cn(p.part_name)+'</b><br><span style="font-size:10px;color:var(--text-muted)">'+p.part_name+'</span></td>';
       h+='<td>'+p.part_number+'</td>';
-      h+='<td style="font-family:var(--font-mono);font-weight:600;cursor:pointer;" title="点击修改库存" onclick="editStock(\''+p.part_name+'\','+p.current_stock+')">'+p.current_stock+' ✎</td>';
+      h+='<td style="font-family:var(--font-mono);font-weight:600;cursor:pointer;" title="点击修改库存" onclick="editStock(\''+p.part_name+'\','+p.current_stock+')">'+p.current_stock+' &#x270E;</td>';
       h+='<td>'+p.safety_stock+'</td><td>'+p.demand+'</td>';
       h+='<td style="color:'+(p.shortage>0?'var(--red)':'var(--text)')+';">'+(p.shortage>0?'<b>'+p.shortage+'</b>':'0')+'</td>';
       h+='<td>$'+p.unit_cost+'</td>';
@@ -203,11 +591,8 @@ async function loadLogs(){
 }
 
 async function initInventory(){
-  try{
-    await fetch('/api/inventory/stock');
-    await loadAll();
-    showMsg('库存已重新初始化')
-  }catch(e){showMsg('初始化失败: '+e.message)}
+  try{await fetch('/api/inventory/stock');await loadAll();showMsg('库存已重新初始化')}
+  catch(e){showMsg('初始化失败: '+e.message)}
 }
 async function generateOrders(){
   try{
@@ -220,10 +605,8 @@ async function setOrderStatus(oid,newStatus){
   try{
     var r=await fetch('/api/inventory/procurement/update-status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({order_id:oid,status:newStatus})});
     var d=await r.json();
-    if(d.success){
-      showMsg(newStatus==='已入库'?'已入库，库存自动更新':('状态更新: '+newStatus));
-      await loadAll();
-    }else{showMsg('更新失败: '+(d.error||''))}
+    if(d.success){showMsg(newStatus==='已入库'?'已入库，库存自动更新':('状态更新: '+newStatus));await loadAll();}
+    else{showMsg('更新失败: '+(d.error||''))}
   }catch(e){showMsg('操作失败')}
 }
 function showMsg(m){var e=document.getElementById('error');e.style.display='block';e.textContent=m;setTimeout(function(){e.style.display='none'},4000)}
@@ -231,17 +614,12 @@ function showMsg(m){var e=document.getElementById('error');e.style.display='bloc
 async function quickAdjust(partName, delta) {
   try {
     var r = await fetch('/api/inventory/adjust', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      method: 'POST', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({part_name: partName, delta: delta})
     });
     var d = await r.json();
-    if (d.success) {
-      showMsg(cn(partName) + ': ' + d.old_stock + ' -> ' + d.new_stock + ' (' + (delta > 0 ? '+' : '') + delta + ')');
-      await loadAll();
-    } else {
-      showMsg('调整失败: ' + (d.detail || 'error'));
-    }
+    if (d.success) { showMsg(cn(partName) + ': ' + d.old_stock + ' -> ' + d.new_stock + ' (' + (delta > 0 ? '+' : '') + delta + ')'); await loadAll(); }
+    else { showMsg('调整失败: ' + (d.detail || 'error')); }
   } catch(e) { showMsg('网络错误'); }
 }
 
@@ -251,8 +629,7 @@ function editStock(partName, currentStock) {
   var newVal = parseInt(val);
   if (isNaN(newVal) || newVal < 0) { showMsg('请输入有效的非负整数'); return; }
   fetch('/api/inventory/adjust', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
+    method: 'POST', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({part_name: partName, new_stock: newVal})
   }).then(function(r){ return r.json() }).then(function(d){
     if (d.success) { showMsg(cn(partName) + ': ' + d.old_stock + ' -> ' + d.new_stock); loadAll(); }
@@ -260,7 +637,7 @@ function editStock(partName, currentStock) {
   }).catch(function(){ showMsg('网络错误'); });
 }
 
-document.addEventListener('DOMContentLoaded',loadAll)
+document.addEventListener('DOMContentLoaded',function(){loadAll();loadPolicyCharts();})
 </script>
 </body>
 </html>

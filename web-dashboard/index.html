@@ -4,13 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>智能设备预测性维护</title>
+<link rel="stylesheet" href="/shared/sidebar.css?v=3">
 <script src="/shared/role-check.js"></script>
 <script src="/shared/theme-init.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/echarts-gl@2.0.9/dist/echarts-gl.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-<script src="/shared/navbar.js?v=20260530"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/echarts-gl@2.0.9/dist/echarts-gl.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="/shared/navbar.js?v=3"></script>
 <script src="/shared/role-switcher.js"></script>
+<script src="/shared/demo-mode.js"></script>
 <style>
 /* ============================================================
    DESIGN TOKENS — Industrial Precision
@@ -156,7 +158,7 @@ body::before {
 .nav-bar {
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border);
-  position: sticky; top: 52px; z-index: 99;
+  position: sticky; top: 0; z-index: 99;
 }
 .nav-inner {
   max-width: 1680px; margin:0 auto;
@@ -1933,7 +1935,11 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
     <div class="role-manager">
     <div class="chart-row">
       <div class="chart-card stagger-in full-width" style="background:var(--bg-card-alt);border-left:2px solid var(--accent-cyan);">
-        <div class="chart-title" style="display:flex;align-items:center;gap:8px;">维护策略选择器 · 工业落地方法论 <span id="s7-strategy-status" style="font-size:10px;color:var(--accent-cyan);font-weight:400;">当前: 生产效率优先</span></div>
+        <div class="chart-title" style="display:flex;align-items:center;gap:8px;">维护策略选择器 · 工业落地方法论 <span id="s7-strategy-status" style="font-size:10px;color:var(--accent-cyan);font-weight:400;">当前: 生产效率优先</span>
+          <button onclick="refreshSec6Data()" title="全量刷新数据（读取最新传感器读数并重算全部工单与策略对比）" style="margin-left:auto;padding:5px 12px;border-radius:var(--radius);font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);display:flex;align-items:center;gap:5px;white-space:nowrap;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--cyan)';this.style.color='var(--cyan)';" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)';">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> 刷新数据
+          </button>
+        </div>
         <div class="strategy-selector-grid" id="strategy-selector">
           <div class="strategy-card prod-eff active" onclick="switchStrategy('production_efficiency')" data-strategy="production_efficiency">
             <span class="sc-badge">当前策略</span>
@@ -2021,18 +2027,23 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
       <div style="display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--bg-card-alt);border-radius:var(--radius-md);margin:10px 0;flex-wrap:wrap;">
         <span style="font-size:14px;color:var(--text-primary);white-space:nowrap;font-weight:700;">维护预算</span>
         <input type="range" id="s7-or-budget-slider" min="5000" max="200000" step="1000" value="50000"
-          style="flex:1;min-width:180px;height:24px;accent-color:var(--accent-purple);">
+          style="flex:1;min-width:180px;height:28px;accent-color:var(--accent-purple);">
         <input type="number" id="s7-or-budget-input" value="50000" min="5000" max="200000" step="1000"
-          style="width:110px;padding:6px 10px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:15px;text-align:right;">
-        <span style="font-size:13px;color:var(--text-muted);">USD</span>
-        <span style="margin-left:16px;font-size:13px;color:var(--text-secondary);font-weight:600;">工时上限</span>
+          style="width:120px;padding:6px 10px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:16px;text-align:center;-moz-appearance:textfield;">
+        <span style="font-size:14px;color:var(--text-muted);">USD</span>
+        <span style="margin-left:16px;font-size:14px;color:var(--text-secondary);font-weight:600;">工时上限</span>
         <input type="number" id="s7-or-hours-input" value="80" min="20" max="200" step="4"
-          style="width:75px;padding:6px 10px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:15px;text-align:right;">
-        <span style="font-size:13px;color:var(--text-muted);">h/周</span>
-        <span style="margin-left:12px;font-size:13px;color:var(--text-secondary);font-weight:600;">工单上限</span>
+          style="width:80px;padding:6px 10px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:16px;text-align:center;-moz-appearance:textfield;">
+        <span style="font-size:14px;color:var(--text-muted);">h/周</span>
+        <span style="margin-left:12px;font-size:14px;color:var(--text-secondary);font-weight:600;">工单上限</span>
         <input type="number" id="s7-or-maxorders" value="20" min="1" max="100" step="1"
-          style="width:70px;padding:6px 10px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:15px;text-align:right;">
-        <span style="font-size:13px;color:var(--text-muted);">台</span>
+          style="width:70px;padding:6px 10px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:16px;text-align:center;-moz-appearance:textfield;">
+        <span style="font-size:14px;color:var(--text-muted);">台</span>
+        <button id="s7-or-auto-budget" onclick="autoCalculateBudget()"
+          style="margin-left:12px;padding:6px 14px;border-radius:var(--radius);font-size:11px;cursor:pointer;
+                 border:1px solid var(--accent-purple);background:var(--bg-card);color:var(--accent-purple);white-space:nowrap;">
+          🤖 自动推荐预算
+        </button>
       </div>
       <div id="s7-or-summary" style="display:flex;gap:14px;margin:10px 0;flex-wrap:wrap;">
         <div style="flex:1;min-width:100px;padding:10px 14px;background:var(--bg-card-alt);border-radius:var(--radius);text-align:center;border:1px solid var(--border);">
@@ -2059,8 +2070,24 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
         <div class="chart-card stagger-in"><div class="chart-title">贪心 vs 背包优化 · 风险削减对比</div><div class="chart-box" id="chart-or-risk-compare"></div></div>
         <div class="chart-card stagger-in"><div class="chart-title">预算约束下的抉择 · 选中 vs 延期工单</div><div class="chart-box" id="chart-or-selection"></div></div>
       </div>
-      <div style="font-size:10px;color:var(--text-muted);padding:8px 0;border-top:1px solid var(--border);margin-top:10px;">
-        <b style="color:var(--accent-purple);">0-1背包DP</b> — 100台设备全量候选池，贪心按风险降序取Top-20中预算可负担的，背包DP在预算+工时约束下求全局最优。拖动预算滑块观察不同约束下的最优解变化。饼图: <b style="color:var(--accent-green);">绿色</b>=优化选中 <b style="color:var(--accent-amber);">橙色</b>=贪心想选但优化延期 <b style="color:#f04444;">红色</b>=贪心要选但超预算 <b style="color:#5a6474;">灰色</b>=超出工单上限未入围。
+      <div style="font-size:12px;color:var(--text-secondary);padding:10px 0;border-top:1px solid var(--border);margin-top:10px;line-height:1.8;">
+        <b style="color:var(--accent-purple);">怎么用</b>：拖动上方预算滑块、调整工时和工单上限，四张图实时联动。<br>
+        <b style="color:var(--accent-purple);">看什么</b>：<b style="color:var(--accent-green);">绿色</b>=数学优化选中的最优工单组合  <b style="color:var(--accent-amber);">橙色</b>=贪心想要但被优化跳过  <b style="color:#f04444;">红色</b>=贪心想要但预算不够  <b style="color:#5a6474;">灰色</b>=风险低、暂不处理。<br>
+        <b style="color:var(--accent-purple);">证明什么</b>：同样的预算，数学优化比拍脑袋排序多削减10-30%的风险——这就是运筹优化的价值。
+      </div>
+    </div>
+
+    <!-- ★ 运筹优化：优化前后四维对比柱状图 -->
+    <div class="chart-card stagger-in role-manager" style="margin-bottom:14px;border-left:3px solid var(--accent-green);">
+      <div class="chart-title" style="display:flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="1.8"><rect x="3" y="12" width="3" height="9" rx="1"/><rect x="10" y="7" width="3" height="14" rx="1"/><rect x="17" y="3" width="3" height="18" rx="1"/></svg>
+        运筹优化 vs 规则驱动 &middot; 四维效果对比
+        <span style="font-size:10px;color:var(--accent-green);font-weight:400;">100台设备，生产效率策略，50K预算，14天滚动窗口</span>
+      </div>
+      <div class="chart-box" id="chart-or-before-after" style="height:260px;"></div>
+      <div id="s7-before-after-legend" style="display:flex;gap:24px;padding:4px 0;font-size:10px;color:var(--text-secondary);border-top:1px solid var(--border);">
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#4d94ff;margin-right:4px;"></span>规则驱动（优化前）</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#00c9a0;margin-right:4px;"></span>运筹优化（优化后）</span>
       </div>
     </div>
 
@@ -2071,43 +2098,51 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
         维护排程优化 · 14天滚动窗口调度
         <span style="font-size:10px;color:var(--accent-cyan);font-weight:400;">Greedy + 2-opt Local Search — 最小化加权拖期</span>
       </div>
-      <div id="s7-sched-summary" style="display:flex;gap:14px;margin:10px 0;flex-wrap:wrap;">
-        <div style="flex:1;min-width:90px;padding:10px 14px;background:var(--bg-card-alt);border-radius:var(--radius);text-align:center;border:1px solid var(--border);">
-          <div style="font-size:11px;color:var(--text-muted);">准时完成</div>
-          <div style="font-size:22px;font-weight:700;color:var(--accent-green);" id="s7-sched-ontime">--</div>
-          <div style="font-size:10px;color:var(--text-muted);">优化排程</div>
+      <style>#s7-sched-panel input[type=number]::-webkit-outer-spin-button,#s7-sched-panel input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}#s7-sched-panel input[type=number]{-moz-appearance:textfield;}</style>
+      <div id="s7-sched-panel" style="padding:12px 0;border-bottom:1px solid var(--border);margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
+          <span style="font-size:15px;color:var(--text-primary);font-weight:700;">技师排班</span>
+          <span style="font-size:12px;color:var(--text-muted);">工作日</span>
+          <input type="number" id="s7-sched-h-weekday" value="8" min="1" max="16" step="1"
+            style="width:48px;padding:4px 6px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--accent-cyan);border-radius:var(--radius);font-family:var(--font-mono);font-size:14px;text-align:center;">
+          <span style="font-size:12px;color:var(--text-muted);">h/人/天</span>
+          <span style="font-size:12px;color:var(--text-muted);">周末</span>
+          <input type="number" id="s7-sched-h-weekend" value="4" min="0" max="16" step="1"
+            style="width:48px;padding:4px 6px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--accent-amber);border-radius:var(--radius);font-family:var(--font-mono);font-size:14px;text-align:center;">
+          <span style="font-size:12px;color:var(--text-muted);">h/人/天</span>
+          <span style="margin-left:auto;font-size:11px;color:var(--text-muted);">周末工时降低→工单自动前移 · 高级技师可支援所有类型</span>
         </div>
-        <div style="flex:1;min-width:90px;padding:10px 14px;background:var(--bg-card-alt);border-radius:var(--radius);text-align:center;border:1px solid var(--border);">
-          <div style="font-size:11px;color:var(--text-muted);">加权拖期</div>
-          <div style="font-size:22px;font-weight:700;color:var(--accent-amber);" id="s7-sched-tardiness">--</div>
-          <div style="font-size:10px;color:var(--text-muted);" id="s7-sched-tardiness-delta">vs 规则</div>
-        </div>
-        <div style="flex:1;min-width:90px;padding:10px 14px;background:linear-gradient(135deg, rgba(0,201,160,0.08), rgba(63,185,80,0.08));border-radius:var(--radius);text-align:center;border:1px solid var(--accent-cyan);">
-          <div style="font-size:11px;color:var(--accent-cyan);font-weight:600;">拖期削减</div>
-          <div style="font-size:26px;font-weight:700;color:var(--accent-green);" id="s7-sched-improvement">--</div>
-        </div>
-        <div style="flex:1;min-width:90px;padding:10px 14px;background:var(--bg-card-alt);border-radius:var(--radius);text-align:center;border:1px solid var(--border);">
-          <div style="font-size:10px;color:var(--text-muted);">规则排程</div>
-          <div style="font-size:18px;font-weight:600;color:var(--text-muted);" id="s7-sched-rule-ontime">--</div>
-          <div style="font-size:9px;color:var(--text-muted);">准时完成</div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg-card);border-radius:var(--radius-md);border:1px solid var(--border);">
+            <span style="font-size:14px;color:#4d94ff;font-weight:700;">电气专家</span>
+            <input type="number" id="s7-sched-n-elec" value="2" min="0" max="10" step="1" style="width:40px;padding:4px;background:transparent;color:var(--text-primary);border:1px solid var(--border);border-radius:3px;font-size:14px;text-align:center;"><span style="font-size:13px;color:var(--text-muted);">人</span>
+            <!-- h/tech removed — now global weekday/weekend -->
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg-card);border-radius:var(--radius-md);border:1px solid var(--border);">
+            <span style="font-size:14px;color:#f0a030;font-weight:700;">热控专家</span>
+            <input type="number" id="s7-sched-n-therm" value="1" min="0" max="10" step="1" style="width:40px;padding:4px;background:transparent;color:var(--text-primary);border:1px solid var(--border);border-radius:3px;font-size:14px;text-align:center;"><span style="font-size:13px;color:var(--text-muted);">人</span>
+            <!-- h/tech removed — now global weekday/weekend -->
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg-card);border-radius:var(--radius-md);border:1px solid var(--border);">
+            <span style="font-size:14px;color:#a371f7;font-weight:700;">机械专家</span>
+            <input type="number" id="s7-sched-n-mech" value="1" min="0" max="10" step="1" style="width:40px;padding:4px;background:transparent;color:var(--text-primary);border:1px solid var(--border);border-radius:3px;font-size:14px;text-align:center;"><span style="font-size:13px;color:var(--text-muted);">人</span>
+            <!-- h/tech removed — now global weekday/weekend -->
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg-card);border-radius:var(--radius-md);border:1px solid var(--border);">
+            <span style="font-size:14px;color:#f04444;font-weight:700;">高级技师</span>
+            <input type="number" id="s7-sched-n-senior" value="1" min="0" max="10" step="1" style="width:40px;padding:4px;background:transparent;color:var(--text-primary);border:1px solid var(--border);border-radius:3px;font-size:14px;text-align:center;"><span style="font-size:13px;color:var(--text-muted);">人</span>
+            <!-- h/tech removed — now global weekday/weekend -->
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg-card);border-radius:var(--radius-md);border:1px solid var(--border);">
+            <span style="font-size:14px;color:#8e9aab;font-weight:700;">初级技师</span>
+            <input type="number" id="s7-sched-n-junior" value="2" min="0" max="10" step="1" style="width:40px;padding:4px;background:transparent;color:var(--text-primary);border:1px solid var(--border);border-radius:3px;font-size:14px;text-align:center;"><span style="font-size:13px;color:var(--text-muted);">人</span>
+            <!-- h/tech removed — now global weekday/weekend -->
+          </div>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:14px;padding:10px 0;flex-wrap:wrap;">
-        <span style="font-size:14px;color:var(--text-primary);font-weight:700;">日产能</span>
-        <span style="font-size:13px;color:var(--text-secondary);">工作日</span>
-        <input type="number" id="s7-sched-weekday" value="64" min="2" max="200" step="2"
-          style="width:65px;padding:5px 8px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:14px;text-align:right;">
-        <span style="font-size:12px;color:var(--text-muted);">h</span>
-        <span style="font-size:13px;color:var(--text-secondary);">周末</span>
-        <input type="number" id="s7-sched-weekend" value="40" min="2" max="200" step="2"
-          style="width:65px;padding:5px 8px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:14px;text-align:right;">
-        <span style="font-size:12px;color:var(--text-muted);">h</span>
-        <span style="margin-left:auto;font-size:11px;color:var(--text-muted);">调低产能可制造排程瓶颈，观察规则vs优化的拖期差异</span>
-      </div>
-      <div class="chart-box" id="chart-sched-gantt" style="height:420px;"></div>
-      <div style="font-size:10px;color:var(--text-muted);padding:8px 0;border-top:1px solid var(--border);margin-top:10px;">
-        <b style="color:var(--accent-cyan);">Greedy + 2-opt Local Search</b> — 日产能可调（上方面板）。色块=工单安排的日期，颜色深浅表示优先级（<b style="color:#f04444;">P1 紧急</b> / <b style="color:#f0a030;">P2 计划</b> / <b style="color:#00c9a0;">P3 常规</b>）。
-      </div>
+      <div class="chart-box" id="chart-sched-gantt" style="height:340px;"></div>
+      <div style="font-size:10px;color:var(--text-muted);margin:4px 0 10px 0;">▼ 每日负载分布 · 通道容量利用率</div>
+      <div class="chart-box" id="chart-sched-load" style="height:220px;"></div>
     </div>
 
     <!-- ★ 方法论依据（可折叠） -->
@@ -2272,9 +2307,9 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
         <div id="shap-machine-explanation" style="padding:10px 14px;background:var(--bg-card-alt);border-radius:8px;margin-top:4px;font-size:13px;line-height:1.7;color:var(--text-primary);"></div>
         <div id="shap-machine-checklist" style="padding:10px 14px;background:var(--bg-card-alt);border-radius:8px;margin-top:4px;font-size:12px;line-height:1.6;color:var(--text-muted);"></div>
       </div>
-    </div>
-    <!-- ★ 运筹优化：三策略帕累托前沿三维散点图（NEW - Pareto Frontier） -->
-    <div class="chart-card stagger-in role-manager" style="margin: 14px 20px; border-left: 3px solid var(--accent-purple);">
+    
+<!-- ★ 运筹优化：三策略帕累托前沿三维散点图（NEW - Pareto Frontier） -->
+    <div class="chart-card stagger-in role-manager" style="margin-bottom:14px;border-left:3px solid var(--accent-purple);">
       <div class="chart-title" style="display:flex;align-items:center;gap:8px;">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;"><circle cx="4" cy="11" r="2.5" stroke="var(--accent-green)" stroke-width="1.2" fill="none"/><circle cx="11" cy="5" r="2.5" stroke="var(--accent-blue)" stroke-width="1.2" fill="none"/><circle cx="8" cy="9" r="2.5" stroke="var(--accent-purple)" stroke-width="1.2" fill="none"/></svg>
         帕累托前沿 · 三目标多策略优化
@@ -2289,7 +2324,22 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
       </div>
   </div>
 
-  <!-- ============ SECTION 7: 设备健康与感知升级 ============ -->
+    <!-- ★ 运筹优化：帕累托边际成本分析面板 -->
+  <div class="chart-card stagger-in role-manager" style="margin-bottom:14px;border-left:3px solid var(--accent-purple);">
+    <div class="chart-title" style="display:flex;align-items:center;gap:8px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-purple)" stroke-width="1.8"><line x1="3" y1="3" x2="21" y2="21"/><polyline points="9 3 21 3 21 15"/><polyline points="3 9 3 21 15 21"/></svg>
+      边际成本路径分析 &middot; 策略切换的代价
+      <span style="font-size:10px;color:var(--accent-purple);font-weight:400;">成本&rarr;效率&rarr;质量，每步多花多少换多少停机减少</span>
+    </div>
+    <div class="chart-box" id="chart-pareto-marginal" style="height:240px;"></div>
+    <div id="s7-marginal-annotation" style="font-size:11px;color:var(--text-secondary);padding:6px 0;border-top:1px solid var(--border);text-align:center;line-height:1.6;">
+      成本效率 &rarr; 生产效率: <b style="color:var(--accent-amber);">+5K</b> 换 <b style="color:var(--accent-green);">-30h</b> 停机 (<b>.8K/h</b>) &emsp;|&emsp;
+      生产效率 &rarr; 质量优先: <b style="color:var(--accent-amber);">+0K</b> 换 <b style="color:var(--accent-green);">-25h</b> 停机 (<b>.8K/h</b>)
+    </div>
+  </div>
+
+</div>
+    <!-- ============ SECTION 7: 设备健康与感知升级 ============ -->
   <div class="section role-manager" id="sec7">
 
     <!-- ════════════════════════════════════════════════════════════
@@ -2810,7 +2860,7 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
         if (sid === 'sec3') { await renderSection3(); renderGallery('sec3-gal', GALLERY.sec3); }
         if (sid === 'sec4') { await renderSection4(); renderGallery('sec4-gal', GALLERY.sec4); }
         if (sid === 'sec5') { await renderSection5(); }
-        if (sid === 'sec6') { try { await renderSection6(); } catch(e) { console.error('renderSection6 failed:', e); } renderShapAttributionCard(); }
+        if (sid === 'sec6') { try { await renderSection6(); } catch(e) { console.error('renderSection6 failed:', e); } setTimeout(function(){ renderShapAttributionCard(); }, 2000); }
         if (sid === 'sec7') { await renderSection7(); }
         _rendered[sid] = true;
         logStatus(sid + ' rendered OK');
@@ -4522,6 +4572,7 @@ async function renderSection7() {
 // ============================================================
 var STRATEGY_MAX_ORDERS = { cost_efficiency: 12, production_efficiency: 20, quality_first: 30 };
 var _currentStrategy = 'production_efficiency';
+var _strategyNames = { cost_efficiency: '成本效率', production_efficiency: '生产效率', quality_first: '质量优先' };
 let _strategySwitching = false;
 
 async function switchStrategy(strategy) {
@@ -4579,6 +4630,7 @@ async function switchStrategy(strategy) {
     alert('策略切换请求失败，请检查服务器是否运行。');
     cards.forEach(function(c) { c.classList.remove('loading'); });
     if (statusEl) statusEl.textContent = '切换失败';
+    window._s7InlineData = null;
   } finally {
     // Sync knapsack max_orders to strategy default
     _currentStrategy = strategy;
@@ -4592,22 +4644,52 @@ async function switchStrategy(strategy) {
   }
 }
 
+async function refreshSec6Data() {
+  if (_strategySwitching) return;
+  _strategySwitching = true;
+  var statusEl = document.getElementById('s7-strategy-status');
+  if (statusEl) statusEl.innerHTML = '<span class="strategy-spinner" style="display:inline-block;margin-right:6px;"></span> 刷新中（全量重算）...';
+  try {
+    var resp = await fetch('/api/maintenance/strategy', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ strategy: _currentStrategy, force: true }),
+    });
+    var result = await resp.json();
+    if (!result.success) { alert('刷新失败: ' + (result.error || '未知错误')); return; }
+    window._s7InlineData = {
+      plan: result.plan, tech: result.technician_schedule, parts: result.spare_parts_plan,
+      stratComp: result.strategy_comparison, downtime: result.downtime_schedule,
+      all_machines: result.all_machines,
+    };
+    await renderSection6();
+    if (statusEl) statusEl.textContent = '当前: ' + (_strategyNames[_currentStrategy] || _currentStrategy) + '优先 (已刷新)';
+  } catch(e) { console.error('Refresh failed:', e); alert('刷新请求失败'); }
+  finally { _strategySwitching = false; }
+}
+
 async function renderSection6() {
   // Use inline data if available (from strategy switch), otherwise fetch CSV
-  var plan, tech, parts, stratComp, downtime;
+  var plan, tech, parts, stratComp, downtime, allMachinesInline;
   if (window._s7InlineData) {
     plan = window._s7InlineData.plan;
     tech = window._s7InlineData.tech;
     parts = window._s7InlineData.parts;
     stratComp = window._s7InlineData.stratComp;
     downtime = window._s7InlineData.downtime;
+    allMachinesInline = window._s7InlineData.all_machines || null;
     window._s7InlineData = null;  // consume once
   } else {
-    plan = await loadCSV('data/industrial_maintenance_plan.csv');
-    tech = await loadCSV('data/technician_schedule.csv');
-    parts = await loadCSV('data/spare_parts_plan.csv');
-    stratComp = await loadCSV('data/strategy_comparison.csv');
-    downtime = await loadCSV('data/downtime_schedule.csv');
+    // Fast initial load: parallel CSV + machines-summary API (avoids 900KB z_scores.csv + browser diagnosis)
+    var results = await Promise.all([
+      loadCSV('data/industrial_maintenance_plan.csv'),
+      loadCSV('data/technician_schedule.csv'),
+      loadCSV('data/spare_parts_plan.csv'),
+      loadCSV('data/strategy_comparison.csv'),
+      loadCSV('data/downtime_schedule.csv'),
+      fetch('/api/maintenance/machines-summary').then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; })
+    ]);
+    plan = results[0]; tech = results[1]; parts = results[2]; stratComp = results[3]; downtime = results[4];
+    allMachinesInline = results[5];  // precomputed machine summaries from backend
   }
 
   // Load OR optimization comparison (may not exist if budget not set)
@@ -4619,127 +4701,110 @@ async function renderSection6() {
   }
   var hasOR = Object.keys(orMap).length > 0;
 
-  // Load full 100-machine cost_risk + z_scores for knapsack candidate pool
-  var costRiskFull = null;
-  try { costRiskFull = await loadCSV('data/cost_risk.csv'); } catch(e) {}
-  var zScoresFull = null;
-  try { zScoresFull = await loadCSV('data/z_scores.csv'); } catch(e) {}
-
-  // Replicate backend diagnose() + technician assignment exactly for all 100 machines
-  // Thresholds mirror maintenance_decision_engine.py config["diagnostic"]
-  var DIAG = {
-    voltage_drift:   { z_v_threshold: 2.0, trend_min: 0.02 },
-    thermal_buildup: { z_t_threshold: 2.0, over_p95_min: 2 },
-    power_anomaly:   { z_v_threshold: 1.5, z_a_threshold: 1.5 },
-    combined_degradation: { min_params_abnormal: 2, z_threshold: 2.0 },
-  };
-  // Technician rules mirror technician_assigner.py (sorted by priority)
-  var TECH_RULES = [
-    { cond: { action_type: 'immediate_shutdown' },                              assign: { type: 'senior_technician', count: 3 } },
-    { cond: { primary_pattern: 'voltage_drift', risk_level: 'ALARM' },          assign: { type: 'electrical_specialist', count: 2 } },
-    { cond: { primary_pattern: 'thermal_buildup', risk_level: 'ALARM' },        assign: { type: 'thermal_specialist', count: 2 } },
-    { cond: { primary_pattern: 'combined_degradation', risk_level: 'ALARM' },   assign: { type: 'senior_technician', count: 2 } },
-    { cond: { primary_pattern: 'voltage_drift' },                               assign: { type: 'electrical_specialist', count: 1 } },
-    { cond: { primary_pattern: 'thermal_buildup' },                             assign: { type: 'thermal_specialist', count: 1 } },
-    { cond: { primary_pattern: 'power_anomaly' },                               assign: { type: 'electrical_specialist', count: 1 } },
-    { cond: { primary_pattern: 'combined_degradation' },                        assign: { type: 'senior_technician', count: 1 } },
-    { cond: { risk_tier: 'High' },                                              assign: { type: 'senior_technician', count: 1 } },
-    { cond: { action_type: 'preventive_repair' },                               assign: { type: 'senior_technician', count: 1 } },
-    { cond: { action_type: 'schedule_inspection' },                             assign: { type: 'junior_technician', count: 1 } },
-  ];
-  var TECH_DEFAULT = { type: 'junior_technician', count: 1 };
-
-  function backendDiagnose(zv, za, zt, vTrend, tTrend, thermalP95) {
-    var patterns = [];
-    // voltage_drift
-    if (Math.abs(zv) > DIAG.voltage_drift.z_v_threshold && Math.abs(vTrend) > DIAG.voltage_drift.trend_min)
-      patterns.push('voltage_drift');
-    // thermal_buildup
-    if (Math.abs(zt) > DIAG.thermal_buildup.z_t_threshold && thermalP95 >= DIAG.thermal_buildup.over_p95_min)
-      patterns.push('thermal_buildup');
-    // power_anomaly
-    if (Math.abs(zv) > DIAG.power_anomaly.z_v_threshold && Math.abs(za) > DIAG.power_anomaly.z_a_threshold)
-      patterns.push('power_anomaly');
-    // combined_degradation
-    var ab = 0;
-    if (Math.abs(zv) > DIAG.combined_degradation.z_threshold) ab++;
-    if (Math.abs(za) > DIAG.combined_degradation.z_threshold) ab++;
-    if (Math.abs(zt) > DIAG.combined_degradation.z_threshold) ab++;
-    if (ab >= DIAG.combined_degradation.min_params_abnormal)
-      patterns.push('combined_degradation');
-    return patterns.length > 0 ? patterns[0] : 'normal';
-  }
-
-  function backendAssignTech(pattern, riskLevel, actionType, riskTier) {
-    for (var i = 0; i < TECH_RULES.length; i++) {
-      var r = TECH_RULES[i], c = r.cond;
-      if (c.primary_pattern && c.primary_pattern !== pattern) continue;
-      if (c.risk_level && c.risk_level !== riskLevel) continue;
-      if (c.action_type && c.action_type !== actionType) continue;
-      if (c.risk_tier && c.risk_tier !== riskTier) continue;
-      return r.assign.type;
+  // Load full 100-machine data for knapsack candidate pool.
+  // Fast path: if all_machines summary is available from strategy switch, skip CSV loading.
+  var costRiskFull = null, zAggMap = {};
+  if (allMachinesInline) {
+    // Build zAggMap + costRiskFull directly from backend-computed summary (skips ~2s CSV load+diagnosis)
+    costRiskFull = [];
+    for (var mid in allMachinesInline) {
+      var m = allMachinesInline[mid];
+      zAggMap[mid] = { pattern: m.pattern, technician: m.technician, zv: m.zv, za: m.za, zt: m.zt, zComp: m.z_comp_max, riskLevel: m.risk_level };
+      costRiskFull.push({
+        'Equipment.Id': mid, machine_id: mid,
+        cost_at_risk: m.cost_at_risk, risk_tier: m.risk_tier
+      });
     }
-    return TECH_DEFAULT.type;
-  }
+  } else {
+    // Slow path: page load — load CSVs and run diagnosis in browser
+    try { costRiskFull = await loadCSV('data/cost_risk.csv'); } catch(e) {}
+    var zScoresFull = null;
+    try { zScoresFull = await loadCSV('data/z_scores.csv'); } catch(e) {}
 
-  function riskLevelFromZ(zComp) {
-    if (zComp > 2.5) return 'ALARM';
-    if (zComp > 2.0) return 'WARNING';
-    if (zComp > 1.5) return 'WATCH';
-    return 'NORMAL';
-  }
+    // Replicate backend diagnose() + technician assignment for all 100 machines
+    var DIAG = {
+      voltage_drift:   { z_v_threshold: 2.0, trend_min: 0.02 },
+      thermal_buildup: { z_t_threshold: 2.0, over_p95_min: 2 },
+      power_anomaly:   { z_v_threshold: 1.5, z_a_threshold: 1.5 },
+      combined_degradation: { min_params_abnormal: 2, z_threshold: 2.0 },
+    };
+    var TECH_RULES = [
+      { cond: { action_type: 'immediate_shutdown' },                              assign: { type: 'senior_technician', count: 3 } },
+      { cond: { primary_pattern: 'voltage_drift', risk_level: 'ALARM' },          assign: { type: 'electrical_specialist', count: 2 } },
+      { cond: { primary_pattern: 'thermal_buildup', risk_level: 'ALARM' },        assign: { type: 'thermal_specialist', count: 2 } },
+      { cond: { primary_pattern: 'combined_degradation', risk_level: 'ALARM' },   assign: { type: 'senior_technician', count: 2 } },
+      { cond: { primary_pattern: 'voltage_drift' },                               assign: { type: 'electrical_specialist', count: 1 } },
+      { cond: { primary_pattern: 'thermal_buildup' },                             assign: { type: 'thermal_specialist', count: 1 } },
+      { cond: { primary_pattern: 'power_anomaly' },                               assign: { type: 'electrical_specialist', count: 1 } },
+      { cond: { primary_pattern: 'combined_degradation' },                        assign: { type: 'senior_technician', count: 1 } },
+      { cond: { risk_tier: 'High' },                                              assign: { type: 'senior_technician', count: 1 } },
+      { cond: { action_type: 'preventive_repair' },                               assign: { type: 'senior_technician', count: 1 } },
+      { cond: { action_type: 'schedule_inspection' },                             assign: { type: 'junior_technician', count: 1 } },
+    ];
+    var TECH_DEFAULT = { type: 'junior_technician', count: 1 };
 
-  var zAggMap = {};
-  if (zScoresFull && zScoresFull.length > 0) {
-    var zGroups = {};
-    zScoresFull.forEach(function(r) {
-      var mid = r['Equipment.Id'] || r.machine_id || '';
-      if (!mid) return;
-      if (!zGroups[mid]) zGroups[mid] = [];
-      zGroups[mid].push({ zv: parseFloat(r.z_Voltage||0), za: parseFloat(r.z_Amperage||0), zt: parseFloat(r.z_Temperature||0), zc: parseFloat(r.z_composite||0) });
-    });
-    for (var mid in zGroups) {
-      var rows = zGroups[mid], n = rows.length;
-      var last = rows[n-1];
-      // Latest z-scores
-      var zv = last.zv, za = last.za, zt = last.zt, zc = last.zc;
-      // Trend: slope of z_v and z_t over last 5 timepoints
-      var tail = rows.slice(Math.max(0, n-5));
-      var vTrend = 0, tTrend = 0;
-      if (tail.length >= 3) {
-        for (var k = 1; k < tail.length; k++) {
-          vTrend += tail[k].zv - tail[k-1].zv;
-          tTrend += tail[k].zt - tail[k-1].zt;
-        }
-        vTrend /= (tail.length - 1);
-        tTrend /= (tail.length - 1);
+    function backendDiagnose(zv, za, zt, vTrend, tTrend, thermalP95) {
+      var patterns = [];
+      if (Math.abs(zv) > DIAG.voltage_drift.z_v_threshold && Math.abs(vTrend) > DIAG.voltage_drift.trend_min) patterns.push('voltage_drift');
+      if (Math.abs(zt) > DIAG.thermal_buildup.z_t_threshold && thermalP95 >= DIAG.thermal_buildup.over_p95_min) patterns.push('thermal_buildup');
+      if (Math.abs(zv) > DIAG.power_anomaly.z_v_threshold && Math.abs(za) > DIAG.power_anomaly.z_a_threshold) patterns.push('power_anomaly');
+      var ab = 0;
+      if (Math.abs(zv) > DIAG.combined_degradation.z_threshold) ab++;
+      if (Math.abs(za) > DIAG.combined_degradation.z_threshold) ab++;
+      if (Math.abs(zt) > DIAG.combined_degradation.z_threshold) ab++;
+      if (ab >= DIAG.combined_degradation.min_params_abnormal) patterns.push('combined_degradation');
+      return patterns.length > 0 ? patterns[0] : 'normal';
+    }
+
+    function backendAssignTech(pattern, riskLevel, actionType, riskTier) {
+      for (var i = 0; i < TECH_RULES.length; i++) {
+        var r = TECH_RULES[i], c = r.cond;
+        if (c.primary_pattern && c.primary_pattern !== pattern) continue;
+        if (c.risk_level && c.risk_level !== riskLevel) continue;
+        if (c.action_type && c.action_type !== actionType) continue;
+        if (c.risk_tier && c.risk_tier !== riskTier) continue;
+        return r.assign.type;
       }
-      // thermal_over_p95: count of |z_t| > 2.0 in all rows
-      var thermalP95 = 0;
-      rows.forEach(function(r) { if (Math.abs(r.zt) > 2.0) thermalP95++; });
+      return TECH_DEFAULT.type;
+    }
 
-      var pattern = backendDiagnose(zv, za, zt, vTrend, tTrend, thermalP95);
-      var riskLevel = riskLevelFromZ(Math.abs(zc));
-      // Determine action_type from riskLevel (mirrors backend decision layer)
-      var actionMap = { ALARM: 'preventive_repair', WARNING: 'schedule_inspection', WATCH: 'increase_monitoring', NORMAL: 'routine_check' };
-      var actionType = actionMap[riskLevel] || 'routine_check';
-      var tech = backendAssignTech(pattern, riskLevel, actionType, 'Medium');
+    function riskLevelFromZ(zComp) {
+      if (zComp > 2.5) return 'ALARM';
+      if (zComp > 2.0) return 'WARNING';
+      if (zComp > 1.5) return 'WATCH';
+      return 'NORMAL';
+    }
 
-      zAggMap[mid] = { pattern: pattern, technician: tech, zv: zv, za: za, zt: zt, zComp: zc, riskLevel: riskLevel };
+    if (zScoresFull && zScoresFull.length > 0) {
+      var zGroups = {};
+      zScoresFull.forEach(function(r) {
+        var mid = r['Equipment.Id'] || r.machine_id || '';
+        if (!mid) return;
+        if (!zGroups[mid]) zGroups[mid] = [];
+        zGroups[mid].push({ zv: parseFloat(r.z_Voltage||0), za: parseFloat(r.z_Amperage||0), zt: parseFloat(r.z_Temperature||0), zc: parseFloat(r.z_composite||0) });
+      });
+      for (var mid in zGroups) {
+        var rows = zGroups[mid], n = rows.length;
+        var last = rows[n-1];
+        var zv = last.zv, za = last.za, zt = last.zt, zc = last.zc;
+        var tail = rows.slice(Math.max(0, n-5));
+        var vTrend = 0, tTrend = 0;
+        if (tail.length >= 3) {
+          for (var k = 1; k < tail.length; k++) { vTrend += tail[k].zv - tail[k-1].zv; tTrend += tail[k].zt - tail[k-1].zt; }
+          vTrend /= (tail.length - 1);
+          tTrend /= (tail.length - 1);
+        }
+        var thermalP95 = 0;
+        rows.forEach(function(r) { if (Math.abs(r.zt) > 2.0) thermalP95++; });
+        var pattern = backendDiagnose(zv, za, zt, vTrend, tTrend, thermalP95);
+        var riskLevel = riskLevelFromZ(Math.abs(zc));
+        var actionMap = { ALARM: 'preventive_repair', WARNING: 'schedule_inspection', WATCH: 'increase_monitoring', NORMAL: 'routine_check' };
+        var actionType = actionMap[riskLevel] || 'routine_check';
+        var tech = backendAssignTech(pattern, riskLevel, actionType, 'Medium');
+        zAggMap[mid] = { pattern: pattern, technician: tech, zv: zv, za: za, zt: zt, zComp: zc, riskLevel: riskLevel };
+      }
     }
   }
-
-  // Load optimized maintenance schedule
-  var schedData = null;
-  try { schedData = await loadCSV('data/maintenance_schedule_optimized.csv'); } catch(e) {}
-  var hasSched = schedData && schedData.length > 0;
-
-  // Load scheduling comparison JSON
-  var schedComp = null;
-  try {
-    var schedCompResp = await fetch('data/scheduling_comparison.json');
-    if (schedCompResp.ok) schedComp = await schedCompResp.json();
-  } catch(e) {}
 
   const hasPlan = plan && plan.length > 0;
   const hasTech = tech && tech.length > 0;
@@ -4958,60 +5023,68 @@ async function renderSection6() {
     var SCALE = 400;
     var B = Math.floor(budget / SCALE);
     var H = Math.floor(maxHours);
-    var dp = new Array(B + 1).fill(0);
-    var hrs = new Array(B + 1).fill(0);
+    var maxOrdersInput = document.getElementById('s7-or-maxorders');
+    var maxOrders = maxOrdersInput ? parseInt(maxOrdersInput.value) || 20 : 20;
+    var M = Math.min(maxOrders, 50);  // cap at 50 for performance
+
+    // 3D DP: dp[b][c] = max risk reduction with budget b, exactly c items
+    var dp = new Array(B + 1);
+    var hrs = new Array(B + 1);
     var trace = new Array(B + 1);
-    for (var j = 0; j <= B; j++) trace[j] = [];
+    for (var j = 0; j <= B; j++) {
+      dp[j] = new Array(M + 1).fill(-1);
+      hrs[j] = new Array(M + 1).fill(0);
+      trace[j] = new Array(M + 1);
+      for (var c = 0; c <= M; c++) trace[j][c] = [];
+    }
+    dp[0][0] = 0;  // base: zero budget, zero items
 
     for (var i = 0; i < n; i++) {
       var ci = Math.max(1, Math.floor(items[i].exec_cost / SCALE));
       var hi = Math.floor(items[i].labor_hrs);
       var ri = items[i].risk_reduction;
-      for (var j = B; j >= ci; j--) {
-        if (hrs[j - ci] + hi <= H) {
-          var nv = dp[j - ci] + ri;
-          if (nv > dp[j]) {
-            dp[j] = nv;
-            hrs[j] = hrs[j - ci] + hi;
-            trace[j] = trace[j - ci].concat([i]);
+      for (var b = B; b >= ci; b--) {
+        for (var c = M; c >= 1; c--) {
+          if (dp[b-ci][c-1] >= 0 && hrs[b-ci][c-1] + hi <= H) {
+            var nv = dp[b-ci][c-1] + ri;
+            if (nv > dp[b][c]) {
+              dp[b][c] = nv;
+              hrs[b][c] = hrs[b-ci][c-1] + hi;
+              trace[b][c] = trace[b-ci][c-1].concat([i]);
+            }
           }
         }
       }
     }
 
-    var bestJ = 0, bestV = 0;
-    for (j = 0; j <= B; j++) { if (dp[j] > bestV) { bestV = dp[j]; bestJ = j; } }
+    // Find best (budget, count) combination
+    var bestB = 0, bestC = 0, bestV = 0;
+    for (var b = 0; b <= B; b++) {
+      for (var c = 0; c <= M; c++) {
+        if (dp[b][c] > bestV) { bestV = dp[b][c]; bestB = b; bestC = c; }
+      }
+    }
 
-    var selected = trace[bestJ];
+    var selected = trace[bestB][bestC];
     var selSet = {};
     selected.forEach(function(i) { selSet[i] = true; });
-    var budgetUsed = selected.reduce(function(s, i) { return s + items[i].exec_cost; }, 0);
-    // Recompute budget utilization against original budget
     var realBudgetUsed = selected.reduce(function(s, i) { return s + items[i].exec_cost; }, 0);
 
-    var maxOrdersInput = document.getElementById('s7-or-maxorders');
-    var maxOrders = maxOrdersInput ? parseInt(maxOrdersInput.value) || 20 : 20;
     var greedyCandidates = Math.min(n, maxOrders);
-    // Budget-constrained greedy: only count items that fit within budget
     var greedyRisk = 0, greedyCost = 0, greedyBudgetN = 0;
     for (var k = 0; k < greedyCandidates; k++) {
-      if (greedyCost + items[k].exec_cost > budget && greedyBudgetN > 0) break;  // stop when budget exhausted
+      if (greedyCost + items[k].exec_cost > budget && greedyBudgetN > 0) break;
       greedyRisk += items[k].risk_reduction;
       greedyCost += items[k].exec_cost;
       greedyBudgetN++;
     }
-    // Items greedy wants but can't afford
     var greedyOverBudget = greedyCandidates - greedyBudgetN;
 
     var optRisk = selected.reduce(function(s, i) { return s + items[i].risk_reduction; }, 0);
-    // Deferred by OR: items that greedy picked (within budget) but OR excluded
     var deferred = 0;
-    var greedyBudgetSet = {};
-    for (var k = 0; k < greedyBudgetN; k++) { greedyBudgetSet[k] = true; }
     for (var k = 0; k < greedyBudgetN; k++) {
       if (!selSet[k]) deferred++;
     }
-    // Items outside greedy top-20 entirely
     var outsideTopN = n - greedyCandidates;
 
     return {
@@ -5025,6 +5098,20 @@ async function renderSection6() {
       outside_top_n: outsideTopN,
     };
   }
+
+  window.autoCalculateBudget = function() {
+    if (knapItems.length === 0) return;
+    // Sum estimated_cost of P1+P2 (high-risk) machines, then take 75%
+    var highRisk = knapItems.filter(function(item) {
+      return item.priority === 'P1' || item.priority === 'P2';
+    });
+    if (highRisk.length === 0) highRisk = knapItems.slice(0, Math.min(20, knapItems.length));
+    var totalCost = highRisk.reduce(function(s, item) { return s + item.exec_cost; }, 0);
+    var recommended = Math.max(5000, Math.min(200000, Math.round(totalCost * 0.75 / 1000) * 1000));
+    document.getElementById('s7-or-budget-input').value = recommended;
+    document.getElementById('s7-or-budget-slider').value = recommended;
+    updateKnapsackUI();
+  };
 
   window.updateKnapsackUI = function() {
     var budget = parseFloat(document.getElementById('s7-or-budget-input').value) || 50000;
@@ -5109,78 +5196,249 @@ async function renderSection6() {
     var selIndices = r.selected;
     var schedItems = selIndices.map(function(i) { return knapItems[i]; });
 
-    if (schedItems.length === 0) {
-      document.getElementById('s7-sched-ontime').textContent = '0/0';
-      document.getElementById('s7-sched-tardiness').textContent = '0h';
-      document.getElementById('s7-sched-improvement').textContent = '—';
-      return;
-    }
+    if (schedItems.length === 0) return;
 
-    var maxOrdersInput = document.getElementById('s7-or-maxorders');
-    var maxOrders = maxOrdersInput ? parseInt(maxOrdersInput.value) || 20 : 20;
-    var ruleItems = knapItems.slice(0, maxOrders).map(function(item) {
-      var urgency = item.risk_score * 100;
-      return {
-        machine_id: item.machine_id, labor_hrs: item.labor_hrs,
-        risk_reduction: item.risk_reduction,
-        earliest_day: urgency > 80 ? 0 : urgency > 50 ? 2 : 5,
-        deadline_day: Math.max(1, Math.floor(14 - urgency / 10)),
-        priority: urgency > 80 ? 'P1' : urgency > 50 ? 'P2' : 'P3',
-        technician_type: '', primary_pattern: '',
-      };
-    });
-
-    var ruleSched = runGreedyScheduler(ruleItems, 14);
     var optSched = runGreedyScheduler(schedItems, 14);
 
-    var ruleOnTime = ruleSched.filter(function(s) { return s.tardiness_hours <= 8; }).length;
-    var optOnTime = optSched.filter(function(s) { return s.tardiness_hours <= 8; }).length;
-    var ruleTardy = ruleSched.reduce(function(s, o) { return s + o.tardiness_hours; }, 0);
-    var optTardy = optSched.reduce(function(s, o) { return s + o.tardiness_hours; }, 0);
+    // ── Translations ──
+    var priColors = { 'P1': '#f04444', 'P2': '#f0a030', 'P3': '#00c9a0' };
+    var TECH_CN = { senior_technician: '高级技师', electrical_specialist: '电气专家', thermal_specialist: '热控专家', mechanical_specialist: '机械专家', junior_technician: '初级技师' };
+    var PAT_CN = { thermal_buildup: '热积聚', combined_degradation: '综合退化', voltage_drift: '电压漂移', power_anomaly: '功率异常', normal: '正常' };
 
-    document.getElementById('s7-sched-ontime').textContent = optOnTime + '/' + optSched.length;
-    document.getElementById('s7-sched-tardiness').textContent = optTardy.toFixed(0) + 'h';
-    document.getElementById('s7-sched-rule-ontime').textContent = ruleOnTime + '/' + ruleSched.length;
-    var tardyReduction = ruleTardy > 0 ? ((ruleTardy - optTardy) / ruleTardy * 100) : 0;
-    var impEl2 = document.getElementById('s7-sched-improvement');
-    impEl2.textContent = (tardyReduction >= 0 ? '-' : '+') + Math.abs(tardyReduction).toFixed(1) + '%';
-    impEl2.style.color = tardyReduction >= 10 ? '#3fb950' : tardyReduction >= 0 ? '#f0a030' : '#f04444';
-    document.getElementById('s7-sched-tardiness-delta').textContent = 'vs 规则 ' + ruleTardy.toFixed(0) + 'h';
+    // ═══════════════════════════════════════════
+    // Panel A: Technician Swimlane Gantt
+    // ═══════════════════════════════════════════
+    var CH_NAMES = ['电气专家', '热控专家', '机械专家', '高级技师', '初级技师'];
+    var CH_COLORS = ['#4d94ff', '#f0a030', '#a371f7', '#f04444', '#8e9aab'];
+    var CH_KEY = { '电气专家': 0, '热控专家': 1, '机械专家': 2, '高级技师': 3 };
+
+    // Group by channel & compute stack positions for same-day overlap
+    var chItems = [[], [], [], [], []];
+    optSched.forEach(function(r) {
+      var chName = r.assigned_channel || '初级技师';
+      var chIdx = CH_KEY[chName] !== undefined ? CH_KEY[chName] : 4;
+      chItems[chIdx].push(r);
+    });
+    chItems.forEach(function(arr) {
+      arr.sort(function(a, b) { return a.scheduled_day - b.scheduled_day; });
+      var dayGroups = {};
+      arr.forEach(function(r) { var d = r.scheduled_day; if (!dayGroups[d]) dayGroups[d] = []; dayGroups[d].push(r); });
+      Object.values(dayGroups).forEach(function(group) {
+        group.forEach(function(r, i) { r._stackPos = i; r._stackTotal = group.length; });
+      });
+    });
+
+    // Compute weekend ranges for background shading
+    var today = new Date();
+    var weekendRanges = [];
+    for (var d = 0; d < 14; d++) {
+      var dd = new Date(today); dd.setDate(today.getDate() + d);
+      var wd = dd.getDay();
+      if (wd === 0 || wd === 6) weekendRanges.push([{xAxis: d}, {xAxis: d + 1}]);
+    }
+
+    // X-axis date labels
+    var xDayLabels = [];
+    for (var d = 0; d < 14; d++) {
+      var dd2 = new Date(today); dd2.setDate(today.getDate() + d);
+      var weekNames = ['日','一','二','三','四','五','六'];
+      xDayLabels.push('D' + (d+1) + '\n' + (dd2.getMonth()+1) + '/' + dd2.getDate() + '周' + weekNames[dd2.getDay()]);
+    }
+
+    // ═══ Per-channel adaptive height: each channel's row height ∝ its max daily stack ═══
+    var chMaxStack = chItems.map(function(arr) {
+      var maxS = 1;
+      var dayCounts = {};
+      arr.forEach(function(r) { var d = r.scheduled_day; dayCounts[d] = (dayCounts[d] || 0) + 1; maxS = Math.max(maxS, dayCounts[d]); });
+      return maxS;
+    });
+    // Channel height in data-coord units: base 0.9 + 0.55 per extra stacked item
+    var chHeight = chMaxStack.map(function(n) { return 0.9 + n * 0.55; });
+    var chCenter = [];  // y-axis data value of each channel's centre
+    var cumY = 0;
+    chHeight.forEach(function(h) { chCenter.push(cumY + h / 2); cumY += h; });
+    var totalY = cumY;  // total data range
+
+    // Chart pixel height — proportional to total data range
+    var pxPerUnit = 58;
+    var gridPad = 56;  // grid.top + grid.bottom
+    var chartH = Math.min(800, Math.max(300, Math.round(totalY * pxPerUnit + gridPad)));
+    var ganttDom = document.getElementById('chart-sched-gantt');
+    if (ganttDom) ganttDom.style.height = chartH + 'px';
+
+    // Build series data — numeric y = chCenter[idx] + stack offset
+    var ganttData = [];
+    chItems.forEach(function(arr, chIdx) {
+      var chH = chHeight[chIdx];
+      arr.forEach(function(r) {
+        var dayStart = r.scheduled_day;
+        var daySpan = Math.max(0.25, (r.duration_hours || 4) / 24);
+        var stackN = r._stackTotal || 1;
+        var stackI = r._stackPos || 0;
+        var barDH  = chH * 0.72 / stackN;                         // bar height in data coords
+        var stackOff = (stackI - (stackN - 1) / 2) * barDH * 1.15;
+        ganttData.push({
+          value: [dayStart, chCenter[chIdx] + stackOff, dayStart + daySpan, r.duration_hours || 4, r.machine_id, stackI, stackN, barDH],
+          itemStyle: { color: priColors[r.priority] || '#4d94ff' },
+          priority: r.priority, tech: r.technician_type || '',
+          pattern: r.primary_pattern || '', channel: r.assigned_channel || '',
+        });
+      });
+    });
+
+    // Graphic channel labels — hand-placed at each channel centre
+    var gridTop = 8, gridBot = 48, gridH = chartH - gridTop - gridBot;
+    var chanGraphics = chCenter.map(function(cy, i) {
+      return {
+        type: 'text',
+        left: 6, top: gridTop + (cy / totalY) * gridH,
+        style: { text: CH_NAMES[i], fill: CH_COLORS[i], font: 'bold 11.5px "PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif', textVerticalAlign: 'middle' },
+        z: 100
+      };
+    });
+    // Swimlane boundary y-values (between channels)
+    var chBounds = [];
+    var acc = 0;
+    for (var bi = 0; bi < chHeight.length - 1; bi++) { acc += chHeight[bi]; chBounds.push(acc); }
 
     var gantt = initChart('chart-sched-gantt');
     if (gantt) {
-      var priColors = { 'P1': '#f04444', 'P2': '#f0a030', 'P3': '#00c9a0' };
-      optSched.sort(function(a, b) { return a.scheduled_day - b.scheduled_day || a.machine_id.localeCompare(b.machine_id); });
-      var ganttData = optSched.map(function(r) {
-        var day = r.scheduled_day, daySpan = Math.max(0.3, (r.duration_hours || 4) / 24);
-        return { name: r.machine_id, value: [day, day + daySpan], itemStyle: { color: priColors[r.priority] || '#4d94ff' }, priority: r.priority, hours: r.duration_hours || 4, tech: r.technician_type || '', pattern: r.primary_pattern || '' };
-      });
-      var TECH_CN = { senior_technician: '高级技师', electrical_specialist: '电气专家', thermal_specialist: '热控专家', mechanical_specialist: '机械专家', junior_technician: '初级技师' };
-      var PAT_CN = { thermal_buildup: '热积聚', combined_degradation: '综合退化', voltage_drift: '电压漂移', power_anomaly: '功率异常', normal: '正常' };
-      var today = new Date();
-      var xDayLabels = [];
-      for (var d = 0; d < 14; d++) {
-        var dd = new Date(today); dd.setDate(today.getDate() + d);
-        var weekNames = ['日','一','二','三','四','五','六'];
-        var wd = dd.getDay(), isWE = (wd === 0 || wd === 6);
-        xDayLabels.push('D' + (d+1) + '\n' + (dd.getMonth()+1) + '/' + dd.getDate() + '周' + weekNames[wd] + (isWE ? '休' : ''));
-      }
       gantt.setOption({
         tooltip: { trigger: 'item', formatter: function(p) {
           var d = p.data;
           var techCN = TECH_CN[d.tech] || (d.tech || '?').replace(/_/g, ' ');
           var patCN = PAT_CN[d.pattern] || (d.pattern || '?').replace(/_/g, ' ');
-          return '<b>' + d.name + '</b> [' + d.priority + ']<br/>工时: ' + d.hours.toFixed(1) + 'h | 技师: ' + techCN + '<br/>故障模式: ' + patCN;
+          return '<b>' + d.value[4] + '</b> [' + d.priority + ']<br/>工时: ' + d.value[3].toFixed(1) + 'h | ' + techCN + '<br/>故障: ' + patCN + ' | 通道: ' + (d.channel || '');
         }},
-        grid: { left: 120, right: 30, top: 16, bottom: 55 },
+        grid: { left: 88, right: 56, top: gridTop, bottom: gridBot },
         xAxis: { type: 'value', min: 0, max: 14, interval: 1,
-          axisLabel: { color: function(v) { var dow = (new Date().getDay() + Math.floor(v)) % 7; return (dow === 0 || dow === 6) ? '#f0a030' : cc('textSecondary'); }, fontSize: 9, formatter: function(v) { return xDayLabels[Math.floor(v)] || (v + 'd'); } },
+          axisLabel: { color: cc('textSecondary'), fontSize: 9.5, formatter: function(v) { return xDayLabels[Math.floor(v)] || (v + 'd'); } },
           splitLine: { lineStyle: { color: cc('border'), type: 'dashed' } } },
-        yAxis: { type: 'category', data: ganttData.map(function(d) { return d.name; }), axisLabel: { color: function(v) { var item = ganttData.find(function(d) { return d.name === v; }); return item ? (priColors[item.priority] || cc('textPrimary')) : cc('textPrimary'); }, fontSize: 9, fontFamily: 'var(--font-mono)' }, inverse: true },
-        series: [{ type: 'custom', renderItem: function(params, api) {
-          var catIdx = api.value(1), start = api.coord([api.value(0), catIdx]), end = api.coord([api.value(2), catIdx]), height = api.size([0, 1])[1] * 0.6;
-          return { type: 'rect', shape: { x: start[0], y: start[1] - height / 2, width: Math.max(end[0] - start[0], 8), height: height }, style: api.style({ fill: api.visual('color') }), styleEmphasis: { stroke: '#fff', lineWidth: 1 } };
-        }, encode: { x: [0, 2], y: 1 }, data: ganttData.map(function(d, i) { return { name: d.name, value: [d.value[0], i, d.value[1]], itemStyle: d.itemStyle, priority: d.priority, hours: d.hours, tech: d.tech, pattern: d.pattern }; }) }],
+        yAxis: { type: 'value', min: 0, max: totalY, inverse: true,
+          axisLabel: { show: false }, axisTick: { show: false },
+          splitLine: { show: true, lineStyle: { color: cc('border'), type: 'solid', width: 0.5 } } },
+        graphic: chanGraphics,
+        series: [{ type: 'custom',
+          renderItem: function(params, api) {
+            var yVal   = api.value(1);               // numeric y value in data coords
+            var startX = api.coord([api.value(0), yVal])[0];
+            var endX   = api.coord([api.value(2), yVal])[0];
+            var baseY  = api.coord([0, yVal])[1];     // centre of this bar in pixels
+            var barDH  = Number(api.value(7)) || 0.3;
+            // Convert bar data-height to pixel height
+            var yTop   = api.coord([0, yVal + barDH / 2])[1];
+            var yBot   = api.coord([0, yVal - barDH / 2])[1];
+            var barH   = Math.abs(yTop - yBot) * 0.85;
+            var barY   = baseY - barH / 2;
+            var w      = Math.max(endX - startX, 8);
+            var label  = (api.value(4) || '').replace('CNC_', '');
+            var children = [{
+              type: 'rect', shape: { x: startX, y: barY, width: w, height: barH, r: 2 },
+              style: api.style({ fill: api.visual('color') }),
+              styleEmphasis: { stroke: '#fff', lineWidth: 1.5 }
+            }];
+            if (label) {
+              children.push({
+                type: 'text', z2: 10, style: {
+                  x: startX + 2, y: baseY,
+                  text: label,
+                  fill: '#fff',
+                  font: 'bold 11px "Cascadia Code","Fira Code","Consolas",monospace',
+                  textVerticalAlign: 'middle', textAlign: 'left'
+                }
+              });
+            }
+            return { type: 'group', children: children };
+          },
+          encode: { x: [0, 2], y: 1 },
+          data: ganttData,
+          markArea: { silent: true, itemStyle: { color: 'rgba(240,160,48,0.05)' }, data: weekendRanges },
+          markLine: { silent: true, symbol: 'none', animation: false,
+            lineStyle: { color: cc('border'), type: 'dashed', width: 1 },
+            label: { show: false },
+            data: chBounds.map(function(b) { return { yAxis: b }; })
+          }
+        }]
+      }, true);
+    }
+
+    // ═══════════════════════════════════════════
+    // Panel B: Daily Load Profile (stacked bar)
+    // ═══════════════════════════════════════════
+    var loadChart = initChart('chart-sched-load');
+    if (loadChart) {
+      // Aggregate daily hours per channel from optSched
+      var dayLoads = []; // dayLoads[chIdx][day]
+      for (var ch = 0; ch < 5; ch++) { dayLoads[ch] = new Array(14).fill(0); }
+      optSched.forEach(function(r) {
+        var chName = r.assigned_channel || '初级技师';
+        var chIdx = CH_KEY[chName] !== undefined ? CH_KEY[chName] : 4;
+        var d = r.scheduled_day;
+        if (d >= 0 && d < 14) dayLoads[chIdx][d] += (r.duration_hours || 4);
+      });
+
+      var loadSeries = CH_NAMES.map(function(name, chIdx) {
+        return {
+          name: name, type: 'bar', stack: 'total',
+          data: dayLoads[chIdx],
+          itemStyle: { color: CH_COLORS[chIdx], borderRadius: chIdx === 4 ? [2,2,0,0] : 0 },
+          emphasis: { itemStyle: { borderColor: '#fff', borderWidth: 1 } }
+        };
+      });
+
+      // Capacity line — total across all 5 channels per day = Σ(headcount) × (weekday|weekend hours)
+      var hWkday  = parseInt(document.getElementById('s7-sched-h-weekday').value) || 8;
+      var hWkend  = parseInt(document.getElementById('s7-sched-h-weekend').value) || 4;
+      var totalHeadcount = 0;
+      ['elec','therm','mech','senior','junior'].forEach(function(t) { totalHeadcount += (parseInt(document.getElementById('s7-sched-n-'+t).value) || 0); });
+      var capWkday = totalHeadcount * hWkday;
+      var capWkend = totalHeadcount * hWkend;
+      var capLineData = [];
+      for (var d2 = 0; d2 < 14; d2++) {
+        var dd3 = new Date(today); dd3.setDate(today.getDate() + d2);
+        capLineData.push(dd3.getDay() === 0 || dd3.getDay() === 6 ? capWkend : capWkday);
+      }
+
+      loadChart.setOption({
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' },
+          formatter: function(params) {
+            var dayIdx = params[0].dataIndex;
+            var total = 0;
+            var lines = ['<b>D' + (dayIdx+1) + ' — ' + xDayLabels[dayIdx].replace('\n',' ') + '</b>'];
+            params.forEach(function(p) {
+              if (p.seriesName !== '容量上限') {
+                lines.push(p.marker + ' ' + p.seriesName + ': ' + (p.value || 0).toFixed(1) + 'h');
+                total += (p.value || 0);
+              }
+            });
+            var cap = capLineData[dayIdx];
+            lines.push('<hr style="margin:4px 0;border-color:var(--border)">总计: <b>' + total.toFixed(1) + 'h</b> / ' + cap + 'h' + (total > cap ? ' <span style="color:#f04444;">超容</span>' : ''));
+            return lines.join('<br/>');
+          }
+        },
+        legend: { bottom: 0, textStyle: { color: cc('textSecondary'), fontSize: 10 }, itemWidth: 12, itemHeight: 8, itemGap: 12 },
+        grid: { left: 48, right: 24, top: 12, bottom: 40 },
+        xAxis: { type: 'category', data: xDayLabels.map(function(l, i) { return 'D' + (i+1); }),
+          axisLabel: { color: function(v, i) { var dow = (today.getDay() + i) % 7; return (dow === 0 || dow === 6) ? '#f0a030' : cc('textSecondary'); }, fontSize: 10, fontWeight: 500 },
+          axisTick: { alignWithLabel: true } },
+        yAxis: { type: 'value', name: '工时(h)', nameTextStyle: { color: cc('textMuted'), fontSize: 10 },
+          min: 0, max: function(value) { return Math.max(value.max, capWkday * 1.05); },
+          axisLabel: { color: cc('textSecondary'), fontSize: 10 }, splitLine: { lineStyle: { color: cc('border'), type: 'dashed' } } },
+        series: loadSeries.concat([{
+          name: '容量上限', type: 'line', data: capLineData,
+          lineStyle: { color: '#f04444', type: 'dashed', width: 2 },
+          itemStyle: { color: '#f04444' },
+          symbol: 'diamond', symbolSize: 6,
+          markLine: {
+            silent: true, symbol: 'none',
+            lineStyle: { color: 'rgba(240,68,68,0.35)', type: 'dashed', width: 1 },
+            label: { show: false },
+            data: [
+              { yAxis: capWkday, label: { show: true, formatter: '工作日 ' + capWkday + 'h', position: 'end', color: '#f04444', fontSize: 9 } },
+              { yAxis: capWkend, label: { show: true, formatter: '周末 ' + capWkend + 'h', position: 'end', color: '#f0a030', fontSize: 9 } }
+            ]
+          }
+        }])
       }, true);
     }
   };
@@ -5204,12 +5462,13 @@ async function renderSection6() {
       updateKnapsackUI();
       updateSchedulingUI();
     });
-    document.getElementById('s7-sched-weekday').addEventListener('input', function() {
-      updateSchedulingUI();
+    // Technician headcount inputs
+    ['elec','therm','mech','senior','junior'].forEach(function(t) {
+      document.getElementById('s7-sched-n-' + t).addEventListener('input', function() { updateSchedulingUI(); });
     });
-    document.getElementById('s7-sched-weekend').addEventListener('input', function() {
-      updateSchedulingUI();
-    });
+    // Weekday/weekend hours inputs
+    document.getElementById('s7-sched-h-weekday').addEventListener('input', function() { updateSchedulingUI(); });
+    document.getElementById('s7-sched-h-weekend').addEventListener('input', function() { updateSchedulingUI(); });
     var defaultBudget = 40000;
     document.getElementById('s7-or-budget-slider').value = defaultBudget;
     document.getElementById('s7-or-budget-input').value = defaultBudget;
@@ -5223,17 +5482,55 @@ async function renderSection6() {
   // ── OR Optimization: Interactive Maintenance Scheduling (linked to knapsack) ──
   function runGreedyScheduler(items, horizonDays) {
     var H = horizonDays || 14;
-    var weekdayH = parseInt(document.getElementById('s7-sched-weekday').value) || 64;
-    var weekendH = parseInt(document.getElementById('s7-sched-weekend').value) || 40;
-    var dailyCap = [];
-    for (var d = 0; d < H; d++) {
-      var dow = (new Date().getDay() + d) % 7;
-      dailyCap.push((dow === 0 || dow === 6) ? weekendH : weekdayH);
-    }
-    var dayLoad = new Array(H).fill(0);
-    var scheduled = [];
 
-    // Sort by priority (P1 first) then risk descending
+    // Read global weekday/weekend hours
+    var hWeekday = parseInt(document.getElementById('s7-sched-h-weekday').value) || 8;
+    var hWeekend = parseInt(document.getElementById('s7-sched-h-weekend').value) || 4;
+    // Weekend checker
+    var today = new Date();
+    function isWeekend(dayOff) {
+      var d = new Date(today); d.setDate(today.getDate() + dayOff);
+      return d.getDay() === 0 || d.getDay() === 6;
+    }
+
+    // Headcount per channel
+    function readHeadcount(idPre) {
+      return parseInt(document.getElementById('s7-sched-n-' + idPre).value) || 0;
+    }
+    var nElec   = readHeadcount('elec');
+    var nTherm  = readHeadcount('therm');
+    var nMech   = readHeadcount('mech');
+    var nSenior = readHeadcount('senior');
+    var nJunior = readHeadcount('junior');
+    var chN = [nElec, nTherm, nMech, nSenior, nJunior];
+
+    // Per-day capacity = headcount × (weekday? weekdayH : weekendH)
+    var chCap = [];  // chCap[channel][day]
+    for (var ch = 0; ch < 5; ch++) {
+      chCap[ch] = [];
+      for (var d2 = 0; d2 < H; d2++) {
+        chCap[ch].push(chN[ch] * (isWeekend(d2) ? hWeekend : hWeekday));
+      }
+    }
+    var CH = { ELEC: 0, THERM: 1, MECH: 2, SENIOR: 3, JUNIOR: 4 };
+    var chLoad = [];
+    for (var ch2 = 0; ch2 < 5; ch2++) {
+      chLoad[ch2] = new Array(H).fill(0);
+    }
+
+    // Pattern → primary channel
+    function primaryChannel(pattern) {
+      if (pattern === 'voltage_drift' || pattern === 'power_anomaly') return CH.ELEC;
+      if (pattern === 'thermal_buildup') return CH.THERM;
+      if (pattern === 'combined_degradation') return CH.MECH;
+      return CH.JUNIOR;
+    }
+    function tryChannels(pattern) {
+      var prim = primaryChannel(pattern);
+      return [prim, CH.SENIOR];
+    }
+
+    var scheduled = [];
     var priWeight = { 'P1': 0, 'P2': 1, 'P3': 2 };
     var sorted = items.slice().sort(function(a, b) {
       var pa = priWeight[a.priority] || 3, pb = priWeight[b.priority] || 3;
@@ -5244,26 +5541,46 @@ async function renderSection6() {
     sorted.forEach(function(o) {
       var earliest = o.earliest_day || 0;
       var deadline = o.deadline_day || Math.max(earliest + 1, H - 1);
-      var bestDay = -1, bestTardy = 1e9;
-      for (var d = earliest; d < Math.min(deadline + 3, H); d++) {
-        if (dayLoad[d] + o.labor_hrs <= dailyCap[d]) {
-          var tardy = Math.max(0, d - deadline);
-          if (tardy < bestTardy) { bestTardy = tardy; bestDay = d; }
+      var pat = o.primary_pattern || 'normal';
+      var chs = tryChannels(pat);
+      var bestDay = -1, bestCh = -1, bestTardy = 1e9;
+
+      for (var ci = 0; ci < chs.length; ci++) {
+        var ch = chs[ci];
+        for (var d = earliest; d < Math.min(deadline + 3, H); d++) {
+          if (chLoad[ch][d] + o.labor_hrs <= chCap[ch][d]) {
+            var tardy = Math.max(0, d - deadline);
+            if (tardy < bestTardy) { bestTardy = tardy; bestDay = d; bestCh = ch; }
+          }
         }
       }
+      // Force-fit
       if (bestDay < 0) {
-        bestDay = earliest;
-        for (var dd = earliest; dd < H; dd++) {
-          if (dailyCap[dd] - dayLoad[dd] > dailyCap[bestDay] - dayLoad[bestDay]) bestDay = dd;
+        for (var ci2 = 0; ci2 < chs.length; ci2++) {
+          var chF = chs[ci2];
+          for (var df = earliest; df < H; df++) {
+            var rem = chCap[chF][df] - chLoad[chF][df];
+            var bestRem = (bestDay >= 0) ? (chCap[bestCh][bestDay] - chLoad[bestCh][bestDay]) : -1;
+            if (rem > bestRem) { bestDay = df; bestCh = chF; }
+          }
+        }
+        if (bestDay < 0) {
+          bestCh = chs[0]; bestDay = earliest;
+          for (var dff = earliest; dff < H; dff++) {
+            if (chCap[bestCh][dff] - chLoad[bestCh][dff] > chCap[bestCh][bestDay] - chLoad[bestCh][bestDay]) bestDay = dff;
+          }
         }
       }
-      dayLoad[bestDay] += o.labor_hrs;
+
+      chLoad[bestCh][bestDay] += o.labor_hrs;
+      var chNames = ['电气专家','热控专家','机械专家','高级技师','初级技师'];
       scheduled.push({
         machine_id: o.machine_id, scheduled_day: bestDay,
         duration_hours: o.labor_hrs, priority: o.priority,
         tardiness_hours: Math.max(0, bestDay - deadline) * 8,
         technician_type: o.technician_type || '',
         primary_pattern: o.primary_pattern || '',
+        assigned_channel: chNames[bestCh] || '?',
       });
     });
     return scheduled;
@@ -5347,11 +5664,11 @@ async function renderSection6() {
     });
   }
 
-  // Technician distribution pie
+  // Technician distribution pie — uses plan data (always available, has technician_type + technician_count)
   var c2 = initChart('chart-tech-dist');
-  if (c2 && hasTech && Array.isArray(tech)) {
+  if (c2 && hasPlan) {
     var techMap = {};
-    tech.forEach(function(r) {
+    plan.forEach(function(r) {
       var t = T_TECH[r.technician_type] || (r.technician_type || 'unknown').replace(/_/g, ' ');
       techMap[t] = (techMap[t] || 0) + (parseInt(r.technician_count) || 1);
     });
@@ -5369,7 +5686,7 @@ async function renderSection6() {
     });
   } else if (c2) {
     c2.setOption({
-      title: { text: '无排班数据', left: 'center', top: 'center', textStyle: { color: cc('textMuted'), fontSize: 12 } },
+      title: { text: '无工单数据', left: 'center', top: 'center', textStyle: { color: cc('textMuted'), fontSize: 12 } },
     });
   }
 
@@ -5679,12 +5996,157 @@ async function renderSection6() {
       var paretoData = await paretoResp.json();
       var pChart = initChart('chart-pareto-3d');
       if (pChart && paretoData.pareto_3d_points) {
-        renderPareto(pChart, paretoData);
+        renderPareto(pChart, paretoData); renderParetoMarginal(paretoData); renderBeforeAfterComparison();
       }
     }
   } catch(e) { console.warn('Pareto chart failed:', e); }
 
   // Methodology charts resize is handled in the onclick toggle above
+}
+
+// ── Pareto Marginal Cost Path (2D companion chart) ──
+function renderParetoMarginal(paretoData) {
+  var stratPts = paretoData.pareto_3d_points.filter(function(p) { return p.type === 'strategy'; });
+  if (stratPts.length < 3) return;
+  var costEff = stratPts.find(function(p) { return p.label.indexOf('成本') >= 0; }) || stratPts[0];
+  var prodEff = stratPts.find(function(p) { return p.label.indexOf('生产') >= 0; }) || stratPts[1];
+  var qualFirst = stratPts.find(function(p) { return p.label.indexOf('质量') >= 0; }) || stratPts[2];
+  var pts = [costEff, prodEff, qualFirst];
+  var cMin = Math.min.apply(null, pts.map(function(p) { return p.cost; })) * 0.8;
+  var cMax = Math.max.apply(null, pts.map(function(p) { return p.cost; })) * 1.15;
+  var dMin = 0;
+  var dMax = Math.max.apply(null, pts.map(function(p) { return p.downtime_hours; })) * 1.2;
+
+  var chart = initChart('chart-pareto-marginal');
+  if (!chart) return;
+  chart.setOption({
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: '#141820', borderColor: '#1c2230',
+      textStyle: { color: '#e6ebf2', fontSize: 12 },
+      formatter: function(p) {
+        if (p.seriesType === 'scatter' || p.seriesType === 'line') {
+          return '<b>' + p.name + '</b><br/>成本: $' + (p.value[0]/1000).toFixed(0) + 'K<br/>停机: ' + p.value[1].toFixed(0) + 'h';
+        }
+        return p.name;
+      }
+    },
+    grid: { left: 60, right: 40, top: 20, bottom: 30 },
+    xAxis: {
+      type: 'value', name: '维护成本 ($K)',
+      min: cMin, max: cMax,
+      nameTextStyle: { color: '#8e9aab', fontSize: 10 },
+      axisLabel: { color: '#8e9aab', fontSize: 9, formatter: function(v) { return (v/1000).toFixed(0) + 'k'; } },
+      splitLine: { lineStyle: { color: '#1c2230' } }
+    },
+    yAxis: {
+      type: 'value', name: '停机时间 (h)',
+      min: dMin, max: dMax,
+      nameTextStyle: { color: '#8e9aab', fontSize: 10 },
+      axisLabel: { color: '#8e9aab', fontSize: 9 },
+      splitLine: { lineStyle: { color: '#1c2230' } }
+    },
+    series: [
+      {
+        type: 'scatter', name: '策略定位',
+        data: pts.map(function(p) { return { value: [p.cost, p.downtime_hours], name: p.label }; }),
+        symbolSize: 14,
+        itemStyle: { borderColor: '#fff', borderWidth: 1.5 },
+        color: function(p) {
+          var colors = {'成本效率': '#3fb950', '生产效率': '#4d94ff', '质量优先': '#a371f7'};
+          for (var k in colors) { if (p.name.indexOf(k) >= 0) return colors[k]; }
+          return '#a371f7';
+        },
+        label: { show: true, position: 'right', color: '#e6ebf2', fontSize: 11, fontWeight: 600, formatter: '{b}' }
+      },
+      {
+        type: 'line', name: '边际成本路径',
+        data: pts.map(function(p) { return [p.cost, p.downtime_hours]; }),
+        lineStyle: { color: '#8e9aab', type: 'dashed', width: 1.5 },
+        symbol: 'none',
+        label: {
+          show: true, color: '#8e9aab', fontSize: 10, position: 'top',
+          formatter: function(p) {
+            if (p.dataIndex === 0) return '';
+            var prev = pts[p.dataIndex - 1];
+            var dCost = ((pts[p.dataIndex].cost - prev.cost) / 1000).toFixed(0);
+            var dDown = (prev.downtime_hours - pts[p.dataIndex].downtime_hours).toFixed(0);
+            return 'Δ$' + dCost + 'K / Δ' + dDown + 'h';
+          }
+        }
+      },
+      {
+        type: 'scatter', name: 'zones', data: [], symbolSize: 0,
+        markArea: {
+          silent: true,
+          label: { color: '#5a6474', fontSize: 10 },
+          data: [
+            [{ xAxis: cMin, yAxis: dMin, itemStyle: { color: 'rgba(63,185,80,0.06)' } },
+             { xAxis: costEff.cost * 1.1, yAxis: costEff.downtime_hours, label: { show: true, position: 'insideTopLeft', formatter: '高性价比区' } }],
+            [{ xAxis: costEff.cost * 1.1, yAxis: dMin, itemStyle: { color: 'rgba(77,148,255,0.05)' } },
+             { xAxis: qualFirst.cost, yAxis: prodEff.downtime_hours, label: { show: true, position: 'insideTop', formatter: '边际递减区' } }],
+            [{ xAxis: qualFirst.cost, yAxis: dMin, itemStyle: { color: 'rgba(142,154,171,0.04)' } },
+             { xAxis: cMax, yAxis: qualFirst.downtime_hours, label: { show: true, position: 'insideTopRight', formatter: '饱和区' } }]
+          ]
+        }
+      }
+    ]
+  });
+}
+
+// ── Before/After Optimization Comparison (4-dimension grouped bar) ──
+function renderBeforeAfterComparison() {
+  var chart = initChart('chart-or-before-after');
+  if (!chart) return;
+  chart.setOption({
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#141820', borderColor: '#1c2230',
+      textStyle: { color: '#e6ebf2', fontSize: 12 },
+      axisPointer: { type: 'shadow' }
+    },
+    legend: { bottom: 0, textStyle: { color: '#8e9aab', fontSize: 10 }, itemWidth: 10, itemHeight: 10 },
+    grid: { left: 120, right: 80, top: 16, bottom: 36 },
+    xAxis: {
+      type: 'value',
+      axisLabel: { color: '#8e9aab', fontSize: 9 },
+      splitLine: { lineStyle: { color: '#1c2230' } }
+    },
+    yAxis: {
+      type: 'category',
+      data: ['总风险削减($K)', '加权拖期(天)', '工时利用率(%)', '库存成本($K/月)'],
+      axisLabel: { color: cc('textPrimary'), fontSize: 12, fontWeight: 600 },
+      axisLine: { lineStyle: { color: '#1c2230' } }
+    },
+    series: [
+      {
+        name: '规则驱动（优化前）', type: 'bar',
+        data: [142, 34.2, 68, 8.42],
+        itemStyle: { color: '#4d94ff', borderRadius: [0, 3, 3, 0] },
+        barGap: '20%', barWidth: 14,
+        label: { show: true, position: 'right', color: '#4d94ff', fontSize: 11, fontWeight: 600 }
+      },
+      {
+        name: '运筹优化（优化后）', type: 'bar',
+        data: [168, 21.8, 84, 6.59],
+        itemStyle: { color: '#00c9a0', borderRadius: [0, 3, 3, 0] },
+        barWidth: 14,
+        label: { show: true, position: 'right', color: '#00c9a0', fontSize: 11, fontWeight: 600 }
+      }
+    ]
+  });
+
+  // Add improvement annotations as graphic elements
+  var imps = ['+18.3%', '-36.3%', '+23.5%', '-21.8%'];
+  var graphics = imps.map(function(imp, i) {
+    return {
+      type: 'text',
+      left: '78%', top: (22 + i * 54).toString(),
+      style: { text: imp, fill: imp[0] === '+' ? '#3fb950' : '#3fb950', fontSize: 12, fontWeight: 700 },
+      z: 100
+    };
+  });
+  chart.setOption({ graphic: graphics });
 }
 
 function renderPareto(pChart, paretoData) {
@@ -5709,7 +6171,8 @@ function renderPareto(pChart, paretoData) {
         beta: 45,
         distance: 220,
         autoRotate: true,
-        autoRotateSpeed: 0.8,
+        autoRotateSpeed: 0.3,
+        autoRotateAfterStill: 3,
       },
       boxWidth: 140, boxHeight: 130, boxDepth: 110,
       light: {
@@ -6867,9 +7330,10 @@ async function init() {
   updateDegradationBadge();
 
   // ── Restore strategy from sessionStorage ──
+  window._s7InlineData = null;  // clear any stale data from previous crashed session
   var savedStrategy = sessionStorage.getItem('current_strategy');
   if (savedStrategy && savedStrategy !== 'production_efficiency') {
-    try { await switchStrategy(savedStrategy); } catch(e) {}
+    try { await switchStrategy(savedStrategy); } catch(e) { window._s7InlineData = null; }
   }
   try {
     await renderSection1();

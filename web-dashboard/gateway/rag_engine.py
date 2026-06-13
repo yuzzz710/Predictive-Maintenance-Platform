@@ -27,6 +27,7 @@ from .config import DASHBOARD_DATA, PROJECT_ROOT, DEEPSEEK_API_KEY, DEEPSEEK_BAS
 _chroma_client = None
 _embedding_model = None
 _embedding_fn = None  # resolved at init time
+_last_embedding_latency_ms = 0
 _collections = {}     # name → Chroma collection
 
 # ── Paths ──────────────────────────────────────────────────────────────────
@@ -117,9 +118,8 @@ def _init_bge_model():
     if _embedding_model is not None:
         return True
 
-    # Set short timeouts: prevent hanging when HuggingFace is unreachable
-    os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "15")
-    os.environ.setdefault("REQUESTS_TIMEOUT", "15")
+    # Force offline — skip HF connectivity checks, use local cache
+    os.environ["HF_HUB_OFFLINE"] = "1"
 
     # Strategy: local cache → HF mirror → TF-IDF
     from sentence_transformers import SentenceTransformer
@@ -130,8 +130,8 @@ def _init_bge_model():
         _embedding_fn = _embed_bge
         print(f"[rag_engine] BGE model loaded from local cache (no network)")
         return True
-    except Exception:
-        pass  # Not cached locally, try mirrors
+    except Exception as e:
+        print(f"[rag_engine] BGE local cache miss: {e}")
 
     # Try 1: Load from HuggingFace with mirror endpoint
     mirrors = [
@@ -188,7 +188,10 @@ def _embed_bge(texts: List[str]) -> List[List[float]]:
 
 
 def _embed_deepseek(texts: List[str]) -> List[List[float]]:
-    """Embed texts using DeepSeek Embedding API (fallback)."""
+    """Embed texts using DeepSeek Embedding API (fallback).
+    Note: DeepSeek's primary API is chat completions. The embeddings endpoint
+    may not be available on all deployments. Falls back to TF-IDF on failure.
+    """
     import httpx
     try:
         resp = httpx.post(
@@ -201,13 +204,17 @@ def _embed_deepseek(texts: List[str]) -> List[List[float]]:
                 "model": "deepseek-chat",
                 "input": texts,
             },
-            timeout=30.0,
+            timeout=5.0,
         )
         if resp.status_code == 200:
             data = resp.json()
             items = data.get("data", [])
-            items.sort(key=lambda x: x.get("index", 0))
-            return [item.get("embedding", []) for item in items]
+            if items:
+                items.sort(key=lambda x: x.get("index", 0))
+                return [item.get("embedding", []) for item in items]
+            else:
+                print(f"[rag_engine] DeepSeek embedding API returned empty data")
+                return _fallback_tfidf(texts)
         else:
             print(f"[rag_engine] DeepSeek embedding API error: {resp.status_code}")
             return _fallback_tfidf(texts)
@@ -256,11 +263,16 @@ def _fallback_tfidf(texts: List[str]) -> List[List[float]]:
 
 def embed(texts: List[str]) -> List[List[float]]:
     """Embed texts using whichever backend is available."""
-    global _embedding_fn
+    global _embedding_fn, _last_embedding_latency_ms
+    t0 = time.perf_counter()
     if _embedding_fn is None:
         if not _init_bge_model():
-            return _fallback_tfidf(texts)
-    return _embedding_fn(texts)
+            result = _fallback_tfidf(texts)
+            _last_embedding_latency_ms = round((time.perf_counter() - t0) * 1000)
+            return result
+    result = _embedding_fn(texts)
+    _last_embedding_latency_ms = round((time.perf_counter() - t0) * 1000)
+    return result
 
 
 def embed_query(text: str) -> List[float]:
@@ -297,7 +309,8 @@ def _init_chroma():
             except Exception:
                 _collections[name] = _chroma_client.create_collection(
                     name=name,
-                    metadata={"description": f"Knowledge base: {name}"},
+                    metadata={"description": f"Knowledge base: {name}",
+                              "hnsw:space": "cosine"},
                 )
         print(f"[rag_engine] Chroma initialized at {CHROMA_DIR}")
     except Exception as e:
@@ -661,8 +674,10 @@ def search(query: str, collection_name: str, k: int = 5) -> Dict:
         for i, doc in enumerate(results["documents"][0]):
             meta = results["metadatas"][0][i] if results.get("metadatas") else {}
             distance = results["distances"][0][i] if results.get("distances") else 0
-            # Chroma returns cosine distance; convert to similarity
-            score = 1.0 - float(distance)
+            # Chroma returns L2 distance for normalized vectors by default
+            # For unit vectors: L2² = 2(1 - cos) → cos = 1 - L2²/2
+            d = float(distance)
+            score = max(0.0, 1.0 - (d * d) / 2.0)
 
             # Filter by relevance threshold
             if score < RELEVANCE_THRESHOLD:
@@ -724,6 +739,91 @@ def search_all(query: str, k: int = 5) -> Dict:
     }
 
 
+def search_with_tier(query: str, tier: str, k: int = 5) -> Dict:
+    """
+    Force-degrade to a specific embedding tier and search.
+    Used by the degradation simulation UI.
+    BGE: normal Chroma vector search.
+    DeepSeek API: vector search with DeepSeek embeddings (falls back gracefully if no API key).
+    TF-IDF: keyword-based text search against chunk content (bypasses Chroma — demonstrates degraded but functional retrieval).
+    """
+    global _embedding_fn
+    t0 = time.perf_counter()
+    original_fn = _embedding_fn
+
+    try:
+        if tier == "bge_local":
+            _init_bge_model()
+            result = search_all(query, k=k)
+
+        elif tier == "deepseek_api":
+            if not DEEPSEEK_API_KEY:
+                elapsed = round((time.perf_counter() - t0) * 1000)
+                return {"tier": tier, "query": query, "results": [],
+                        "total_found": 0, "elapsed_ms": elapsed,
+                        "note": "DeepSeek API Key 未配置，无法使用云端嵌入"}
+            _embedding_fn = _embed_deepseek
+            result = search_all(query, k=k)
+            # If all results were threshold-filtered, note it
+            if result.get("total_found", 0) == 0:
+                result["note"] = "DeepSeek 嵌入向量空间与 BGE 索引不兼容，语义检索不可用（这正是降级场景的真实表现）"
+
+        elif tier == "tfidf_fallback":
+            # TF-IDF cannot meaningfully search a BGE-indexed Chroma collection.
+            # Instead, do a keyword-match search against raw chunk content —
+            # this simulates the real TF-IDF fallback: slower, less accurate, but always works.
+            _init_chroma()
+            query_terms = set(query)
+            # Also add bigrams for Chinese matching
+            for i in range(len(query) - 1):
+                query_terms.add(query[i:i + 2])
+            keyword_results = []
+            for coll_name in COLLECTION_NAMES:
+                coll = _collections.get(coll_name)
+                if not coll:
+                    continue
+                try:
+                    count = coll.count()
+                    existing = coll.get(include=["metadatas", "documents"], limit=min(count, 200))
+                    if existing and existing.get("ids"):
+                        for idx, chunk_id in enumerate(existing["ids"]):
+                            content = existing.get("documents", [""])[idx] if idx < len(existing.get("documents", [])) else ""
+                            meta = existing.get("metadatas", [{}])[idx] if idx < len(existing.get("metadatas", [])) else {}
+                            # Simple TF scoring: count overlapping terms
+                            score = 0
+                            for term in query_terms:
+                                if term in content:
+                                    score += 1
+                            if score > 0:
+                                norm_score = min(score / max(len(query_terms), 1), 1.0)
+                                keyword_results.append({
+                                    "source": meta.get("source", ""),
+                                    "section": meta.get("section", meta.get("source", "")),
+                                    "collection": coll_name,
+                                    "content": content[:300],
+                                    "score": round(norm_score, 4),
+                                })
+                except Exception:
+                    pass
+            keyword_results.sort(key=lambda x: -x["score"])
+            total = len(keyword_results)
+            keyword_results = keyword_results[:k]
+            elapsed = round((time.perf_counter() - t0) * 1000)
+            return {
+                "tier": tier, "query": query, "results": keyword_results,
+                "total_found": total, "elapsed_ms": elapsed,
+            }
+        else:
+            return {"error": f"Unknown tier: {tier}"}
+
+        elapsed = round((time.perf_counter() - t0) * 1000)
+        result["elapsed_ms"] = result.get("elapsed_ms", elapsed)
+        result["tier"] = tier
+        return result
+    finally:
+        _embedding_fn = original_fn
+
+
 def search_all_as_context(query: str, k: int = 5) -> str:
     """
     Convenience: search all collections and return formatted context string
@@ -741,9 +841,21 @@ def search_all_as_context(query: str, k: int = 5) -> str:
 def get_stats() -> Dict:
     """Get statistics for all knowledge base collections."""
     _init_chroma()
+    # Detect current embedding tier
+    tier = "tfidf_fallback"
+    if _embedding_model is not None:
+        tier = "bge_local"
+    elif _embedding_fn is not None:
+        fn_name = getattr(_embedding_fn, '__name__', '')
+        if 'deepseek' in fn_name:
+            tier = "deepseek_api"
+        elif 'tfidf' in fn_name:
+            tier = "tfidf_fallback"
     stats = {
         "engine_available": _embedding_fn is not None or _init_bge_model(),
         "chroma_available": _chroma_client is not None,
+        "embedding_tier": tier,
+        "embedding_latency_ms": _last_embedding_latency_ms,
         "collections": {},
     }
     for name in COLLECTION_NAMES:

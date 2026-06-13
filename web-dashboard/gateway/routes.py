@@ -115,7 +115,133 @@ def _build_signal_list(project_root: Path) -> List[Dict[str, Any]]:
             signals["cost_at_risk"] = float(cost_row.iloc[0]["cost_at_risk"])
         signal_list.append(signals)
 
-    return signal_list
+    return signal_list, z_agg
+
+
+def _build_all_machines_summary(PROJECT_ROOT, cost_df, z_agg=None):
+    """
+    Build per-machine z-score aggregates + diagnosis summary for all 100 machines.
+    Returns dict {machine_id: {z_comp_max, pattern, technician, risk_level, cost_at_risk, ...}}
+    Used by strategy switch API to avoid frontend re-loading z_scores.csv.
+    Mirrors the frontend's backendDiagnose() + backendAssignTech() + zAggMap logic exactly.
+    """
+    import numpy as np
+
+    # If z_agg is provided (from _build_signal_list), skip CSV I/O and use it directly
+    if z_agg is None:
+        prep_dir = str(PROJECT_ROOT / "agent-mcp架构" / "outputs_test" / "output_data_prep")
+        z_path = os.path.join(prep_dir, "z_scores.csv")
+        if not os.path.exists(z_path):
+            return {}
+        df_z = pd.read_csv(z_path)
+        if "Date" in df_z.columns:
+            df_z["Date"] = pd.to_datetime(df_z["Date"])
+        # Build z_agg from DataFrame (same logic as _build_signal_list)
+        z_agg = {}
+        for mid, grp in df_z.groupby("Equipment.Id"):
+            mid = str(mid)
+            try:
+                grp_sorted = grp.sort_values("Date")
+                last_n = grp_sorted.tail(5)
+                latest = grp_sorted.iloc[-1]
+            except (KeyError, TypeError):
+                last_n = grp.tail(5)
+                latest = grp.iloc[-1]
+            z_agg[mid] = {
+                "z_v_last": float(latest.get("z_Voltage", 0)),
+                "z_a_last": float(latest.get("z_Amperage", 0)),
+                "z_t_last": float(latest.get("z_Temperature", 0)),
+                "z_comp_mean": float(last_n["z_composite"].mean()),
+                "z_comp_max": float(last_n["z_composite"].max()),
+                "thermal_over_p95": int(last_n["z_Temperature"].abs().gt(2.0).sum()),
+                "v_slope": float(last_n["z_Voltage"].diff().mean()) if len(last_n) >= 3 else 0.0,
+                "t_slope": float(last_n["z_Temperature"].diff().mean()) if len(last_n) >= 3 else 0.0,
+                "a_slope": float(last_n["z_Amperage"].diff().mean()) if len(last_n) >= 3 else 0.0,
+            }
+
+    # Diagnostic thresholds (mirror maintenance_decision_engine.py config["diagnostic"])
+    Z_V_THRESHOLD = 2.0
+    Z_T_THRESHOLD = 2.0
+    Z_A_THRESHOLD = 1.5
+    Z_COMPOSITE_THRESHOLD = 2.0
+    TREND_MIN = 0.02
+    THERMAL_OVER_P95_MIN = 2
+
+    all_machines = {}
+    for mid, z in z_agg.items():
+        mid = str(mid)
+        zv = float(z["z_v_last"])
+        za = float(z["z_a_last"])
+        zt = float(z["z_t_last"])
+        z_comp_mean = float(z["z_comp_mean"])
+        z_comp_max = float(z["z_comp_max"])
+        thermal_p95 = int(z["thermal_over_p95"])
+        v_slope = float(z["v_slope"])
+        t_slope = float(z["t_slope"])
+
+        # Diagnose pattern (mirror backendDiagnose in frontend)
+        pattern = "normal"
+        if abs(zv) > Z_V_THRESHOLD and abs(v_slope) > TREND_MIN:
+            pattern = "voltage_drift"
+        elif abs(zt) > Z_T_THRESHOLD and thermal_p95 >= THERMAL_OVER_P95_MIN:
+            pattern = "thermal_buildup"
+        elif abs(zv) > Z_V_THRESHOLD and abs(za) > Z_A_THRESHOLD:
+            pattern = "power_anomaly"
+        else:
+            ab = sum([abs(zv) > Z_COMPOSITE_THRESHOLD, abs(za) > Z_COMPOSITE_THRESHOLD, abs(zt) > Z_COMPOSITE_THRESHOLD])
+            if ab >= 2:
+                pattern = "combined_degradation"
+
+        # Risk level
+        z_comp = max(z_comp_max, z_comp_mean)
+        if z_comp > 2.5: risk_level = "ALARM"
+        elif z_comp > 2.0: risk_level = "WARNING"
+        elif z_comp > 1.5: risk_level = "WATCH"
+        else: risk_level = "NORMAL"
+
+        # Technician assignment (mirror technician_assigner.py priority rules)
+        tech = "junior_technician"
+        if risk_level == "ALARM" and pattern == "voltage_drift": tech = "electrical_specialist"
+        elif risk_level == "ALARM" and pattern == "thermal_buildup": tech = "thermal_specialist"
+        elif risk_level == "ALARM" and pattern == "combined_degradation": tech = "senior_technician"
+        elif pattern == "voltage_drift": tech = "electrical_specialist"
+        elif pattern == "thermal_buildup": tech = "thermal_specialist"
+        elif pattern == "power_anomaly": tech = "electrical_specialist"
+        elif pattern == "combined_degradation": tech = "senior_technician"
+
+        # Cost data
+        cost_row = cost_df[cost_df["Equipment.Id"] == mid] if "Equipment.Id" in cost_df.columns else pd.DataFrame()
+        cost_at_risk = float(cost_row.iloc[0]["cost_at_risk"]) if len(cost_row) > 0 else 5000.0
+        risk_tier = str(cost_row.iloc[0]["risk_tier"]) if len(cost_row) > 0 and "risk_tier" in cost_row.columns else "Medium"
+
+        all_machines[mid] = {
+            "z_comp_max": float(z_comp_max),
+            "z_comp_mean": float(z_comp_mean),
+            "zv": float(zv), "za": float(za), "zt": float(zt),
+            "thermal_over_p95": thermal_p95,
+            "v_slope": float(v_slope), "t_slope": float(t_slope),
+            "cost_at_risk": cost_at_risk,
+            "risk_tier": risk_tier,
+            "pattern": pattern,
+            "technician": tech,
+            "risk_level": risk_level,
+        }
+
+    return all_machines
+
+
+@router.get("/api/maintenance/machines-summary")
+async def machines_summary():
+    """
+    Return per-machine z-score aggregates + diagnosis for all 100 machines.
+    Lightweight endpoint (~15KB JSON) — reads fresh z_scores.csv each call.
+    Used by frontend to skip 900KB CSV load + in-browser diagnosis on initial render.
+    """
+    from .config import PROJECT_ROOT
+    prep_dir = str(PROJECT_ROOT / "agent-mcp架构" / "outputs_test" / "output_data_prep")
+    cost_path = os.path.join(prep_dir, "cost_risk_matrix.csv")
+    cost_df = pd.read_csv(cost_path) if os.path.exists(cost_path) else pd.DataFrame()
+    return _build_all_machines_summary(PROJECT_ROOT, cost_df)
 
 
 @router.post("/api/maintenance/strategy")
@@ -130,6 +256,7 @@ async def switch_strategy(data: dict = Body(...)):
                 "downtime_schedule": [...] }
     """
     strategy = data.get("strategy", "production_efficiency")
+    force = data.get("force", False)
     if strategy not in _VALID_STRATEGIES:
         return JSONResponse(
             {"success": False, "error": f"Invalid strategy '{strategy}'. Valid: {sorted(_VALID_STRATEGIES)}"},
@@ -155,8 +282,8 @@ async def switch_strategy(data: dict = Body(...)):
     cost_path = os.path.join(prep_dir, "cost_risk_matrix.csv")
     cost_df = pd.read_csv(cost_path)
 
-    # Build signal list
-    signal_list = _build_signal_list(PROJECT_ROOT)
+    # Build signal list (also returns z_agg to avoid re-reading z_scores.csv)
+    signal_list, z_agg = _build_signal_list(PROJECT_ROOT)
 
     # Load health scores
     health_score_paths = [
@@ -247,15 +374,22 @@ async def switch_strategy(data: dict = Body(...)):
     downtime_df = pd.DataFrame(downtime_rows)
     downtime_df.to_csv(os.path.join(output_dir, "downtime_schedule.csv"), index=False, encoding="utf-8")
 
-    # Strategy comparison (all 3)
-    comp_df = industrial_engine.strategy_selector.generate_strategy_comparison(
-        signal_list, base_engine
-    )
-    # Add computed fields for frontend chart compatibility
-    comp_df["avg_cost_per_order"] = comp_df.apply(
-        lambda r: round(r["total_estimated_cost"] / max(r["n_work_orders"], 1), 2), axis=1
-    )
-    comp_df.to_csv(os.path.join(output_dir, "strategy_comparison.csv"), index=False, encoding="utf-8")
+    # Strategy comparison (all 3) — cached unless force refresh
+    comp_path = os.path.join(output_dir, "strategy_comparison.csv")
+    if force or not os.path.exists(comp_path):
+        comp_df = industrial_engine.strategy_selector.generate_strategy_comparison(
+            signal_list, base_engine
+        )
+        comp_df["avg_cost_per_order"] = comp_df.apply(
+            lambda r: round(r["total_estimated_cost"] / max(r["n_work_orders"], 1), 2), axis=1
+        )
+        comp_df.to_csv(comp_path, index=False, encoding="utf-8")
+    else:
+        comp_df = pd.read_csv(comp_path)
+
+    # ── Build all_machines summary (z-score aggregates + diagnosis for 100 machines) ──
+    # This avoids frontend re-loading z_scores.csv and re-running diagnosis on strategy switch
+    all_machines = _build_all_machines_summary(PROJECT_ROOT, cost_df, z_agg)
 
     # Build inline response data for immediate frontend re-render
     def df_to_records(df, max_rows=None):
@@ -283,6 +417,7 @@ async def switch_strategy(data: dict = Body(...)):
         "technician_schedule": df_to_records(tech_df),
         "spare_parts_plan": df_to_records(parts_df),
         "downtime_schedule": df_to_records(downtime_df),
+        "all_machines": all_machines,
     }
 
 

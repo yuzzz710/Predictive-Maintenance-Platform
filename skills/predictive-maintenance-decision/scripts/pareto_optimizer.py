@@ -5,9 +5,10 @@ Pareto Optimizer — Multi-Objective Pareto Frontier for Maintenance Strategies
 Generates the 3-objective Pareto frontier (cost, downtime, quality risk) and
 positions the three maintenance strategies on it.
 
-Method: ε-constraint method
-  - Fix one objective as constraint ε, optimize another
-  - Generate frontier points for cost-vs-downtime and cost-vs-quality
+Method: ε-constraint LP via scipy.optimize.linprog (HiGHS solver)
+  - For each ε in cost range: min Σdowntime_i·x_i  s.t. Σcost_i·x_i ≤ ε, 0≤x_i≤1
+  - Same for quality-risk minimization
+  - Generates true Pareto frontier from actual machine-level trade-off data
 
 Output: pareto_frontier.json for ECharts 3D scatter visualization.
 
@@ -24,6 +25,7 @@ from typing import List, Dict
 
 import numpy as np
 import pandas as pd
+from scipy.optimize import linprog
 
 
 class ParetoOptimizer:
@@ -45,7 +47,12 @@ class ParetoOptimizer:
 
     def generate_frontiers(self) -> dict:
         """
-        Generate cost-vs-downtime and cost-vs-quality Pareto frontiers.
+        Generate cost-vs-downtime and cost-vs-quality Pareto frontiers
+        using true epsilon-constraint LP (scipy.optimize.linprog).
+
+        For each epsilon_k (cost cap), solves:
+          min  Σ downtime_i * x_i    s.t.  Σ cost_i * x_i <= epsilon_k,  0 <= x_i <= 1
+          min  Σ quality_i * x_i     s.t.  Σ cost_i * x_i <= epsilon_k,  0 <= x_i <= 1
 
         Returns dict with:
           - strategy_positions: {strategy: {cost, downtime, quality, orders}}
@@ -64,64 +71,113 @@ class ParetoOptimizer:
                 "warnings": int(row.get("n_warnings", 0)),
             }
 
-        # Estimate downtime and quality from plan data
         avg_duration = float(self.plan_df["estimated_duration_hours"].mean()) if "estimated_duration_hours" in self.plan_df.columns else 4.0
         avg_cost_per_order = float(self.plan_df["estimated_cost"].mean()) if "estimated_cost" in self.plan_df.columns else 3000
 
         for strat in strategies:
-            n = strategies[strat]["orders"]
-            strategies[strat]["downtime_hours"] = round(n * avg_duration, 1)
-            # Quality risk: proxy by alarm count × avg cost (higher alarm = more quality risk)
+            n_orders = strategies[strat]["orders"]
+            strategies[strat]["downtime_hours"] = round(n_orders * avg_duration, 1)
             strategies[strat]["quality_risk"] = round(
                 strategies[strat]["alarms"] * avg_cost_per_order * 0.3, 2
             )
 
-        # Generate ε-constraint frontiers
-        # Sample K points along cost range
+        # ── Build per-machine cost / downtime / quality vectors ──
+        n = len(self.plan_df)
+        if n == 0:
+            return {
+                "strategy_positions": {}, "cost_downtime_frontier": [],
+                "cost_quality_frontier": [], "pareto_3d_points": [],
+                "metadata": {"method": "epsilon_constraint_lp", "n_machines": 0},
+            }
+
+        cost_vec = self.plan_df["estimated_cost"].fillna(3000).values.astype(float)
+        downtime_vec = self.plan_df["estimated_duration_hours"].fillna(4.0).values.astype(float)
+
+        anomaly_col = "anomaly_score" if "anomaly_score" in self.plan_df.columns else None
+        if anomaly_col:
+            quality_vec = self.plan_df[anomaly_col].fillna(0.5).values.astype(float) * cost_vec * 0.3
+        else:
+            quality_vec = 0.5 * cost_vec * 0.3
+
+        cost_total = float(cost_vec.sum())
+        cost_min_eps = max(cost_total * 0.03, cost_vec.min())
+        cost_max_eps = cost_total * 0.75
         K = 20
-        all_costs = [s["cost"] for s in strategies.values()]
-        cost_min = min(all_costs) * 0.7
-        cost_max = max(all_costs) * 1.5
 
-        # Cost vs Downtime frontier (approximation via linear trade-off)
+        # ── Cost vs Downtime frontier (LP: min downtime s.t. cost <= epsilon) ──
         cost_dt_frontier = []
+        c_obj = downtime_vec
+        A_ub = [cost_vec]
+
         for k in range(K + 1):
-            t = k / K
-            cost = cost_min + t * (cost_max - cost_min)
-            # Downtime = base_hours - efficiency_gain × budget_usage
-            base_hours = max(s["downtime_hours"] for s in strategies.values())
-            downtime = base_hours * (1 - 0.6 * t)  # more spend → less downtime
+            eps = cost_min_eps + (k / K) * (cost_max_eps - cost_min_eps)
+            result = linprog(c_obj, A_ub=A_ub, b_ub=[eps],
+                             bounds=[(0, 1)] * n, method='highs')
+            if result.success:
+                sel = result.x > 0.5
+                cost_dt_frontier.append({
+                    "cost": round(float(cost_vec[sel].sum()), 0),
+                    "downtime_hours": round(float(downtime_vec[sel].sum()), 1),
+                    "pareto_rank": k + 1,
+                })
+
+        if not cost_dt_frontier:
             cost_dt_frontier.append({
-                "cost": round(cost, 0),
-                "downtime_hours": round(downtime, 1),
-                "pareto_rank": k + 1,
+                "cost": round(cost_total * 0.3, 0),
+                "downtime_hours": round(float(downtime_vec.sum() * 0.3), 1),
+                "pareto_rank": 1,
             })
 
-        # Cost vs Quality frontier
+        # ── Cost vs Quality frontier (LP: min quality risk s.t. cost <= epsilon) ──
         cost_qual_frontier = []
+        c_qual = quality_vec
+
         for k in range(K + 1):
-            t = k / K
-            cost = cost_min + t * (cost_max - cost_min)
-            base_quality = max(s["quality_risk"] for s in strategies.values())
-            quality = base_quality * (1 - 0.5 * t)  # more spend → lower quality risk
+            eps = cost_min_eps + (k / K) * (cost_max_eps - cost_min_eps)
+            result = linprog(c_qual, A_ub=A_ub, b_ub=[eps],
+                             bounds=[(0, 1)] * n, method='highs')
+            if result.success:
+                sel = result.x > 0.5
+                cost_qual_frontier.append({
+                    "cost": round(float(cost_vec[sel].sum()), 0),
+                    "quality_risk": round(float(quality_vec[sel].sum()), 2),
+                    "pareto_rank": k + 1,
+                })
+
+        if not cost_qual_frontier:
             cost_qual_frontier.append({
-                "cost": round(cost, 0),
-                "quality_risk": round(quality, 2),
-                "pareto_rank": k + 1,
+                "cost": round(cost_total * 0.3, 0),
+                "quality_risk": round(float(quality_vec.sum() * 0.3), 2),
+                "pareto_rank": 1,
             })
 
-        # 3D points for scatter plot
+        # ── 3D points: combine downtime + quality at each cost level ──
         pareto_3d = []
-        for k in range(K + 1):
-            t = k / K
-            cost = cost_min + t * (cost_max - cost_min)
-            base_hours = max(s["downtime_hours"] for s in strategies.values())
-            base_quality = max(s["quality_risk"] for s in strategies.values())
+        dt_by_cost = {p["cost"]: p["downtime_hours"] for p in cost_dt_frontier}
+        qual_by_cost = {p["cost"]: p["quality_risk"] for p in cost_qual_frontier}
+        sorted_qual_costs = sorted(qual_by_cost.keys())
+
+        def _interp_quality(cost_val):
+            if cost_val <= sorted_qual_costs[0]:
+                return qual_by_cost[sorted_qual_costs[0]]
+            if cost_val >= sorted_qual_costs[-1]:
+                return qual_by_cost[sorted_qual_costs[-1]]
+            for i in range(len(sorted_qual_costs) - 1):
+                lo, hi = sorted_qual_costs[i], sorted_qual_costs[i + 1]
+                if lo <= cost_val <= hi:
+                    t = (cost_val - lo) / (hi - lo) if hi > lo else 0
+                    return qual_by_cost[lo] + t * (qual_by_cost[hi] - qual_by_cost[lo])
+            return qual_by_cost[sorted_qual_costs[-1]]
+
+        for pt in cost_dt_frontier:
+            c = pt["cost"]
+            dt = pt["downtime_hours"]
+            qr = qual_by_cost.get(c, _interp_quality(c))
             pareto_3d.append({
-                "cost": round(cost, 0),
-                "downtime_hours": round(base_hours * (1 - 0.6 * t), 1),
-                "quality_risk": round(base_quality * (1 - 0.5 * t), 2),
-                "label": f"Pareto-{k+1}",
+                "cost": round(c, 0),
+                "downtime_hours": round(dt, 1),
+                "quality_risk": round(qr, 2),
+                "label": f"Pareto-{pt['pareto_rank']}",
                 "type": "frontier",
             })
 
@@ -160,8 +216,10 @@ class ParetoOptimizer:
             "cost_quality_frontier": cost_qual_frontier,
             "pareto_3d_points": pareto_3d,
             "metadata": {
-                "method": "epsilon_constraint",
+                "method": "epsilon_constraint_lp",
+                "solver": "scipy.linprog_highs",
                 "n_frontier_points": K + 1,
+                "n_machines": n,
                 "objectives": ["cost", "downtime_hours", "quality_risk"],
             },
         }

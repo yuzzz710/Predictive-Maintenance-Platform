@@ -1,8 +1,8 @@
 {
-  "mode": "STAT_ONLY",
-  "label": "统计降级模式 (统计+规则)",
+  "mode": "FULL",
+  "label": "全功能运行 (统计+ML+SHAP)",
   "components": {
-    "ml_available": false,
+    "ml_available": true,
     "stat_available": true,
     "rule_available": true
   }

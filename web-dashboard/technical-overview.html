@@ -4,10 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>系统技术架构 — Industrial AI Copilot</title>
+<link rel="stylesheet" href="/shared/sidebar.css?v=3">
 <script src="/shared/role-check.js"></script>
 <script src="/shared/theme-init.js"></script>
-<script src="/shared/navbar.js?v=20260530"></script>
+<script src="/shared/navbar.js?v=3"></script>
 <script src="/shared/role-switcher.js"></script>
+<script src="/shared/demo-mode.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <style>
 /* ═══════════════════════════════════════════════════════════════
@@ -922,6 +924,107 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
   border-color: rgba(220,40,40,0.12);
 }
 
+/* ══ MCP vs 传统API 对比 ══ */
+.mcp-compare-section { margin-top: 28px; }
+.mcp-compare-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+}
+@media (max-width: 700px) { .mcp-compare-grid { grid-template-columns: 1fr; } }
+
+.mcp-compare-card {
+  background: var(--bg-card); border-radius: 12px;
+  border: 1px solid var(--border); overflow: hidden;
+}
+.mcp-compare-card.traditional { border-top: 3px solid var(--accent-red); }
+.mcp-compare-card.mcp-style { border-top: 3px solid var(--accent-cyan); }
+
+.mcp-card-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 16px 20px 0;
+}
+.mcp-card-icon { font-size: 20px; }
+.mcp-card-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+
+.mcp-card-body { padding: 14px 20px; }
+.mcp-item {
+  font-size: 13px; color: var(--text-secondary);
+  padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.03);
+  opacity: 0; animation: mcpFadeIn 0.5s ease forwards;
+}
+.mcp-item:last-child { border-bottom: none; }
+.mcp-item-a1 { animation-delay: 0.1s; } .mcp-item-a2 { animation-delay: 0.25s; }
+.mcp-item-a3 { animation-delay: 0.4s; } .mcp-item-a4 { animation-delay: 0.55s; }
+.mcp-item-a5 { animation-delay: 0.7s; }
+.mcp-item-b1 { animation-delay: 0.15s; } .mcp-item-b2 { animation-delay: 0.3s; }
+.mcp-item-b3 { animation-delay: 0.45s; } .mcp-item-b4 { animation-delay: 0.6s; }
+.mcp-item-b5 { animation-delay: 0.75s; }
+@keyframes mcpFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.mcp-num {
+  display: inline-block; font-size: 22px; font-weight: 800;
+  font-family: var(--font-mono); margin-right: 4px; min-width: 28px;
+}
+.traditional .mcp-num { color: var(--accent-red); }
+.mcp-style .mcp-num { color: var(--accent-cyan); }
+.mcp-hl { font-weight: 600; color: var(--text-primary); }
+
+.mcp-card-code {
+  margin: 0 20px 16px; padding: 14px 16px;
+  background: var(--bg-input); border-radius: 8px;
+  border: 1px solid var(--border-light);
+}
+.mcp-code-label {
+  font-size: 11px; font-weight: 600; color: var(--text-muted);
+  margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.mcp-pre {
+  font-family: var(--font-mono); font-size: 11px; line-height: 1.65;
+  color: var(--text-secondary); margin: 0; white-space: pre-wrap; word-break: break-all;
+}
+.mcp-pre-json { color: var(--accent-cyan); }
+
+.mcp-code-toggle { margin-top: 16px; }
+.mcp-toggle-btn {
+  display: block; width: 100%; padding: 12px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 8px; cursor: pointer;
+  font-size: 13px; font-weight: 600; color: var(--text-secondary);
+  font-family: var(--font-sans); transition: all 0.2s;
+}
+.mcp-toggle-btn:hover { border-color: var(--accent-cyan); color: var(--text-primary); }
+.mcp-code-body { display: none; margin-top: 12px; }
+.mcp-code-body.open { display: block; }
+.mcp-code-cols {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+}
+@media (max-width: 700px) { .mcp-code-cols { grid-template-columns: 1fr; } }
+.mcp-code-col {
+  background: var(--bg-card); border-radius: 8px;
+  border: 1px solid var(--border); overflow: hidden;
+}
+.mcp-code-col-title {
+  font-size: 12px; font-weight: 700; padding: 10px 16px;
+  background: var(--bg-card-alt); color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
+}
+.mcp-code-col .mcp-pre { padding: 12px 16px; font-size: 10px; }
+
+.mcp-innovate-bar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-top: 18px; padding: 14px 20px;
+  background: linear-gradient(135deg, rgba(0,201,160,0.06), rgba(163,113,247,0.04));
+  border: 1px solid rgba(0,201,160,0.15); border-radius: 10px;
+}
+.mcp-innovate-label { font-size: 13px; font-weight: 700; color: var(--accent-cyan); }
+.mcp-innovate-tag {
+  font-size: 11px; font-weight: 600; color: var(--text-primary);
+  background: rgba(0,201,160,0.08); padding: 3px 10px; border-radius: 5px;
+  font-family: var(--font-mono);
+}
+.mcp-innovate-sep { color: var(--border); font-size: 14px; }
+
 </style>
 </head>
 <body>
@@ -1643,6 +1746,113 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
       <code>chart</code> — ECharts图表数据（前端自动渲染）<br>
       <code>report</code> — AI生成报告<br>
       <code>error</code> / <code>done</code> — 异常/完成信号</p>
+    </div>
+  </div>
+
+  <!-- ══ MCP vs 传统API 对比演示 ══ -->
+  <div class="mcp-compare-section" style="margin-top:24px;">
+    <h3 style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">⚡ MCP协议 vs 传统API调用</h3>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">同样的25个工具，两种集成方式——MCP将"人写prompt描述工具"变为"LLM直接理解JSON Schema"</p>
+
+    <div class="mcp-compare-grid">
+      <!-- 传统方式 -->
+      <div class="mcp-compare-card traditional">
+        <div class="mcp-card-header">
+          <span class="mcp-card-icon">❌</span>
+          <span class="mcp-card-title">传统 REST API 方式</span>
+        </div>
+        <div class="mcp-card-body">
+          <div class="mcp-item mcp-item-a1"><span class="mcp-num">25</span> 个独立 HTTP 端点</div>
+          <div class="mcp-item mcp-item-a2">每个端点 = <span class="mcp-hl">独立路由</span> + 独立文档</div>
+          <div class="mcp-item mcp-item-a3">LLM 通过 <span class="mcp-hl">prompt 文本描述</span> "理解"工具</div>
+          <div class="mcp-item mcp-item-a4">新增工具需要 <span class="mcp-hl">修改路由</span> + 更新 prompt</div>
+          <div class="mcp-item mcp-item-a5">工具变更 = <span class="mcp-hl">代码改动</span> + 文档同步</div>
+        </div>
+        <div class="mcp-card-code">
+          <div class="mcp-code-label">示例: 调用 query_device_status</div>
+          <pre class="mcp-pre">curl -X POST /api/tools/query_device_status \
+  -H "Content-Type: application/json" \
+  -d '{"machine_id": "CNC_042"}'
+# 需要预先知道端点路径、方法、参数格式</pre>
+        </div>
+      </div>
+
+      <!-- MCP 方式 -->
+      <div class="mcp-compare-card mcp-style">
+        <div class="mcp-card-header">
+          <span class="mcp-card-icon">✅</span>
+          <span class="mcp-card-title">MCP 协议方式</span>
+        </div>
+        <div class="mcp-card-body">
+          <div class="mcp-item mcp-item-b1"><span class="mcp-num">0</span> 个手动端点 — 自动发现</div>
+          <div class="mcp-item mcp-item-b2">服务端通过 <span class="mcp-hl">tools/list</span> 一次性暴露所有工具</div>
+          <div class="mcp-item mcp-item-b3">LLM 直接读取 <span class="mcp-hl">JSON Schema</span> 理解参数和返回格式</div>
+          <div class="mcp-item mcp-item-b4">新增工具 <span class="mcp-hl">零配置</span> — 注册即发现</div>
+          <div class="mcp-item mcp-item-b5">工具变更 <span class="mcp-hl">自动同步</span> — 无需更新 prompt</div>
+        </div>
+        <div class="mcp-card-code">
+          <div class="mcp-code-label">示例: 自动发现并调用工具</div>
+          <pre class="mcp-pre mcp-pre-json">// Step 1: 服务端自动发现
+{"method": "tools/list"}
+→ ["query_device_status", "diagnose_root_cause", ...]
+
+// Step 2: LLM 直接调用（理解 JSON Schema）
+{"method": "tools/call",
+ "name": "query_device_status",
+ "arguments": {"machine_id": "CNC_042"}}
+→ {"status": "Critical", "health_score": 42}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- 折叠代码对比 -->
+    <div class="mcp-code-toggle" id="mcpCodeToggle" style="margin-top:16px;">
+      <button class="mcp-toggle-btn" onclick="var b=document.getElementById('mcpCodeBody');var t=this;if(b.classList.contains('open')){b.classList.remove('open');t.textContent='📝 展开代码对比: 传统 vs MCP';}else{b.classList.add('open');t.textContent='📝 收起代码对比';}">
+        📝 展开代码对比: 传统 vs MCP
+      </button>
+      <div class="mcp-code-body" id="mcpCodeBody">
+        <div class="mcp-code-cols">
+          <div class="mcp-code-col">
+            <div class="mcp-code-col-title">❌ 传统方式 — 25个独立端点</div>
+            <pre class="mcp-pre"># 每个工具需要单独的 HTTP 路由
+@app.post("/api/tools/query_device_status")
+def query_device_status(machine_id: str):
+    return get_device_status(machine_id)
+
+@app.post("/api/tools/query_alert_list")
+def query_alert_list(min_severity: str = "Warning"):
+    return get_alerts(min_severity)
+
+# ... 23 more endpoints
+# 新增工具 = 新增路由 + 更新 prompt 描述</pre>
+          </div>
+          <div class="mcp-code-col">
+            <div class="mcp-code-col-title">✅ MCP 方式 — 标准化工具注册</div>
+            <pre class="mcp-pre mcp-pre-json"># 一次性注册所有工具到 MCP Server
+mcp = FastMCP("PredictiveMaintenance")
+
+@mcp.tool()
+def query_device_status(machine_id: str) -> dict:
+    """查询设备健康状态、告警、工单信息"""
+    return get_device_status(machine_id)
+
+# LLM 通过 tools/list 自动发现所有工具
+# 新增工具 = 注册装饰器 — 零配置自动发现</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 创新点总结 -->
+    <div class="mcp-innovate-bar">
+      <span class="mcp-innovate-label">💡 MCP 创新点</span>
+      <span class="mcp-innovate-tag">标准化工具协议</span>
+      <span class="mcp-innovate-sep">|</span>
+      <span class="mcp-innovate-tag">服务端自动发现</span>
+      <span class="mcp-innovate-sep">|</span>
+      <span class="mcp-innovate-tag">LLM 原生理解 JSON Schema</span>
+      <span class="mcp-innovate-sep">|</span>
+      <span class="mcp-innovate-tag">零配置集成</span>
     </div>
   </div>
 </div>

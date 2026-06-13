@@ -27,6 +27,7 @@ from typing import Dict
 
 import numpy as np
 import pandas as pd
+from scipy.stats import norm
 
 
 # Service level z-values linked to strategy
@@ -38,6 +39,8 @@ STRATEGY_Z = {
 
 FIXED_ORDERING_COST = 200.0       # $ per order (admin + shipping)
 HOLDING_COST_RATE = 0.02           # daily holding cost rate (2% of unit cost)
+PREMIUM_RATE = 2.5                  # emergency procurement premium (2.5x unit cost)
+SHORTAGE_DOWNTIME_COST = 200.0     # $/day extra downtime waiting cost during stockout
 
 
 class InventoryOptimizer:
@@ -49,9 +52,12 @@ class InventoryOptimizer:
         policy_df = opt.optimize(catalog_path, log_path)
     """
 
-    def __init__(self, strategy: str = "production_efficiency"):
+    def __init__(self, strategy: str = "production_efficiency",
+                 premium_rate: float = None, downtime_cost: float = None):
         self.strategy = strategy
         self.z = STRATEGY_Z.get(strategy, 1.41)
+        self.premium_rate = premium_rate if premium_rate is not None else PREMIUM_RATE
+        self.downtime_cost = downtime_cost if downtime_cost is not None else SHORTAGE_DOWNTIME_COST
 
     def optimize(self, catalog_path: str, log_path: str) -> pd.DataFrame:
         """
@@ -89,19 +95,28 @@ class InventoryOptimizer:
 
                 h = HOLDING_COST_RATE * unit_cost  # daily holding cost
                 K = FIXED_ORDERING_COST
+                # Shortage cost: emergency premium + downtime waiting cost
+                p = self.premium_rate * unit_cost + self.downtime_cost * lead_time
 
-                # Reorder point
-                s = demand * lead_time + self.z * math.sqrt(max(demand * lead_time, 0.01))
-                # Economic Order Quantity
-                eoq = math.sqrt(max(2 * K * demand / max(h, 0.001), 1))
+                # Optimal service level (critical ratio from newsvendor)
+                critical_ratio = p / max(p + h, 0.001)
+                adjusted_z = max(self.z, norm.ppf(critical_ratio) if hasattr(norm, 'ppf') else self.z)
+
+                # Reorder point with shortage-cost-adjusted z
+                s = demand * lead_time + adjusted_z * math.sqrt(max(demand * lead_time, 0.01))
+                # EOQ with shortage: EOQ_s = √(2Kμ/h · (h+p)/p)
+                eoq = math.sqrt(max(2 * K * demand / max(h, 0.001) * (h + p) / max(p, 0.001), 1))
                 # Target stock
                 S = s + eoq
 
-                safety_stock = self.z * math.sqrt(max(demand * lead_time, 0.01))
+                safety_stock = adjusted_z * math.sqrt(max(demand * lead_time, 0.01))
 
                 # Current stock estimate: assume 60% of S as baseline
                 current_stock = round(S * 0.6, 0)
                 order_qty = max(0, round(S - current_stock, 0))
+
+                risk_info = self._stockout_risk(demand * lead_time, current_stock)
+                annual_stockout_cost = round(p * 365 * risk_info["prob"], 2)
 
                 rows.append({
                     "part_name": name,
@@ -115,9 +130,13 @@ class InventoryOptimizer:
                     "safety_stock": round(safety_stock, 2),
                     "eoq": round(eoq, 2),
                     "holding_cost_daily": round(h, 4),
+                    "shortage_cost_per_unit": round(p, 2),
+                    "critical_ratio": round(critical_ratio, 3),
                     "current_stock_est": int(current_stock),
                     "suggested_order_qty": int(order_qty),
-                    "stockout_risk": self._stockout_risk(demand * lead_time, current_stock),
+                    "stockout_risk": risk_info["level"],
+                    "stockout_probability": risk_info["prob"],
+                    "annual_stockout_cost_est": annual_stockout_cost,
                 })
 
         # Common parts
@@ -130,12 +149,17 @@ class InventoryOptimizer:
             demand = 0.1 * qty_per_machine  # common parts used across all fault types
             h = HOLDING_COST_RATE * unit_cost
             K = FIXED_ORDERING_COST
-            s = demand * lead_time + self.z * math.sqrt(max(demand * lead_time, 0.01))
-            eoq = math.sqrt(max(2 * K * demand / max(h, 0.001), 1))
+            p = self.premium_rate * unit_cost + self.downtime_cost * lead_time
+            critical_ratio = p / max(p + h, 0.001)
+            adjusted_z = max(self.z, norm.ppf(critical_ratio) if hasattr(norm, 'ppf') else self.z)
+            s = demand * lead_time + adjusted_z * math.sqrt(max(demand * lead_time, 0.01))
+            eoq = math.sqrt(max(2 * K * demand / max(h, 0.001) * (h + p) / max(p, 0.001), 1))
             S = s + eoq
-            safety_stock = self.z * math.sqrt(max(demand * lead_time, 0.01))
+            safety_stock = adjusted_z * math.sqrt(max(demand * lead_time, 0.01))
             current_stock = round(S * 0.6, 0)
             order_qty = max(0, round(S - current_stock, 0))
+            risk_info = self._stockout_risk(demand * lead_time, current_stock)
+            annual_stockout_cost = round(p * 365 * risk_info["prob"], 2)
 
             rows.append({
                 "part_name": name,
@@ -149,9 +173,13 @@ class InventoryOptimizer:
                 "safety_stock": round(safety_stock, 2),
                 "eoq": round(eoq, 2),
                 "holding_cost_daily": round(h, 4),
+                "shortage_cost_per_unit": round(p, 2),
+                "critical_ratio": round(critical_ratio, 3),
                 "current_stock_est": int(current_stock),
                 "suggested_order_qty": int(order_qty),
-                "stockout_risk": self._stockout_risk(demand * lead_time, current_stock),
+                "stockout_risk": risk_info["level"],
+                "stockout_probability": risk_info["prob"],
+                "annual_stockout_cost_est": annual_stockout_cost,
             })
 
         return pd.DataFrame(rows)
@@ -192,16 +220,16 @@ class InventoryOptimizer:
         return rates
 
     @staticmethod
-    def _stockout_risk(lead_time_demand: float, stock: float) -> str:
-        """Classify stockout risk based on stock vs lead-time demand."""
+    def _stockout_risk(lead_time_demand: float, stock: float) -> dict:
+        """Return stockout classification with numeric probability estimate."""
         if stock <= 0:
-            return "critical"
+            return {"level": "critical", "prob": 0.95}
         ratio = stock / max(lead_time_demand, 0.001)
         if ratio < 1.0:
-            return "high"
+            return {"level": "high", "prob": 0.75}
         elif ratio < 2.0:
-            return "medium"
-        return "low"
+            return {"level": "medium", "prob": 0.30}
+        return {"level": "low", "prob": 0.05}
 
 
 def main():

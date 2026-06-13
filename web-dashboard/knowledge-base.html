@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>知识库管理 — 工业智能运维</title>
+<link rel="stylesheet" href="/shared/sidebar.css?v=3">
 <script src="/shared/role-check.js"></script>
 <script src="/shared/theme-init.js"></script>
 <script src="/shared/navbar.js?v=20260603"></script>
@@ -203,6 +204,55 @@ tr:hover td { background:rgba(255,255,255,0.01); }
 .cite-preview-meta { font-size:11px; color:var(--text-muted); margin-bottom:12px; }
 .cite-preview-content { font-size:12px; line-height:1.8; color:var(--text-secondary); padding:12px; background:var(--bg-card-alt); border-radius:6px; border-left:3px solid var(--accent-purple); white-space:pre-wrap; font-family:var(--font-sans); }
 .cite-preview-close { position:absolute; top:12px; right:16px; background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer; }
+
+/* ── Degradation Simulation ── */
+.degrade-sim-card { font-size: 13px; }
+.degrade-radio {
+  display: flex; align-items: center; gap: 6px; cursor: pointer;
+  font-size: 12px; color: var(--text-secondary); padding: 3px 0;
+  font-family: var(--font-mono);
+}
+.degrade-radio input[type="radio"] { accent-color: var(--accent-purple); }
+.degrade-results-cols {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  padding: 12px 0;
+}
+@media (max-width: 860px) { .degrade-results-cols { grid-template-columns: 1fr; } }
+.degrade-col {
+  background: var(--bg-card-alt); border-radius: 8px;
+  border: 1px solid var(--border); overflow: hidden;
+}
+.degrade-col-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; font-size: 12px; font-weight: 700;
+  border-bottom: 1px solid var(--border);
+}
+.degrade-col-header.bge { color: var(--accent-green); background: rgba(63,185,80,0.04); }
+.degrade-col-header.deepseek { color: var(--accent-amber); background: rgba(240,160,48,0.04); }
+.degrade-col-header.tfidf { color: var(--accent-red); background: rgba(240,68,68,0.04); }
+.degrade-col-latency { font-family: var(--font-mono); font-size: 11px; font-weight: 400; color: var(--text-muted); }
+.degrade-hit {
+  padding: 8px 14px; border-bottom: 1px solid rgba(255,255,255,0.02);
+}
+.degrade-hit:last-child { border-bottom: none; }
+.degrade-hit-title {
+  font-size: 12px; font-weight: 600; color: var(--text-primary);
+  margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.degrade-hit-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
+.degrade-hit-snippet {
+  font-size: 11px; color: var(--text-secondary); line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.degrade-hit-score {
+  font-family: var(--font-mono); font-size: 10px;
+  padding: 1px 6px; border-radius: 3px; display: inline-block;
+}
+.degrade-hit-score.high { background: rgba(63,185,80,0.1); color: var(--accent-green); }
+.degrade-hit-score.mid { background: rgba(240,160,48,0.1); color: var(--accent-amber); }
+.degrade-hit-score.low { background: rgba(240,68,68,0.08); color: var(--accent-red); }
+.degrade-empty { text-align: center; padding: 24px; color: var(--text-muted); font-size: 12px; }
+
 </style>
 </head>
 <body>
@@ -230,6 +280,24 @@ tr:hover td { background:rgba(255,255,255,0.01); }
       <div class="status-indicator">
         <span class="dot-live on" id="statusDot"></span>
         <span id="statusText">引擎就绪</span>
+      </div>
+
+      <!-- Degradation Simulation -->
+      <div class="card degrade-sim-card" style="margin-top:16px;">
+        <div class="card-header" style="font-size:13px;">🔬 降级模拟</div>
+        <div style="padding:0 16px 4px;font-size:11px;color:var(--text-muted);">选择嵌入层级并触发搜索对比</div>
+        <div style="padding:8px 16px;display:flex;flex-direction:column;gap:4px;">
+          <label class="degrade-radio"><input type="radio" name="degradeTier" value="bge_local" checked> BGE 本地 · ~15ms</label>
+          <label class="degrade-radio"><input type="radio" name="degradeTier" value="deepseek_api"> DeepSeek API · ~300ms</label>
+          <label class="degrade-radio"><input type="radio" name="degradeTier" value="tfidf_fallback"> TF-IDF · ~5ms</label>
+        </div>
+        <div style="padding:8px 16px 12px;display:flex;gap:6px;">
+          <input type="text" id="degradeQuery" placeholder="搜索查询..." style="flex:1;padding:6px 10px;font-size:12px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);">
+          <button class="btn small primary" onclick="runDegradeTest()" id="degradeTestBtn">🔍 测试</button>
+        </div>
+        <div style="padding:0 16px 12px;">
+          <button class="btn small" onclick="runDegradeTestAll()" id="degradeTestAllBtn">⚡ 三级对比测试</button>
+        </div>
       </div>
     </div>
 
@@ -308,6 +376,14 @@ tr:hover td { background:rgba(255,255,255,0.01); }
         <div class="rag-compare-footer">
           💡 以上对比基于实际 RAG 系统生成（BGE-small-zh 嵌入 + Chroma 向量检索 + DeepSeek LLM），引用内容均来自项目真实文档和知识库。
         </div>
+      </div>
+      <!-- Degrade Test Results -->
+      <div class="card degrade-results-card" id="degradeResultsCard" style="display:none;margin-top:18px;">
+        <div class="card-header">
+          <span class="card-title">📊 降级测试结果</span>
+          <span id="degradeResultsQuery" style="font-size:12px;color:var(--text-muted);"></span>
+        </div>
+        <div class="degrade-results-cols" id="degradeResultsCols"></div>
       </div>
     </div>
   </div>
@@ -701,6 +777,89 @@ function openSearchCitePreview(citeId) {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeCitePreview();
 });
+
+// ── Degradation Test ──
+function runDegradeTest() {
+  var query = document.getElementById('degradeQuery').value.trim();
+  if (!query) { alert('请输入搜索查询'); return; }
+  var tier = document.querySelector('input[name="degradeTier"]:checked');
+  if (!tier) return;
+  tier = tier.value;
+  var btn = document.getElementById('degradeTestBtn');
+  btn.textContent = '⏳'; btn.disabled = true;
+  fetch('/api/knowledge-base/degrade-test', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({query: query})
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    if (!data.success) { alert(data.error); return; }
+    // Find the selected tier result
+    var match = data.results.filter(function(r) { return r.tier === tier; });
+    showDegradeResults(query, match);
+  }).catch(function(e) { alert('测试失败: ' + e.message); })
+  .finally(function() { btn.textContent = '🔍 测试'; btn.disabled = false; });
+}
+
+function runDegradeTestAll() {
+  var query = document.getElementById('degradeQuery').value.trim();
+  if (!query) { alert('请输入搜索查询'); return; }
+  var btn = document.getElementById('degradeTestAllBtn');
+  btn.textContent = '⏳ 测试中...'; btn.disabled = true;
+  fetch('/api/knowledge-base/degrade-test', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({query: query})
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    if (!data.success) { alert(data.error); return; }
+    showDegradeResults(query, data.results);
+  }).catch(function(e) { alert('测试失败: ' + e.message); })
+  .finally(function() { btn.textContent = '⚡ 三级对比测试'; btn.disabled = false; });
+}
+
+function showDegradeResults(query, results) {
+  var card = document.getElementById('degradeResultsCard');
+  var cols = document.getElementById('degradeResultsCols');
+  var queryEl = document.getElementById('degradeResultsQuery');
+  if (!card || !cols) return;
+  card.style.display = 'block';
+  queryEl.textContent = '查询: "' + query + '"';
+
+  var tierNames = {
+    'bge_local': { label: '🔹 BGE 本地', cls: 'bge' },
+    'deepseek_api': { label: '🔸 DeepSeek API', cls: 'deepseek' },
+    'tfidf_fallback': { label: '🔻 TF-IDF', cls: 'tfidf' }
+  };
+
+  var html = '';
+  results.forEach(function(r) {
+    var tn = tierNames[r.tier] || { label: r.tier, cls: '' };
+    var hits = r.results || [];
+    html += '<div class="degrade-col">' +
+      '<div class="degrade-col-header ' + tn.cls + '">' +
+        '<span>' + tn.label + '</span>' +
+        '<span class="degrade-col-latency">' + (r.elapsed_ms || 0) + 'ms</span>' +
+      '</div>';
+    if (hits.length === 0) {
+      var note = r.note || '';
+      html += '<div class="degrade-empty">' + (note ? note : '无结果') + '</div>';
+    } else {
+      hits.forEach(function(h) {
+        var score = h.score || 0;
+        var scoreCls = score >= 0.7 ? 'high' : (score >= 0.4 ? 'mid' : 'low');
+        var scorePct = Math.round(score * 100) + '%';
+        html += '<div class="degrade-hit">' +
+          '<div class="degrade-hit-title">' + (h.section || h.source || '未知') + '</div>' +
+          '<div class="degrade-hit-meta">' +
+            '<span class="degrade-hit-score ' + scoreCls + '">' + scorePct + '</span> ' +
+            (h.source || '') +
+          '</div>' +
+          '<div class="degrade-hit-snippet">' + ((h.content || '').substring(0, 120)) + '</div>' +
+          '</div>';
+      });
+    }
+    html += '</div>';
+  });
+  cols.innerHTML = html;
+  card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 
 // Init
 renderRagCompare();

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import os
 from enum import Enum
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Any
@@ -72,7 +73,7 @@ STRATEGY_CONFIGS: Dict[MaintenanceStrategy, StrategyConfig] = {
                         "cost_risk_weight": 0.40, "trend_weight": 0.10},
         sla_p1=48, sla_p2=96, sla_p3=168,
         max_orders=12,
-        max_budget=0,  # 0 = no budget cap (cost_efficiency already limits max_orders to 12)
+        max_budget=80000,  # $80K budget cap — activates knapsack DP selection
         window_multiplier=1.5,
         cost_multiplier_at_risk=1.0,
         quality_sensitivity=0.3,
@@ -87,7 +88,7 @@ STRATEGY_CONFIGS: Dict[MaintenanceStrategy, StrategyConfig] = {
                         "cost_risk_weight": 0.20, "trend_weight": 0.15},
         sla_p1=12, sla_p2=48, sla_p3=72,
         max_orders=20,
-        max_budget=0,  # 0 = no budget cap; set >0 to enable cost-constrained selection
+        max_budget=150000,  # $150K budget cap — enables cost-constrained DP optimization
         window_multiplier=0.8,
         cost_multiplier_at_risk=0.9,
         quality_sensitivity=0.5,
@@ -102,7 +103,7 @@ STRATEGY_CONFIGS: Dict[MaintenanceStrategy, StrategyConfig] = {
                         "cost_risk_weight": 0.15, "trend_weight": 0.20},
         sla_p1=8, sla_p2=24, sla_p3=48,
         max_orders=30,
-        max_budget=0,  # 0 = no budget cap (quality_first prioritizes coverage over cost)
+        max_budget=250000,  # $250K budget cap — widest coverage under DP optimization
         window_multiplier=0.5,
         cost_multiplier_at_risk=1.2,
         quality_sensitivity=1.0,
@@ -231,8 +232,8 @@ class StrategySelector:
             return []
 
         B = int(budget_limit)
-        # Labor-hour cap: derive from max_orders × typical repair hours
-        H = int(max_orders * 4.0)
+        # Labor-hour cap: from technician schedule or fallback (14d × 8h × 2 techs)
+        H = self._calculate_available_hours(14)
 
         # Build items array: (risk_reduction, cost, hours)
         items = []
@@ -257,31 +258,51 @@ class StrategySelector:
                 "candidate": r,
             })
 
-        # 0-1 Knapsack DP with budget dimension
-        # dp[j] = max risk reduction achievable with budget <= j
-        dp = [0.0] * (B + 1)
-        hours_used = [0] * (B + 1)
-        # For reconstruction: trace[j] = list of item indices for budget j
-        trace = [[] for _ in range(B + 1)]
+        # 2D 0-1 Knapsack DP: dp[budget][hours] = max risk reduction
+        # Uses backtracking (last_item + prev_state) to avoid O(k) list copies in inner loop
+        SCALE = 200
+        B_scaled = max(1, B // SCALE)
+        H_max = int(H)
+
+        dp = [[0.0] * (H_max + 1) for _ in range(B_scaled + 1)]
+        last = [[-1] * (H_max + 1) for _ in range(B_scaled + 1)]   # which item was added
+        prev = [[(-1, -1)] * (H_max + 1) for _ in range(B_scaled + 1)]  # (prev_b, prev_h)
 
         for i, item in enumerate(items):
-            ci = item["cost"]
-            hi = item["hours"]
+            ci = max(1, item["cost"] // SCALE)
+            hi = min(item["hours"], H_max)
             ri = item["risk_reduction"]
-            for j in range(B, ci - 1, -1):
-                prev_h = hours_used[j - ci] if j - ci >= 0 else 0
-                if prev_h + hi <= H:
-                    new_val = dp[j - ci] + ri
-                    if new_val > dp[j]:
-                        dp[j] = new_val
-                        hours_used[j] = prev_h + hi
-                        trace[j] = trace[j - ci] + [i]
+            for j in range(B_scaled, ci - 1, -1):
+                row_j = dp[j]
+                row_j_prev = dp[j - ci]
+                last_j = last[j]
+                prev_j = prev[j]
+                for h in range(H_max, hi - 1, -1):
+                    new_val = row_j_prev[h - hi] + ri
+                    if new_val > row_j[h]:
+                        row_j[h] = new_val
+                        last_j[h] = i
+                        prev_j[h] = (j - ci, h - hi)
 
-        # Find best budget utilization
-        best_j = max(range(B + 1), key=lambda j: dp[j])
-        selected_indices = trace[best_j]
+        # Find best (budget, hours) combination
+        best_val = 0.0
+        best_j, best_h = 0, 0
+        for j in range(B_scaled + 1):
+            for h in range(H_max + 1):
+                if dp[j][h] > best_val:
+                    best_val = dp[j][h]
+                    best_j = j
+                    best_h = h
+
+        # Backtrack to reconstruct selected indices
+        selected_indices = []
+        b, h = best_j, best_h
+        while b >= 0 and h >= 0 and last[b][h] >= 0:
+            idx = last[b][h]
+            selected_indices.append(idx)
+            b, h = prev[b][h]
         budget_used = sum(items[i]["cost"] for i in selected_indices)
-        risk_achieved = dp[best_j]
+        risk_achieved = best_val
 
         # Annotate results with optimization metadata
         selected = [items[i]["candidate"] for i in selected_indices]
@@ -403,6 +424,51 @@ class StrategySelector:
             "budget_utilization_pct": summary.get("budget_utilization_pct", 0),
             "deferred_by_or": summary.get("n_greedy", greedy_n) - len(optimized) if len(optimized) < greedy_n else 0,
         }
+
+    def calculate_dynamic_budget(self, plan_df: pd.DataFrame,
+                                 coverage_ratio: float = 0.75) -> float:
+        """
+        Calculate a data-driven budget from cost_at_risk distribution.
+
+        Budget = coverage_ratio × sum of estimated_cost for P1+P2 (high-risk) machines.
+        Falls back to top-20 by urgency if priority column missing.
+        """
+        if plan_df.empty:
+            return self.config.max_budget or 100000
+
+        if "maintenance_priority" in plan_df.columns:
+            high_risk = plan_df[plan_df["maintenance_priority"].isin(["P1", "P2"])]
+        else:
+            high_risk = plan_df.nlargest(min(20, len(plan_df)), "urgency_score")
+
+        if "estimated_cost" in high_risk.columns:
+            total = float(high_risk["estimated_cost"].sum())
+        else:
+            total = float(high_risk["cost_at_risk"].sum() * 0.15)
+
+        return max(round(total * coverage_ratio, -3), 5000)  # round to nearest 1000, min $5K
+
+    @staticmethod
+    def _calculate_available_hours(horizon_days: int = 14) -> int:
+        """Estimate available labor hours from technician schedule or fallback (cached)."""
+        cache_attr = f'_cached_hours_{horizon_days}'
+        cached = getattr(StrategySelector, cache_attr, None)
+        if cached is not None:
+            return cached
+        tech_path = os.path.join(
+            os.path.dirname(__file__), "..", "..", "..",
+            "web-dashboard", "data", "technician_schedule.csv"
+        )
+        result = horizon_days * 8 * 2  # fallback
+        if os.path.exists(tech_path):
+            try:
+                tech_df = pd.read_csv(tech_path, encoding="utf-8")
+                if "available_hours" in tech_df.columns:
+                    result = int(tech_df["available_hours"].head(horizon_days).sum())
+            except Exception:
+                pass
+        setattr(StrategySelector, cache_attr, result)
+        return result
 
     def get_sla(self, priority: str) -> int:
         """Return SLA target in hours for a given priority level."""

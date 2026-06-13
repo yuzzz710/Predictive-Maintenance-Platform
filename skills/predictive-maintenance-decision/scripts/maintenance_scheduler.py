@@ -50,9 +50,11 @@ class MaintenanceScheduler:
         result_df = sched.schedule(plan_df, ref_date=pd.Timestamp.now())
     """
 
-    def __init__(self, horizon_days: int = 14, seed: int = 42):
+    def __init__(self, horizon_days: int = 14, seed: int = 42,
+                 merge_batch: bool = False):
         self.horizon = horizon_days
         self.rng = np.random.default_rng(seed)
+        self.merge_batch = merge_batch
 
     def schedule(self, plan_df: pd.DataFrame,
                  ref_date=None) -> pd.DataFrame:
@@ -85,11 +87,18 @@ class MaintenanceScheduler:
 
             # Earliest start: P1=day0, P2=day2, P3=day5
             earliest = {"P1": 0, "P2": 2, "P3": 5}.get(priority, 5)
-            # Deadline: earlier for higher urgency
-            deadline = max(earliest + 1, int(14 - urgency / 10))
+
+            # Deadline from degradation-rate projection (not arbitrary 14-urgency/10)
+            trend = float(row.get("trend_score", 0.01))
+            anomaly = float(row.get("anomaly_score", 0.5))
+            alarm_threshold = 0.7
+            gap_to_alarm = max(0.05, alarm_threshold - anomaly)
+            days_to_alarm = gap_to_alarm / max(abs(trend), 0.005)
+            # Cap by priority: P1=1d, P2=3d, P3=7d
+            max_dl = {"P1": 1, "P2": 3, "P3": 7}.get(priority, 5)
+            deadline = earliest + min(int(days_to_alarm), max_dl)
             deadline = min(deadline, self.horizon - 1)
-            if deadline <= earliest:
-                deadline = earliest + 1
+            deadline = max(deadline, earliest + 1)
 
             # Risk weight ∝ urgency × cost_at_risk
             risk_weight = urgency * cost / 10000.0
@@ -103,7 +112,13 @@ class MaintenanceScheduler:
                 "priority": priority,
                 "pattern": pattern,
                 "technician_type": tech,
+                "trend_score": float(row.get("trend_score", 0.01)),
+                "anomaly_score": float(row.get("anomaly_score", 0.5)),
             })
+
+        # ── Merge compatible orders (same tech + pattern + overlapping windows) ──
+        if self.merge_batch:
+            orders = self._merge_candidates(orders)
 
         # Sort by priority then risk_weight descending for greedy construction
         pri_order = {"P1": 0, "P2": 1, "P3": 2}
@@ -187,6 +202,46 @@ class MaintenanceScheduler:
                         schedule = swapped
                         improved = True
 
+        # ── Relocate local search (move single order to better day) ──
+        relocate_improved = True
+        relocate_iters = 0
+        while relocate_improved and relocate_iters < 100:
+            relocate_improved = False
+            relocate_iters += 1
+            for a_idx in range(len(schedule)):
+                oi_a, day_a = schedule[a_idx]
+                o_a = orders[oi_a]
+                for new_day in range(o_a["earliest_day"], self.horizon):
+                    if new_day == day_a:
+                        continue
+                    # Validate capacity for candidate move
+                    test_load = [0.0] * self.horizon
+                    valid = True
+                    for oi, d in schedule:
+                        d_test = new_day if oi == oi_a else d
+                        if d_test < orders[oi]["earliest_day"]:
+                            valid = False
+                            break
+                        test_load[d_test] += orders[oi]["duration_hours"]
+                        if test_load[d_test] > _hours_available(d_test, ref_date) * 1.05:
+                            valid = False
+                            break
+                    if not valid:
+                        continue
+                    # Evaluate weighted tardiness
+                    score = sum(
+                        max(0, (new_day if oi == oi_a else d) - orders[oi]["deadline_day"])
+                        * orders[oi]["risk_weight"]
+                        for oi, d in schedule
+                    )
+                    if score < best_score - 0.001:
+                        best_score = score
+                        schedule[a_idx] = (oi_a, new_day)
+                        relocate_improved = True
+                        break  # first-improvement
+                if relocate_improved:
+                    break
+
         # ── Remove empty days, build output ──
         rows = []
         for oi, day in schedule:
@@ -222,6 +277,52 @@ class MaintenanceScheduler:
             "total_weighted_tardiness": round(getattr(self, '_last_score', 0), 2),
             "n_ontime": getattr(self, '_n_ontime', 0),
         }
+
+    def _merge_candidates(self, orders: List[dict]) -> List[dict]:
+        """
+        Pre-process: merge compatible orders into batches.
+        Two orders are mergeable if:
+          - Same technician_type AND same primary_pattern (not 'normal')
+          - Overlapping time windows (earliest_day to deadline_day)
+          - Combined duration <= 16h (2-shift max)
+        Returns modified orders list with some orders merged (15% time saving).
+        """
+        merged = []
+        used = set()
+        for i, o_i in enumerate(orders):
+            if i in used:
+                continue
+            group = [i]
+            for j, o_j in enumerate(orders):
+                if j <= i or j in used:
+                    continue
+                same_tech = o_i["technician_type"] == o_j["technician_type"]
+                same_pattern = o_i["pattern"] == o_j["pattern"]
+                not_normal = o_i["pattern"] != "normal"
+                overlap = (max(o_i["earliest_day"], o_j["earliest_day"]) <=
+                           min(o_i["deadline_day"], o_j["deadline_day"]))
+                if same_tech and same_pattern and not_normal and overlap:
+                    combined_dur = sum(orders[k]["duration_hours"] for k in group)
+                    combined_dur += o_j["duration_hours"]
+                    if combined_dur <= 16.0:
+                        group.append(j)
+            for idx in group:
+                used.add(idx)
+            if len(group) == 1:
+                merged.append(o_i)
+            else:
+                batch = dict(o_i)
+                batch["machine_id"] = "+".join(orders[k]["machine_id"] for k in group)
+                batch["duration_hours"] = round(
+                    sum(orders[k]["duration_hours"] for k in group) * 0.85, 1
+                )
+                batch["risk_weight"] = sum(orders[k]["risk_weight"] for k in group)
+                batch["deadline_day"] = min(orders[k]["deadline_day"] for k in group)
+                batch["earliest_day"] = min(orders[k]["earliest_day"] for k in group)
+                batch["pattern"] = o_i["pattern"] + "_batch"
+                batch["_merged_from"] = [orders[k]["machine_id"] for k in group]
+                merged.append(batch)
+        return merged
 
     def compare_with_rules(self, plan_df: pd.DataFrame,
                            downtime_window_col: str = "recommended_downtime_window",

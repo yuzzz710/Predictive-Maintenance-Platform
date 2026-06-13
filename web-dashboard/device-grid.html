@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>设备健康矩阵 — 工业智能运维</title>
+<link rel="stylesheet" href="/shared/sidebar.css?v=3">
+<script src="/shared/theme-init.js"></script>
+<script src="/shared/navbar.js?v=3"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="/shared/device-grid-component.js"></script>
+<style>
+:root {
+  --bg-root: #080a0d; --bg-card: #141820; --bg-card-alt: #181d26; --bg-surface: #0e1117;
+  --border: #1c2230; --border-light: #242b38;
+  --text-primary: #e6ebf2; --text-secondary: #8e9aab; --text-muted: #5a6474;
+  --cyan: #00c9a0; --red: #f04444; --amber: #f0a030; --green: #3fb950;
+  --teal: #00c9a0; --blue: #4d94ff; --orange: #f0883e; --yellow: #f0a030; --purple: #a371f7;
+  --font-sans: 'PingFang SC','Microsoft YaHei','Segoe UI',system-ui,sans-serif;
+  --font-mono: 'Cascadia Code','Fira Code','Consolas',monospace;
+  --radius: 6px;
+}
+[data-theme="light"] {
+  --bg-root: #f4f6f9; --bg-card: #ffffff; --bg-card-alt: #f0f2f5; --bg-surface: #ffffff;
+  --border: #dde1e7; --border-light: #e4e8ef;
+  --text-primary: #1a1d26; --text-secondary: #4a5568; --text-muted: #7a8498;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: var(--font-sans); background: var(--bg-root);
+  color: var(--text-primary); min-height: 100vh; line-height: 1.5;
+}
+body::before {
+  content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(0,201,160,0.04), transparent),
+              radial-gradient(ellipse 50% 30% at 80% 80%, rgba(77,148,255,0.03), transparent);
+}
+
+/* ── Header ── */
+.page-header { text-align: center; padding: 32px 24px 16px; }
+.page-header h1 { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+.page-header p { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+/* ── Grid ── */
+.grid-wrapper { max-width: 800px; margin: 0 auto; padding: 0 24px; }
+.grid-legend {
+  display: flex; gap: 18px; margin-bottom: 12px; font-size: 11px;
+  color: var(--text-secondary); flex-wrap: wrap; align-items: center;
+}
+.grid-legend span { display: flex; align-items: center; gap: 5px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+.machine-grid {
+  display: grid; grid-template-columns: repeat(10, 1fr); grid-template-rows: repeat(10, 1fr);
+  gap: 7px; max-width: 760px; margin: 0 auto;
+}
+
+.cell {
+  aspect-ratio: 1; border-radius: 6px; cursor: pointer; position: relative;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 600; letter-spacing: 0.3px;
+  color: rgba(255,255,255,0.92); user-select: none;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+.cell:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.35); filter: brightness(1.08); z-index: 10; }
+.cell.healthy  { background: #238636; }
+.cell.degrading { background: #b8860b; }
+.cell.critical { background: #da3633; }
+
+.cell.has-wo { animation: keycapPulse 2s ease-in-out infinite; }
+.cell.has-wo.alarm { animation-name: keycapAlarm; }
+@keyframes keycapPulse { 0%,100% { filter: brightness(1); } 50% { filter: brightness(1.1); } }
+@keyframes keycapAlarm {
+  0%,100% { box-shadow: 0 0 6px rgba(240,68,68,0.4), 0 0 16px rgba(240,68,68,0.12); filter: brightness(1); }
+  50% { box-shadow: 0 0 14px rgba(255,60,60,0.6), 0 0 28px rgba(255,60,60,0.25); filter: brightness(1.1); }
+}
+.cell.has-wo.warning { animation-name: keycapWarn; }
+@keyframes keycapWarn {
+  0%,100% { box-shadow: 0 0 4px rgba(240,136,62,0.35), 0 0 10px rgba(240,136,62,0.1); filter: brightness(1); }
+  50% { box-shadow: 0 0 10px rgba(255,150,40,0.5), 0 0 20px rgba(255,150,40,0.2); filter: brightness(1.07); }
+}
+.cell.priority-pulse { animation: priorityPulse 2s ease-in-out infinite; z-index: 10; position: relative; }
+@keyframes priorityPulse {
+  0%,100% { box-shadow: 0 0 10px rgba(240,160,48,0.5), 0 0 22px rgba(240,160,48,0.2); filter: brightness(1); }
+  50% { box-shadow: 0 0 18px rgba(255,180,40,0.75), 0 0 36px rgba(255,180,40,0.32); filter: brightness(1.12); }
+}
+.cell .pri-badge {
+  position: absolute; top: 3px; right: 3px;
+  font-size: 7px; padding: 1px 4px; border-radius: 7px;
+  background: rgba(0,0,0,0.55); color: #fff;
+  font-family: var(--font-mono);
+}
+
+/* ── Stats bar ── */
+.stats-bar {
+  display: flex; gap: 24px; justify-content: center; padding: 16px 24px;
+  font-size: 12px; color: var(--text-secondary); flex-wrap: wrap;
+}
+.stats-bar b { color: var(--text-primary); }
+.stats-bar .st-critical { color: #da3633; }
+.stats-bar .st-degrading { color: #b8860b; }
+.stats-bar .st-healthy { color: #238636; }
+
+/* ── Footer ── */
+.grid-footer {
+  text-align: center; padding: 12px 24px 32px;
+  font-size: 11px; color: var(--text-muted);
+}
+
+.fallback { text-align: center; padding: 40px; color: var(--text-muted); font-size: 13px; }
+
+/* ── Detail Panel ── */
+.panel-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 2000;
+  display: none; opacity: 0; transition: opacity 0.25s ease;
+}
+.panel-overlay.open { display: block; opacity: 1; }
+.detail-panel {
+  position: fixed; top: 0; right: 0; width: 420px; max-width: 95vw; height: 100vh;
+  background: var(--bg-card); border-left: 1px solid var(--border);
+  z-index: 2001; overflow-y: auto; padding: 0;
+  transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: -8px 0 32px rgba(0,0,0,0.3);
+}
+.detail-panel.open { transform: translateX(0); }
+.panel-header {
+  position: sticky; top: 0; background: var(--bg-card); z-index: 10;
+  padding: 18px 20px 12px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-close {
+  width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border);
+  background: var(--bg-card-alt); color: var(--text-secondary); cursor: pointer;
+  font-size: 16px; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.panel-close:hover { background: var(--red); color: #fff; border-color: var(--red); }
+.panel-body { padding: 16px 20px; }
+.panel-section {
+  background: var(--bg-card-alt); border-radius: var(--radius);
+  padding: 14px 16px; margin-bottom: 12px;
+  border: 1px solid var(--border);
+}
+.panel-section h3 {
+  font-size: 13px; margin-bottom: 10px; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 6px;
+}
+.panel-section h3 .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.stat-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+.stat-item { flex: 1; min-width: 80px; }
+.stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-value { font-size: 18px; font-weight: 700; font-family: "Cascadia Code","Fira Code","Consolas",monospace; }
+.signal-item {
+  display: flex; align-items: flex-start; gap: 8px; padding: 6px 0;
+  border-bottom: 1px solid var(--border); font-size: 12px; line-height: 1.6;
+}
+.signal-item:last-child { border-bottom: none; }
+.signal-badge { font-size: 14px; flex-shrink: 0; width: 20px; text-align: center; }
+.checklist-item {
+  font-size: 12px; padding: 4px 0; color: var(--text-secondary);
+  display: flex; gap: 6px;
+}
+.checklist-item .idx { color: var(--teal); flex-shrink: 0; font-weight: 600; }
+.shap-explore-btn-open {
+  display: block; width: 100%; padding: 10px; margin-bottom: 10px;
+  border-radius: 6px; cursor: pointer; font-size: 12px; font-family: var(--font-sans);
+  border: 1px solid rgba(163,113,247,0.25); background: rgba(163,113,247,0.08);
+  color: var(--purple); transition: all 0.2s;
+}
+.shap-explore-btn-open:hover { background: rgba(163,113,247,0.15); border-color: var(--purple); }
+
+/* ── SHAP Exploration ── */
+.shap-explore-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+  z-index: 3000; display: none; opacity: 0;
+  transition: opacity 0.25s ease; backdrop-filter: blur(2px);
+}
+.shap-explore-overlay.open { display: flex; align-items: center; justify-content: center; opacity: 1; }
+.shap-explore-modal {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; width: 920px; max-width: 95vw; max-height: 90vh;
+  overflow-y: auto; box-shadow: 0 16px 64px rgba(0,0,0,0.4);
+  display: flex; flex-direction: column;
+}
+.shap-explore-header {
+  position: sticky; top: 0; z-index: 10; background: var(--bg-card);
+  padding: 20px 24px 14px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.shap-explore-title { font-size: 18px; font-weight: 700; color: var(--purple); }
+.shap-explore-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.shap-explore-close {
+  background: none; border: none; color: var(--text-muted);
+  font-size: 22px; cursor: pointer; padding: 4px 8px;
+  border-radius: 4px; transition: all 0.2s;
+}
+.shap-explore-close:hover { background: var(--red); color: #fff; }
+.shap-explore-body { padding: 16px 24px 24px; }
+.shap-explore-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.shap-explore-label { font-size: 13px; color: var(--text-secondary); white-space: nowrap; }
+.shap-explore-select {
+  padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--bg-input, var(--bg-card)); color: var(--text-primary); font-size: 13px;
+  cursor: pointer; min-width: 200px;
+}
+.shap-explore-select:focus { outline: none; border-color: var(--purple); }
+.shap-explore-tagline { font-size: 12px; color: var(--text-muted); width: 100%; margin-top: 4px; }
+.shap-explore-chart { width: 100%; }
+.shap-explore-stats { display: flex; gap: 20px; padding: 8px 0; font-size: 12px; color: var(--text-muted); flex-wrap: wrap; }
+.shap-explore-stats b { color: var(--text-primary); }
+
+/* ── Trace Panel ── */
+.trace-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 3000; display: none; opacity: 0; transition: opacity 0.25s ease; }
+.trace-overlay.open { display: block; opacity: 1; }
+.trace-panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 560px; max-width: 94vw; max-height: 80vh; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); z-index: 3001; overflow-y: auto; box-shadow: 0 16px 48px rgba(0,0,0,0.5); display: none; }
+.trace-panel.open { display: block; }
+.trace-header { position: sticky; top: 0; background: var(--bg-card); z-index: 10; padding: 16px 20px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.trace-close { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg-card-alt); color: var(--text-secondary); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.trace-close:hover { background: var(--red); color: #fff; border-color: var(--red); }
+.trace-body { padding: 16px 20px; font-size: 12px; line-height: 1.8; color: var(--text-secondary); }
+.trace-body h3 { font-size: 14px; color: var(--text-primary); margin: 14px 0 8px; }
+.trace-body h3:first-child { margin-top: 0; }
+.trace-item { padding: 6px 10px; margin: 3px 0; background: var(--bg-card-alt); border-radius: 4px; display: flex; justify-content: space-between; }
+.ti-label { flex: 1; }
+.ti-val { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+.trace-bar-wrap { height: 6px; background: var(--bg-card-alt); border-radius: 3px; margin: 4px 0 8px; overflow: hidden; }
+.trace-bar-fill { height: 100%; border-radius: 3px; }
+.trace-note { font-size: 11px; color: var(--text-muted); margin-top: 12px; padding: 10px 14px; background: var(--bg-card-alt); border-radius: 4px; border-left: 3px solid var(--cyan); line-height: 1.7; }
+
+@media (max-width: 768px) {
+  .detail-panel { width: 100vw; }
+  .machine-grid { gap: 3px; }
+  .cell { border-radius: 3px; font-size: 7px; }
+}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>100台 CNC 设备健康矩阵</h1>
+  <p>实时监控 · 彩色编码 · 点击查看详情</p>
+</div>
+
+<div class="grid-wrapper">
+  <div class="grid-legend">
+    <span><span class="legend-dot" style="background:#238636;"></span> 健康</span>
+    <span><span class="legend-dot" style="background:#b8860b;"></span> 退化</span>
+    <span><span class="legend-dot" style="background:#da3633;"></span> 高危</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;box-shadow:0 0 8px rgba(240,68,68,0.5);margin-right:4px;background:#da3633;"></span> 开放工单</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;box-shadow:0 0 10px rgba(240,160,48,0.5);margin-right:4px;background:transparent;border:1px solid rgba(240,160,48,0.3);"></span> Top 3 风险</span>
+  </div>
+  <div class="machine-grid" id="machine-grid"><div class="fallback">加载中...</div></div>
+</div>
+
+<div class="stats-bar" id="stats-bar"></div>
+<div class="grid-footer">数据源: equipment_health_score.csv &middot; maintenance_work_orders.csv</div>
+
+<!-- Detail Panel -->
+<div class="panel-overlay" id="panel-overlay" onclick="closePanel()"></div>
+<div class="detail-panel" id="detail-panel">
+  <div class="panel-header">
+    <div>
+      <div style="font-size:18px;font-weight:700;" id="panel-mid">--</div>
+      <div style="font-size:11px;color:var(--text-muted);" id="panel-subtitle">--</div>
+    </div>
+    <button class="panel-close" onclick="closePanel()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="panel-body" id="panel-body"></div>
+</div>
+
+<!-- Trace Panel -->
+<div class="trace-overlay" id="trace-overlay" onclick="closeTrace()"></div>
+<div class="trace-panel" id="trace-panel">
+  <div class="trace-header">
+    <div style="font-size:16px;font-weight:700;" id="trace-title">基线溯源</div>
+    <button class="trace-close" onclick="closeTrace()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="trace-body" id="trace-body"></div>
+</div>
+
+<!-- SHAP Exploration Modal -->
+<div class="shap-explore-overlay" id="shap-explore-overlay">
+  <div class="shap-explore-modal">
+    <div class="shap-explore-header">
+      <div>
+        <div class="shap-explore-title">SHAP 归因交互式探索</div>
+        <div class="shap-explore-subtitle" id="shap-explore-subtitle">选择一个特征，查看其对所有100台设备风险评分的影响</div>
+      </div>
+      <button class="shap-explore-close" onclick="closeShapExploration()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="shap-explore-body">
+      <div class="shap-explore-controls">
+        <label class="shap-explore-label">选择特征:</label>
+        <select class="shap-explore-select" id="shap-feature-select" onchange="renderShapScatter()"></select>
+        <div class="shap-explore-tagline" id="shap-tagline"></div>
+      </div>
+      <div class="shap-explore-chart" id="chart-shap-scatter" style="height:460px;"></div>
+      <div class="shap-explore-stats" id="shap-explore-stats"></div>
+    </div>
+  </div>
+</div>
+
+<script>document.addEventListener('DOMContentLoaded', initDeviceGrid);</script>
+</body>
+</html>
