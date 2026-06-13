@@ -197,11 +197,10 @@ body {
 }
 .shap-explore-overlay.open { display: flex; align-items: center; justify-content: center; opacity: 1; }
 .shap-explore-modal {
-  background: var(--glass-bg-modal);
-  backdrop-filter: var(--glass-blur-strong); -webkit-backdrop-filter: var(--glass-blur-strong);
+  background: var(--bg-surface);
   border: 0.5px solid var(--glass-border);
   border-radius: var(--radius-xl); width: 920px; max-width: 95vw; max-height: 90vh;
-  overflow-y: auto; box-shadow: var(--shadow-xl), var(--glass-highlight-strong);
+  overflow-y: auto; box-shadow: var(--shadow-xl);
   display: flex; flex-direction: column;
 }
 .shap-explore-header {
@@ -239,8 +238,8 @@ body {
   flex: 1; min-width: 200px; line-height: 1.5;
 }
 .shap-explore-chart {
-  background: var(--bg-card-alt); border-radius: var(--radius);
-  padding: 4px; border: 0.5px solid var(--border-light);
+  background: rgba(255,255,255,0.04); border-radius: var(--radius-md);
+  padding: 8px; border: 0.5px solid var(--border);
 }
 .shap-explore-stats {
   display: flex; gap: 24px; margin-top: 12px;

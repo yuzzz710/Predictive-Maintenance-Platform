@@ -444,9 +444,10 @@ function renderShapScatter() {
     '<span>均值贡献: <b>' + (meanContrib > 0 ? '+' : '') + meanContrib.toFixed(4) + '</b></span>';
 
   var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-  var textPrimary = isDark ? '#e6ebf2' : '#1a1d26';
-  var textSecondary = isDark ? '#8e9aab' : '#4a5568';
-  var levelColor = { 'Healthy': '#3fb950', 'Warning': '#f0a030', 'Degrading': '#f0883e', 'Critical': '#f04444' };
+  var textPrimary = isDark ? '#f5f5f7' : '#1d1d1f';
+  var textSecondary = isDark ? '#aeaeb2' : '#6e6e73';
+  var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  var levelColor = { 'Healthy': '#30d158', 'Warning': '#ffb340', 'Degrading': '#ff9500', 'Critical': '#ff453a' };
 
   var dom = document.getElementById('chart-shap-scatter');
   if (!dom) return;
@@ -456,8 +457,8 @@ function renderShapScatter() {
   chart.setOption({
     tooltip: {
       trigger: 'item',
-      backgroundColor: isDark ? 'rgba(20,24,32,0.95)' : 'rgba(255,255,255,0.95)',
-      borderColor: isDark ? '#2a3a50' : '#d0d7de',
+      backgroundColor: isDark ? 'rgba(30,30,32,0.96)' : 'rgba(255,255,255,0.96)',
+      borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
       textStyle: { color: textPrimary, fontSize: 12 },
       formatter: function(p) {
         var v = p.value;
@@ -467,15 +468,15 @@ function renderShapScatter() {
     grid: { left: 60, right: 30, top: 16, bottom: 40 },
     xAxis: {
       type: 'value', name: featMeta.display_name + ' (' + featMeta.unit + ')',
-      nameTextStyle: { color: textSecondary, fontSize: 10 },
-      axisLabel: { color: textSecondary, fontSize: 9 },
-      splitLine: { lineStyle: { color: isDark ? '#1c2230' : '#e8ecf0' } }
+      nameTextStyle: { color: textSecondary, fontSize: 11 },
+      axisLabel: { color: textSecondary, fontSize: 10 },
+      splitLine: { lineStyle: { color: gridColor } }
     },
     yAxis: {
       type: 'value', name: 'SHAP 贡献值',
-      nameTextStyle: { color: textSecondary, fontSize: 10 },
-      axisLabel: { color: textSecondary, fontSize: 9 },
-      splitLine: { lineStyle: { color: isDark ? '#1c2230' : '#e8ecf0' } }
+      nameTextStyle: { color: textSecondary, fontSize: 11 },
+      axisLabel: { color: textSecondary, fontSize: 10 },
+      splitLine: { lineStyle: { color: gridColor } }
     },
     series: [{
       type: 'scatter',
@@ -484,9 +485,9 @@ function renderShapScatter() {
       itemStyle: {
         color: function(p) {
           var c = levelColor[p.value[3]] || '#8e9aab';
-          return p.value[1] > 0 ? c : c;
+          return c;
         },
-        opacity: 0.7
+        opacity: 0.75
       },
       emphasis: { itemStyle: { opacity: 1, borderColor: '#fff', borderWidth: 1 } }
     }]
