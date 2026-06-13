@@ -1003,6 +1003,36 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
 }
 .mcp-innovate-sep { color: var(--border); font-size: 14px; }
 
+/* ═══════════════════════════════════════════════════════════════
+   FLOATING TOC — Right side navigation
+   ═══════════════════════════════════════════════════════════════ */
+.toc-floating {
+  position: fixed; right: 16px; top: 50%; transform: translateY(-50%);
+  z-index: 500; display: flex; flex-direction: column; gap: 4px;
+  background: var(--glass-bg-card);
+  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius-lg); padding: 10px 8px;
+  box-shadow: var(--shadow-md), var(--glass-highlight);
+}
+.toc-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--border-accent); cursor: pointer;
+  transition: all var(--transition); position: relative;
+}
+.toc-dot:hover { background: var(--accent-cyan); transform: scale(1.3); }
+.toc-dot.active { background: var(--accent-cyan); box-shadow: 0 0 8px rgba(102,217,200,0.4); }
+.toc-dot:hover::after {
+  content: attr(data-label);
+  position: absolute; right: 18px; top: 50%; transform: translateY(-50%);
+  white-space: nowrap; font-size: 11px; font-weight: 600;
+  color: var(--text-primary); background: var(--bg-surface);
+  padding: 4px 10px; border-radius: 6px;
+  border: 0.5px solid var(--border);
+  pointer-events: none;
+}
+@media (max-width: 1200px) { .toc-floating { display: none; } }
+
 </style>
 </head>
 <body>
@@ -1073,9 +1103,26 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
+     FLOATING TOC
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="toc-floating" id="toc-floating">
+  <div class="toc-dot" data-label="00 全景鸟瞰" data-target="sec-overview"></div>
+  <div class="toc-dot" data-label="01 三角色" data-target="sec-roles"></div>
+  <div class="toc-dot" data-label="02 核心算法" data-target="sec-algorithms"></div>
+  <div class="toc-dot" data-label="02.5 数据天花板" data-target="data-ceiling-demo"></div>
+  <div class="toc-dot" data-label="03 流水线" data-target="sec-pipeline"></div>
+  <div class="toc-dot" data-label="04 决策引擎" data-target="sec-decision"></div>
+  <div class="toc-dot" data-label="05 AI Copilot" data-target="sec-copilot"></div>
+  <div class="toc-dot" data-label="06 SHAP" data-target="sec-shap"></div>
+  <div class="toc-dot" data-label="07 数据同步" data-target="sec-dashboard"></div>
+  <div class="toc-dot" data-label="08 技术演进" data-target="sec-evolution"></div>
+  <div class="toc-dot" data-label="09 技术栈" data-target="sec-techstack"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
      SECTION 0: SYSTEM OVERVIEW — 系统鸟瞰
      ═══════════════════════════════════════════════════════════════ -->
-<div class="section">
+<div class="section" id="sec-overview">
   <h2 class="section-title"><span class="st-num">00</span> 系统全景鸟瞰</h2>
   <p class="section-sub">四层架构：角色门（Role Gate）→ 数据层（4 CSV → 5 Skills）→ 智能层（统计+ML+诊断+决策融合）→ 应用层（三角色专属视图 + Dashboard + AI Copilot + 工单输出）</p>
   <div class="arch-container">
@@ -1086,7 +1133,7 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
 <!-- ═══════════════════════════════════════════════════════════════
      SECTION 1: ROLE ARCHITECTURE — 三角色权限与首页架构
      ═══════════════════════════════════════════════════════════════ -->
-<div class="section">
+<div class="section" id="sec-roles">
   <h2 class="section-title"><span class="st-num">01</span> 三角色权限与首页双视图</h2>
   <p class="section-sub">系统为三类用户提供专属视图，通过同步CSS过滤机制实现零闪烁角色切换。同一套代码，三套视角。</p>
 
@@ -1167,7 +1214,7 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
 <!-- ═══════════════════════════════════════════════════════════════
      SECTION 2: CORE ALGORITHMS — 核心算法体系
      ═══════════════════════════════════════════════════════════════ -->
-<div class="section">
+<div class="section" id="sec-algorithms">
   <h2 class="section-title"><span class="st-num">02</span> 核心算法体系</h2>
   <p class="section-sub">6个核心算法构成系统的数学基础——从单设备统计基线到多信号融合决策</p>
 
@@ -1427,7 +1474,7 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
 <!-- ═══════════════════════════════════════════════════════════════
      SECTION 3: PIPELINE ARCHITECTURE — 流水线架构
      ═══════════════════════════════════════════════════════════════ -->
-<div class="section">
+<div class="section" id="sec-pipeline">
   <h2 class="section-title"><span class="st-num">03</span> DAG流水线与降级架构</h2>
   <p class="section-sub">5技能DAG调度 + ThreadPool并行 + 四级自动降级保障系统在任何条件下都能产出可用的维护建议</p>
 
@@ -1561,7 +1608,7 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
 <!-- ═══════════════════════════════════════════════════════════════
      SECTION 4: DECISION ENGINE — 决策引擎三层架构
      ═══════════════════════════════════════════════════════════════ -->
-<div class="section">
+<div class="section" id="sec-decision">
   <h2 class="section-title"><span class="st-num">04</span> 决策引擎 · 三层架构</h2>
   <p class="section-sub">Phase A 基础决策 → Phase B 工业扩展 → Phase C 传感器升级路线图</p>
 
@@ -1660,7 +1707,7 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
 <!-- ═══════════════════════════════════════════════════════════════
      SECTION 5: AI COPILOT — MCP + Gateway 架构
      ═══════════════════════════════════════════════════════════════ -->
-<div class="section">
+<div class="section" id="sec-copilot">
   <h2 class="section-title"><span class="st-num">05</span> AI Copilot · MCP + Gateway 架构</h2>
   <p class="section-sub">7 MCP工具 → FastAPI Gateway (9 Tools) → DeepSeek API → SSE Streaming → Browser — 自然语言驱动的工业AI助手</p>
 
@@ -1838,7 +1885,7 @@ def query_device_status(machine_id: str) -> dict:
 <!-- ═══════════════════════════════════════════════════════════════
      SECTION 6: SHAP EXPLAINABILITY — 可解释性管线
      ═══════════════════════════════════════════════════════════════ -->
-<div class="section">
+<div class="section" id="sec-shap">
   <h2 class="section-title"><span class="st-num">06</span> SHAP可解释性管线</h2>
   <p class="section-sub">两条归因路径实现从数学特征到工业根因的透明映射，确保每个告警都可追溯、可解释</p>
 
@@ -1880,7 +1927,7 @@ def query_device_status(machine_id: str) -> dict:
 <!-- ═══════════════════════════════════════════════════════════════
      SECTION 7: DASHBOARD DATA SYNC — 数据同步架构
      ═══════════════════════════════════════════════════════════════ -->
-<div class="section">
+<div class="section" id="sec-dashboard">
   <h2 class="section-title"><span class="st-num">07</span> Dashboard数据同步架构</h2>
   <p class="section-sub">22个文件从3个来源汇聚到Dashboard的8个交互式分析标签页（sec0-sec7），按角色权限过滤可见Tab</p>
 
@@ -1935,7 +1982,7 @@ def query_device_status(machine_id: str) -> dict:
 <!-- ═══════════════════════════════════════════════════════════════
      SECTION 8: EVOLUTION TIMELINE — 技术演进路线
      ═══════════════════════════════════════════════════════════════ -->
-<div class="section">
+<div class="section" id="sec-evolution">
   <h2 class="section-title"><span class="st-num">08</span> 数据流转与技术演进</h2>
   <p class="section-sub">5阶段由数据发现驱动——每一阶段由前一阶段的核心局限推动，最终收敛到多信号融合+AI Copilot架构</p>
 
@@ -2211,7 +2258,7 @@ def query_device_status(machine_id: str) -> dict:
 <!-- ═══════════════════════════════════════════════════════════════
      SECTION 9: TECH STACK — 技术栈全景
      ═══════════════════════════════════════════════════════════════ -->
-<div class="section">
+<div class="section" id="sec-techstack">
   <h2 class="section-title"><span class="st-num">09</span> 技术栈全景</h2>
   <p class="section-sub">覆盖数据探索、统计建模、机器学习、深度学习、系统工程、前端可视化的完整技术生态</p>
   <div class="tech-grid">
@@ -3082,6 +3129,45 @@ function renderDegradeDetail(level) {
 }
 
 initDegradeStateMachine();
+
+// ── Floating TOC ──
+(function initTOC() {
+  var dots = document.querySelectorAll('.toc-dot');
+  var sections = [];
+  dots.forEach(function(d) {
+    var el = document.getElementById(d.getAttribute('data-target'));
+    if (el) sections.push({ dot: d, section: el });
+  });
+  if (!sections.length) return;
+
+  // Click to scroll
+  dots.forEach(function(d) {
+    d.addEventListener('click', function() {
+      var el = document.getElementById(d.getAttribute('data-target'));
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  // Scroll tracking — highlight active dot
+  var ticking = false;
+  window.addEventListener('scroll', function() {
+    if (!ticking) {
+      requestAnimationFrame(function() {
+        var scrollPos = window.scrollY + 200;
+        var active = null;
+        sections.forEach(function(s) {
+          if (s.section.offsetTop <= scrollPos) active = s;
+        });
+        dots.forEach(function(d) { d.classList.remove('active'); });
+        if (active) active.dot.classList.add('active');
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+  // Set initial active
+  if (sections[0]) sections[0].dot.classList.add('active');
+})();
 
 </script>
 
