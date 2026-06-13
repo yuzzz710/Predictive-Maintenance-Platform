@@ -1033,6 +1033,16 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
 }
 @media (max-width: 1200px) { .toc-floating { display: none; } }
 
+/* ═══════════════════════════════════════════════════════════════
+   SCROLL PROGRESS BAR — Top edge indicator
+   ═══════════════════════════════════════════════════════════════ */
+.progress-bar-top {
+  position: fixed; top: 0; left: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+  z-index: 9999; width: 0%; transition: width 0.1s linear;
+  border-radius: 0 2px 2px 0;
+}
+
 </style>
 </head>
 <body>
@@ -3167,6 +3177,24 @@ initDegradeStateMachine();
   });
   // Set initial active
   if (sections[0]) sections[0].dot.classList.add('active');
+})();
+
+// ── Scroll Progress Bar ──
+(function initProgressBar() {
+  var bar = document.createElement('div');
+  bar.className = 'progress-bar-top';
+  document.body.appendChild(bar);
+  var ticking = false;
+  window.addEventListener('scroll', function() {
+    if (!ticking) {
+      requestAnimationFrame(function() {
+        var h = document.documentElement.scrollHeight - window.innerHeight;
+        bar.style.width = (h > 0 ? (window.scrollY / h * 100).toFixed(1) : 0) + '%';
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
 })();
 
 </script>
