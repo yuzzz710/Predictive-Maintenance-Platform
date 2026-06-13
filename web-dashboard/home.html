@@ -1097,7 +1097,7 @@ html[data-demo="true"] .demo-hud { display: flex; }
 <!-- ═══════════════════════════════════════════════════════════════════
      Scripts
      ═══════════════════════════════════════════════════════════════════ -->
-<script src="/shared/device-grid-component.js?v=5"></script>
+<script src="/shared/device-grid-component.js?v=6"></script>
 <script>
 // ── Data loading (same sources as main dashboard) ──
 async function loadJSON(path) {
@@ -2099,7 +2099,7 @@ function closeStepOverlay() {
 
 
 // ── Baseline Trace ──
-function buildZScoreTrace(mid,h,b,z){
+function buildZScoreTrace(mid,z,b,h){
   if(!z) return '<p style="color:var(--text-secondary)">Z-Score数据不可用</p>';
   var params=[
     {label:'电压',zk:'z_Voltage',mk:'Op.Voltage_mu',sk:'Op.Voltage_sigma'},
