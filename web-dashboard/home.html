@@ -1054,6 +1054,15 @@ html[data-demo="true"] .demo-hud { display: flex; }
         <span><span class="ld" style="background:var(--accent-amber);"></span> 警告: <b id="mgr-warn-num">--</b>台</span>
         <span><span class="ld" style="background:var(--accent-green);"></span> 健康: <b id="mgr-hlth-num">--</b>台</span>
       </div>
+      <div class="mgr-health-detail" id="mgr-health-detail" style="margin-top:14px;padding-top:12px;border-top:0.5px solid var(--border);">
+        <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:12px;">
+          <div><span style="color:var(--text-muted);">日成本风险合计</span><br><b style="color:var(--accent-red);font-size:16px;" id="mgr-total-risk">--</b></div>
+          <div><span style="color:var(--text-muted);">平均健康分</span><br><b style="color:var(--accent-cyan);font-size:16px;" id="mgr-avg-score">--</b></div>
+          <div><span style="color:var(--text-muted);">活跃工单</span><br><b style="color:var(--accent-amber);font-size:16px;" id="mgr-active-wos">--</b></div>
+          <div><span style="color:var(--text-muted);">紧急工单(P1)</span><br><b style="color:var(--accent-red);font-size:16px;" id="mgr-p1-wos">--</b></div>
+        </div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:10px;line-height:1.6;" id="mgr-insight"></div>
+      </div>
     </div>
     <div class="mgr-card">
       <h3><span class="dot" style="background:var(--accent-red);"></span>日成本风险 Top 5</h3>
@@ -1222,6 +1231,28 @@ async function initManagerDashboard() {
       '<div class=\"bar-degrading\" style=\"flex:' + (deg/total).toFixed(2) + ';\"></div>' +
       '<div class=\"bar-warning\" style=\"flex:' + (warn/total).toFixed(2) + ';\"></div>' +
       '<div class=\"bar-healthy\" style=\"flex:' + (hlth/total).toFixed(2) + ';\"></div>';
+
+    // Health detail metrics
+    var totalCostRisk = 0, avgScore = 0, scoreCount = 0, p1Count = 0;
+    healthData.forEach(function(r) {
+      totalCostRisk += parseFloat(r.cost_at_risk) || 0;
+      var sc = parseFloat(r.health_score);
+      if (!isNaN(sc)) { avgScore += sc; scoreCount++; }
+    });
+    workOrderData.forEach(function(r) {
+      if (parseInt(r.priority) === 1) p1Count++;
+    });
+    document.getElementById('mgr-total-risk').textContent = '$' + (totalCostRisk/1000).toFixed(0) + 'k';
+    document.getElementById('mgr-avg-score').textContent = (scoreCount>0?(avgScore/scoreCount).toFixed(0):'--') + '分';
+    document.getElementById('mgr-active-wos').textContent = woCount + '张';
+    document.getElementById('mgr-p1-wos').textContent = p1Count + '张';
+    // Insight
+    var insight = '';
+    if (crit > 50) insight = '⚠ 超过半数设备处于高危状态，建议立即启动集中维护窗口。';
+    else if (crit > 20) insight = '⚠ ' + crit + '台设备高危，建议优先处理P1工单以降低停产风险。';
+    else insight = '✅ 设备整体状态可控，按计划执行维护即可。';
+    if (totalCostRisk > 500000) insight += ' 日成本风险超过$500k，维护投入产出比极高。';
+    document.getElementById('mgr-insight').textContent = '💡 ' + insight;
 
     // Top risks table
     var tbody = document.getElementById('mgr-top-risks');
