@@ -551,6 +551,143 @@ async def generate_work_order_detail(data: dict = Body(...)):
     return JSONResponse(result)
 
 
+JUDGE_EXPLAIN_PROMPT = """你是工业智能运维项目的"评委讲解助手"。你的任务是用通俗易懂、适合答辩的语言，向评委解释项目中的模块、技术和设计决策。
+
+## 你的听众
+- 评委可能是工业专家、AI专家、投资人、或跨领域评审
+- 他们关心：这个模块做什么？为什么重要？解决了什么问题？效果如何？和项目整体什么关系？
+- 他们不一定熟悉具体技术栈，但能听懂逻辑清晰的解释
+
+## 你的回答风格
+- **口语化但专业**：像在现场向评委介绍，不说"数据表明"而说"我们看到"、"这意味着"
+- **先结论后细节**：第一句话就要让评委听懂这个模块的核心价值
+- **用数字说话**：提到具体数据（健康率92%、3台危急、节费60-80%等）
+- **关联整体**：每个模块都关联到"从数据到决策的完整闭环"这个项目主线
+- **自信但不夸大**：诚实说明数据限制（如30步观测窗口），不制造虚假精度
+- **长度适中**：每个回答3-6句核心信息，不要长篇大论
+
+## 项目背景速查
+- 监控：100台CNC数控机床，4传感器参数（电压/电流/温度/转速）
+- 方法：统计基线(z-score) + ML密度估计 + 成本风险矩阵 → 多信号融合决策
+- 决策权重：stat_anomaly=0.40, ml_density=0.25, cost_risk=0.25, trend=0.10
+- 核心创新：逐设备基线（非全局阈值）、SHAP可解释性、四级降级保障、三种维护策略
+- 数据天花板：4参数Youden's J≤0.075，纯ML上限≈0.537，融合后→0.90
+- 降级：FULL→STAT_ONLY→RULE_ONLY→EMERGENCY，任何条件都能产出可执行方案
+"""
+
+
+@router.post("/api/assistant/explain")
+async def assistant_explain(request: Request):
+    """
+    Judge explanation assistant — SSE streaming endpoint.
+
+    Request: {context: {page, section, title}, question: str, mode: str, previous_text?: str}
+    Response: SSE stream with text_delta, error, done events.
+    Modes: explain, simplify, expand
+    """
+    from .config import DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL, DEEPSEEK_MODEL
+
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+
+    context = body.get("context", {})
+    question = body.get("question", "")
+    mode = body.get("mode", "explain")
+    previous_text = body.get("previous_text", "")
+
+    if not DEEPSEEK_API_KEY:
+        return JSONResponse({"error": "DEEPSEEK_API_KEY not configured"}, status_code=503)
+
+    # Build system prompt with context
+    page_name = context.get("page", "")
+    section_name = context.get("section", "")
+    title_name = context.get("title", "")
+
+    system_content = JUDGE_EXPLAIN_PROMPT
+    if page_name:
+        system_content += f"\n\n用户当前所在页面：{page_name}"
+    if section_name or title_name:
+        system_content += f"\n用户关注的模块：{title_name or section_name}"
+
+    # Mode-specific instructions
+    if mode == "simplify":
+        system_content += "\n\n用户要求“简化一点”——请把之前的讲解浓缩为3-4句核心信息，去掉技术细节，只说最重要的价值主张。"
+    elif mode == "expand":
+        system_content += "\n\n用户要求“展开讲细”——请增加更多技术细节和量化数据，让评委深入了解设计思路。"
+    else:
+        system_content += "\n\n请用“做什么 -> 为什么重要 -> 效果如何 -> 和整体关系”的结构来组织回答。"
+
+    user_content = question
+    if previous_text:
+        user_content = f"之前的讲解：\n{previous_text[:1500]}\n\n用户新要求：{question}"
+
+    async def event_generator():
+        try:
+            import httpx
+            url = f"{DEEPSEEK_BASE_URL}/v1/chat/completions"
+            headers = {
+                "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+                "Content-Type": "application/json",
+                "Accept": "text/event-stream",
+            }
+            payload = {
+                "model": DEEPSEEK_MODEL,
+                "messages": [
+                    {"role": "system", "content": system_content},
+                    {"role": "user", "content": user_content},
+                ],
+                "stream": True,
+                "temperature": 0.5,
+                "max_tokens": 2048,
+            }
+
+            async with httpx.AsyncClient(timeout=httpx.Timeout(120.0, connect=10.0)) as client:
+                async with client.stream("POST", url, headers=headers, json=payload) as response:
+                    if response.status_code != 200:
+                        error_body = await response.aread()
+                        yield f"data: {json.dumps({'type': 'error', 'message': f'API error ({response.status_code}): {error_body.decode()[:300]}'}, ensure_ascii=False)}\n\n"
+                        return
+
+                    async for line in response.aiter_lines():
+                        if not line.startswith("data: "):
+                            continue
+                        data_str = line[6:].strip()
+                        if data_str == "[DONE]":
+                            break
+                        try:
+                            chunk = json.loads(data_str)
+                        except json.JSONDecodeError:
+                            continue
+
+                        choices = chunk.get("choices", [])
+                        if not choices:
+                            continue
+                        delta = choices[0].get("delta", {})
+                        content = delta.get("content", "")
+                        if content:
+                            yield f"data: {json.dumps({'type': 'text_delta', 'text': content}, ensure_ascii=False)}\n\n"
+
+            yield f"data: {json.dumps({'type': 'done'}, ensure_ascii=False)}\n\n"
+
+        except httpx.TimeoutException:
+            yield f"data: {json.dumps({'type': 'error', 'message': 'AI服务请求超时，请稍后重试'}, ensure_ascii=False)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': f'AI服务异常: {str(e)}'}, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+            "Access-Control-Allow-Origin": "*",
+        }
+    )
+
+
 @router.get("/health")
 async def health():
     """Health check."""
