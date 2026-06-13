@@ -15,109 +15,27 @@
 <script src="/shared/demo-mode.js"></script>
 <style>
 /* ============================================================
-   DESIGN TOKENS — Industrial Precision
+   DESIGN TOKENS — provided by navbar.js (single source of truth)
+   Base reset — provided by navbar.js
    ============================================================ */
-:root {
-  --bg-root: #080a0d;
-  --bg-surface: #0e1117;
-  --bg-card: #141820;
-  --bg-card-alt: #181d26;
-  --bg-input: #0c0f15;
-  --border: #1c2230;
-  --border-light: #242b38;
-  --border-accent: #2a3a50;
-  --text-primary: #e6ebf2;
-  --text-secondary: #8e9aab;
-  --text-muted: #5a6474;
-  --accent-cyan: #00c9a0;
-  --accent-amber: #f0a030;
-  --accent-red: #f04444;
-  --accent-blue: #4d94ff;
-  --accent-green: #3fb950;
-  --accent-purple: #a371f7;
-  --accent-pink: #db61a2;
-  --shadow-card: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.2);
-  --shadow-lg: 0 8px 30px rgba(0,0,0,0.5);
-  --radius: 3px;
-  --radius-md: 6px;
-  --font-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', 'Source Code Pro', monospace;
-  --font-sans: 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', 'WenQuanYi Micro Hei', 'Segoe UI', system-ui, sans-serif;
-  --transition: 0.2s cubic-bezier(0.33, 1, 0.68, 1);
-}
 
 /* ============================================================
-   LIGHT THEME — Clean Industrial
-   ============================================================ */
-[data-theme="light"] {
-  --bg-root: #f4f6f9;
-  --bg-surface: #ffffff;
-  --bg-card: #ffffff;
-  --bg-card-alt: #f0f2f5;
-  --bg-input: #ffffff;
-  --border: #dde1e7;
-  --border-light: #e4e8ef;
-  --border-accent: #c4cdd9;
-  --text-primary: #1a1d26;
-  --text-secondary: #4a5568;
-  --text-muted: #7a8498;
-  --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-lg: 0 8px 30px rgba(0,0,0,0.10);
-}
-
-[data-theme="light"] body::before {
-  background:
-    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.006) 2px, rgba(0,0,0,0.006) 4px),
-    radial-gradient(ellipse at 20% 0%, rgba(0,156,130,0.04) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 100%, rgba(200,130,30,0.04) 0%, transparent 50%);
-}
-
-[data-theme="light"] .chart-title::before {
-  background: var(--accent-cyan);
-}
-
-.theme-toggle {
-  display: flex; align-items: center; gap: 6px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 4px 10px;
-  font-size: 11px; color: var(--text-secondary);
-  cursor: pointer; transition: var(--transition);
-  font-family: var(--font-mono); white-space: nowrap;
-  user-select: none;
-}
-.theme-toggle:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
-.theme-toggle .tt-icon { font-size: 14px; line-height: 1; }
-
-* { margin:0; padding:0; box-sizing:border-box; }
-
-/* ============================================================
-   BASE — Industrial atmosphere
+   BASE — iOS 26 Glass Atmosphere
    ============================================================ */
 body {
-  background: var(--bg-root);
-  color: var(--text-primary);
+  background: var(--bg-root); color: var(--text-primary);
   font-family: var(--font-sans);
-  line-height: 1.5;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-body::before {
-  content: '';
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background:
-    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.003) 2px, rgba(255,255,255,0.003) 4px),
-    radial-gradient(ellipse at 20% 0%, rgba(0,201,160,0.03) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 100%, rgba(240,160,48,0.03) 0%, transparent 50%);
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ============================================================
-   HEADER
+   HEADER — iOS 26 Glass
    ============================================================ */
 .header {
   position: sticky; top:0; z-index:100;
-  background: var(--bg-surface);
-  border-bottom: 1px solid var(--border);
+  background: var(--glass-bg-header);
+  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: 0.5px solid var(--glass-border);
   padding: 0 24px;
 }
 .header-inner {
@@ -133,12 +51,12 @@ body::before {
 .logo-indicator {
   width: 8px; height: 8px; border-radius: 50%;
   background: var(--accent-cyan);
-  box-shadow: 0 0 6px var(--accent-cyan), 0 0 20px rgba(0,201,160,0.3);
+  box-shadow: 0 0 6px var(--accent-cyan), 0 0 20px rgba(102,217,200,0.3);
   animation: indicator-pulse 2s infinite;
 }
 @keyframes indicator-pulse {
-  0%,100% { opacity:1; box-shadow: 0 0 6px var(--accent-cyan), 0 0 20px rgba(0,201,160,0.3); }
-  50% { opacity:0.5; box-shadow: 0 0 2px var(--accent-cyan), 0 0 6px rgba(0,201,160,0.1); }
+  0%,100% { opacity:1; box-shadow: 0 0 6px var(--accent-cyan), 0 0 20px rgba(102,217,200,0.3); }
+  50% { opacity:0.5; box-shadow: 0 0 2px var(--accent-cyan), 0 0 6px rgba(102,217,200,0.1); }
 }
 .status-bar {
   display: flex; align-items: center; gap: 18px;
@@ -153,11 +71,12 @@ body::before {
 .status-dot.warn { background: var(--accent-amber); box-shadow: 0 0 4px var(--accent-amber); }
 
 /* ============================================================
-   NAVIGATION
+   NAVIGATION — iOS 26 Glass
    ============================================================ */
 .nav-bar {
-  background: var(--bg-surface);
-  border-bottom: 1px solid var(--border);
+  background: var(--glass-bg-header);
+  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: 0.5px solid var(--glass-border);
   position: sticky; top: 0; z-index: 99;
 }
 .nav-inner {
@@ -177,15 +96,15 @@ body::before {
   position: relative;
   letter-spacing: 0.3px;
 }
-.nav-tab:hover { color: var(--text-primary); background: rgba(255,255,255,0.015); }
+.nav-tab:hover { color: var(--text-primary); background: var(--bg-card-alt); }
 .nav-tab.active {
   color: var(--accent-cyan);
   border-bottom-color: var(--accent-cyan);
 }
 .nav-tab .tab-badge {
   display: inline-block; margin-left: 6px;
-  font-size: 9px; padding: 1px 5px; border-radius: 2px;
-  background: rgba(0,201,160,0.12); color: var(--accent-cyan);
+  font-size: 9px; padding: 1px 5px; border-radius: 10px;
+  background: rgba(102,217,200,0.12); color: var(--accent-cyan);
   font-family: var(--font-mono);
 }
 
@@ -198,6 +117,18 @@ body::before {
 @keyframes sectionIn { from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
 
 /* ============================================================
+   UNIVERSAL GLASS CARD — all section containers
+   ============================================================ */
+.chart-card, .info-card, .stat-card, .card {
+  background: var(--glass-bg-card);
+  backdrop-filter: var(--glass-blur-light); -webkit-backdrop-filter: var(--glass-blur-light);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-sm), var(--glass-highlight);
+}
+
+/* ============================================================
    STATS CARDS
    ============================================================ */
 .stats-row {
@@ -208,10 +139,6 @@ body::before {
 }
 .stats-row.cols-5 { grid-template-columns: repeat(5, 1fr); }
 .stat-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px 20px;
   transition: var(--transition);
   position: relative;
   overflow: visible;
@@ -220,10 +147,10 @@ body::before {
   content: '';
   position: absolute; top:0; left:0; width:3px; height:100%;
   background: var(--border-light);
-  border-radius: var(--radius) 0 0 var(--radius);
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
   transition: var(--transition);
 }
-.stat-card:hover { border-color: var(--border-accent); box-shadow: var(--shadow-card); }
+.stat-card:hover { border-color: var(--border-accent); box-shadow: var(--shadow-md), var(--glass-highlight); }
 .stat-card:hover::after { background: var(--accent-cyan); }
 .stat-info {
   position: relative;
@@ -243,8 +170,9 @@ body::before {
   top: calc(100% + 10px);
   left: 50%;
   transform: translateX(-50%);
-  background: var(--bg-card-alt);
-  border: 1px solid var(--border-accent);
+  background: var(--glass-bg-modal);
+  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  border: 0.5px solid var(--glass-border);
   border-radius: var(--radius-md);
   padding: 12px 16px;
   width: 280px;
@@ -252,7 +180,7 @@ body::before {
   line-height: 1.7;
   color: var(--text-secondary);
   z-index: 1000;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-xl), var(--glass-highlight);
   pointer-events: none;
   transition: opacity 0.2s ease, visibility 0.2s ease;
   text-align: left;
@@ -303,13 +231,13 @@ body::before {
   gap: 12px;
   padding: 12px 0 8px 0;
   margin: 8px 0 12px 0;
-  border-bottom: 2px solid var(--border);
+  border-bottom: 0.5px solid var(--border);
 }
 .section-tier-header:first-child { margin-top: 0; padding-top: 0; }
 .tier-badge {
   display: inline-block;
   padding: 3px 10px;
-  border-radius: 3px;
+  border-radius: 10px;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -341,13 +269,9 @@ body::before {
 .chart-row.cols-3 { grid-template-columns: repeat(3, 1fr); }
 .chart-row.cols-1 { grid-template-columns: 1fr; }
 .chart-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
   transition: var(--transition);
 }
-.chart-card:hover { border-color: var(--border-light); }
+.chart-card:hover { border-color: var(--border-accent); box-shadow: var(--shadow-md), var(--glass-highlight); }
 .chart-card.full-width { grid-column: 1 / -1; }
 .chart-title {
   font-size: 12px; font-weight: 600;
@@ -362,26 +286,31 @@ body::before {
   background: var(--accent-cyan);
   border-radius: 1px;
 }
+[data-theme="light"] .chart-title::before {
+  background: var(--accent-cyan);
+}
 .chart-box { width:100%; height:340px; }
 .chart-box.tall { height:460px; }
 .chart-box.short { height:280px; }
 .chart-box.mini { height:240px; }
 
 /* ============================================================
-   BACKTEST PANEL — Industrial Operations Terminal
+   BACKTEST PANEL — iOS 26 Glass
    ============================================================ */
 .bt-panel-wrap {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg-card);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  background: var(--glass-bg-card);
+  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-sm), var(--glass-highlight);
   overflow: hidden;
   margin-top: 14px;
 }
 .bt-panel-header {
   display: flex; align-items: center; gap: 10px;
   padding: 12px 18px;
-  background: linear-gradient(135deg, rgba(0,201,160,0.06) 0%, rgba(77,148,255,0.04) 100%);
-  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(102,217,200,0.06) 0%, rgba(109,181,249,0.04) 100%);
+  border-bottom: 0.5px solid var(--glass-border);
   cursor: pointer;
   user-select: none;
   transition: var(--transition);
@@ -389,7 +318,7 @@ body::before {
   color: var(--text-primary); letter-spacing: 0.5px;
 }
 .bt-panel-header:hover {
-  background: linear-gradient(135deg, rgba(0,201,160,0.10) 0%, rgba(77,148,255,0.06) 100%);
+  background: linear-gradient(135deg, rgba(102,217,200,0.10) 0%, rgba(109,181,249,0.06) 100%);
 }
 .bt-panel-header .bt-arrow {
   font-size: 9px; color: var(--accent-cyan);
@@ -399,7 +328,7 @@ body::before {
 .bt-panel-header.open .bt-arrow { transform: rotate(90deg); }
 .bt-panel-badge {
   font-size: 10px; padding: 2px 8px; border-radius: 10px;
-  background: rgba(0,201,160,0.12); color: var(--accent-cyan);
+  background: rgba(102,217,200,0.12); color: var(--accent-cyan);
   letter-spacing: 0.5px; font-weight: 500;
 }
 .bt-panel-body { display:none; padding: 20px; }
@@ -407,8 +336,8 @@ body::before {
 /* ── Threshold Segmented Control ── */
 .bt-segmented {
   display: inline-flex; gap: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 0.5px solid var(--border-accent);
+  border-radius: 22px;
   overflow: hidden;
   background: var(--bg-input);
 }
@@ -421,17 +350,17 @@ body::before {
   letter-spacing: 0.3px;
 }
 .bt-segmented button:not(:last-child) {
-  border-right: 1px solid var(--border);
+  border-right: 0.5px solid var(--border);
 }
 .bt-segmented button:hover {
   color: var(--text-primary);
-  background: rgba(255,255,255,0.03);
+  background: var(--bg-card-alt);
 }
 .bt-segmented button.active {
   background: var(--accent-cyan);
-  color: #080a0d;
+  color: #000;
   font-weight: 700;
-  box-shadow: 0 0 12px rgba(0,201,160,0.25);
+  box-shadow: 0 0 12px rgba(102,217,200,0.25);
   z-index: 1;
 }
 
@@ -446,13 +375,15 @@ body::before {
 @media (max-width: 600px)  { .bt-metrics-grid { grid-template-columns: repeat(2, 1fr); } }
 
 .bt-metric {
-  background: var(--bg-card-alt);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: var(--glass-bg-card);
+  backdrop-filter: var(--glass-blur-light); -webkit-backdrop-filter: var(--glass-blur-light);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius-lg);
   padding: 14px 16px;
   position: relative;
   overflow: hidden;
   transition: var(--transition);
+  box-shadow: var(--shadow-sm), var(--glass-highlight);
 }
 .bt-metric::before {
   content: '';
@@ -463,7 +394,7 @@ body::before {
 }
 .bt-metric:hover {
   border-color: var(--border-accent);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-md), var(--glass-highlight);
 }
 .bt-metric:hover::before { height: 3px; }
 .bt-metric.accent-green::before  { background: var(--accent-green); }
@@ -504,9 +435,11 @@ body::before {
 }
 @media (max-width: 860px) { .bt-charts-row { grid-template-columns: 1fr; } }
 .bt-chart-card {
-  background: var(--bg-card-alt);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: var(--glass-bg-card);
+  backdrop-filter: var(--glass-blur-light); -webkit-backdrop-filter: var(--glass-blur-light);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm), var(--glass-highlight);
   padding: 4px;
   overflow: hidden;
 }
@@ -517,10 +450,12 @@ body::before {
 /* ── Narrative Summary ── */
 .bt-narrative {
   margin-top: 18px;
-  background: var(--bg-card-alt);
-  border: 1px solid var(--border);
+  background: var(--glass-bg-card);
+  backdrop-filter: var(--glass-blur-light); -webkit-backdrop-filter: var(--glass-blur-light);
+  border: 0.5px solid var(--glass-border);
   border-left: 3px solid var(--accent-cyan);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm), var(--glass-highlight);
   padding: 14px 18px;
   font-family: var(--font-mono);
   font-size: 11px;
@@ -559,7 +494,7 @@ body::before {
 @media (max-width: 860px) { .bt-context-hint { margin-left: 0; } }
 
 /* ============================================================
-   STRATEGY SELECTOR CARDS
+   STRATEGY SELECTOR CARDS — iOS 26 Glass
    ============================================================ */
 .strategy-selector-grid {
   display: grid;
@@ -570,23 +505,19 @@ body::before {
   line-height: 1.7;
 }
 .strategy-card {
-  background: var(--bg-card);
-  padding: 14px;
-  border-radius: var(--radius);
-  border: 2px solid var(--border);
-  cursor: pointer;
-  transition: all 0.25s ease;
+  background: var(--glass-bg-card);
+  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-sm), var(--glass-highlight);
+  cursor: pointer; transition: all var(--transition-spring);
   position: relative;
 }
-.strategy-card:hover {
-  border-color: var(--border-accent);
-  box-shadow: var(--shadow-card);
-  transform: translateY(-2px);
-}
+.strategy-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg), var(--glass-highlight); }
 .strategy-card.active {
   border-color: var(--accent-cyan);
-  box-shadow: 0 0 0 3px rgba(0, 201, 160, 0.15);
-  background: rgba(0, 201, 160, 0.05);
+  box-shadow: 0 0 0 2px rgba(102,217,200,0.15), var(--shadow-md), var(--glass-highlight);
 }
 .strategy-card .sc-badge {
   position: absolute;
@@ -621,11 +552,11 @@ body::before {
   line-height: 1.6;
 }
 .strategy-card.cost-eff .sc-name { color: var(--accent-green); }
-.strategy-card.cost-eff.active { border-color: var(--accent-green); box-shadow: 0 0 0 3px rgba(63, 185, 80, 0.15); background: rgba(63, 185, 80, 0.05); }
+.strategy-card.cost-eff.active { border-color: var(--accent-green); box-shadow: 0 0 0 2px rgba(48,209,88,0.15), var(--shadow-md), var(--glass-highlight); }
 .strategy-card.cost-eff.active .sc-badge { background: var(--accent-green); }
 .strategy-card.prod-eff .sc-name { color: var(--accent-cyan); }
 .strategy-card.quality .sc-name { color: var(--accent-purple); }
-.strategy-card.quality.active { border-color: var(--accent-purple); box-shadow: 0 0 0 3px rgba(139, 98, 255, 0.15); background: rgba(139, 98, 255, 0.05); }
+.strategy-card.quality.active { border-color: var(--accent-purple); box-shadow: 0 0 0 2px rgba(191,90,242,0.15), var(--shadow-md), var(--glass-highlight); }
 .strategy-card.quality.active .sc-badge { background: var(--accent-purple); }
 .strategy-card.loading {
   pointer-events: none;
@@ -652,16 +583,18 @@ body::before {
   margin-bottom: 18px;
 }
 .wo-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: var(--glass-bg-card);
+  backdrop-filter: var(--glass-blur-light); -webkit-backdrop-filter: var(--glass-blur-light);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm), var(--glass-highlight);
   padding: 14px 16px;
   cursor: pointer;
   transition: var(--transition);
   border-left: 3px solid var(--border);
   position: relative;
 }
-.wo-card:hover { border-color: var(--border-accent); box-shadow: var(--shadow-card); transform: translateX(2px); }
+.wo-card:hover { border-color: var(--border-accent); box-shadow: var(--shadow-md), var(--glass-highlight); transform: translateX(2px); }
 .wo-card.critical { border-left-color: var(--accent-red); }
 .wo-card.high { border-left-color: var(--accent-amber); }
 .wo-card.medium { border-left-color: var(--accent-blue); }
@@ -674,19 +607,19 @@ body::before {
   font-size: 10px; font-weight: 700; padding: 2px 7px;
   border-radius: 2px; font-family: var(--font-mono); letter-spacing:0.5px;
 }
-.wo-priority.critical { background:rgba(240,68,68,0.15); color:var(--accent-red); }
-.wo-priority.high { background:rgba(240,160,48,0.15); color:var(--accent-amber); }
-.wo-priority.medium { background:rgba(77,148,255,0.15); color:var(--accent-blue); }
-.wo-priority.low { background:rgba(0,201,160,0.15); color:var(--accent-cyan); }
+.wo-priority.critical { background:rgba(255,69,58,0.15); color:var(--accent-red); }
+.wo-priority.high { background:rgba(255,179,64,0.15); color:var(--accent-amber); }
+.wo-priority.medium { background:rgba(109,181,249,0.15); color:var(--accent-blue); }
+.wo-priority.low { background:rgba(102,217,200,0.15); color:var(--accent-cyan); }
 .wo-machine { font-weight:600; font-size:14px; font-family:var(--font-mono); }
 .wo-action {
   font-size: 10px; padding: 2px 7px; border-radius: 2px;
   font-weight: 600; letter-spacing: 0.3px; white-space: nowrap;
 }
-.action-immediate_shutdown { background:rgba(240,68,68,0.2); color:var(--accent-red); }
-.action-preventive_repair { background:rgba(240,160,48,0.2); color:var(--accent-amber); }
-.action-schedule_inspection { background:rgba(77,148,255,0.2); color:var(--accent-blue); }
-.action-increase_monitoring { background:rgba(0,201,160,0.2); color:var(--accent-cyan); }
+.action-immediate_shutdown { background:rgba(255,69,58,0.2); color:var(--accent-red); }
+.action-preventive_repair { background:rgba(255,179,64,0.2); color:var(--accent-amber); }
+.action-schedule_inspection { background:rgba(109,181,249,0.2); color:var(--accent-blue); }
+.action-increase_monitoring { background:rgba(102,217,200,0.2); color:var(--accent-cyan); }
 .wo-metrics {
   display: flex; gap: 16px; margin: 8px 0;
   font-size: 11px; color: var(--text-secondary); flex-wrap:wrap;
@@ -702,12 +635,12 @@ body::before {
   display: inline-flex; align-items: center; gap: 4px;
   margin-top: 10px; padding: 5px 14px;
   font-size: 10px; font-family: var(--font-mono);
-  background: rgba(0,201,160,0.06);
-  border: 1px solid rgba(0,201,160,0.18);
-  color: var(--accent-cyan); border-radius: var(--radius);
+  background: rgba(102,217,200,0.06);
+  border: 0.5px solid rgba(102,217,200,0.18);
+  color: var(--accent-cyan); border-radius: 22px;
   cursor: pointer; transition: var(--transition);
 }
-.wo-detail-btn:hover { background: rgba(0,201,160,0.12); border-color: var(--accent-cyan); }
+.wo-detail-btn:hover { background: rgba(102,217,200,0.12); border-color: var(--accent-cyan); }
 .wo-detail-btn.loading { pointer-events: none; opacity: 0.6; }
 
 /* ── Work Order Detail Modal ── */
@@ -720,13 +653,14 @@ body::before {
 }
 .wo-detail-modal.active { display: flex; }
 .wo-detail-modal .modal-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-accent);
-  border-radius: var(--radius-md);
+  background: var(--glass-bg-modal);
+  backdrop-filter: var(--glass-blur-strong); -webkit-backdrop-filter: var(--glass-blur-strong);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius-xl);
   width: min(1050px, 95vw);
   height: 88vh;
   display: flex; flex-direction: column;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-xl), var(--glass-highlight-strong);
   animation: modalIn 0.25s ease;
 }
 .wo-detail-modal .modal-header {
@@ -770,10 +704,10 @@ body::before {
   text-decoration: none;
 }
 .btn-pdf-dl {
-  background: rgba(240,68,68,0.08); border: 1px solid rgba(240,68,68,0.2);
-  color: var(--accent-red);
+  background: rgba(255,69,58,0.08); border: 0.5px solid rgba(255,69,58,0.2);
+  color: var(--accent-red); border-radius: 22px;
 }
-.btn-pdf-dl:hover { background: rgba(240,68,68,0.15); }
+.btn-pdf-dl:hover { background: rgba(255,69,58,0.15); }
 .btn-new-tab {
   background: var(--bg-card); border: 1px solid var(--border);
   color: var(--text-secondary);
@@ -789,13 +723,15 @@ body::before {
   gap: 10px;
 }
 .sensor-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: var(--glass-bg-card);
+  backdrop-filter: var(--glass-blur-light); -webkit-backdrop-filter: var(--glass-blur-light);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm), var(--glass-highlight);
   padding: 14px 16px;
   transition: var(--transition);
 }
-.sensor-card:hover { border-color: var(--border-light); }
+.sensor-card:hover { border-color: var(--border-accent); box-shadow: var(--shadow-md), var(--glass-highlight); }
 .sensor-name { font-weight:600; font-size:13px; margin-bottom:6px; font-family:var(--font-mono); }
 .sensor-meta { font-size:10.5px; color:var(--text-muted); display:flex; flex-direction:column; gap:3px; }
 
@@ -821,8 +757,8 @@ body::before {
   display: inline-block; padding: 2px 6px; border-radius: 2px;
   font-size: 9.5px; font-weight: 600; margin-top: 6px; letter-spacing:0.3px;
 }
-.feas-High { background:rgba(63,185,80,0.18); color:var(--accent-green); }
-.feas-Medium { background:rgba(240,160,48,0.18); color:var(--accent-amber); }
+.feas-High { background:rgba(48,209,88,0.18); color:var(--accent-green); }
+.feas-Medium { background:rgba(255,179,64,0.18); color:var(--accent-amber); }
 
 /* ============================================================
    FILTER BAR
@@ -833,7 +769,7 @@ body::before {
 }
 .filter-bar select, .filter-bar input {
   background: var(--bg-input); color: var(--text-primary);
-  border: 1px solid var(--border); border-radius: var(--radius);
+  border: 0.5px solid var(--border-accent); border-radius: var(--radius);
   padding: 6px 10px; font-size: 11px; cursor: pointer;
   font-family: var(--font-sans);
   transition: var(--transition);
@@ -844,20 +780,20 @@ body::before {
 .filter-bar label { font-size: 11px; color: var(--text-muted); white-space: nowrap; font-family:var(--font-sans); }
 .filter-chip {
   display: inline-flex; align-items: center; gap: 4px;
-  font-size: 10px; padding: 3px 8px; border-radius: 2px;
+  font-size: 10px; padding: 3px 10px; border-radius: 10px;
   cursor: pointer; transition: var(--transition); user-select: none;
-  border: 1px solid var(--border); color: var(--text-secondary);
-  background: var(--bg-card);
+  border: 0.5px solid var(--border); color: var(--text-secondary);
+  background: var(--bg-card-alt);
 }
 .filter-chip:hover { border-color: var(--accent-cyan); }
-.filter-chip.active { background: rgba(0,201,160,0.12); color: var(--accent-cyan); border-color: var(--accent-cyan); }
+.filter-chip.active { background: rgba(102,217,200,0.12); color: var(--accent-cyan); border-color: var(--accent-cyan); }
 
 /* ============================================================
    DATA TABLE
    ============================================================ */
 .table-wrap {
-  max-height: 500px; overflow-y: auto; border-radius: var(--radius);
-  border: 1px solid var(--border);
+  max-height: 500px; overflow-y: auto; border-radius: var(--radius-md);
+  border: 0.5px solid var(--glass-border);
 }
 .table-wrap.log-table { max-height: 560px; }
 .data-table {
@@ -881,9 +817,9 @@ body::before {
   color: var(--text-primary);
 }
 .data-table tr:hover td { background: rgba(255,255,255,0.02); }
-.data-table tr.row-fault td { background: rgba(240,68,68,0.04); }
-.data-table tr.row-fault:hover td { background: rgba(240,68,68,0.07); }
-.data-table tr.row-normal td { background: rgba(63,185,80,0.03); }
+.data-table tr.row-fault td { background: rgba(255,69,58,0.04); }
+.data-table tr.row-fault:hover td { background: rgba(255,69,58,0.07); }
+.data-table tr.row-normal td { background: rgba(48,209,88,0.03); }
 .data-table tr.row-expanded td { background: var(--bg-card-alt); border-bottom:2px solid var(--accent-cyan); }
 .detail-panel {
   background: var(--bg-card-alt);
@@ -905,13 +841,14 @@ body::before {
   margin-top: 14px;
 }
 .pagination button {
-  background: var(--bg-card); color: var(--text-secondary);
-  border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 5px 12px; font-size: 11px; cursor: pointer;
+  background: var(--glass-bg-card); color: var(--text-secondary);
+  border: 0.5px solid var(--glass-border); border-radius: 22px;
+  padding: 5px 14px; font-size: 11px; cursor: pointer;
   font-family: var(--font-mono); transition: var(--transition);
+  backdrop-filter: var(--glass-blur-light); -webkit-backdrop-filter: var(--glass-blur-light);
 }
 .pagination button:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
-.pagination button.active { background: rgba(0,201,160,0.12); color: var(--accent-cyan); border-color: var(--accent-cyan); }
+.pagination button.active { background: rgba(102,217,200,0.12); color: var(--accent-cyan); border-color: var(--accent-cyan); }
 .pagination button:disabled { opacity:0.3; cursor:default; }
 .pagination .page-info { font-size: 10.5px; color: var(--text-muted); margin: 0 8px; font-family:var(--font-mono); }
 
@@ -926,12 +863,14 @@ body::before {
 .gallery-toggle {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 12px; font-weight: 600; color: var(--accent-cyan);
-  cursor: pointer; padding: 6px 12px;
-  border: 1px solid var(--border); border-radius: var(--radius);
-  background: var(--bg-card); transition: var(--transition);
+  cursor: pointer; padding: 8px 16px;
+  border: 0.5px solid var(--glass-border); border-radius: 22px;
+  background: var(--glass-bg-card);
+  backdrop-filter: var(--glass-blur-light); -webkit-backdrop-filter: var(--glass-blur-light);
+  transition: var(--transition);
   user-select: none; font-family: var(--font-sans);
 }
-.gallery-toggle:hover { border-color: var(--accent-cyan); background: rgba(0,201,160,0.04); }
+.gallery-toggle:hover { border-color: var(--accent-cyan); background: rgba(102,217,200,0.08); }
 .gallery-toggle .arrow { transition: var(--transition); font-size: 9px; display:inline-block; }
 .gallery-toggle.open .arrow { transform: rotate(90deg); }
 .gallery-grid {
@@ -941,16 +880,18 @@ body::before {
   margin-top: 14px;
 }
 .gallery-item {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: var(--glass-bg-card);
+  backdrop-filter: var(--glass-blur-light); -webkit-backdrop-filter: var(--glass-blur-light);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm), var(--glass-highlight);
   overflow: hidden;
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transition-spring);
 }
 .gallery-item:hover {
   border-color: var(--accent-cyan);
-  box-shadow: 0 4px 20px rgba(0,201,160,0.1);
+  box-shadow: var(--shadow-lg), var(--glass-highlight);
   transform: translateY(-2px);
 }
 .gallery-item img {
@@ -1024,7 +965,7 @@ body::before {
   width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
   border-radius: 50%; background: rgba(255,255,255,0.04);
 }
-.lightbox-close:hover { color: var(--accent-red); background: rgba(240,68,68,0.1); }
+.lightbox-close:hover { color: var(--accent-red); background: rgba(255,69,58,0.1); }
 .lightbox-prev, .lightbox-next {
   position: absolute; top: 50%; transform: translateY(-50%);
   font-size: 36px; color: var(--text-muted); cursor: pointer;
@@ -1042,7 +983,7 @@ body::before {
   border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius);
   padding: 5px 12px; font-size: 14px; cursor: pointer; transition: var(--transition);
 }
-.lightbox-toolbar button:hover { color: var(--accent-cyan); border-color: var(--accent-cyan); background: rgba(0,201,160,0.1); }
+.lightbox-toolbar button:hover { color: var(--accent-cyan); border-color: var(--accent-cyan); background: rgba(102,217,200,0.1); }
 
 /* ============================================================
    SCROLLBAR
@@ -1053,37 +994,39 @@ body::before {
 ::-webkit-scrollbar-thumb:hover { background:var(--border-light); }
 
 /* ============================================================
-   ALARM DETAIL MODAL
+   ALARM DETAIL MODAL — iOS 26 Glass
    ============================================================ */
 .modal-overlay {
   display: none;
   position: fixed; top:0; left:0; right:0; bottom:0;
-  background: rgba(0,0,0,0.75);
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
   z-index: 10000;
   align-items: center; justify-content: center;
 }
 .modal-overlay.active { display: flex; }
 .modal-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-accent);
-  border-radius: var(--radius-md);
+  background: var(--glass-bg-modal);
+  backdrop-filter: var(--glass-blur-strong); -webkit-backdrop-filter: var(--glass-blur-strong);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius-xl);
   width: min(1100px, 92vw);
   max-height: 85vh;
   display: flex; flex-direction: column;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-xl), var(--glass-highlight-strong);
   animation: modalIn 0.25s ease;
 }
 @keyframes modalIn { from { opacity:0; transform: scale(0.96) translateY(8px); } to { opacity:1; transform: scale(1) translateY(0); } }
 .modal-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 18px 22px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 0.5px solid var(--glass-border);
   flex-shrink: 0;
 }
 .modal-header h3 { font-size: 15px; color: var(--text-primary); font-weight: 600; }
 .modal-header .modal-close {
   width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
-  background: none; border: 1px solid var(--border); border-radius: var(--radius);
+  background: none; border: 0.5px solid var(--border-accent); border-radius: var(--radius);
   color: var(--text-muted); font-size: 18px; cursor: pointer; transition: var(--transition);
 }
 .modal-header .modal-close:hover { color: var(--accent-red); border-color: var(--accent-red); }
@@ -1147,9 +1090,10 @@ body::before {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   min-height: 180px; padding: 30px 20px;
   text-align: center;
-  background: var(--bg-card-alt);
-  border: 1px dashed var(--border);
-  border-radius: var(--radius);
+  background: var(--glass-bg-card);
+  backdrop-filter: var(--glass-blur-light); -webkit-backdrop-filter: var(--glass-blur-light);
+  border: 0.5px dashed var(--glass-border);
+  border-radius: var(--radius-lg);
 }
 .chart-fallback-icon { font-size: 32px; margin-bottom: 10px; opacity: 0.6; }
 .chart-fallback-text { font-size: 13px; color: var(--text-secondary); font-weight: 500; margin-bottom: 6px; }
@@ -1166,32 +1110,37 @@ body::before {
   opacity: 0.92; pointer-events: none;
 }
 
+/* Pipeline stage badges */
+.pipeline-stage {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 10px;
+  background: var(--bg-card-alt); border: 0.5px solid var(--border);
+  white-space: nowrap; transition: var(--transition);
+}
+.pipeline-stage.ready { border-color: rgba(48,209,88,0.3); }
+.pipeline-stage.missing { border-color: rgba(255,179,64,0.3); background: rgba(255,179,64,0.04); }
+.pipeline-stage-icon { font-size: 12px; }
+.pipeline-stage-label { font-size: 10px; color: var(--text-secondary); }
+.pipeline-stage.ready .pipeline-stage-label { color: var(--accent-green); }
+.pipeline-stage.missing .pipeline-stage-label { color: var(--accent-amber); }
+
 /* ============================================================
-   PIPELINE STATUS BAR
+   PIPELINE STATUS BAR — iOS 26 Glass
    ============================================================ */
 .pipeline-status-bar {
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
   padding: 8px 14px; margin-bottom: 16px;
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius); font-size: 11px;
+  background: var(--glass-bg-card);
+  backdrop-filter: var(--glass-blur-light); -webkit-backdrop-filter: var(--glass-blur-light);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius-lg); font-size: 11px;
   font-family: var(--font-mono);
+  box-shadow: var(--shadow-sm), var(--glass-highlight);
 }
 .pipeline-status-title {
   font-weight: 600; color: var(--text-primary); margin-right: 6px;
   font-family: var(--font-sans); font-size: 11.5px; white-space: nowrap;
 }
-.pipeline-stage {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 3px 8px; border-radius: 2px;
-  background: var(--bg-card-alt); border: 1px solid var(--border);
-  white-space: nowrap; transition: var(--transition);
-}
-.pipeline-stage.ready { border-color: rgba(63,185,80,0.3); }
-.pipeline-stage.missing { border-color: rgba(240,160,48,0.3); background: rgba(240,160,48,0.04); }
-.pipeline-stage-icon { font-size: 12px; }
-.pipeline-stage-label { font-size: 10px; color: var(--text-secondary); }
-.pipeline-stage.ready .pipeline-stage-label { color: var(--accent-green); }
-.pipeline-stage.missing .pipeline-stage-label { color: var(--accent-amber); }
 .pipeline-next-step {
   margin-left: auto; font-size: 10px; color: var(--accent-cyan);
   white-space: nowrap;
@@ -1240,18 +1189,19 @@ html[data-role="manager"] .role-operator:not(.role-manager) { display: none !imp
 html[data-role="manager"] .role-developer:not(.role-manager) { display: none !important; }
 /* developer sees everything — no extra rules needed */
 
-/* ═══ Algorithm Comparison ═══ */
+/* ═══ Algorithm Comparison— Glass ═══ */
 .algo-conclusion {
   display: flex; gap: 14px; align-items: flex-start;
-  background: linear-gradient(135deg, rgba(77,148,255,0.05), rgba(163,113,247,0.03));
-  border: 1px solid rgba(77,148,255,0.15); border-radius: var(--radius);
+  background: linear-gradient(135deg, rgba(109,181,249,0.05), rgba(191,90,242,0.03));
+  border: 0.5px solid rgba(109,181,249,0.15); border-radius: var(--radius-lg);
   padding: 16px 20px; margin-bottom: 14px;
+  backdrop-filter: var(--glass-blur-light); -webkit-backdrop-filter: var(--glass-blur-light);
 }
 .algo-conclusion-icon { font-size: 24px; flex-shrink: 0; margin-top: 2px; }
 .algo-conclusion-text { font-size: 12px; color: var(--text-secondary); line-height: 1.8; }
 [data-theme="light"] .algo-conclusion {
-  background: linear-gradient(135deg, rgba(77,148,255,0.04), rgba(163,113,247,0.02));
-  border-color: rgba(77,148,255,0.12);
+  background: linear-gradient(135deg, rgba(100,181,246,0.04), rgba(179,136,235,0.02));
+  border-color: rgba(100,181,246,0.12);
 }
 
 .algo-table { overflow-x: auto; }
@@ -1271,37 +1221,37 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
   display: inline-block; padding: 1px 8px; border-radius: 10px;
   font-size: 10px; font-weight: 600;
 }
-.algo-table .badge-type.classical { background: rgba(77,148,255,0.12); color: #4d94ff; }
-.algo-table .badge-type.ensemble { background: rgba(0,201,160,0.12); color: var(--accent-cyan); }
-.algo-table .badge-type.deep { background: rgba(163,113,247,0.12); color: var(--accent-purple); }
+.algo-table .badge-type.classical { background: rgba(109,181,249,0.12); color: var(--accent-blue); }
+.algo-table .badge-type.ensemble { background: rgba(102,217,200,0.12); color: var(--accent-cyan); }
+.algo-table .badge-type.deep { background: rgba(191,90,242,0.12); color: var(--accent-purple); }
 .algo-table .auc-val { font-family: var(--font-mono); font-weight: 600; }
 .algo-table .auc-low { color: var(--accent-red); }
 .algo-table .auc-mid { color: var(--accent-amber); }
 .algo-table .auc-high { color: var(--accent-green); }
 
-/* ── Cost-Benefit Calculator ── */
-.calc-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:20px; margin-top:14px; }
+/* ── Cost-Benefit Calculator — Glass ── */
+.calc-card { background:var(--glass-bg-card); backdrop-filter:var(--glass-blur-light); -webkit-backdrop-filter:var(--glass-blur-light); border:0.5px solid var(--glass-border); border-radius:var(--radius-lg); padding:20px; margin-top:14px; box-shadow:var(--shadow-sm),var(--glass-highlight); }
 .calc-card h4 { font-size:15px; margin-bottom:14px; color:var(--accent-cyan); }
 .calc-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 .calc-inputs { display:flex; flex-direction:column; gap:10px; }
 .calc-row { display:flex; align-items:center; gap:10px; }
 .calc-row label { width:140px; font-size:12px; color:var(--text-secondary); flex-shrink:0; }
-.calc-row input { flex:1; background:var(--bg-input); color:var(--text-primary); border:1px solid var(--border); border-radius:4px; padding:6px 10px; font-size:13px; font-family:var(--font-mono); }
+.calc-row input { flex:1; background:var(--bg-input); color:var(--text-primary); border:0.5px solid var(--border-accent); border-radius:var(--radius); padding:6px 10px; font-size:13px; font-family:var(--font-mono); }
 .calc-row input:focus { outline:none; border-color:var(--accent-cyan); }
 .calc-row .unit { font-size:11px; color:var(--text-muted); width:50px; flex-shrink:0; }
 .calc-presets { display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; align-items:center; }
-.calc-preset { padding:5px 14px; border-radius:14px; border:1px solid var(--border); background:var(--bg-card-alt); color:var(--text-secondary); font-size:11px; cursor:pointer; transition:all 0.2s; }
+.calc-preset { padding:5px 14px; border-radius:22px; border:0.5px solid var(--border-accent); background:var(--bg-card-alt); color:var(--text-secondary); font-size:11px; cursor:pointer; transition:all 0.2s; }
 .calc-preset:hover { border-color:var(--accent-cyan); color:var(--text-primary); }
-.calc-preset.active { background:rgba(0,201,160,0.1); border-color:var(--accent-cyan); color:var(--accent-cyan); }
+.calc-preset.active { background:rgba(102,217,200,0.1); border-color:var(--accent-cyan); color:var(--accent-cyan); }
 .calc-results { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.calc-result { background:var(--bg-card-alt); border-radius:6px; padding:12px; text-align:center; }
+.calc-result { background:var(--glass-bg-card); backdrop-filter:var(--glass-blur-light); -webkit-backdrop-filter:var(--glass-blur-light); border-radius:var(--radius); padding:12px; text-align:center; }
 .calc-result .cr-val { font-size:22px; font-weight:700; font-family:var(--font-mono); }
 .calc-result .cr-lbl { font-size:10px; color:var(--text-muted); margin-top:2px; }
-.calc-result.highlight { border:1px solid var(--accent-cyan); }
+.calc-result.highlight { border:0.5px solid var(--accent-cyan); }
 .calc-phase-select { display:flex; gap:6px; margin-top:6px; }
-.calc-phase-btn { flex:1; padding:6px 8px; border-radius:4px; border:1px solid var(--border); background:var(--bg-card-alt); color:var(--text-secondary); font-size:11px; cursor:pointer; text-align:center; transition:all 0.2s; }
+.calc-phase-btn { flex:1; padding:6px 8px; border-radius:22px; border:0.5px solid var(--border-accent); background:var(--bg-card-alt); color:var(--text-secondary); font-size:11px; cursor:pointer; text-align:center; transition:all 0.2s; }
 .calc-phase-btn:hover { border-color:var(--accent-cyan); }
-.calc-phase-btn.active { background:rgba(0,201,160,0.08); border-color:var(--accent-cyan); color:var(--accent-cyan); }
+.calc-phase-btn.active { background:rgba(102,217,200,0.08); border-color:var(--accent-cyan); color:var(--accent-cyan); }
 
 </style>
 </head>
@@ -1409,14 +1359,14 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
         <div style="font-size:12px;font-weight:600;margin-bottom:10px;">📌 快速导航（按角色推荐）</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <span style="font-size:10px;color:var(--accent-cyan);font-family:var(--font-mono);">🔧 运维:</span>
-          <a href="#" onclick="document.querySelector('.nav-tab[data-section=&#39;sec1&#39;]').click();return false;" style="font-size:11px;color:var(--text-secondary);text-decoration:none;padding:3px 10px;border:1px solid var(--border);border-radius:3px;">运行日志</a>
-          <a href="#" onclick="document.querySelector('.nav-tab[data-section=&#39;sec6&#39;]').click();return false;" style="font-size:11px;color:var(--text-secondary);text-decoration:none;padding:3px 10px;border:1px solid var(--border);border-radius:3px;">维护决策中心</a>
-          <a href="#" onclick="document.querySelector('.nav-tab[data-section=&#39;sec5&#39;]').click();return false;" style="font-size:11px;color:var(--text-secondary);text-decoration:none;padding:3px 10px;border:1px solid var(--border);border-radius:3px;">方案有效性验证</a>
+          <a href="#" onclick="document.querySelector('.nav-tab[data-section=&#39;sec1&#39;]').click();return false;" style="font-size:11px;color:var(--text-secondary);text-decoration:none;padding:5px 14px;border:0.5px solid var(--border-accent);border-radius:22px;">运行日志</a>
+          <a href="#" onclick="document.querySelector('.nav-tab[data-section=&#39;sec6&#39;]').click();return false;" style="font-size:11px;color:var(--text-secondary);text-decoration:none;padding:5px 14px;border:0.5px solid var(--border-accent);border-radius:22px;">维护决策中心</a>
+          <a href="#" onclick="document.querySelector('.nav-tab[data-section=&#39;sec5&#39;]').click();return false;" style="font-size:11px;color:var(--text-secondary);text-decoration:none;padding:5px 14px;border:0.5px solid var(--border-accent);border-radius:22px;">方案有效性验证</a>
           <span style="margin-left:16px;font-size:10px;color:var(--accent-amber);font-family:var(--font-mono);">📊 管理:</span>
-          <a href="#" onclick="document.querySelector('.nav-tab[data-section=&#39;sec6&#39;]').click();return false;" style="font-size:11px;color:var(--text-secondary);text-decoration:none;padding:3px 10px;border:1px solid var(--border);border-radius:3px;">策略对比</a>
-          <a href="#" onclick="document.querySelector('.nav-tab[data-section=&#39;sec7&#39;]').click();return false;" style="font-size:11px;color:var(--text-secondary);text-decoration:none;padding:3px 10px;border:1px solid var(--border);border-radius:3px;">传感器升级ROI</a>
-          <a href="/chat" style="font-size:11px;color:var(--accent-cyan);text-decoration:none;padding:3px 10px;border:1px solid var(--accent-cyan);border-radius:3px;">🤖 AI Copilot</a>
-          <a href="/reports" style="font-size:11px;color:var(--accent-cyan);text-decoration:none;padding:3px 10px;border:1px solid var(--accent-cyan);border-radius:3px;">📋 报告中心</a>
+          <a href="#" onclick="document.querySelector('.nav-tab[data-section=&#39;sec6&#39;]').click();return false;" style="font-size:11px;color:var(--text-secondary);text-decoration:none;padding:5px 14px;border:0.5px solid var(--border-accent);border-radius:22px;">策略对比</a>
+          <a href="#" onclick="document.querySelector('.nav-tab[data-section=&#39;sec7&#39;]').click();return false;" style="font-size:11px;color:var(--text-secondary);text-decoration:none;padding:5px 14px;border:0.5px solid var(--border-accent);border-radius:22px;">传感器升级ROI</a>
+          <a href="/chat" style="font-size:11px;color:var(--accent-cyan);text-decoration:none;padding:5px 14px;border:0.5px solid var(--accent-cyan);border-radius:22px;background:rgba(102,217,200,0.06);">🤖 AI Copilot</a>
+          <a href="/reports" style="font-size:11px;color:var(--accent-cyan);text-decoration:none;padding:5px 14px;border:0.5px solid var(--accent-cyan);border-radius:22px;background:rgba(102,217,200,0.06);">📋 报告中心</a>
         </div>
       </div>
     </div>
@@ -1477,7 +1427,7 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
       </div>
       <div class="chart-box short" id="chart-methodology-roadmap"></div>
       <div style="display:flex;gap:32px;font-size:10px;color:var(--text-muted);padding:4px 10px;flex-wrap:wrap;">
-        <span><span style="display:inline-block;width:12px;height:12px;background:#00c9a0;border-radius:2px;margin-right:4px;"></span>数据输入</span>
+        <span><span style="display:inline-block;width:12px;height:12px;background:var(--accent-cyan);border-radius:2px;margin-right:4px;"></span>数据输入</span>
         <span><span style="display:inline-block;width:12px;height:12px;background:#4d94ff;border-radius:2px;margin-right:4px;"></span>EDA探索</span>
         <span><span style="display:inline-block;width:12px;height:12px;background:#a371f7;border-radius:2px;margin-right:4px;"></span>关联分析</span>
         <span><span style="display:inline-block;width:12px;height:12px;background:#f0a030;border-radius:2px;margin-right:4px;"></span>统计推断</span>
@@ -1593,12 +1543,12 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
       <span style="font-size:13px;">🤖</span>
       <span style="font-size:11px;color:var(--text-secondary);">AI 快速解读：传导链分析"不显著"意味着什么？交叉特征为什么有效？</span>
       <a href="/chat?prompt=%E4%BC%A0%E5%AF%BC%E9%93%BE%E5%88%86%E6%9E%90%E7%9A%84%E7%BB%93%E8%AE%BA%E6%98%AF%E2%80%9C%E4%B8%AD%E4%BB%8B%E6%95%88%E5%BA%94%E4%B8%8D%E6%98%BE%E8%91%97%E2%80%9D%EF%BC%8C%E8%BF%99%E6%84%8F%E5%91%B3%E7%9D%80%E4%BB%80%E4%B9%88%EF%BC%9F%E4%BA%A4%E5%8F%89%E7%89%B9%E5%BE%81%E2%80%9C%E7%BB%B4%E6%8A%A4-%E6%95%85%E9%9A%9C%E7%B4%AF%E7%A7%AF%E2%80%9D%E4%B8%BA%E4%BB%80%E4%B9%88%CF%81%3D0.369%E6%98%AF%E6%9C%80%E9%AB%98%E7%9A%84%EF%BC%9FSpearman%E7%9F%A9%E9%98%B5%E6%8F%AD%E7%A4%BA%E4%BA%86%E5%93%AA%E4%BA%9B%E5%85%B3%E8%81%94%EF%BC%9F"
-        style="margin-left:auto;padding:5px 14px;background:rgba(0,201,160,0.08);
-        border:1px solid rgba(0,201,160,0.2);color:var(--accent-cyan);
-        border-radius:var(--radius);font-size:10px;text-decoration:none;
+        style="margin-left:auto;padding:5px 14px;background:rgba(102,217,200,0.08);
+        border:0.5px solid rgba(102,217,200,0.2);color:var(--accent-cyan);
+        border-radius:22px;font-size:10px;text-decoration:none;
         font-family:var(--font-mono);white-space:nowrap;transition:var(--transition);"
-        onmouseover="this.style.background='rgba(0,201,160,0.15)'"
-        onmouseout="this.style.background='rgba(0,201,160,0.08)'">
+        onmouseover="this.style.background='rgba(102,217,200,0.15)'"
+        onmouseout="this.style.background='rgba(102,217,200,0.08)'">
         AI 解读 →
       </a>
     </div>
@@ -1618,12 +1568,12 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
       <span style="font-size:13px;">🤖</span>
       <span style="font-size:11px;color:var(--text-secondary);">AI 快速解读：为什么逐设备基线是必需的？Z&gt;2.0 的 83.9% 精确率怎么来的？</span>
       <a href="/chat?prompt=%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BF%85%E9%A1%BB%E7%94%A8%E6%AF%8F%E5%8F%B0%E8%AE%BE%E5%A4%87%E8%87%AA%E5%B7%B1%E7%9A%84%E5%9F%BA%E7%BA%BF%EF%BC%9F%E5%85%A8%E5%B1%80%E9%98%88%E5%80%BC%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E5%8F%AF%E7%94%A8%EF%BC%9FZ%3E2.0%E7%9A%8483.9%25%E7%B2%BE%E7%A1%AE%E7%8E%87%E6%98%AF%E6%80%8E%E4%B9%88%E8%AE%A1%E7%AE%97%E5%87%BA%E6%9D%A5%E7%9A%84%EF%BC%9F%E4%B8%89%E5%B1%82%E5%88%86%E5%B1%82%E5%9F%BA%E7%BA%BF%E6%9E%B6%E6%9E%84%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"
-        style="margin-left:auto;padding:5px 14px;background:rgba(0,201,160,0.08);
-        border:1px solid rgba(0,201,160,0.2);color:var(--accent-cyan);
-        border-radius:var(--radius);font-size:10px;text-decoration:none;
+        style="margin-left:auto;padding:5px 14px;background:rgba(102,217,200,0.08);
+        border:0.5px solid rgba(102,217,200,0.2);color:var(--accent-cyan);
+        border-radius:22px;font-size:10px;text-decoration:none;
         font-family:var(--font-mono);white-space:nowrap;transition:var(--transition);"
-        onmouseover="this.style.background='rgba(0,201,160,0.15)'"
-        onmouseout="this.style.background='rgba(0,201,160,0.08)'">
+        onmouseover="this.style.background='rgba(102,217,200,0.15)'"
+        onmouseout="this.style.background='rgba(102,217,200,0.08)'">
         AI 解读 →
       </a>
     </div>
@@ -1701,12 +1651,12 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
       <span style="font-size:13px;">🤖</span>
       <span style="font-size:11px;color:var(--text-secondary);">AI 快速解读：为什么 XGBoost AUC≈0.48？MTNN 的 SHAP 归因揭示了什么？</span>
       <a href="/chat?prompt=%E4%B8%BA%E4%BB%80%E4%B9%88%20XGBoost%20%E6%A8%A1%E5%9E%8B%E7%9A%84%20AUC%20%E5%8F%AA%E6%9C%89%200.48%EF%BC%8C%E7%AD%89%E4%BB%B7%E9%9A%8F%E6%9C%BA%E7%8C%9C%E6%B5%8B%EF%BC%9FMulti-Task%20NN%20%E7%9A%84%200.59%20%E6%98%AF%E6%80%8E%E4%B9%88%E6%8F%90%E5%8D%87%E7%9A%84%EF%BC%9FSHAP%20%E5%BD%92%E5%9B%A0%E6%98%BE%E7%A4%BA%E5%93%AA%E4%BA%9B%E7%89%B9%E5%BE%81%E6%9C%80%E9%87%8D%E8%A6%81%EF%BC%9F%E6%A8%A1%E5%9E%8B%E5%A4%A9%E8%8A%B1%E6%9D%BF%E6%98%AF%E5%A4%9A%E5%B0%91%EF%BC%9F"
-        style="margin-left:auto;padding:5px 14px;background:rgba(0,201,160,0.08);
-        border:1px solid rgba(0,201,160,0.2);color:var(--accent-cyan);
-        border-radius:var(--radius);font-size:10px;text-decoration:none;
+        style="margin-left:auto;padding:5px 14px;background:rgba(102,217,200,0.08);
+        border:0.5px solid rgba(102,217,200,0.2);color:var(--accent-cyan);
+        border-radius:22px;font-size:10px;text-decoration:none;
         font-family:var(--font-mono);white-space:nowrap;transition:var(--transition);"
-        onmouseover="this.style.background='rgba(0,201,160,0.15)'"
-        onmouseout="this.style.background='rgba(0,201,160,0.08)'">
+        onmouseover="this.style.background='rgba(102,217,200,0.15)'"
+        onmouseout="this.style.background='rgba(102,217,200,0.08)'">
         AI 解读 →
       </a>
     </div>
@@ -1779,12 +1729,12 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
       <span style="font-size:13px;">🤖</span>
       <span style="font-size:11px;color:var(--text-secondary);">AI 快速解读：三层回测各自验证什么？为什么 Watch 检出率高但提前量短、Alarm 检出率低但提前量长？漏报率 57% 是算法问题还是数据瓶颈？</span>
       <a href="/chat?prompt=%E6%97%B6%E5%BA%8F%E5%9B%9E%E6%B5%8B%E9%AA%8C%E8%AF%81%E6%98%AF%E6%80%8E%E4%B9%88%E5%81%9A%E7%9A%84%EF%BC%9F%E4%B8%89%E5%B1%82%E5%9B%9E%E6%B5%8B%E4%BD%93%E7%B3%BB%E5%90%84%E8%87%AA%E9%AA%8C%E8%AF%81%E4%BB%80%E4%B9%88%EF%BC%9F%E9%A2%84%E8%AD%A6%E6%8F%90%E5%89%8D%E9%87%8F%E5%88%86%E5%B8%83%E5%9B%BE%E6%80%8E%E4%B9%88%E7%9C%8B%EF%BC%9F%E4%B8%BA%E4%BB%80%E4%B9%88Watch%E6%A3%80%E5%87%BA%E7%8E%87%E9%AB%98%E4%BD%86%E6%8F%90%E5%89%8D%E9%87%8F%E7%9F%AD%E3%80%81Alarm%E6%A3%80%E5%87%BA%E7%8E%87%E4%BD%8E%E4%BD%86%E6%8F%90%E5%89%8D%E9%87%8F%E9%95%BF%EF%BC%9F%E6%BC%8F%E6%8A%A5%E7%8E%87%E6%98%AF%E7%AE%97%E6%B3%95%E9%97%AE%E9%A2%98%E8%BF%98%E6%98%AF%E6%95%B0%E6%8D%AE%E7%93%B6%E9%A2%88%EF%BC%9F"
-        style="margin-left:auto;padding:5px 14px;background:rgba(0,201,160,0.08);
-        border:1px solid rgba(0,201,160,0.2);color:var(--accent-cyan);
-        border-radius:var(--radius);font-size:10px;text-decoration:none;
+        style="margin-left:auto;padding:5px 14px;background:rgba(102,217,200,0.08);
+        border:0.5px solid rgba(102,217,200,0.2);color:var(--accent-cyan);
+        border-radius:22px;font-size:10px;text-decoration:none;
         font-family:var(--font-mono);white-space:nowrap;transition:var(--transition);"
-        onmouseover="this.style.background='rgba(0,201,160,0.15)'"
-        onmouseout="this.style.background='rgba(0,201,160,0.08)'">
+        onmouseover="this.style.background='rgba(102,217,200,0.15)'"
+        onmouseout="this.style.background='rgba(102,217,200,0.08)'">
         AI 解读 →
       </a>
     </div>
@@ -1991,12 +1941,12 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
       <span style="font-size:13px;">🤖</span>
       <span style="font-size:11px;color:var(--text-secondary);">AI 快速解读：工单优先级怎么算的？三种策略哪个适合我的工厂？</span>
       <a href="/chat?prompt=%E5%BD%93%E5%89%8D%E5%B7%A5%E5%8D%95%E6%98%AF%E6%80%8E%E4%B9%88%E6%8E%92%E4%BC%98%E5%85%88%E7%BA%A7%E7%9A%84%EF%BC%9F4%E4%B8%AA%E8%9E%8D%E5%90%88%E4%BF%A1%E5%8F%B7%EF%BC%88%E7%BB%9F%E8%AE%A10.40%2B%E6%88%90%E6%9C%AC0.25%2BML0.25%2B%E8%B6%8B%E5%8A%BF0.10%EF%BC%89%E5%88%86%E5%88%AB%E8%B4%A1%E7%8C%AE%E4%BA%86%E4%BB%80%E4%B9%88%EF%BC%9F%E4%B8%89%E7%A7%8D%E7%BB%B4%E6%8A%A4%E7%AD%96%E7%95%A5%E5%90%84%E8%87%AA%E9%80%82%E5%90%88%E4%BB%80%E4%B9%88%E5%9C%BA%E6%99%AF%EF%BC%9F"
-        style="margin-left:auto;padding:5px 14px;background:rgba(0,201,160,0.08);
-        border:1px solid rgba(0,201,160,0.2);color:var(--accent-cyan);
-        border-radius:var(--radius);font-size:10px;text-decoration:none;
+        style="margin-left:auto;padding:5px 14px;background:rgba(102,217,200,0.08);
+        border:0.5px solid rgba(102,217,200,0.2);color:var(--accent-cyan);
+        border-radius:22px;font-size:10px;text-decoration:none;
         font-family:var(--font-mono);white-space:nowrap;transition:var(--transition);"
-        onmouseover="this.style.background='rgba(0,201,160,0.15)'"
-        onmouseout="this.style.background='rgba(0,201,160,0.08)'">
+        onmouseover="this.style.background='rgba(102,217,200,0.15)'"
+        onmouseout="this.style.background='rgba(102,217,200,0.08)'">
         AI 解读 →
       </a>
     </div>
@@ -2056,7 +2006,7 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
           <div style="font-size:22px;font-weight:700;color:var(--accent-purple);" id="s7-or-optimized-risk">--</div>
           <div style="font-size:10px;color:var(--text-muted);"><span id="s7-or-optimized-n">--</span> 工单</div>
         </div>
-        <div style="flex:1;min-width:100px;padding:10px 14px;background:linear-gradient(135deg, rgba(167,113,247,0.08), rgba(0,201,160,0.08));border-radius:var(--radius);text-align:center;border:1px solid var(--accent-purple);">
+        <div style="flex:1;min-width:100px;padding:10px 14px;background:linear-gradient(135deg, rgba(167,113,247,0.08), rgba(102,217,200,0.08));border-radius:var(--radius);text-align:center;border:1px solid var(--accent-purple);">
           <div style="font-size:11px;color:var(--accent-purple);font-weight:600;">风险削减提升</div>
           <div style="font-size:26px;font-weight:700;color:var(--accent-green);" id="s7-or-improvement">--</div>
         </div>
@@ -2072,7 +2022,7 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
       </div>
       <div style="font-size:12px;color:var(--text-secondary);padding:10px 0;border-top:1px solid var(--border);margin-top:10px;line-height:1.8;">
         <b style="color:var(--accent-purple);">怎么用</b>：拖动上方预算滑块、调整工时和工单上限，四张图实时联动。<br>
-        <b style="color:var(--accent-purple);">看什么</b>：<b style="color:var(--accent-green);">绿色</b>=数学优化选中的最优工单组合  <b style="color:var(--accent-amber);">橙色</b>=贪心想要但被优化跳过  <b style="color:#f04444;">红色</b>=贪心想要但预算不够  <b style="color:#5a6474;">灰色</b>=风险低、暂不处理。<br>
+        <b style="color:var(--accent-purple);">看什么</b>：<b style="color:var(--accent-green);">绿色</b>=数学优化选中的最优工单组合  <b style="color:var(--accent-amber);">橙色</b>=贪心想要但被优化跳过  <b style="color:var(--accent-red);">红色</b>=贪心想要但预算不够  <b style="color:var(--text-muted);">灰色</b>=风险低、暂不处理。<br>
         <b style="color:var(--accent-purple);">证明什么</b>：同样的预算，数学优化比拍脑袋排序多削减10-30%的风险——这就是运筹优化的价值。
       </div>
     </div>
@@ -2087,7 +2037,7 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
       <div class="chart-box" id="chart-or-before-after" style="height:260px;"></div>
       <div id="s7-before-after-legend" style="display:flex;gap:24px;padding:4px 0;font-size:10px;color:var(--text-secondary);border-top:1px solid var(--border);">
         <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#4d94ff;margin-right:4px;"></span>规则驱动（优化前）</span>
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#00c9a0;margin-right:4px;"></span>运筹优化（优化后）</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--accent-cyan);margin-right:4px;"></span>运筹优化（优化后）</span>
       </div>
     </div>
 
@@ -2114,22 +2064,22 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
         </div>
         <div style="display:flex;gap:14px;flex-wrap:wrap;">
           <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg-card);border-radius:var(--radius-md);border:1px solid var(--border);">
-            <span style="font-size:14px;color:#4d94ff;font-weight:700;">电气专家</span>
+            <span style="font-size:14px;color:var(--accent-blue);font-weight:700;">电气专家</span>
             <input type="number" id="s7-sched-n-elec" value="2" min="0" max="10" step="1" style="width:40px;padding:4px;background:transparent;color:var(--text-primary);border:1px solid var(--border);border-radius:3px;font-size:14px;text-align:center;"><span style="font-size:13px;color:var(--text-muted);">人</span>
             <!-- h/tech removed — now global weekday/weekend -->
           </div>
           <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg-card);border-radius:var(--radius-md);border:1px solid var(--border);">
-            <span style="font-size:14px;color:#f0a030;font-weight:700;">热控专家</span>
+            <span style="font-size:14px;color:var(--accent-amber);font-weight:700;">热控专家</span>
             <input type="number" id="s7-sched-n-therm" value="1" min="0" max="10" step="1" style="width:40px;padding:4px;background:transparent;color:var(--text-primary);border:1px solid var(--border);border-radius:3px;font-size:14px;text-align:center;"><span style="font-size:13px;color:var(--text-muted);">人</span>
             <!-- h/tech removed — now global weekday/weekend -->
           </div>
           <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg-card);border-radius:var(--radius-md);border:1px solid var(--border);">
-            <span style="font-size:14px;color:#a371f7;font-weight:700;">机械专家</span>
+            <span style="font-size:14px;color:var(--accent-purple);font-weight:700;">机械专家</span>
             <input type="number" id="s7-sched-n-mech" value="1" min="0" max="10" step="1" style="width:40px;padding:4px;background:transparent;color:var(--text-primary);border:1px solid var(--border);border-radius:3px;font-size:14px;text-align:center;"><span style="font-size:13px;color:var(--text-muted);">人</span>
             <!-- h/tech removed — now global weekday/weekend -->
           </div>
           <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg-card);border-radius:var(--radius-md);border:1px solid var(--border);">
-            <span style="font-size:14px;color:#f04444;font-weight:700;">高级技师</span>
+            <span style="font-size:14px;color:var(--accent-red);font-weight:700;">高级技师</span>
             <input type="number" id="s7-sched-n-senior" value="1" min="0" max="10" step="1" style="width:40px;padding:4px;background:transparent;color:var(--text-primary);border:1px solid var(--border);border-radius:3px;font-size:14px;text-align:center;"><span style="font-size:13px;color:var(--text-muted);">人</span>
             <!-- h/tech removed — now global weekday/weekend -->
           </div>
@@ -2424,12 +2374,12 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
         基于当前100台设备数据瓶颈，量化对比传感器升级方案的投资回报
       </span>
       <a href="/chat?prompt=%E8%AF%B7%E5%88%86%E6%9E%90%E6%88%91%E5%B7%A5%E5%8E%82100%E5%8F%B0CNC%E8%AE%BE%E5%A4%87%E7%9A%84%E4%BC%A0%E6%84%9F%E5%99%A8%E6%95%B0%E6%8D%AE%E7%93%B6%E9%A2%88%EF%BC%8C%E5%AF%B9%E6%AF%94%E4%BB%85%E5%8A%A0%E8%A3%85%E6%8C%AF%E5%8A%A8%E4%BC%A0%E6%84%9F%E5%99%A8%20vs%20%E6%8C%AF%E5%8A%A8%2B%E7%94%B5%E6%B5%81%E9%A2%91%E8%B0%B1%E4%B8%A4%E4%B8%AA%E6%96%B9%E6%A1%88%E7%9A%84%E6%8A%95%E8%B5%84%E5%9B%9E%E6%8A%A5%EF%BC%8C%E6%8E%A8%E8%8D%90%E6%9C%80%E4%BC%98%E8%B7%AF%E5%BE%84"
-        style="margin-left:auto;padding:6px 16px;background:rgba(0,201,160,0.08);
-        border:1px solid rgba(0,201,160,0.2);color:var(--accent-cyan);
+        style="margin-left:auto;padding:6px 16px;background:rgba(102,217,200,0.08);
+        border:1px solid rgba(102,217,200,0.2);color:var(--accent-cyan);
         border-radius:var(--radius);font-size:11px;text-decoration:none;
         font-family:var(--font-mono);white-space:nowrap;transition:var(--transition);"
-        onmouseover="this.style.background='rgba(0,201,160,0.15)'"
-        onmouseout="this.style.background='rgba(0,201,160,0.08)'">
+        onmouseover="this.style.background='rgba(102,217,200,0.15)'"
+        onmouseout="this.style.background='rgba(102,217,200,0.08)'">
         开始咨询 &rarr;
       </a>
     </div>
