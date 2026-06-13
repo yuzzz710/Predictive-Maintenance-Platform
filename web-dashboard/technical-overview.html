@@ -2331,9 +2331,9 @@ var C = {
 
 function tooltipCfg() {
   return {
-    backgroundColor: 'rgba(14,17,23,0.95)',
-    borderColor: C.border,
-    textStyle: { color: C.textPrimary, fontSize: 12 }
+    backgroundColor: 'rgba(255,255,255,0.96)',
+    borderColor: 'rgba(0,0,0,0.10)',
+    textStyle: { color: '#1d1d1f', fontSize: 12 }
   };
 }
 
@@ -2807,7 +2807,7 @@ function renderKdeChart(domId, paramData) {
       trigger: 'axis',
       backgroundColor: 'rgba(28,28,30,0.95)',
       borderColor: C.border,
-      textStyle: { color: C.textPrimary, fontSize: 11 },
+      textStyle: { color: '#1d1d1f', fontSize: 11 },
       formatter: function(ps) {
         var lines = [];
         for (var i = 0; i < ps.length; i++) {
