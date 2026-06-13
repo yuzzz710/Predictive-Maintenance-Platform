@@ -81,8 +81,8 @@ body {
 }
 .cell.priority-pulse { animation: priorityPulse 2s ease-in-out infinite; z-index: 10; position: relative; }
 @keyframes priorityPulse {
-  0%,100% { box-shadow: 0 0 10px rgba(240,160,48,0.5), 0 0 22px rgba(240,160,48,0.2); filter: brightness(1); }
-  50% { box-shadow: 0 0 18px rgba(255,180,40,0.75), 0 0 36px rgba(255,180,40,0.32); filter: brightness(1.12); }
+  0%,100% { box-shadow: 0 0 10px rgba(255,179,64,0.5), 0 0 22px rgba(255,179,64,0.2); filter: brightness(1); }
+  50% { box-shadow: 0 0 18px rgba(255,179,64,0.75), 0 0 36px rgba(255,179,64,0.35); filter: brightness(1.12); }
 }
 .cell .pri-badge {
   position: absolute; top: -4px; right: -4px;
@@ -98,7 +98,9 @@ body {
 }
 .stats-bar b { color: var(--text-primary); }
 .stats-bar .st-critical { color: var(--accent-red); }
-.stats-bar .st-degrading { color: rgba(255,69,58,0.7); }
+.stats-bar .st-degrading { color: rgba(255,149,0,0.85); }
+.stats-bar .st-warning { color: var(--accent-amber); }
+.stats-bar .st-wo { color: var(--accent-red); }
 .stats-bar .st-healthy { color: var(--accent-green); }
 
 /* ── Footer ── */
@@ -299,11 +301,12 @@ body {
 
 <div class="grid-wrapper">
   <div class="grid-legend">
-    <span><span class="legend-dot" style="background:rgba(48,209,88,0.25);border:0.5px solid rgba(48,209,88,0.3);"></span> 健康</span>
-    <span><span class="legend-dot" style="background:rgba(255,69,58,0.22);border:0.5px solid rgba(255,69,58,0.25);"></span> 退化</span>
-    <span><span class="legend-dot" style="background:rgba(255,69,58,0.35);border:0.5px solid rgba(255,69,58,0.3);"></span> 高危</span>
-    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;box-shadow:0 0 8px rgba(255,69,58,0.5);margin-right:4px;background:rgba(255,69,58,0.35);"></span> 开放工单</span>
-    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;box-shadow:0 0 10px rgba(240,160,48,0.5);margin-right:4px;background:transparent;border:0.5px solid rgba(240,160,48,0.3);"></span> Top 3 风险</span>
+    <span><span class="legend-dot" style="background:rgba(48,209,88,0.50);border:0.5px solid rgba(48,209,88,0.5);"></span> 健康</span>
+    <span><span class="legend-dot" style="background:rgba(255,179,64,0.50);border:0.5px solid rgba(255,179,64,0.5);"></span> 警告</span>
+    <span><span class="legend-dot" style="background:rgba(255,149,0,0.55);border:0.5px solid rgba(255,149,0,0.5);"></span> 退化</span>
+    <span><span class="legend-dot" style="background:rgba(255,69,58,0.60);border:0.5px solid rgba(255,69,58,0.5);"></span> 高危</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;box-shadow:0 0 8px rgba(255,69,58,0.6);margin-right:4px;background:rgba(255,69,58,0.60);"></span> 开放工单</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;box-shadow:0 0 10px rgba(255,179,64,0.5);margin-right:4px;background:transparent;border:0.5px solid rgba(255,179,64,0.4);"></span> Top 3 风险</span>
   </div>
   <div class="machine-grid" id="machine-grid"><div class="fallback">加载中...</div></div>
 </div>

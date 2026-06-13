@@ -74,7 +74,7 @@ function renderGrid() {
   var grid = document.getElementById('machine-grid');
   if (!grid) return;
   grid.innerHTML = '';
-  var stats = { healthy: 0, degrading: 0, critical: 0, withWO: 0 };
+  var stats = { healthy: 0, warning: 0, degrading: 0, critical: 0, withWO: 0 };
 
   for (var i = 1; i <= 100; i++) {
     var mid = 'CNC_' + String(i).padStart(3, '0');
@@ -96,7 +96,8 @@ function renderGrid() {
     cell.className = 'cell';
     cell.title = mid + ' | 健康分: ' + (h.health_score || '?') + ' | ' + level;
 
-    if (level === 'Healthy' || level === 'Warning') { cell.classList.add('healthy'); stats.healthy++; }
+    if (level === 'Healthy') { cell.classList.add('healthy'); stats.healthy++; }
+    else if (level === 'Warning') { cell.classList.add('warning'); stats.warning++; }
     else if (level === 'Degrading') { cell.classList.add('degrading'); stats.degrading++; }
     else { cell.classList.add('critical'); stats.critical++; }
 
@@ -131,9 +132,10 @@ function renderGrid() {
     statsBar.innerHTML =
       '<span>总计 <b>100</b> 台</span>' +
       '<span class="st-healthy">健康 <b>' + stats.healthy + '</b></span>' +
+      '<span class="st-warning">警告 <b>' + (stats.warning || 0) + '</b></span>' +
       '<span class="st-degrading">退化 <b>' + stats.degrading + '</b></span>' +
       '<span class="st-critical">高危 <b>' + stats.critical + '</b></span>' +
-      '<span>开放工单 <b>' + stats.withWO + '</b></span>';
+      '<span class="st-wo">开放工单 <b>' + stats.withWO + '</b></span>';
   }
 }
 
