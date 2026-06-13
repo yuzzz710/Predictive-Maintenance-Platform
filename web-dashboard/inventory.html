@@ -9,92 +9,154 @@
 <script src="/shared/role-check.js"></script>
 <script src="/shared/theme-init.js"></script>
 <style>
-:root {
-  --bg: #080a0d;--bg-surface: #0e1117;--bg-card: #141820;--bg-card-alt: #181d26;
-  --bg-input: #0c0f15;--border: #1c2230;--border-light: #242b38;
-  --text: #e6ebf2;--text-secondary: #8e9aab;--text-muted: #5a6474;
-  --cyan: #00c9a0;--amber: #f0a030;--red: #f04444;--blue: #4d94ff;--green: #3fb950;--purple: #a371f7;
-  --radius: 3px;--radius-md: 6px;--radius-lg: 10px;
-  --font-mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
-  --font-sans: 'PingFang SC','Microsoft YaHei','Hiragino Sans GB','Segoe UI',system-ui,sans-serif;
-  --spacing-xs: 4px;--spacing-sm: 8px;--spacing-md: 16px;--spacing-lg: 24px;
+/* ══════════════════════════════════════════════════════════════════════
+   Design tokens from navbar.js — DO NOT redefine :root here
+   Ambient light orbs also from navbar.js — DO NOT redeclare body::before
+   ══════════════════════════════════════════════════════════════════════ */
+body {
+  background: var(--bg-root); color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
-[data-theme="light"] {
-  --bg: #f5f7fa;--bg-surface: #fff;--bg-card: #fff;--bg-card-alt: #f8f9fb;
-  --bg-input: #f0f2f5;--border: #e2e6ed;--border-light: #eef0f4;
-  --text: #1a1d26;--text-secondary: #4a5568;--text-muted: #8a94a6;
+
+/* ══════════════════════════════════════════════════════════════════════
+   Header — iOS 26 glass
+   ══════════════════════════════════════════════════════════════════════ */
+.header {
+  padding: var(--space-md) var(--space-lg);
+  max-width: 1300px; margin: var(--space-md) auto 0;
+  background: var(--glass-bg-card);
+  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm), var(--glass-highlight);
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
-body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(0,201,160,0.04),transparent),radial-gradient(ellipse 60% 40% at 80% 80%,rgba(77,148,255,0.03),transparent)}
-.header{background:var(--bg-surface);border-bottom:1px solid var(--border);padding:16px 24px}
-.header-inner{max-width:1300px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-.header-title{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px}
-.header-title .dot{color:var(--cyan)}
-.content{max-width:1300px;margin:0 auto;padding:20px 24px}
-
-.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px}
-.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 16px;text-align:center}
-.stat-card .v{font-size:22px;font-weight:700;font-family:var(--font-mono)}
-.stat-card .l{font-size:11px;color:var(--text-muted);margin-top:2px}
-
-.section{margin-bottom:24px}
-.section h3{font-size:14px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
-.section-bar{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-.btn{padding:8px 16px;border-radius:var(--radius);font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);font-family:var(--font-sans);transition:all 0.2s}
-.btn:hover{color:var(--text);border-color:var(--cyan);background:rgba(0,201,160,0.08)}
-.btn.primary{background:rgba(0,201,160,0.1);border-color:rgba(0,201,160,0.25);color:var(--cyan)}
-.btn.danger{color:var(--red);border-color:rgba(240,68,68,0.25)}
-.btn.small{padding:4px 10px;font-size:11px}
-
-table{width:100%;border-collapse:collapse;font-size:12px}
-th{text-align:left;padding:8px 10px;color:var(--text-muted);font-weight:500;border-bottom:1px solid var(--border);background:var(--bg-surface);position:sticky;top:0}
-td{padding:8px 10px;border-bottom:1px solid var(--border-light);color:var(--text-secondary)}
-tr:hover td{background:rgba(255,255,255,0.015)}
-
-.badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:600}
-.badge.ok{background:rgba(63,185,80,0.1);color:var(--green)}
-.badge.low{background:rgba(240,160,48,0.1);color:var(--amber)}
-.badge.out{background:rgba(240,68,68,0.1);color:var(--red)}
-.badge.info{background:rgba(77,148,255,0.08);color:var(--blue)}
-.badge.purple{background:rgba(163,113,247,0.08);color:var(--purple)}
-
-.alert-row td{background:rgba(240,68,68,0.04)}
-.alert-row:hover td{background:rgba(240,68,68,0.08)}
-
-.procurement-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 18px;margin-bottom:8px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.procurement-card .pc-status{font-weight:600;font-size:12px}
-.procurement-card .pc-part{font-family:var(--font-mono);font-size:14px;font-weight:600}
-.procurement-card .pc-info{font-size:11px;color:var(--text-muted)}
-.procurement-card .pc-actions{margin-left:auto;display:flex;gap:6px}
-
-/* Purchase suggestion card (from OR inventory optimization) */
-.purchase-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-.purchase-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.purchase-card:hover{border-color:var(--purple);background:rgba(163,113,247,0.03)}
-.purchase-card .pu-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:8px;font-size:10px;font-weight:600;white-space:nowrap}
-.purchase-card .pu-badge.pu-urgent{background:rgba(240,68,68,0.12);color:var(--red)}
-.purchase-card .pu-badge.pu-normal{background:rgba(77,148,255,0.1);color:var(--blue)}
-.purchase-card .pu-part{font-family:var(--font-mono);font-size:14px;font-weight:600;min-width:120px}
-.purchase-card .pu-detail{font-size:11px;color:var(--text-secondary);display:flex;flex-direction:column;gap:2px}
-.purchase-card .pu-detail span{color:var(--text-muted)}
-.purchase-card .pu-cost{font-family:var(--font-mono);font-size:15px;font-weight:700;color:var(--purple);margin-left:auto;text-align:right}
-.purchase-card .pu-cost small{font-size:10px;color:var(--text-muted);display:block;font-weight:400}
-
-/* Risk indicator bar */
-.risk-bar-track{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;min-width:60px}
-.risk-bar-fill{height:100%;border-radius:2px;transition:width 0.5s ease}
-
-.loading{text-align:center;padding:40px;color:var(--text-muted)}
-.error{background:rgba(240,68,68,0.08);border:1px solid rgba(240,68,68,0.2);border-radius:var(--radius);padding:12px;color:var(--red);font-size:12px;margin-bottom:16px;display:none}
-.empty-state{text-align:center;padding:24px;color:var(--text-muted);background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);font-size:13px;line-height:1.8}
-
-@media(max-width:768px){
-  .procurement-card,.purchase-card{flex-direction:column;align-items:flex-start}
-  .purchase-grid{grid-template-columns:1fr}
-  .pc-actions,.pu-cost{margin-left:0}
+.header-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
 }
-html[data-role="operator"] .role-manager:not(.role-operator){display:none!important}
+.header-title { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.header-title .dot { color: var(--accent-cyan); }
+
+/* ══════════════════════════════════════════════════════════════════════
+   Content
+   ══════════════════════════════════════════════════════════════════════ */
+.content { max-width: 1300px; margin: 0 auto; padding: 20px 24px; }
+
+/* ── Stats Row (glass mini-cards) ── */
+.stats-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px; margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--glass-bg-card);
+  backdrop-filter: var(--glass-blur-light); -webkit-backdrop-filter: var(--glass-blur-light);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px; text-align: center;
+  box-shadow: var(--shadow-sm), var(--glass-highlight);
+}
+.stat-card .v { font-size: 22px; font-weight: 700; font-family: var(--font-mono); color: var(--text-primary); }
+.stat-card .l { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* ── Section ── */
+.section { margin-bottom: 24px; }
+.section h3 {
+  font-size: 14px; font-weight: 600; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px; color: var(--text-primary);
+}
+.section-bar { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+
+/* ── Small button variant (navbar doesn't define this) ── */
+.btn.small { padding: 4px 12px; font-size: 11px; border-radius: var(--radius-sm); }
+
+/* ── Badges ── */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 10px; font-size: 10px; font-weight: 600;
+}
+.badge.ok    { background: rgba(48,209,88,0.08);   color: var(--accent-green); }
+.badge.low   { background: rgba(255,179,64,0.08);  color: var(--accent-amber); }
+.badge.out   { background: rgba(255,69,58,0.08);   color: var(--accent-red); }
+.badge.info  { background: rgba(109,181,249,0.08);  color: var(--accent-blue); }
+.badge.purple{ background: rgba(191,90,242,0.08);  color: var(--accent-purple); }
+
+/* ── Alert row ── */
+.alert-row td { background: rgba(255,69,58,0.04); }
+.alert-row:hover td { background: rgba(255,69,58,0.08); }
+
+/* ── Procurement Cards (glass) ── */
+.procurement-card {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+.procurement-card .pc-status { font-weight: 600; font-size: 12px; }
+.procurement-card .pc-part {
+  font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--text-primary);
+}
+.procurement-card .pc-info { font-size: 11px; color: var(--text-muted); }
+.procurement-card .pc-actions { margin-left: auto; display: flex; gap: 6px; }
+
+/* ── Purchase Suggestion Cards ── */
+.purchase-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;
+}
+.purchase-card {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 12px 14px;
+}
+.purchase-card:hover {
+  border-color: var(--accent-purple);
+  background: rgba(191,90,242,0.04);
+}
+.purchase-card .pu-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 8px; font-size: 10px; font-weight: 600; white-space: nowrap;
+}
+.purchase-card .pu-badge.pu-urgent { background: rgba(255,69,58,0.12); color: var(--accent-red); }
+.purchase-card .pu-badge.pu-normal  { background: rgba(109,181,249,0.10); color: var(--accent-blue); }
+.purchase-card .pu-part {
+  font-family: var(--font-mono); font-size: 14px; font-weight: 600; min-width: 120px; color: var(--text-primary);
+}
+.purchase-card .pu-detail { font-size: 11px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 2px; }
+.purchase-card .pu-detail span { color: var(--text-muted); }
+.purchase-card .pu-cost {
+  font-family: var(--font-mono); font-size: 15px; font-weight: 700;
+  color: var(--accent-purple); margin-left: auto; text-align: right;
+}
+.purchase-card .pu-cost small { font-size: 10px; color: var(--text-muted); display: block; font-weight: 400; }
+
+/* ── Urgent purchase: amber left-border accent ── */
+.purchase-card.pu-urgent-card {
+  border-left: 3px solid var(--accent-amber);
+}
+
+/* ── Risk indicator bar ── */
+.risk-bar-track { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; min-width: 60px; }
+.risk-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+
+/* ── Loading / Error / Empty ── */
+.loading { text-align: center; padding: 40px; color: var(--text-muted); }
+.error {
+  background: rgba(255,69,58,0.08); border: 0.5px solid rgba(255,69,58,0.2);
+  border-radius: var(--radius); padding: 12px; color: var(--accent-red);
+  font-size: 12px; margin-bottom: 16px; display: none;
+}
+.empty-state {
+  text-align: center; padding: 24px; color: var(--text-muted);
+  background: var(--glass-bg-card);
+  backdrop-filter: var(--glass-blur-light); -webkit-backdrop-filter: var(--glass-blur-light);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius-md); font-size: 13px; line-height: 1.8;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .header-inner { flex-direction: column; align-items: flex-start; }
+  .procurement-card, .purchase-card { flex-direction: column; align-items: flex-start; }
+  .purchase-grid { grid-template-columns: 1fr; }
+  .pc-actions, .pu-cost { margin-left: 0; }
+}
+html[data-role="operator"] .role-manager:not(.role-operator) { display:none !important; }
 </style>
 </head>
 <body>
@@ -115,13 +177,13 @@ html[data-role="operator"] .role-manager:not(.role-operator){display:none!import
   <!-- Inventory Optimization Dashboard -->
   <div class="section">
     <h3>
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
         <rect x="3" y="12" width="3" height="9" rx="1"/><rect x="10" y="7" width="3" height="14" rx="1"/><rect x="17" y="3" width="3" height="18" rx="1"/>
       </svg>
       (s,S) 库存策略可视化
     </h3>
-        <!-- Row 1: Gap Chart (full width) -->
-    <div class="chart-card" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;margin-bottom:16px;">
+    <!-- Row 1: Gap Chart (full width) -->
+    <div class="glass-card" style="padding:16px;margin-bottom:16px;">
       <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:4px;">当前库存 vs 目标库存(S) &mdash; 缺口对比</div>
       <div style="font-size:10px;color:var(--text-muted);margin-bottom:12px;">柱高 = 当前库存(实际) &middot; 紫色线 = (s,S)策略目标值 &middot; 红色区域 = 缺口</div>
       <div id="chart-gap-container"><canvas id="chart-inv-gap" style="max-height:360px;"></canvas></div>
@@ -129,11 +191,11 @@ html[data-role="operator"] .role-manager:not(.role-operator){display:none!import
     </div>
     <!-- Row 2: Risk Donut (left) + Risk Top 5 (right) -->
     <div class="chart-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-      <div class="chart-card" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;">
+      <div class="glass-card" style="padding:16px;">
         <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:12px;">缺货风险分布</div>
         <canvas id="chart-risk-donut" style="max-height:280px;"></canvas>
       </div>
-      <div class="chart-card" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;">
+      <div class="glass-card" style="padding:16px;">
         <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">缺货风险 Top 5</div>
         <div id="risk-top5"></div>
       </div>
@@ -148,7 +210,7 @@ html[data-role="operator"] .role-manager:not(.role-operator){display:none!import
   <!-- Purchase Suggestions (from (s,S) optimization) -->
   <div class="section">
     <h3>
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-purple)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
         <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
       </svg>
       采购建议 &mdash; 基于 (s,S) 最优策略
@@ -160,28 +222,30 @@ html[data-role="operator"] .role-manager:not(.role-operator){display:none!import
   <!-- Stock Table -->
   <div class="section">
     <h3>
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
         <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
       </svg>
       库存总览
     </h3>
     <div class="section-bar">
-      <button class="btn primary" onclick="loadAll()">&#x21BB; 刷新</button>
-      <button class="btn" onclick="initInventory()">&#x21BB; 重新初始化</button>
+      <button class="btn btn-primary" onclick="loadAll()">&#x21BB; 刷新</button>
+      <button class="btn btn-ghost" onclick="initInventory()">&#x21BB; 重新初始化</button>
     </div>
-    <div id="stock-table"><div class="loading">加载中...</div></div>
+    <div class="glass-card" style="padding:0;overflow:hidden;">
+      <div id="stock-table"><div class="loading">加载中...</div></div>
+    </div>
   </div>
 
   <!-- Procurement Orders -->
   <div class="section">
     <h3>
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-amber)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
         <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
       </svg>
       采购订单
     </h3>
     <div class="section-bar">
-      <button class="btn primary" onclick="generateOrders()">+ 自动生成采购单</button>
+      <button class="btn btn-primary" onclick="generateOrders()">+ 自动生成采购单</button>
     </div>
     <div id="procurement-list"><div class="loading">加载中...</div></div>
   </div>
@@ -210,12 +274,12 @@ var PART_CN = {
 };
 function cn(n){return PART_CN[n]||n}
 
-// Risk level color map (semantic tokens)
+// Risk level color map (iOS 26 semantic tokens)
 var RISK_COLORS = {
-  critical: {fill:'rgba(240,68,68,0.7)',stroke:'var(--red)',text:'严重',cls:'out'},
-  high: {fill:'rgba(240,160,48,0.7)',stroke:'var(--amber)',text:'高',cls:'low'},
-  medium: {fill:'rgba(77,148,255,0.6)',stroke:'var(--blue)',text:'中',cls:'info'},
-  low: {fill:'rgba(63,185,80,0.5)',stroke:'var(--green)',text:'低',cls:'ok'}
+  critical: {fill:'rgba(255,69,58,0.7)',stroke:'var(--accent-red)',text:'严重',cls:'out'},
+  high: {fill:'rgba(255,179,64,0.7)',stroke:'var(--accent-amber)',text:'高',cls:'low'},
+  medium: {fill:'rgba(109,181,249,0.6)',stroke:'var(--accent-blue)',text:'中',cls:'info'},
+  low: {fill:'rgba(48,209,88,0.5)',stroke:'var(--accent-green)',text:'低',cls:'ok'}
 };
 
 async function loadAll(){await Promise.all([loadStock(),loadProcurement(),loadLogs()]);loadPolicyCharts();}
@@ -331,36 +395,36 @@ function renderGapChart(rows) {
       labels: labels,
       datasets: [
         { label: '当前库存(实际)', data: currentData,
-          backgroundColor: currentData.map(function(v,i){ return v < targetData[i] ? 'rgba(240,160,48,0.55)' : 'rgba(63,185,80,0.45)'; }),
-          borderColor: currentData.map(function(v,i){ return v < targetData[i] ? 'var(--amber)' : 'var(--green)'; }),
+          backgroundColor: currentData.map(function(v,i){ return v < targetData[i] ? 'rgba(255,179,64,0.55)' : 'rgba(48,209,88,0.45)'; }),
+          borderColor: currentData.map(function(v,i){ return v < targetData[i] ? 'var(--accent-amber)' : 'var(--accent-green)'; }),
           borderWidth: 1, borderRadius: 2 },
         { label: '目标库存(S)', data: targetData, type: 'line',
-          borderColor: 'var(--purple)', backgroundColor: 'transparent', borderWidth: 2, borderDash: [4,3],
-          pointRadius: 3, pointBackgroundColor: 'var(--purple)', tension: 0.2 },
+          borderColor: 'var(--accent-purple)', backgroundColor: 'transparent', borderWidth: 2, borderDash: [4,3],
+          pointRadius: 3, pointBackgroundColor: 'var(--accent-purple)', tension: 0.2 },
         { label: '重订货点(s)', data: sData, type: 'line',
-          borderColor: 'var(--amber)', backgroundColor: 'transparent', borderWidth: 1.2, borderDash: [2,4],
-          pointRadius: 2, pointBackgroundColor: 'var(--amber)', tension: 0.2 },
+          borderColor: 'var(--accent-amber)', backgroundColor: 'transparent', borderWidth: 1.2, borderDash: [2,4],
+          pointRadius: 2, pointBackgroundColor: 'var(--accent-amber)', tension: 0.2 },
         { label: '缺口(需补货)', data: gapData,
-          backgroundColor: 'rgba(240,68,68,0.35)', borderColor: 'var(--red)', borderWidth: 1, borderRadius: 2 }
+          backgroundColor: 'rgba(255,69,58,0.35)', borderColor: 'var(--accent-red)', borderWidth: 1, borderRadius: 2 }
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { labels: { color: '#8e9aab', font: { size: 10 }, usePointStyle: true, padding: 16 } },
+        legend: { labels: { color: '#98989d', font: { size: 10 }, usePointStyle: true, padding: 16 } },
         tooltip: {
-          backgroundColor: '#141820', titleColor: '#e6ebf2',
-          bodyColor: '#8e9aab', borderColor: '#1c2230', borderWidth: 1,
+          backgroundColor: '#1c1c1e', titleColor: '#f5f5f7',
+          bodyColor: '#98989d', borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1,
           callbacks: {
             label: function(ctx){ return ctx.dataset.label + ': ' + parseFloat(ctx.raw).toFixed(1) + ' 件'; }
           }
         }
       },
       scales: {
-        x: { ticks: { color: '#8e9aab', font: { size: 9 }, maxRotation: 60 }, grid: { display: false } },
-        y: { ticks: { color: '#8e9aab', font: { size: 10 } }, grid: { color: '#1c2230' },
-             title: { display: true, text: '件', color: '#8e9aab', font: { size: 10 } } }
+        x: { ticks: { color: '#98989d', font: { size: 9 }, maxRotation: 60 }, grid: { display: false } },
+        y: { ticks: { color: '#98989d', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.06)' },
+             title: { display: true, text: '件', color: '#98989d', font: { size: 10 } } }
       }
     }
   });
@@ -382,18 +446,18 @@ function renderRiskDonut(rows) {
       labels: ['严重', '高', '中', '低'],
       datasets: [{
         data: [riskCounts.critical, riskCounts.high, riskCounts.medium, riskCounts.low],
-        backgroundColor: ['rgba(240,68,68,0.7)','rgba(240,160,48,0.7)','rgba(77,148,255,0.6)','rgba(63,185,80,0.5)'],
-        borderColor: ['var(--red)','var(--amber)','var(--blue)','var(--green)'],
+        backgroundColor: ['rgba(255,69,58,0.7)','rgba(255,179,64,0.7)','rgba(109,181,249,0.6)','rgba(48,209,88,0.5)'],
+        borderColor: ['var(--accent-red)','var(--accent-amber)','var(--accent-blue)','var(--accent-green)'],
         borderWidth: 1.5, hoverBorderWidth: 2.5
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false, cutout: '60%',
       plugins: {
-        legend: { position: 'bottom', labels: { color: '#8e9aab', font: { size: 10 }, padding: 12, usePointStyle: true } },
+        legend: { position: 'bottom', labels: { color: '#98989d', font: { size: 10 }, padding: 12, usePointStyle: true } },
         tooltip: {
-          backgroundColor: '#141820', titleColor: '#e6ebf2',
-          bodyColor: '#8e9aab', borderColor: '#1c2230', borderWidth: 1,
+          backgroundColor: '#1c1c1e', titleColor: '#f5f5f7',
+          bodyColor: '#98989d', borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1,
           callbacks: {
             label: function(ctx){ var pct = total > 0 ? (ctx.raw / total * 100).toFixed(0) : 0; return ctx.label + ': ' + ctx.raw + ' 件 (' + pct + '%)'; }
           }
@@ -430,8 +494,8 @@ function renderRiskTop5(rows) {
       '<td><b>' + cn(r.part_name) + '</b><br><span style="font-size:10px;color:var(--text-muted);">' + r.part_number + '</span></td>' +
       '<td><span class="badge ' + rc.cls + '">' + rc.text + '</span></td>' +
       '<td>' + (prob * 100).toFixed(0) + '%</td>' +
-      '<td style="color:' + (annualCost > 5000 ? 'var(--red)' : 'var(--text-secondary)') + ';font-family:var(--font-mono);">$' + annualCost.toFixed(0) + '</td>' +
-      '<td style="color:' + (orderQty > 0 ? 'var(--purple)' : 'var(--text-muted)') + ';font-weight:600;">' + (orderQty > 0 ? orderQty + ' 件' : '&mdash;') + '</td>' +
+      '<td style="color:' + (annualCost > 5000 ? 'var(--accent-red)' : 'var(--text-secondary)') + ';font-family:var(--font-mono);">$' + annualCost.toFixed(0) + '</td>' +
+      '<td style="color:' + (orderQty > 0 ? 'var(--accent-purple)' : 'var(--text-muted)') + ';font-weight:600;">' + (orderQty > 0 ? orderQty + ' 件' : '&mdash;') + '</td>' +
       '</tr>';
   });
   html += '</table>';
@@ -483,17 +547,17 @@ function renderPurchaseSuggestions(rows) {
     var gap = Math.max(0, S - cur);
     var fillPct = S > 0 ? Math.min(100, cur / S * 100) : 0;
 
-    html += '<div class="purchase-card">' +
+    html += '<div class="purchase-card glass-card' + (isUrgent ? ' pu-urgent-card' : '') + '">' +
       '<span class="pu-badge ' + (isUrgent ? 'pu-urgent' : 'pu-normal') + '">' +
         (isUrgent ? '&#x26A0; 紧急补货' : '&#x21E7; 建议采购') +
       '</span>' +
       '<span class="pu-part">' + cn(r.part_name) + '</span>' +
       '<span class="pu-detail">' +
-        '<span>当前库存: <b>' + cur + '</b> &rarr; 目标: <b>' + S + '</b> (缺口: <b style="color:var(--red);">' + gap.toFixed(0) + '</b>)</span>' +
+        '<span>当前库存: <b>' + cur + '</b> &rarr; 目标: <b>' + S + '</b> (缺口: <b style="color:var(--accent-red);">' + gap.toFixed(0) + '</b>)</span>' +
         '<span>重订货点(s): ' + s.toFixed(1) + ' &middot; EOQ: ' + eoq.toFixed(1) + ' &middot; ' + r.part_number + '</span>' +
       '</span>' +
       '<div class="risk-bar-track" title="库存充盈率 ' + fillPct.toFixed(0) + '%">' +
-        '<div class="risk-bar-fill" style="width:' + fillPct + '%;background:' + (fillPct < 30 ? 'var(--red)' : fillPct < 60 ? 'var(--amber)' : 'var(--green)') + ';"></div>' +
+        '<div class="risk-bar-fill" style="width:' + fillPct + '%;background:' + (fillPct < 30 ? 'var(--accent-red)' : fillPct < 60 ? 'var(--accent-amber)' : 'var(--accent-green)') + ';"></div>' +
       '</div>' +
       '<span class="pu-cost">$' + totalCost.toFixed(0) +
         '<small>采购 ' + orderQty + ' 件 &times; $' + unitCost.toFixed(0) + '/件</small>' +
@@ -502,19 +566,19 @@ function renderPurchaseSuggestions(rows) {
   });
   html += '</div>'; // close purchase-grid
 
-  // Summary stats row
+  // Summary stats row (glass)
   var totalOrderCost = needsOrder.reduce(function(s,r){ return s + (parseInt(r.suggested_order_qty)||0) * (parseFloat(r.unit_cost)||0); }, 0);
   var totalItems = needsOrder.reduce(function(s,r){ return s + (parseInt(r.suggested_order_qty)||0); }, 0);
-  html += '<div style="display:flex;gap:16px;padding:10px 18px;background:var(--bg-card-alt);border-radius:var(--radius);margin-top:8px;font-size:12px;color:var(--text-secondary);flex-wrap:wrap;">' +
-    '<span>建议采购 <b style="color:var(--text);">' + needsOrder.length + '</b> 种备件</span>' +
-    '<span>共 <b style="color:var(--text);">' + totalItems + '</b> 件</span>' +
-    '<span>预估总成本 <b style="color:var(--purple);">$' + totalOrderCost.toFixed(0) + '</b></span>' +
+  html += '<div style="display:flex;gap:16px;padding:10px 18px;background:var(--glass-bg-card);backdrop-filter:var(--glass-blur-light);-webkit-backdrop-filter:var(--glass-blur-light);border:0.5px solid var(--glass-border);border-radius:var(--radius);margin-top:8px;font-size:12px;color:var(--text-secondary);flex-wrap:wrap;">' +
+    '<span>建议采购 <b style="color:var(--text-primary);">' + needsOrder.length + '</b> 种备件</span>' +
+    '<span>共 <b style="color:var(--text-primary);">' + totalItems + '</b> 件</span>' +
+    '<span>预估总成本 <b style="color:var(--accent-purple);">$' + totalOrderCost.toFixed(0) + '</b></span>' +
     '</div>';
 
   container.innerHTML = html;
 }
 
-// ── Existing functions (unchanged) ──
+// ── Load Stock Table ──
 
 async function loadStock(){
   try{
@@ -524,8 +588,8 @@ async function loadStock(){
     parts.forEach(function(p){totalCost+=p.current_stock*p.unit_cost});
     document.getElementById('stats-row').innerHTML=
       '<div class="stat-card"><div class="v">'+s.total_parts+'</div><div class="l">备件种类</div></div>'+
-      '<div class="stat-card"><div class="v" style="color:'+(low>0?'var(--amber)':'var(--green)')+';">'+low+'</div><div class="l">库存不足</div></div>'+
-      '<div class="stat-card"><div class="v" style="color:'+(totalShort>0?'var(--red)':'var(--text)')+';">'+totalShort+'</div><div class="l">总缺口(件)</div></div>'+
+      '<div class="stat-card"><div class="v" style="color:'+(low>0?'var(--accent-amber)':'var(--accent-green)')+';">'+low+'</div><div class="l">库存不足</div></div>'+
+      '<div class="stat-card"><div class="v" style="color:'+(totalShort>0?'var(--accent-red)':'var(--text-primary)')+';">'+totalShort+'</div><div class="l">总缺口(件)</div></div>'+
       '<div class="stat-card"><div class="v">$'+totalCost.toFixed(0)+'</div><div class="l">库存总值</div></div>';
     var h='<table><tr><th>零件</th><th>型号</th><th>库存</th><th>安全库存</th><th>需求</th><th>缺口</th><th>单价</th><th>状态</th><th>供应商</th><th>操作</th></tr>';
     parts.forEach(function(p){
@@ -534,15 +598,15 @@ async function loadStock(){
       h+='<td>'+p.part_number+'</td>';
       h+='<td style="font-family:var(--font-mono);font-weight:600;cursor:pointer;" title="点击修改库存" onclick="editStock(\''+p.part_name+'\','+p.current_stock+')">'+p.current_stock+' &#x270E;</td>';
       h+='<td>'+p.safety_stock+'</td><td>'+p.demand+'</td>';
-      h+='<td style="color:'+(p.shortage>0?'var(--red)':'var(--text)')+';">'+(p.shortage>0?'<b>'+p.shortage+'</b>':'0')+'</td>';
+      h+='<td style="color:'+(p.shortage>0?'var(--accent-red)':'var(--text-primary)')+';">'+(p.shortage>0?'<b>'+p.shortage+'</b>':'0')+'</td>';
       h+='<td>$'+p.unit_cost+'</td>';
       h+='<td><span class="badge '+sc+'">'+p.status_label+'</span></td>';
       h+='<td style="font-size:11px">'+p.supplier+'</td>';
       h+='<td style="white-space:nowrap">';
-      h+='<button class="btn small" onclick="quickAdjust(\''+p.part_name+'\',1)" title="+1">+1</button> ';
-      h+='<button class="btn small" onclick="quickAdjust(\''+p.part_name+'\',-1)" title="-1">-1</button> ';
-      h+='<button class="btn small" onclick="quickAdjust(\''+p.part_name+'\',5)" title="+5">+5</button> ';
-      h+='<button class="btn small danger" onclick="quickAdjust(\''+p.part_name+'\',-5)" title="-5">-5</button>';
+      h+='<button class="btn btn-ghost small" onclick="quickAdjust(\''+p.part_name+'\',1)" title="+1">+1</button> ';
+      h+='<button class="btn btn-ghost small" onclick="quickAdjust(\''+p.part_name+'\',-1)" title="-1">-1</button> ';
+      h+='<button class="btn btn-ghost small" onclick="quickAdjust(\''+p.part_name+'\',5)" title="+5">+5</button> ';
+      h+='<button class="btn btn-danger small" onclick="quickAdjust(\''+p.part_name+'\',-5)" title="-5">-5</button>';
       h+='</td></tr>';
     });
     h+='</table>';
@@ -557,18 +621,18 @@ async function loadProcurement(){
     var h='';
     orders.forEach(function(o){
       var sc=o.status==='已入库'?'ok':o.status==='已到货'?'info':o.status==='运输中'?'purple':'low';
-      h+='<div class="procurement-card">';
+      h+='<div class="procurement-card glass-card" style="margin-bottom:8px;padding:14px 18px;">';
       h+='<span class="badge '+sc+'">'+o.status+'</span>';
       h+='<span class="pc-part">'+cn(o.part_name)+'</span>';
-      h+='<span class="pc-info">×'+o.quantity_ordered+' | $'+o.total_cost+' | '+o.supplier+'</span>';
+      h+='<span class="pc-info">&times;'+o.quantity_ordered+' | $'+o.total_cost+' | '+o.supplier+'</span>';
       h+='<span class="pc-info">订单日:'+o.order_date+' | 预计到货:'+o.expected_arrival+'</span>';
       h+='<div class="pc-actions">';
-      h+='<select onchange="setOrderStatus(\''+o.order_id+'\',this.value)" style="padding:6px 12px;border-radius:var(--radius);font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);outline:none;font-family:var(--font-sans);">';
+      h+='<select onchange="setOrderStatus(\''+o.order_id+'\',this.value)" style="padding:6px 12px;border-radius:var(--radius-sm);font-size:11px;cursor:pointer;border:0.5px solid var(--border-accent);background:var(--bg-input);backdrop-filter:var(--glass-blur-light);-webkit-backdrop-filter:var(--glass-blur-light);color:var(--text-secondary);outline:none;font-family:var(--font-sans);">';
       ['申请中','已下单','运输中','已到货','已入库'].forEach(function(s){
         h+='<option value="'+s+'"'+(o.status===s?' selected':'')+'>'+s+'</option>';
       });
       h+='</select>';
-      if(o.status!=='已入库')h+=' <button class="btn small primary" onclick="setOrderStatus(\''+o.order_id+'\',\'已入库\')">确认入库</button>';
+      if(o.status!=='已入库')h+=' <button class="btn btn-primary small" onclick="setOrderStatus(\''+o.order_id+'\',\'已入库\')">确认入库</button>';
       h+='</div></div>';
     });
     document.getElementById('procurement-list').innerHTML=h
@@ -581,7 +645,7 @@ async function loadLogs(){
     if(logs.length===0){document.getElementById('log-table').innerHTML='<div style="text-align:center;padding:20px;color:var(--text-muted)">暂无变动记录</div>';return}
     var h='<table><tr><th>时间</th><th>零件</th><th>变动</th><th>原因</th><th>新库存</th></tr>';
     logs.forEach(function(l){
-      var color=l.change_qty>0?'var(--green)':'var(--red)',sign=l.change_qty>0?'+':'';
+      var color=l.change_qty>0?'var(--accent-green)':'var(--accent-red)',sign=l.change_qty>0?'+':'';
       h+='<tr><td>'+(l.created_at||'').substring(0,19)+'</td><td>'+cn(l.part_name)+'</td>';
       h+='<td style="color:'+color+';font-weight:600;">'+sign+l.change_qty+'</td>';
       h+='<td>'+l.reason+'</td><td>'+l.new_stock+'</td></tr>';
