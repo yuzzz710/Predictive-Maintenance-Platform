@@ -466,7 +466,7 @@
       '<span class="gn-status-dot" id="gn-status-dot"></span>' +
       '<span id="gn-status-text">检测中...</span>' +
       '</div>' +
-      '<span class="gn-badge">决赛必拿一等奖版</span>' +
+      '<span class="gn-badge">决赛一等奖版</span>' +
       '</div>' +
       '</div>' +
       '</nav>';
