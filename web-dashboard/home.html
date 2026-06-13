@@ -183,7 +183,7 @@ body {
 
 .stat-row { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:8px; }
 .stat-item { flex:1; min-width:80px; }
-.stat-label { font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
+.stat-label { font-size:10px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px; }
 .stat-value { font-size:18px; font-weight:700; font-family:var(--font-mono); }
 
 .signal-item {
@@ -226,9 +226,9 @@ body {
   display:flex; align-items:flex-start; justify-content:space-between;
 }
 .shap-explore-title { font-size:18px; font-weight:700; color:var(--accent-purple); }
-.shap-explore-subtitle { font-size:12px; color:var(--text-muted); margin-top:4px; }
+.shap-explore-subtitle { font-size:12px; color:var(--text-secondary); margin-top:4px; }
 .shap-explore-close {
-  background:none; border:none; color:var(--text-muted);
+  background:none; border:none; color:var(--text-secondary);
   font-size:22px; cursor:pointer; padding:4px 8px;
   border-radius:10px; transition:all var(--transition);
 }
@@ -279,7 +279,7 @@ body {
    ══════════════════════════════════════════════════════════════════════ */
 .grid-footer {
   max-width:1400px; margin:12px auto; padding:8px 24px;
-  font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between;
+  font-size:10px; color:var(--text-secondary); display:flex; justify-content:space-between;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -552,9 +552,9 @@ html[data-role="developer"] .role-manager-header { display: none !important; }
 .trace-item{padding:6px 10px;margin:3px 0;background:var(--bg-card-alt);border-radius:var(--radius-sm);display:flex;justify-content:space-between}
 .trace-bar-wrap{height:6px;background:var(--bg-card-alt);border-radius:3px;margin:4px 0 8px;overflow:hidden}
 .trace-bar-fill{height:100%;border-radius:3px}
-.trace-note{font-size:11px;color:var(--text-muted);margin-top:12px;padding:10px 14px;background:var(--bg-card-alt);border-radius:var(--radius-sm);border-left:3px solid var(--accent-cyan);line-height:1.7}
+.trace-note{font-size:11px;color:var(--text-secondary);margin-top:12px;padding:10px 14px;background:var(--bg-card-alt);border-radius:var(--radius-sm);border-left:3px solid var(--accent-cyan);line-height:1.7}
 .trace-table{width:100%;border-collapse:collapse;font-size:10px;margin:8px 0}
-.trace-table th{text-align:left;padding:4px 8px;color:var(--text-muted);border-bottom:0.5px solid var(--border);font-family:var(--font-mono)}
+.trace-table th{text-align:left;padding:4px 8px;color:var(--text-secondary);border-bottom:0.5px solid var(--border);font-family:var(--font-mono)}
 .trace-table td{padding:4px 8px;border-bottom:0.5px solid var(--border-light)}
 .trace-table .hl{color:var(--accent-cyan);font-weight:600}/* ═══════════════════════════════════════════════════════════════
    FAULT INJECTION DEMO — iOS 26 glass
@@ -986,7 +986,7 @@ html[data-demo="true"] .demo-hud { display: flex; }
     </div>
     <div class="mgr-kpi-card kpi-precision">
       <div class="mgr-kpi-label">告警精确率</div>
-      <div class="mgr-kpi-value">83.9<small style="font-size:14px;color:var(--text-muted);">%</small></div>
+      <div class="mgr-kpi-value">83.9<small style="font-size:14px;color:var(--text-secondary);">%</small></div>
       <div class="mgr-kpi-sub">Z-Score z>2.0 · 每5次≈4次正确</div>
     </div>
   </div>
@@ -1024,7 +1024,7 @@ html[data-demo="true"] .demo-hud { display: flex; }
         <span class="mgr-strategy-tag active" id="mgr-tag-prod">⚡ 生产效率 20工单 · 推荐</span>
         <span class="mgr-strategy-tag" id="mgr-tag-quality">🔬 质量优先 30工单</span>
       </div>
-      <div style="font-size:11px;color:var(--text-muted);margin-top:10px;">策略可在 AI Copilot 或维护决策中心切换</div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-top:10px;">策略可在 AI Copilot 或维护决策中心切换</div>
     </div>
     <div class="mgr-card">
       <h3><span class="dot" style="background:var(--accent-blue);"></span>快捷入口</h3>
@@ -1061,7 +1061,7 @@ html[data-demo="true"] .demo-hud { display: flex; }
   <div class="panel-header">
     <div>
       <div style="font-size:18px;font-weight:700;" id="panel-mid">--</div>
-      <div style="font-size:11px;color:var(--text-muted);" id="panel-subtitle">--</div>
+      <div style="font-size:11px;color:var(--text-secondary);" id="panel-subtitle">--</div>
     </div>
     <button class="panel-close" id="panel-close">&times;</button>
   </div>
@@ -1235,7 +1235,7 @@ async function init() {
     });
   } catch(e) {
     var gridEl = document.getElementById('machine-grid'); if (gridEl) gridEl.innerHTML =
-      '<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-muted);">'
+      '<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-secondary);">'
       + '数据加载失败。请先运行 Pipeline 生成数据文件。<br><br>'
       + '<code style="font-size:12px;">python agent-mcp架构/agent_orchestrator.py --data-dir 原始数据集 --skip-ml --skip-diagnosis --shap --dashboard-data web-dashboard/data</code>'
       + '</div>';
@@ -1557,10 +1557,10 @@ async function initOperatorDashboard(healthData, workOrderData) {
           '</div>';
       });
     } catch(e) {
-      planCards = '<div style="grid-column:1/-1;color:var(--text-muted);padding:20px;text-align:center;">工单数据加载失败</div>';
+      planCards = '<div style="grid-column:1/-1;color:var(--text-secondary);padding:20px;text-align:center;">工单数据加载失败</div>';
     }
     var woGrid = document.getElementById('ops-wo-cards');
-    if (woGrid) woGrid.innerHTML = planCards || '<div style="grid-column:1/-1;color:var(--text-muted);padding:20px;text-align:center;">暂无维护工单</div>';
+    if (woGrid) woGrid.innerHTML = planCards || '<div style="grid-column:1/-1;color:var(--text-secondary);padding:20px;text-align:center;">暂无维护工单</div>';
 
 
     // ── Parts List (load from spare_parts_plan.csv) ──
@@ -1603,9 +1603,9 @@ async function initOperatorDashboard(healthData, workOrderData) {
           '<td>' + uniqueMachines.slice(0, 5).join(', ') + (uniqueMachines.length > 5 ? ' ...' : '') + '</td>' +
           '</tr>';
       });
-      partsTbody.innerHTML = partsRows || '<tr><td colspan="4" style="color:var(--text-muted);">暂无零件采购需求</td></tr>';
+      partsTbody.innerHTML = partsRows || '<tr><td colspan="4" style="color:var(--text-secondary);">暂无零件采购需求</td></tr>';
     } catch(e) {
-      document.getElementById('ops-parts-tbody').innerHTML = '<tr><td colspan="4" style="color:var(--text-muted);">零件数据加载失败</td></tr>';
+      document.getElementById('ops-parts-tbody').innerHTML = '<tr><td colspan="4" style="color:var(--text-secondary);">零件数据加载失败</td></tr>';
     }
   } catch(e) {
     console.error('Operator dashboard init failed:', e);
@@ -2001,7 +2001,7 @@ function startStepAnimation(injectionData) {
     var descEl = document.getElementById('fi-step-desc');
     if (!descEl) return;
     var barContainer = document.createElement('div');
-    barContainer.style.cssText = 'margin-top:12px;font-size:11px;color:var(--text-muted);';
+    barContainer.style.cssText = 'margin-top:12px;font-size:11px;color:var(--text-secondary);';
     barContainer.innerHTML =
       '<span>设备健康分变化</span>' +
       '<div style="background:rgba(255,255,255,0.06);border-radius:4px;height:8px;margin-top:6px;overflow:hidden;">' +
@@ -2099,8 +2099,8 @@ function closeStepOverlay() {
 
 
 // ── Baseline Trace ──
-async function buildZScoreTrace(mid,h,b,z){
-  if(!z) return '<p style="color:var(--text-muted)">Z-Score数据不可用</p>';
+function buildZScoreTrace(mid,h,b,z){
+  if(!z) return '<p style="color:var(--text-secondary)">Z-Score数据不可用</p>';
   var params=[
     {label:'电压',zk:'z_Voltage',mk:'Op.Voltage_mu',sk:'Op.Voltage_sigma'},
     {label:'电流',zk:'z_Amperage',mk:'Op.Amperage_mu',sk:'Op.Amperage_sigma'},
@@ -2135,7 +2135,7 @@ async function buildZScoreTrace(mid,h,b,z){
 }
 
 function buildRiskTrace(mid,h,b){
-  if(!h) return '<p style="color:var(--text-muted)">成本风险数据不可用</p>';
+  if(!h) return '<p style="color:var(--text-secondary)">成本风险数据不可用</p>';
   var fr=((parseFloat(h.failure_rate)||0)*100).toFixed(1);
   var cr=parseFloat(h.cost_at_risk)||0;
   var html='<p>风险计算公式：<b>故障概率 × 单件成本 × 日产量</b></p>';
