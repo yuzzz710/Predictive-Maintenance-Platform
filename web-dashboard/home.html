@@ -609,20 +609,20 @@ html[data-role="developer"] .role-manager-header { display: none !important; }
 }
 .fi-overlay.open { display: flex; }
 .fi-modal {
-  background: var(--glass-bg-modal);
-  backdrop-filter: var(--glass-blur-strong); -webkit-backdrop-filter: var(--glass-blur-strong);
+  background: var(--bg-surface);
   border: 0.5px solid var(--glass-border);
   border-radius: var(--radius-xl); width: 480px; max-width: 95vw;
-  box-shadow: var(--shadow-xl),var(--glass-highlight-strong); overflow: hidden;
+  box-shadow: var(--shadow-xl); overflow: hidden;
 }
 .fi-modal-header {
   padding: 16px 20px; border-bottom: 0.5px solid var(--border);
   display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg-card-alt);
 }
-.fi-modal-header h3 { font-size: 15px; font-weight: 700; margin: 0; }
+.fi-modal-header h3 { font-size: 15px; font-weight: 700; margin: 0; color: var(--text-primary); }
 .fi-modal-close {
   width: 28px; height: 28px; border-radius: 10px;
-  border: 0.5px solid var(--border); background: transparent;
+  border: 0.5px solid var(--border); background: var(--bg-card-alt);
   color: var(--text-secondary); cursor: pointer; font-size: 16px;
   display: flex; align-items: center; justify-content: center;
   transition: all var(--transition);
@@ -631,7 +631,7 @@ html[data-role="developer"] .role-manager-header { display: none !important; }
 .fi-modal-body { padding: 20px; }
 .fi-form-group { margin-bottom: 16px; }
 .fi-form-label {
-  font-size: 11px; color: var(--text-muted); margin-bottom: 6px;
+  font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;
   letter-spacing: 0.5px; font-weight: 600;
 }
 .fi-select {
@@ -654,7 +654,7 @@ html[data-role="developer"] .role-manager-header { display: none !important; }
 .fi-btn-inject:hover { background: rgba(255,69,58,0.3); box-shadow: 0 0 16px rgba(255,69,58,0.25); }
 .fi-btn-inject:disabled { opacity: 0.5; cursor: not-allowed; }
 .fi-modal-note {
-  margin-top: 12px; font-size: 10px; color: var(--text-muted);
+  margin-top: 12px; font-size: 10px; color: var(--text-secondary);
   text-align: center; line-height: 1.5;
 }
 
@@ -665,12 +665,11 @@ html[data-role="developer"] .role-manager-header { display: none !important; }
 }
 .fi-step-overlay.active { display: flex; }
 .fi-step-panel {
-  background: var(--glass-bg-modal);
-  backdrop-filter: var(--glass-blur-strong); -webkit-backdrop-filter: var(--glass-blur-strong);
+  background: var(--bg-surface);
   border: 0.5px solid var(--glass-border);
   border-radius: var(--radius-xl); padding: 28px 32px; min-width: 440px;
   max-width: 560px;
-  box-shadow: var(--shadow-xl),var(--glass-highlight-strong);
+  box-shadow: var(--shadow-xl);
   animation: fiStepIn 0.35s cubic-bezier(0.33, 1, 0.68, 1);
 }
 .fi-step-indicator {
@@ -686,7 +685,7 @@ html[data-role="developer"] .role-manager-header { display: none !important; }
 .fi-step-icon-area .icon { font-size: 40px; display: block; }
 .fi-step-title-area { font-size: 16px; font-weight: 700; margin-bottom: 12px; text-align: center; }
 .fi-step-desc-area {
-  font-size: 13px; color: var(--text-secondary); line-height: 1.8;
+  font-size: 13px; color: var(--text-primary); line-height: 1.8;
   margin-bottom: 20px;
 }
 .fi-step-close-btn {
@@ -744,12 +743,11 @@ html[data-role="developer"] .role-manager-header { display: none !important; }
 .fi-wo-flyin {
   position: fixed; right: -420px; top: 160px; z-index: 10000;
   width: 360px;
-  background: var(--glass-bg-modal);
-  backdrop-filter: var(--glass-blur-strong); -webkit-backdrop-filter: var(--glass-blur-strong);
+  background: var(--bg-surface);
   border: 0.5px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: 0;
-  box-shadow: var(--shadow-lg),var(--glass-highlight-strong);
+  box-shadow: var(--shadow-lg);
   transition: right 0.5s cubic-bezier(0.33, 1, 0.68, 1);
   font-family: var(--font-sans);
   overflow: hidden;
