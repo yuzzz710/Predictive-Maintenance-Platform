@@ -28,12 +28,14 @@ async function loadCSV(path) {
 
 // ── Trace data loader ──
 function loadTraceData() {
-  loadCSV('data/baseline_stats.csv').then(function(bl) {
-    bl.forEach(function(r) { var m = r['Equipment.Id'] || r.machine_id; if (m) _traceBaseline[m] = r; });
-  }).catch(function(){});
-  loadCSV('data/z_scores.csv').then(function(zs) {
-    zs.forEach(function(r) { var m = r['Equipment.Id'] || r.machine_id; if (m && !_traceZScores[m]) _traceZScores[m] = r; });
-  }).catch(function(){});
+  return Promise.all([
+    loadCSV('data/baseline_stats.csv').then(function(bl) {
+      bl.forEach(function(r) { var m = r['Equipment.Id'] || r.machine_id; if (m) _traceBaseline[m] = r; });
+    }).catch(function(){}),
+    loadCSV('data/z_scores.csv').then(function(zs) {
+      zs.forEach(function(r) { var m = r['Equipment.Id'] || r.machine_id; if (m && !_traceZScores[m]) _traceZScores[m] = r; });
+    }).catch(function(){})
+  ]);
 }
 
 // ── Init ──
@@ -61,7 +63,7 @@ async function initDeviceGrid() {
 
     shapScatterData = _shapScatter;
     renderGrid();
-    loadTraceData();
+    await loadTraceData();
   } catch(e) {
     console.error('Init failed:', e);
     var grid = document.getElementById('machine-grid');
