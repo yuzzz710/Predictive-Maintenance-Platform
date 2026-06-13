@@ -1004,6 +1004,17 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
 .mcp-innovate-sep { color: var(--border); font-size: 14px; }
 
 /* ═══════════════════════════════════════════════════════════════
+   HIGHLIGHT BADGE — 路演核心亮点标记
+   ═══════════════════════════════════════════════════════════════ */
+.highlight-badge {
+  display: inline-block; padding: 3px 10px; border-radius: 10px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+  background: rgba(191,90,242,0.12); color: var(--accent-purple);
+  border: 0.5px solid rgba(191,90,242,0.25);
+  margin-left: 8px; vertical-align: middle;
+}
+
+/* ═══════════════════════════════════════════════════════════════
    FLOATING TOC — Right side navigation
    ═══════════════════════════════════════════════════════════════ */
 .toc-floating {
@@ -1133,7 +1144,7 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
      SECTION 0: SYSTEM OVERVIEW — 系统鸟瞰
      ═══════════════════════════════════════════════════════════════ -->
 <div class="section" id="sec-overview">
-  <h2 class="section-title"><span class="st-num">00</span> 系统全景鸟瞰</h2>
+  <h2 class="section-title"><span class="st-num">00</span> 系统全景鸟瞰<span class="highlight-badge">🌟 架构总览</span></h2>
   <p class="section-sub">四层架构：角色门（Role Gate）→ 数据层（4 CSV → 5 Skills）→ 智能层（统计+ML+诊断+决策融合）→ 应用层（三角色专属视图 + Dashboard + AI Copilot + 工单输出）</p>
   <div class="arch-container">
     <div class="arch-diagram tall" id="chart-overview"></div>
@@ -1619,7 +1630,7 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
      SECTION 4: DECISION ENGINE — 决策引擎三层架构
      ═══════════════════════════════════════════════════════════════ -->
 <div class="section" id="sec-decision">
-  <h2 class="section-title"><span class="st-num">04</span> 决策引擎 · 三层架构</h2>
+  <h2 class="section-title"><span class="st-num">04</span> 决策引擎 · 三层架构<span class="highlight-badge">🌟 核心竞争力</span></h2>
   <p class="section-sub">Phase A 基础决策 → Phase B 工业扩展 → Phase C 传感器升级路线图</p>
 
   <!-- Phase A: 4-Layer Fusion -->
@@ -1718,7 +1729,7 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
      SECTION 5: AI COPILOT — MCP + Gateway 架构
      ═══════════════════════════════════════════════════════════════ -->
 <div class="section" id="sec-copilot">
-  <h2 class="section-title"><span class="st-num">05</span> AI Copilot · MCP + Gateway 架构</h2>
+  <h2 class="section-title"><span class="st-num">05</span> AI Copilot · MCP + Gateway 架构<span class="highlight-badge">🌟 交互亮点</span></h2>
   <p class="section-sub">7 MCP工具 → FastAPI Gateway (9 Tools) → DeepSeek API → SSE Streaming → Browser — 自然语言驱动的工业AI助手</p>
 
   <div class="arch-container">
@@ -1896,7 +1907,7 @@ def query_device_status(machine_id: str) -> dict:
      SECTION 6: SHAP EXPLAINABILITY — 可解释性管线
      ═══════════════════════════════════════════════════════════════ -->
 <div class="section" id="sec-shap">
-  <h2 class="section-title"><span class="st-num">06</span> SHAP可解释性管线</h2>
+  <h2 class="section-title"><span class="st-num">06</span> SHAP可解释性管线<span class="highlight-badge">🌟 技术差异化</span></h2>
   <p class="section-sub">两条归因路径实现从数学特征到工业根因的透明映射，确保每个告警都可追溯、可解释</p>
 
   <div class="arch-container">
@@ -1993,7 +2004,7 @@ def query_device_status(machine_id: str) -> dict:
      SECTION 8: EVOLUTION TIMELINE — 技术演进路线
      ═══════════════════════════════════════════════════════════════ -->
 <div class="section" id="sec-evolution">
-  <h2 class="section-title"><span class="st-num">08</span> 数据流转与技术演进</h2>
+  <h2 class="section-title"><span class="st-num">08</span> 数据流转与技术演进<span class="highlight-badge">🌟 技术故事线</span></h2>
   <p class="section-sub">5阶段由数据发现驱动——每一阶段由前一阶段的核心局限推动，最终收敛到多信号融合+AI Copilot架构</p>
 
   <!-- Evolution Overview Chart -->
