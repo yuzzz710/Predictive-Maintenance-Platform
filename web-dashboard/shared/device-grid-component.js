@@ -447,7 +447,7 @@ function renderShapScatter() {
   var textPrimary = isDark ? '#f5f5f7' : '#1d1d1f';
   var textSecondary = isDark ? '#aeaeb2' : '#6e6e73';
   var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-  var levelColor = { 'Healthy': '#30d158', 'Warning': '#ffb340', 'Degrading': '#ff9500', 'Critical': '#ff453a' };
+  var levelColor = { 'Healthy': '#30d158', 'Warning': '#ffd21e', 'Degrading': '#ff5014', 'Critical': '#ff453a' };
 
   var dom = document.getElementById('chart-shap-scatter');
   if (!dom) return;
