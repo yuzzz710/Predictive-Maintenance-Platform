@@ -212,19 +212,35 @@ body::before {
 }
 
 .role-gate-footer {
-  text-align: center; margin-top: 36px;
-  font-size: 12px; color: var(--text-muted);
+  text-align: center; margin-top: 40px;
+  font-size: 13px; color: var(--text-muted);
   letter-spacing: 0.3px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
 }
-.role-gate-footer span { color: var(--text-secondary); }
+.role-gate-footer .footer-hint {
+  color: var(--text-secondary); font-weight: 500;
+}
+.role-gate-footer .footer-arrow {
+  display: inline-block; font-size: 16px;
+  animation: arrowWiggle 2s ease-in-out infinite;
+}
+@keyframes arrowWiggle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
 
 @media (max-width: 860px) {
   .role-cards { flex-direction: column; align-items: center; }
-  .role-card { max-width: 100%; }
-  .role-gate-title { font-size: 22px; }
+  .role-card { max-width: 380px; min-width: 0; width: 100%; }
+  .role-gate-title { font-size: 26px; }
+  .role-gate-subtitle { font-size: 13px; letter-spacing: 0.5px; }
 }
 @media (max-width: 480px) {
-  .role-gate-title { font-size: 19px; }
+  .role-gate-title { font-size: 22px; }
+  .role-gate-subtitle { font-size: 12px; letter-spacing: 0; }
+  .role-card { padding: 24px 18px 20px; }
+  .role-card .card-icon { font-size: 36px; }
+  .role-card .card-title { font-size: 16px; }
 }
 </style>
 </head>
@@ -282,7 +298,8 @@ body::before {
   </div>
 
   <p class="role-gate-footer">
-    &#128161; 提示：您可以在任意页面的顶部导航栏<span>切换角色</span>，无需重新选择
+    <span class="footer-arrow">&#8593;</span>
+    <span>提示：任意页面顶部导航栏可<span class="footer-hint">一键切换角色</span>，无需重新登录</span>
   </p>
 </div>
 
