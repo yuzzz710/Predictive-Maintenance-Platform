@@ -1,0 +1,156 @@
+/* ════════════════════════════════════════════════════════════
+   iOS 26 Design Tokens — Shared CSS (no JS dependency)
+
+   Load this on any standalone page that needs glassmorphism
+   tokens but doesn't want the navbar sidebar.
+
+   Source of truth: navbar.js :root / [data-theme="light"] blocks
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Deep Mode (default :root) ── */
+:root {
+  --bg-root: #000000;
+  --bg-surface: #1c1c1e;
+  --bg-card: rgba(44, 44, 46, 0.35);
+  --bg-card-alt: rgba(58, 58, 60, 0.25);
+  --bg-input: rgba(44, 44, 46, 0.30);
+
+  --text-primary: #f5f5f7;
+  --text-secondary: #98989d;
+  --text-muted: #636366;
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-light: rgba(255, 255, 255, 0.05);
+  --border-accent: rgba(255, 255, 255, 0.12);
+
+  --accent-cyan: #66d9c8;
+  --accent-green: #30d158;
+  --accent-blue: #6db5f9;
+  --accent-amber: #ffb340;
+  --accent-red: #ff453a;
+  --accent-purple: #bf5af2;
+  --accent-pink: #ff6482;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.6);
+
+  --radius-sm: 10px;
+  --radius: 14px;
+  --radius-md: 18px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+
+  --glass-bg-card: rgba(44, 44, 46, 0.35);
+  --glass-bg-header: rgba(28, 28, 30, 0.4);
+  --glass-bg-modal: rgba(44, 44, 46, 0.55);
+  --glass-bg-sidebar: rgba(28, 28, 30, 0.5);
+
+  --glass-blur: blur(45px) saturate(220%);
+  --glass-blur-light: blur(30px) saturate(200%);
+  --glass-blur-strong: blur(55px) saturate(240%);
+
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-highlight: inset 0 0.5px 0 rgba(255, 255, 255, 0.08);
+  --glass-highlight-strong: inset 0 0.5px 0 rgba(255, 255, 255, 0.14);
+
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+
+  --space-xs: 6px;
+  --space-sm: 10px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  --transition: 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-spring: 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Role theme colors — roadshow */
+  --role-operator: #0EA5E9;
+  --role-operator-glow: rgba(14, 165, 233, 0.35);
+  --role-manager: #F59E0B;
+  --role-manager-glow: rgba(245, 158, 11, 0.35);
+  --role-developer: #8B5CF6;
+  --role-developer-glow: rgba(139, 92, 246, 0.35);
+}
+
+/* ── Light Mode ── */
+[data-theme="light"] {
+  --bg-root: #f2f2f7;
+  --bg-surface: #fafafa;
+  --bg-card: rgba(255, 255, 255, 0.38);
+  --bg-card-alt: rgba(245, 245, 247, 0.25);
+  --bg-input: rgba(255, 255, 255, 0.32);
+
+  --text-primary: #1d1d1f;
+  --text-secondary: #6e6e73;
+  --text-muted: #aeaeb2;
+
+  --border: rgba(0, 0, 0, 0.06);
+  --border-light: rgba(0, 0, 0, 0.04);
+  --border-accent: rgba(0, 0, 0, 0.10);
+
+  --accent-cyan: #5ac8b8;
+  --accent-green: #4cd964;
+  --accent-blue: #64b5f6;
+  --accent-amber: #f0a840;
+  --accent-red: #e06060;
+  --accent-purple: #b388eb;
+  --accent-pink: #e080a0;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.10);
+  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.14);
+
+  --glass-bg-card: rgba(255, 255, 255, 0.38);
+  --glass-bg-header: rgba(250, 250, 250, 0.45);
+  --glass-bg-modal: rgba(255, 255, 255, 0.55);
+  --glass-bg-sidebar: rgba(250, 250, 250, 0.5);
+
+  --glass-blur: blur(40px) saturate(220%);
+  --glass-blur-light: blur(30px) saturate(200%);
+  --glass-blur-strong: blur(50px) saturate(240%);
+
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-highlight: inset 0 0.5px 0 rgba(255, 255, 255, 0.6);
+  --glass-highlight-strong: inset 0 0.5px 0 rgba(255, 255, 255, 0.85);
+
+  /* Role theme colors — roadshow */
+  --role-operator: #0284c7;
+  --role-operator-glow: rgba(2, 132, 199, 0.25);
+  --role-manager: #d97706;
+  --role-manager-glow: rgba(217, 119, 6, 0.25);
+  --role-developer: #7c3aed;
+  --role-developer-glow: rgba(124, 58, 237, 0.25);
+}
+
+/* ── Ambient Light Orbs (body::before) ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 30% 20%, rgba(102, 217, 200, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 70% 60%, rgba(109, 181, 249, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 80%, rgba(191, 90, 242, 0.04) 0%, transparent 60%);
+}
+[data-theme="light"] body::before {
+  background:
+    radial-gradient(ellipse 80% 60% at 30% 20%, rgba(90, 200, 184, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 70% 60%, rgba(100, 181, 246, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 80%, rgba(179, 136, 235, 0.05) 0%, transparent 60%);
+}
+
+/* ── Base Reset ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0; padding: 0;
+  background: var(--bg-root); color: var(--text-primary);
+  font-family: var(--font-sans);
+  min-height: 100vh; overflow-x: hidden;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+}
