@@ -1,0 +1,146 @@
+{
+  "_comment": "报告类型配置 — 每种报告类型的章节、数据源、阈值、LLM/PDF/Email 开关",
+  "_version": "1.0",
+
+  "report_types": {
+    "weekly": {
+      "title": "周度系统报告",
+      "template": "weekly_report.html",
+      "data_sources": [
+        "alerts", "devices", "sensors", "faults",
+        "rca", "cost", "health", "predictability"
+      ],
+      "sections": [
+        {"key": "executive_summary",           "title": "执行摘要",               "order": 1,   "template_block": "executive_summary"},
+        {"key": "alerts_overview",             "title": "高风险设备概览",          "order": 2,   "template_block": "alerts_overview"},
+        {"key": "device_trends",               "title": "设备趋势分析",            "order": 3,   "template_block": "device_trends"},
+        {"key": "fault_history",               "title": "故障历史分析",            "order": 4,   "template_block": "fault_history"},
+        {"key": "root_cause",                  "title": "根因分析",               "order": 5,   "template_block": "root_cause"},
+        {"key": "maintenance_recommendations", "title": "维护建议清单",            "order": 6,   "template_block": "maintenance_recommendations"},
+        {"key": "cost_risk_analysis",          "title": "成本风险分析",            "order": 7,   "template_block": "cost_risk_analysis"},
+        {"key": "predictive_benefits",         "title": "预测性维护效益分析",       "order": 8,   "template_block": "predictive_benefits"}
+      ],
+      "thresholds": {"top_n": 5},
+      "llm_enabled": false,
+      "pdf_enabled": true,
+      "email_enabled": true
+    },
+
+    "device": {
+      "title": "单设备深度报告",
+      "template": "device_report.html",
+      "data_sources": ["devices", "sensors", "faults", "rca", "cost"],
+      "sections": [
+        {"key": "device_status",       "title": "设备状态总览",      "order": 1, "template_block": "device_status"},
+        {"key": "zscore_analysis",     "title": "Z-Score 分析",     "order": 2, "template_block": "zscore_analysis"},
+        {"key": "sensor_trends",       "title": "传感器趋势",        "order": 3, "template_block": "sensor_trends"},
+        {"key": "diagnosis",           "title": "诊断结论",          "order": 4, "template_block": "diagnosis"},
+        {"key": "root_cause",          "title": "根因分析",          "order": 5, "template_block": "root_cause"},
+        {"key": "cost_benefits",       "title": "成本与效益",        "order": 6, "template_block": "cost_benefits"}
+      ],
+      "thresholds": {},
+      "llm_enabled": false,
+      "pdf_enabled": true,
+      "email_enabled": false
+    },
+
+    "risk": {
+      "title": "高风险设备报告",
+      "template": "weekly_report.html",
+      "data_sources": ["alerts", "devices", "sensors", "faults", "rca", "cost"],
+      "sections": [
+        {"key": "executive_summary",           "title": "执行摘要",               "order": 1, "template_block": "executive_summary"},
+        {"key": "alerts_overview",             "title": "高风险设备概览",          "order": 2, "template_block": "alerts_overview"},
+        {"key": "device_trends",               "title": "设备趋势分析",            "order": 3, "template_block": "device_trends"},
+        {"key": "fault_history",               "title": "故障历史分析",            "order": 4, "template_block": "fault_history"},
+        {"key": "root_cause",                  "title": "根因分析",               "order": 5, "template_block": "root_cause"},
+        {"key": "maintenance_recommendations", "title": "维护建议清单",            "order": 6, "template_block": "maintenance_recommendations"},
+        {"key": "cost_risk_analysis",          "title": "成本风险分析",            "order": 7, "template_block": "cost_risk_analysis"}
+      ],
+      "thresholds": {"top_n": 10},
+      "llm_enabled": false,
+      "pdf_enabled": true,
+      "email_enabled": true
+    },
+
+    "thermal": {
+      "title": "热漂移分析报告",
+      "template": "weekly_report.html",
+      "data_sources": ["alerts", "devices", "sensors", "rca", "predictability"],
+      "sections": [
+        {"key": "executive_summary",           "title": "执行摘要",               "order": 1, "template_block": "executive_summary"},
+        {"key": "alerts_overview",             "title": "热漂移设备概览",          "order": 2, "template_block": "alerts_overview"},
+        {"key": "device_trends",               "title": "温度趋势详细分析",         "order": 3, "template_block": "device_trends"},
+        {"key": "root_cause",                  "title": "根因分析",               "order": 4, "template_block": "root_cause"},
+        {"key": "predictive_benefits",         "title": "预测性维护效益分析",       "order": 5, "template_block": "predictive_benefits"}
+      ],
+      "thresholds": {"top_n": 5},
+      "llm_enabled": false,
+      "pdf_enabled": true,
+      "email_enabled": false
+    },
+
+    "health_critical": {
+      "title": "低健康分报告",
+      "template": "weekly_report.html",
+      "data_sources": ["alerts", "devices", "health", "faults", "cost"],
+      "sections": [
+        {"key": "executive_summary",           "title": "执行摘要",               "order": 1,   "template_block": "executive_summary"},
+        {"key": "health_ranking",              "title": "健康分排名 · 全场设备健康度", "order": 2, "template_block": "health_ranking"},
+        {"key": "alerts_overview",             "title": "高风险设备概览",          "order": 3,   "template_block": "alerts_overview"},
+        {"key": "fault_history",               "title": "故障历史分析",            "order": 4,   "template_block": "fault_history"},
+        {"key": "cost_risk_analysis",          "title": "成本风险分析",            "order": 5,   "template_block": "cost_risk_analysis"},
+        {"key": "maintenance_recommendations", "title": "维护建议清单",            "order": 6,   "template_block": "maintenance_recommendations"}
+      ],
+      "thresholds": {"top_n": 10, "health_threshold": 30},
+      "llm_enabled": false,
+      "pdf_enabled": true,
+      "email_enabled": true
+    },
+
+    "parts_summary": {
+      "title": "备件需求汇总",
+      "template": "weekly_report.html",
+      "data_sources": ["devices", "parts"],
+      "sections": [
+        {"key": "executive_summary",           "title": "执行摘要",           "order": 1, "template_block": "executive_summary"},
+        {"key": "parts_breakdown",             "title": "备件需求汇总 · 按频率排序", "order": 2, "template_block": "parts_breakdown"},
+        {"key": "alerts_overview",             "title": "关联设备概览",        "order": 3, "template_block": "alerts_overview"},
+        {"key": "maintenance_recommendations", "title": "采购建议",           "order": 4, "template_block": "maintenance_recommendations"}
+      ],
+      "thresholds": {"top_n": 5},
+      "llm_enabled": false,
+      "pdf_enabled": true,
+      "email_enabled": false
+    },
+
+    "work_order": {
+      "title": "工单执行报告",
+      "template": "work_order_report.html",
+      "data_sources": ["device", "faults", "sensors", "rca", "expert_rules"],
+      "sections": [
+        {"key": "problem_summary",    "title": "问题摘要",       "order": 1, "template_block": "problem_summary"},
+        {"key": "possible_causes",    "title": "可能原因",       "order": 2, "template_block": "possible_causes"},
+        {"key": "inspection_steps",   "title": "检查步骤",       "order": 3, "template_block": "inspection_steps"},
+        {"key": "parts_tools",        "title": "备件与工具清单",   "order": 4, "template_block": "parts_tools"},
+        {"key": "safety_notes",       "title": "安全注意事项",    "order": 5, "template_block": "safety_notes"},
+        {"key": "verification",       "title": "修复后验证方法",   "order": 6, "template_block": "verification"},
+        {"key": "execution_window",   "title": "建议执行时段",    "order": 7, "template_block": "execution_window"}
+      ],
+      "thresholds": {},
+      "llm_enabled": true,
+      "llm_system_prompt_key": "work_order",
+      "pdf_enabled": true,
+      "email_enabled": false
+    }
+  },
+
+  "email_templates": {
+    "daily_health": "email_daily_health.html",
+    "weekly_report": "email_weekly_report.html"
+  },
+
+  "llm_system_prompts": {
+    "work_order": "你是工业CNC设备预测性维护高级专家，拥有20年现场维修经验。你的任务是根据提供的设备多源监测数据，生成一份专业、可执行的现场维护执行单。\n\n## 输出格式要求（必须严格包含以下全部7个章节，使用Markdown格式）\n\n### 1. 问题摘要\n用2-3句话概括设备当前状态：告警等级、核心异常参数、诊断模式、紧急程度。必须引用具体数据（z-score值、成本风险金额、健康评分）。\n\n### 2. 可能原因（按概率从高到低排列）\n列出3-4个可能原因，每条包含：原因描述、概率评估（高/中/低）、支撑证据（引用提供的上下文数据）、排除方法简述。\n\n### 3. 检查步骤（每步标注优先级、预计耗时、所需工具、判定标准）\n至少5个步骤，按优先级P0→P1→P2→P3排列。P0为安全准备步骤（必须执行）。\n\n### 4. 备件与工具清单\n分两部分：可能需要更换的备件（名称、型号、数量、参考单价）、所需检测工具（逐项列出）。\n\n### 5. 安全注意事项\n至少列出4条安全提醒，按严重程度排列。必须包含：断电/锁定/挂牌(LOTO)要求、个人防护装备(PPE)要求、特殊危险源警示、作业制度要求。\n\n### 6. 修复后验证方法\n列出至少3项验证测试，每项包含：测试方法描述、量化判定标准、预计验证时长。引用提供的验收标准数据。\n\n### 7. 建议执行时段\n基于紧急度分数和SLA目标，给出：推荐执行时间窗口（立即/本班次/24h内/本周）、预计总工时、对生产的影响评估、是否需要协调停机窗口。\n\n## 质量标准\n- 语言：中文，专业术语可保留英文\n- 数据引用：所有数字必须来自提供的结构化数据，不得编造\n- 可操作性：每一条检查步骤现场人员拿到就能执行\n- 安全性：安全提醒完整覆盖电气/热/机械三类风险\n- 篇幅：总长度控制在1500-3000字"
+  }
+}
