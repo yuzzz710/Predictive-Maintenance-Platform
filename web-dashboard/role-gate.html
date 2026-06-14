@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>工业智能运维平台 — 角色选择</title>
+<title>鹰眼 · 工业智能运维平台 — 角色选择</title>
 <link rel="stylesheet" href="/shared/design-tokens.css?v=1">
 <script src="/shared/theme-init.js"></script>
 <style>
@@ -110,13 +110,27 @@ body::after {
   position: relative; z-index: 1;
 }
 
-.role-gate-title {
-  font-size: 34px; font-weight: 800; letter-spacing: -0.5px;
-  margin-bottom: 8px;
+/* ── Title Group: Brand Name + Product Category ── */
+.title-group {
+  display: flex; align-items: baseline; justify-content: center; gap: 16px;
+  margin-bottom: 8px; flex-wrap: wrap;
+}
+.title-brand {
+  font-size: 68px; font-weight: 900; letter-spacing: -2px; line-height: 1;
+  background: linear-gradient(135deg, #0EA5E9 0%, #8B5CF6 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 8px rgba(14, 165, 233, 0.2));
+}
+.title-sep {
+  font-size: 26px; font-weight: 200; color: rgba(255, 255, 255, 0.3);
+  line-height: 1;
+}
+.title-desc {
+  font-size: 26px; font-weight: 700; letter-spacing: -0.3px; line-height: 1;
   background: linear-gradient(135deg, #0EA5E9 0%, #8B5CF6 50%, #F59E0B 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter: drop-shadow(0 1px 6px rgba(14, 165, 233, 0.15));
 }
 
 .role-gate-subtitle {
@@ -324,11 +338,16 @@ body::after {
 @media (max-width: 860px) {
   .role-cards { flex-direction: column; align-items: center; }
   .role-card { max-width: 380px; min-width: 0; width: 100%; }
-  .role-gate-title { font-size: 26px; }
+  .title-brand { font-size: 48px; }
+  .title-desc { font-size: 20px; }
+  .title-sep { font-size: 20px; }
   .role-gate-subtitle { font-size: 13px; letter-spacing: 0.5px; }
 }
 @media (max-width: 480px) {
-  .role-gate-title { font-size: 22px; }
+  .title-brand { font-size: 36px; letter-spacing: -1px; }
+  .title-desc { font-size: 16px; }
+  .title-sep { font-size: 16px; }
+  .title-group { gap: 10px; }
   .role-gate-subtitle { font-size: 12px; letter-spacing: 0; }
   .role-card { padding: 20px 16px 16px; }
   .role-card .card-icon { width: 52px; height: 52px; font-size: 26px; border-radius: 14px; margin-bottom: 14px; }
@@ -356,7 +375,11 @@ body::after {
 </div>
 
 <div class="role-gate-container">
-  <h1 class="role-gate-title">工业智能运维平台</h1>
+  <h1 class="title-group">
+    <span class="title-brand">鹰眼</span>
+    <span class="title-sep">|</span>
+    <span class="title-desc">工业智能运维平台</span>
+  </h1>
   <p class="role-gate-subtitle">同一智能平台 · 三大专属视角 · 赋能工业全链路运维升级</p>
 
   <div class="role-cards">
