@@ -62,11 +62,28 @@ body::after {
   border: 1px solid rgba(14, 165, 233, 0.04);
   background: transparent;
 }
-.wm-ring:nth-child(1) { width: 300px; height: 300px; top: -80px; left: -60px; border-width: 2px; }
-.wm-ring:nth-child(2) { width: 240px; height: 240px; top: 10%; right: -100px; border-color: rgba(139, 92, 246, 0.04); }
-.wm-ring:nth-child(3) { width: 400px; height: 400px; bottom: -150px; left: 30%; border-color: rgba(245, 158, 11, 0.03); border-width: 2px; }
-.wm-ring:nth-child(4) { width: 180px; height: 180px; bottom: 20%; right: 20%; border-color: rgba(14, 165, 233, 0.03); }
-.wm-ring:nth-child(5) { width: 100px; height: 100px; top: 40%; left: 5%; border-color: rgba(139, 92, 246, 0.05); }
+.wm-ring:nth-child(1) { width: 300px; height: 300px; top: -80px; left: -60px; border-width: 2px; animation: ringSpinCW 60s linear infinite; }
+.wm-ring:nth-child(2) { width: 240px; height: 240px; top: 10%; right: -100px; border-color: rgba(139, 92, 246, 0.04); animation: ringSpinCCW 45s linear infinite; }
+.wm-ring:nth-child(3) { width: 400px; height: 400px; bottom: -150px; left: 30%; border-color: rgba(245, 158, 11, 0.03); border-width: 2px; animation: ringSpinCW 30s linear infinite; }
+.wm-ring:nth-child(4) { width: 180px; height: 180px; bottom: 20%; right: 20%; border-color: rgba(14, 165, 233, 0.03); animation: ringSpinCCW 55s linear infinite; }
+.wm-ring:nth-child(5) { width: 100px; height: 100px; top: 40%; left: 5%; border-color: rgba(139, 92, 246, 0.05); animation: ringSpinCW 40s linear infinite; }
+
+@keyframes ringSpinCW  { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes ringSpinCCW { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+
+/* Radar scan — subtle expanding ring from center */
+.radar-scan {
+  position: fixed; top: 50%; left: 50%; pointer-events: none; z-index: 0;
+  width: 2px; height: 2px; border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.04);
+  animation: radarPulse 6s ease-out infinite;
+  transform: translate(-50%, -50%);
+}
+@keyframes radarPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.05); }
+  70%  { box-shadow: 0 0 0 600px rgba(14, 165, 233, 0); }
+  100% { box-shadow: 0 0 0 600px rgba(14, 165, 233, 0); }
+}
 
 /* Floating particles — low density, slow speed, blue-tinted */
 .particles {
@@ -124,14 +141,12 @@ body::after {
   filter: drop-shadow(0 2px 10px rgba(102, 217, 200, 0.25));
 }
 .title-sep {
-  font-size: 26px; font-weight: 200; color: rgba(255, 255, 255, 0.3);
+  font-size: 26px; font-weight: 200; color: rgba(255, 255, 255, 0.8);
   line-height: 1;
 }
 .title-desc {
-  font-size: 26px; font-weight: 700; letter-spacing: -0.3px; line-height: 1;
-  background: linear-gradient(135deg, #0EA5E9 0%, #8B5CF6 50%, #F59E0B 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 26px; font-weight: 600; letter-spacing: -0.3px; line-height: 1;
+  color: #ffffff;
 }
 
 .role-gate-subtitle {
@@ -177,8 +192,8 @@ body::after {
 /* Top glow bar */
 .role-card::before {
   content: '';
-  position: absolute; top: 0; left: 12px; right: 12px; height: 3px;
-  border-radius: 0 0 3px 3px;
+  position: absolute; top: 0; left: 12px; right: 12px; height: 2px;
+  border-radius: 0 0 2px 2px;
   transition: all 0.6s ease;
 }
 .role-card:hover {
@@ -260,48 +275,60 @@ body::after {
 .role-card .card-metric .metric-value {
   display: block; font-size: 28px; font-weight: 800;
   font-family: var(--font-mono); letter-spacing: -1px;
-  transition: transform 0.5s cubic-bezier(0.34, 1.2, 0.64, 1);
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.15));
+  animation: metricLoad 0.8s cubic-bezier(0.34, 1.3, 0.64, 1) both;
 }
+.role-card:nth-child(1) .metric-value { animation-delay: 0.3s; }
+.role-card:nth-child(2) .metric-value { animation-delay: 0.45s; }
+.role-card:nth-child(3) .metric-value { animation-delay: 0.6s; }
+
 .role-card.card-operator .metric-value { color: var(--role-operator); }
 .role-card.card-manager .metric-value   { color: var(--role-manager); }
 .role-card.card-developer .metric-value { color: var(--role-developer); }
+
+@keyframes metricLoad {
+  0%   { transform: scale(0); opacity: 0; }
+  50%  { transform: scale(1.2); opacity: 1; }
+  70%  { transform: scale(0.92); }
+  100% { transform: scale(1); opacity: 1; }
+}
 
 .role-card .card-metric .metric-label {
   display: block; font-size: 11px; color: #9a9a9f;
   margin-top: 2px;
 }
 .role-card:hover .card-metric .metric-value {
-  animation: metricPop 0.7s cubic-bezier(0.34, 1.3, 0.64, 1);
+  animation: metricPop 0.5s cubic-bezier(0.34, 1.3, 0.64, 1);
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
 }
 @keyframes metricPop {
-  0%   { transform: scale(0.3); opacity: 0.3; }
-  60%  { transform: scale(1.15); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
 }
 
 /* ── Top glow bars per role ── */
 .role-card.card-operator::before {
-  background: linear-gradient(90deg, transparent, var(--role-operator), var(--role-operator-glow), var(--role-operator), transparent);
+  background: linear-gradient(90deg, transparent, #0EA5E9, #38BDF8, #0EA5E9, transparent);
   background-size: 200% 100%;
-  box-shadow: 0 1px 8px var(--role-operator-glow);
+  box-shadow: 0 0 2px rgba(14, 165, 233, 0.5);
 }
 .role-card.card-manager::before {
-  background: linear-gradient(90deg, transparent, var(--role-manager), var(--role-manager-glow), var(--role-manager), transparent);
+  background: linear-gradient(90deg, transparent, #F59E0B, #FBBF24, #F59E0B, transparent);
   background-size: 200% 100%;
-  box-shadow: 0 1px 8px var(--role-manager-glow);
+  box-shadow: 0 0 2px rgba(245, 158, 11, 0.5);
 }
 .role-card.card-developer::before {
-  background: linear-gradient(90deg, transparent, var(--role-developer), var(--role-developer-glow), var(--role-developer), transparent);
+  background: linear-gradient(90deg, transparent, #8B5CF6, #A78BFA, #8B5CF6, transparent);
   background-size: 200% 100%;
-  box-shadow: 0 1px 8px var(--role-developer-glow);
+  box-shadow: 0 0 2px rgba(139, 92, 246, 0.5);
 }
 .role-card:hover::before {
-  animation: lightFlow 1.5s ease-in-out infinite;
-  box-shadow: 0 1px 14px;
+  animation: lightFlow 1s ease-in-out infinite;
 }
-.role-card.card-operator:hover::before { box-shadow: 0 1px 14px var(--role-operator-glow); }
-.role-card.card-manager:hover::before   { box-shadow: 0 1px 14px var(--role-manager-glow); }
-.role-card.card-developer:hover::before { box-shadow: 0 1px 14px var(--role-developer-glow); }
+.role-card.card-operator:hover::before { box-shadow: 0 0 4px rgba(14, 165, 233, 0.8); }
+.role-card.card-manager:hover::before   { box-shadow: 0 0 4px rgba(245, 158, 11, 0.8); }
+.role-card.card-developer:hover::before { box-shadow: 0 0 4px rgba(139, 92, 246, 0.8); }
 
 @keyframes lightFlow {
   0%   { background-position: 200% 0; }
@@ -367,6 +394,7 @@ body::after {
   <div class="wm-ring"></div>
   <div class="wm-ring"></div>
 </div>
+<div class="radar-scan"></div>
 <div class="particles">
   <div class="particle"></div><div class="particle"></div><div class="particle"></div>
   <div class="particle"></div><div class="particle"></div><div class="particle"></div>
