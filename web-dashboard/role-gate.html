@@ -29,55 +29,81 @@ body {
   position: relative;
 }
 
-/* Data grid lines — subtle tech texture */
-body::after {
-  content: '';
-  position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.04;
-  background-image:
-    linear-gradient(rgba(14, 165, 233, 0.3) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(14, 165, 233, 0.3) 1px, transparent 1px);
-  background-size: 60px 60px;
-  mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 0%, transparent 70%);
-  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 0%, transparent 70%);
-}
-
-/* Floating particles */
-.particles {
-  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
-}
-.particle {
-  position: absolute;
-  width: 2px; height: 2px;
-  background: var(--accent-cyan);
-  border-radius: 50%;
-  opacity: 0;
-  animation: floatUp linear infinite;
-}
-.particle:nth-child(1)  { left: 10%; animation-duration: 8s; animation-delay: 0s; }
-.particle:nth-child(2)  { left: 25%; animation-duration: 12s; animation-delay: 1s; width: 1px; height: 1px; }
-.particle:nth-child(3)  { left: 40%; animation-duration: 10s; animation-delay: 3s; }
-.particle:nth-child(4)  { left: 55%; animation-duration: 14s; animation-delay: 0.5s; width: 1.5px; height: 1.5px; }
-.particle:nth-child(5)  { left: 70%; animation-duration: 9s; animation-delay: 2s; }
-.particle:nth-child(6)  { left: 85%; animation-duration: 11s; animation-delay: 4s; width: 1px; height: 1px; }
-.particle:nth-child(7)  { left: 15%; animation-duration: 13s; animation-delay: 5s; }
-.particle:nth-child(8)  { left: 60%; animation-duration: 7s; animation-delay: 1.5s; }
-.particle:nth-child(9)  { left: 35%; animation-duration: 15s; animation-delay: 3.5s; width: 2.5px; height: 2.5px; }
-.particle:nth-child(10) { left: 75%; animation-duration: 10s; animation-delay: 6s; }
-
-@keyframes floatUp {
-  0%   { transform: translateY(100vh) scale(0); opacity: 0; }
-  10%  { opacity: 0.8; }
-  90%  { opacity: 0.3; }
-  100% { transform: translateY(-10vh) scale(1); opacity: 0; }
-}
-
-/* Override design-tokens body::before — use our own ambient orbs */
+/* ── Background texture layers ── */
+/* Industrial line-art watermark — subtle gear/motor outlines */
 body::before {
   background:
     radial-gradient(ellipse 100% 70% at 30% 15%, rgba(14, 165, 233, 0.07) 0%, transparent 60%),
     radial-gradient(ellipse 80% 60% at 70% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 60%),
     radial-gradient(ellipse 90% 50% at 50% 85%, rgba(245, 158, 11, 0.04) 0%, transparent 60%) !important;
 }
+/* Data grid — double-layer tech precision */
+body::after {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  opacity: 0.06;
+  background-image:
+    /* 40px major grid */
+    linear-gradient(rgba(14, 165, 233, 0.25) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14, 165, 233, 0.25) 1px, transparent 1px),
+    /* 10px sub-grid for precision feel */
+    linear-gradient(rgba(14, 165, 233, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14, 165, 233, 0.08) 1px, transparent 1px);
+  background-size: 40px 40px, 40px 40px, 10px 10px, 10px 10px;
+  mask-image: radial-gradient(ellipse 75% 65% at 50% 50%, black 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 50%, black 0%, transparent 70%);
+}
+/* Industrial watermark — concentric circles suggesting gears */
+.industrial-watermark {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+}
+.industrial-watermark .wm-ring {
+  position: absolute; border-radius: 50%;
+  border: 1px solid rgba(14, 165, 233, 0.04);
+  background: transparent;
+}
+.wm-ring:nth-child(1) { width: 300px; height: 300px; top: -80px; left: -60px; border-width: 2px; }
+.wm-ring:nth-child(2) { width: 240px; height: 240px; top: 10%; right: -100px; border-color: rgba(139, 92, 246, 0.04); }
+.wm-ring:nth-child(3) { width: 400px; height: 400px; bottom: -150px; left: 30%; border-color: rgba(245, 158, 11, 0.03); border-width: 2px; }
+.wm-ring:nth-child(4) { width: 180px; height: 180px; bottom: 20%; right: 20%; border-color: rgba(14, 165, 233, 0.03); }
+.wm-ring:nth-child(5) { width: 100px; height: 100px; top: 40%; left: 5%; border-color: rgba(139, 92, 246, 0.05); }
+
+/* Floating particles — low density, slow speed, blue-tinted */
+.particles {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+}
+.particle {
+  position: absolute;
+  width: 2px; height: 2px;
+  border-radius: 50%;
+  opacity: 0;
+  animation: floatUp linear infinite;
+}
+/* Cyan/blue particles */
+.particle:nth-child(1)  { left: 8%;  background: #38bdf8; animation-duration: 18s; animation-delay: 0s; }
+.particle:nth-child(2)  { left: 18%; background: #0EA5E9; animation-duration: 22s; animation-delay: 2s; width: 1px; height: 1px; }
+.particle:nth-child(3)  { left: 28%; background: #7dd3fc; animation-duration: 16s; animation-delay: 5s; }
+.particle:nth-child(4)  { left: 38%; background: #38bdf8; animation-duration: 24s; animation-delay: 1s; width: 1.5px; height: 1.5px; }
+.particle:nth-child(5)  { left: 48%; background: #0EA5E9; animation-duration: 20s; animation-delay: 3s; }
+.particle:nth-child(6)  { left: 58%; background: #bae6fd; animation-duration: 26s; animation-delay: 7s; width: 1px; height: 1px; }
+.particle:nth-child(7)  { left: 68%; background: #38bdf8; animation-duration: 15s; animation-delay: 4s; }
+.particle:nth-child(8)  { left: 78%; background: #0EA5E9; animation-duration: 19s; animation-delay: 8s; }
+.particle:nth-child(9)  { left: 88%; background: #7dd3fc; animation-duration: 23s; animation-delay: 2.5s; width: 2px; height: 2px; }
+.particle:nth-child(10) { left: 12%; background: #bae6fd; animation-duration: 28s; animation-delay: 6s; }
+.particle:nth-child(11) { left: 33%; background: #38bdf8; animation-duration: 17s; animation-delay: 9s; }
+.particle:nth-child(12) { left: 52%; background: #0EA5E9; animation-duration: 21s; animation-delay: 1.5s; width: 1px; height: 1px; }
+.particle:nth-child(13) { left: 72%; background: #7dd3fc; animation-duration: 25s; animation-delay: 3.5s; }
+.particle:nth-child(14) { left: 92%; background: #38bdf8; animation-duration: 14s; animation-delay: 5.5s; }
+.particle:nth-child(15) { left: 5%;  background: #0EA5E9; animation-duration: 30s; animation-delay: 0.5s; width: 1.5px; height: 1.5px; }
+
+@keyframes floatUp {
+  0%   { transform: translateY(110vh) scale(0); opacity: 0; }
+  5%   { opacity: 0.6; }
+  15%  { opacity: 0.4; }
+  85%  { opacity: 0.15; }
+  100% { transform: translateY(-15vh) scale(1.2); opacity: 0; }
+}
+
 
 .role-gate-container {
   max-width: 960px; width: 100%; text-align: center;
@@ -102,22 +128,38 @@ body::before {
   display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
 }
 
+/* ══════════════════════════════════════════════════════════════
+   Role Cards — 3D glass with dual-layer shadow + inner glow
+   ══════════════════════════════════════════════════════════════ */
 .role-card {
   flex: 1; min-width: 260px; max-width: 300px;
   background: var(--glass-bg-card);
   backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-xl);
-  padding: 32px 24px 24px;
+  padding: 28px 22px 20px;
+  /* Dual-layer shadow: deep-soft black + sharp theme-color */
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
-    0 1px 2px rgba(0, 0, 0, 0.2),
-    0 8px 24px rgba(0, 0, 0, 0.3),
-    0 20px 48px rgba(0, 0, 0, 0.2);
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 10px 20px rgba(0, 0, 0, 0.15),
+    0 4px 8px rgba(0, 0, 0, 0.12);
   cursor: pointer; text-align: center;
-  transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.4, 1), box-shadow 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.4, 1),
+              box-shadow 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
   position: relative; overflow: hidden;
 }
+/* Inner glow — role-themed on hover */
+.role-card::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  border-radius: var(--radius-xl);
+  opacity: 0; transition: opacity 0.5s ease;
+}
+.role-card.card-operator::after { box-shadow: inset 0 0 30px rgba(14, 165, 233, 0.12); }
+.role-card.card-manager::after   { box-shadow: inset 0 0 30px rgba(245, 158, 11, 0.12); }
+.role-card.card-developer::after { box-shadow: inset 0 0 30px rgba(139, 92, 246, 0.12); }
+.role-card:hover::after { opacity: 1; }
+
+/* Top glow bar */
 .role-card::before {
   content: '';
   position: absolute; top: 0; left: 12px; right: 12px; height: 3px;
@@ -127,19 +169,43 @@ body::before {
 .role-card:hover {
   transform: translateY(-10px) scale(1.04) !important;
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.06) inset,
-    0 2px 4px rgba(0, 0, 0, 0.3),
-    0 12px 36px rgba(0, 0, 0, 0.5),
-    0 32px 64px rgba(0, 0, 0, 0.3);
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 16px 32px rgba(0, 0, 0, 0.22),
+    0 6px 14px rgba(0, 0, 0, 0.18);
 }
 .role-card:active { transform: scale(0.97) !important; transition: all 0.1s ease; }
 
+/* ── Icon — gradient-filled app-icon style ── */
 .role-card .card-icon {
-  font-size: 48px; margin-bottom: 16px; display: block;
-  transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.4, 1);
+  width: 68px; height: 68px;
+  margin: 0 auto 18px;
+  border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 34px;
+  transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.4, 1),
+              box-shadow 0.6s ease;
+  position: relative; z-index: 1;
 }
-.role-card:hover .card-icon { transform: scale(1.1); }
+.role-card.card-operator .card-icon {
+  background: linear-gradient(135deg, #0EA5E9, #38bdf8);
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.3);
+}
+.role-card.card-manager .card-icon {
+  background: linear-gradient(135deg, #F59E0B, #fbbf24);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+}
+.role-card.card-developer .card-icon {
+  background: linear-gradient(135deg, #8B5CF6, #a78bfa);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3);
+}
+.role-card:hover .card-icon {
+  transform: scale(1.12);
+}
+.role-card.card-operator:hover .card-icon { box-shadow: 0 10px 32px rgba(14, 165, 233, 0.5); }
+.role-card.card-manager:hover .card-icon   { box-shadow: 0 10px 32px rgba(245, 158, 11, 0.5); }
+.role-card.card-developer:hover .card-icon { box-shadow: 0 10px 32px rgba(139, 92, 246, 0.5); }
 
+/* ── Title & subtitle ── */
 .role-card .card-title {
   font-size: 18px; font-weight: 700; margin-bottom: 2px;
   transition: color 0.3s ease;
@@ -153,55 +219,81 @@ body::before {
   text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500;
 }
 
-.role-card .card-desc {
-  font-size: 12px; color: var(--text-secondary); line-height: 1.8;
+/* ── Feature list — icon + text ── */
+.role-card .card-features {
+  text-align: left; margin-bottom: 14px;
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 0 6px;
 }
-.role-card .card-desc .desc-primary {
-  display: block; font-weight: 600; color: var(--text-primary);
-  font-size: 13px; margin-bottom: 6px;
+.role-card .card-features .feat-item {
+  font-size: 11px; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 8px;
+  line-height: 1.6;
 }
-.role-card .card-desc .desc-metrics {
+.role-card .card-features .feat-dot {
+  width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+  opacity: 0.7;
+}
+.role-card.card-operator .feat-dot { background: var(--role-operator); }
+.role-card.card-manager .feat-dot   { background: var(--role-manager); }
+.role-card.card-developer .feat-dot { background: var(--role-developer); }
+
+/* ── Big metric number ── */
+.role-card .card-metric {
+  padding-top: 12px; border-top: 0.5px solid var(--border);
+}
+.role-card .card-metric .metric-value {
+  display: block; font-size: 28px; font-weight: 800;
+  font-family: var(--font-mono); letter-spacing: -1px;
+  transition: transform 0.5s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+.role-card.card-operator .metric-value { color: var(--role-operator); }
+.role-card.card-manager .metric-value   { color: var(--role-manager); }
+.role-card.card-developer .metric-value { color: var(--role-developer); }
+
+.role-card .card-metric .metric-label {
   display: block; font-size: 11px; color: var(--text-muted);
+  margin-top: 2px;
 }
-.role-card .card-desc .metric-num {
-  font-weight: 700; font-family: var(--font-mono);
-  transition: all 0.3s ease;
-  display: inline-block;
+.role-card:hover .card-metric .metric-value {
+  animation: metricPop 0.7s cubic-bezier(0.34, 1.3, 0.64, 1);
 }
-.role-card:hover .card-desc .metric-num {
-  animation: numBounce 0.6s var(--transition-spring);
-}
-@keyframes numBounce {
-  0%, 100% { transform: scale(1); }
-  30% { transform: scale(1.25); color: var(--text-primary); }
-  60% { transform: scale(0.95); }
+@keyframes metricPop {
+  0%   { transform: scale(0.3); opacity: 0.3; }
+  60%  { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
-/* Role theme color glow bars */
+/* ── Top glow bars per role ── */
 .role-card.card-operator::before {
   background: linear-gradient(90deg, transparent, var(--role-operator), var(--role-operator-glow), var(--role-operator), transparent);
   background-size: 200% 100%;
-  box-shadow: 0 0 12px var(--role-operator-glow);
+  box-shadow: 0 1px 16px var(--role-operator-glow);
 }
 .role-card.card-manager::before {
   background: linear-gradient(90deg, transparent, var(--role-manager), var(--role-manager-glow), var(--role-manager), transparent);
   background-size: 200% 100%;
-  box-shadow: 0 0 12px var(--role-manager-glow);
+  box-shadow: 0 1px 16px var(--role-manager-glow);
 }
 .role-card.card-developer::before {
   background: linear-gradient(90deg, transparent, var(--role-developer), var(--role-developer-glow), var(--role-developer), transparent);
   background-size: 200% 100%;
-  box-shadow: 0 0 12px var(--role-developer-glow);
+  box-shadow: 0 1px 16px var(--role-developer-glow);
 }
 .role-card:hover::before {
   animation: lightFlow 1.5s ease-in-out infinite;
+  box-shadow: 0 1px 24px;
 }
+.role-card.card-operator:hover::before { box-shadow: 0 1px 24px var(--role-operator-glow); }
+.role-card.card-manager:hover::before   { box-shadow: 0 1px 24px var(--role-manager-glow); }
+.role-card.card-developer:hover::before { box-shadow: 0 1px 24px var(--role-developer-glow); }
+
 @keyframes lightFlow {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
 
-.role-card { animation: cardIn 0.5s var(--transition-spring) both; }
+.role-card { animation: cardIn 0.5s var(--transition-spring) backwards; }
 .role-card:nth-child(1) { animation-delay: 0.05s; }
 .role-card:nth-child(2) { animation-delay: 0.15s; }
 .role-card:nth-child(3) { animation-delay: 0.25s; }
@@ -238,25 +330,29 @@ body::before {
 @media (max-width: 480px) {
   .role-gate-title { font-size: 22px; }
   .role-gate-subtitle { font-size: 12px; letter-spacing: 0; }
-  .role-card { padding: 24px 18px 20px; }
-  .role-card .card-icon { font-size: 36px; }
+  .role-card { padding: 20px 16px 16px; }
+  .role-card .card-icon { width: 52px; height: 52px; font-size: 26px; border-radius: 14px; margin-bottom: 14px; }
   .role-card .card-title { font-size: 16px; }
+  .role-card .card-metric .metric-value { font-size: 22px; }
+  .role-card .card-features .feat-item { font-size: 10px; }
 }
 </style>
 </head>
 <body>
 
+<div class="industrial-watermark">
+  <div class="wm-ring"></div>
+  <div class="wm-ring"></div>
+  <div class="wm-ring"></div>
+  <div class="wm-ring"></div>
+  <div class="wm-ring"></div>
+</div>
 <div class="particles">
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
+  <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+  <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+  <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+  <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+  <div class="particle"></div><div class="particle"></div><div class="particle"></div>
 </div>
 
 <div class="role-gate-container">
@@ -266,32 +362,47 @@ body::before {
   <div class="role-cards">
 
     <div class="role-card card-operator" onclick="selectRole('operator')">
-      <span class="card-icon">&#9881;</span>
+      <div class="card-icon">&#9881;</div>
       <div class="card-title">运维工程师</div>
       <div class="card-subtitle">Operator · 执行层</div>
-      <div class="card-desc">
-        <span class="desc-primary">设备全生命周期健康管理</span>
-        <span class="desc-metrics">异常智能告警 · 工单自动流转 · 根因快速定位 · <span class="metric-num">运维成本降低 35%</span></span>
+      <div class="card-features">
+        <span class="feat-item"><span class="feat-dot"></span>异常智能告警</span>
+        <span class="feat-item"><span class="feat-dot"></span>工单自动流转</span>
+        <span class="feat-item"><span class="feat-dot"></span>根因快速定位</span>
+      </div>
+      <div class="card-metric">
+        <span class="metric-value">35%</span>
+        <span class="metric-label">运维成本降低</span>
       </div>
     </div>
 
     <div class="role-card card-manager" onclick="selectRole('manager')">
-      <span class="card-icon">&#128202;</span>
+      <div class="card-icon">&#128202;</div>
       <div class="card-title">生产管理负责人</div>
       <div class="card-subtitle">Manager · 决策层</div>
-      <div class="card-desc">
-        <span class="desc-primary">全局运维数据实时看板</span>
-        <span class="desc-metrics">关键指标一目了然 · 成本效益精准分析 · <span class="metric-num">决策效率提升 50%</span> · <span class="metric-num">设备稼动率提高 15%</span></span>
+      <div class="card-features">
+        <span class="feat-item"><span class="feat-dot"></span>关键指标总览</span>
+        <span class="feat-item"><span class="feat-dot"></span>成本效益分析</span>
+        <span class="feat-item"><span class="feat-dot"></span>策略对比选择</span>
+      </div>
+      <div class="card-metric">
+        <span class="metric-value">50%</span>
+        <span class="metric-label">决策效率提升</span>
       </div>
     </div>
 
     <div class="role-card card-developer" onclick="selectRole('developer')">
-      <span class="card-icon">&#128295;</span>
+      <div class="card-icon">&#128295;</div>
       <div class="card-title">平台开发人员</div>
       <div class="card-subtitle">Developer · 全量视图</div>
-      <div class="card-desc">
-        <span class="desc-primary">一站式开发与运维平台</span>
-        <span class="desc-metrics">完整数据探索 · 模型快速迭代 · 系统灵活扩展 · <span class="metric-num">开发周期缩短 60%</span></span>
+      <div class="card-features">
+        <span class="feat-item"><span class="feat-dot"></span>完整数据探索</span>
+        <span class="feat-item"><span class="feat-dot"></span>模型快速迭代</span>
+        <span class="feat-item"><span class="feat-dot"></span>系统灵活扩展</span>
+      </div>
+      <div class="card-metric">
+        <span class="metric-value">60%</span>
+        <span class="metric-label">开发周期缩短</span>
       </div>
     </div>
 
