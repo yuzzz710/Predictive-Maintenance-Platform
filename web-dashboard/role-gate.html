@@ -103,42 +103,103 @@ body::before {
 }
 
 .role-card {
-  flex: 1; min-width: 240px; max-width: 280px;
+  flex: 1; min-width: 260px; max-width: 300px;
   background: var(--glass-bg-card);
   backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
-  border: 0.5px solid var(--glass-border);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-xl);
-  padding: 28px 24px 24px;
-  box-shadow: var(--shadow-sm), var(--glass-highlight);
+  padding: 32px 24px 24px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    0 20px 48px rgba(0, 0, 0, 0.2);
   cursor: pointer; text-align: center;
-  transition: all var(--transition-spring);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative; overflow: hidden;
 }
-
-.role-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg), var(--glass-highlight-strong);
+.role-card::before {
+  content: '';
+  position: absolute; top: 0; left: 12px; right: 12px; height: 3px;
+  border-radius: 0 0 3px 3px;
+  transition: all 0.4s ease;
 }
+.role-card:hover {
+  transform: translateY(-10px) scale(1.04);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    0 12px 36px rgba(0, 0, 0, 0.5),
+    0 32px 64px rgba(0, 0, 0, 0.3);
+}
+.role-card:active { transform: scale(0.97); transition: all 0.1s ease; }
 
-.role-card:active { transform: scale(0.98); }
-
-.role-card .card-icon { font-size: 36px; margin-bottom: 12px; }
+.role-card .card-icon {
+  font-size: 48px; margin-bottom: 16px; display: block;
+  transition: transform 0.4s var(--transition-spring);
+}
+.role-card:hover .card-icon { transform: scale(1.1); }
 
 .role-card .card-title {
-  font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;
+  font-size: 18px; font-weight: 700; margin-bottom: 2px;
+  transition: color 0.3s ease;
 }
+.role-card.card-operator .card-title { color: var(--role-operator); }
+.role-card.card-manager .card-title { color: var(--role-manager); }
+.role-card.card-developer .card-title { color: var(--role-developer); }
 
 .role-card .card-subtitle {
-  font-size: 11px; color: var(--text-muted); margin-bottom: 12px;
+  font-size: 10px; color: var(--text-muted); margin-bottom: 14px;
+  text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500;
 }
 
 .role-card .card-desc {
-  font-size: 12px; color: var(--text-secondary); line-height: 1.6;
+  font-size: 12px; color: var(--text-secondary); line-height: 1.8;
+}
+.role-card .card-desc .desc-primary {
+  display: block; font-weight: 600; color: var(--text-primary);
+  font-size: 13px; margin-bottom: 6px;
+}
+.role-card .card-desc .desc-metrics {
+  display: block; font-size: 11px; color: var(--text-muted);
+}
+.role-card .card-desc .metric-num {
+  font-weight: 700; font-family: var(--font-mono);
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+.role-card:hover .card-desc .metric-num {
+  animation: numBounce 0.6s var(--transition-spring);
+}
+@keyframes numBounce {
+  0%, 100% { transform: scale(1); }
+  30% { transform: scale(1.25); color: var(--text-primary); }
+  60% { transform: scale(0.95); }
 }
 
-.role-card.card-operator { border-top: 3px solid var(--accent-cyan); }
-.role-card.card-manager { border-top: 3px solid var(--accent-amber); }
-.role-card.card-developer { border-top: 3px solid var(--accent-purple); }
+/* Role theme color glow bars */
+.role-card.card-operator::before {
+  background: linear-gradient(90deg, transparent, var(--role-operator), var(--role-operator-glow), var(--role-operator), transparent);
+  background-size: 200% 100%;
+  box-shadow: 0 0 12px var(--role-operator-glow);
+}
+.role-card.card-manager::before {
+  background: linear-gradient(90deg, transparent, var(--role-manager), var(--role-manager-glow), var(--role-manager), transparent);
+  background-size: 200% 100%;
+  box-shadow: 0 0 12px var(--role-manager-glow);
+}
+.role-card.card-developer::before {
+  background: linear-gradient(90deg, transparent, var(--role-developer), var(--role-developer-glow), var(--role-developer), transparent);
+  background-size: 200% 100%;
+  box-shadow: 0 0 12px var(--role-developer-glow);
+}
+.role-card:hover::before {
+  animation: lightFlow 1.5s ease-in-out infinite;
+}
+@keyframes lightFlow {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
 
 .role-card { animation: cardIn 0.5s var(--transition-spring) both; }
 .role-card:nth-child(1) { animation-delay: 0.05s; }
@@ -189,24 +250,33 @@ body::before {
   <div class="role-cards">
 
     <div class="role-card card-operator" onclick="selectRole('operator')">
-      <div class="card-icon">&#9881;</div>
+      <span class="card-icon">&#9881;</span>
       <div class="card-title">运维工程师</div>
-      <div class="card-subtitle">Operator &middot; 执行层</div>
-      <div class="card-desc">设备健康监控、异常告警处理、工单执行跟踪、根因归因分析</div>
+      <div class="card-subtitle">Operator · 执行层</div>
+      <div class="card-desc">
+        <span class="desc-primary">设备全生命周期健康管理</span>
+        <span class="desc-metrics">异常智能告警 · 工单自动流转 · 根因快速定位 · <span class="metric-num">运维成本降低 35%</span></span>
+      </div>
     </div>
 
     <div class="role-card card-manager" onclick="selectRole('manager')">
-      <div class="card-icon">&#128202;</div>
+      <span class="card-icon">&#128202;</span>
       <div class="card-title">生产管理负责人</div>
-      <div class="card-subtitle">Manager &middot; 决策层</div>
-      <div class="card-desc">运维业务关键指标总览、成本效益分析与预算管控、策略对比选择、ROI分析</div>
+      <div class="card-subtitle">Manager · 决策层</div>
+      <div class="card-desc">
+        <span class="desc-primary">全局运维数据实时看板</span>
+        <span class="desc-metrics">关键指标一目了然 · 成本效益精准分析 · <span class="metric-num">决策效率提升 50%</span> · <span class="metric-num">设备稼动率提高 15%</span></span>
+      </div>
     </div>
 
     <div class="role-card card-developer" onclick="selectRole('developer')">
-      <div class="card-icon">&#128295;</div>
+      <span class="card-icon">&#128295;</span>
       <div class="card-title">平台开发人员</div>
-      <div class="card-subtitle">Developer &middot; 全量视图</div>
-      <div class="card-desc">完整数据探索与技术分析、预测模型评估与对比、系统架构文档、全部页面可见</div>
+      <div class="card-subtitle">Developer · 全量视图</div>
+      <div class="card-desc">
+        <span class="desc-primary">一站式开发与运维平台</span>
+        <span class="desc-metrics">完整数据探索 · 模型快速迭代 · 系统灵活扩展 · <span class="metric-num">开发周期缩短 60%</span></span>
+      </div>
     </div>
 
   </div>
