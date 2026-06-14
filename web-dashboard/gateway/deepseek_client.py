@@ -15,6 +15,7 @@ from typing import AsyncGenerator, List
 from .config import DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL, DEEPSEEK_MODEL
 from .prompts import SYSTEM_PROMPT
 from .tools import TOOLS, execute_tool
+from .health_summary import get_health_context_text
 
 
 MAX_TURNS = 3        # Keep last N user-assistant conversation turns for context
@@ -39,6 +40,9 @@ def _build_payload(messages: list, stream: bool = True, rag_context: str = "") -
         rag_context: Optional RAG-retrieved document context to inject into system prompt
     """
     system_content = SYSTEM_PROMPT
+    # Inject real-time health data from CSV, replacing the placeholder
+    health_data = get_health_context_text()
+    system_content = system_content.replace('__HEALTH_DATA_INJECTED_AT_RUNTIME__', health_data)
     if rag_context:
         system_content += (
             "\n\n## 📚 参考文档（来自知识库检索，请优先参考以下内容回答）\n\n"

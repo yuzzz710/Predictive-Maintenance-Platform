@@ -17,7 +17,7 @@
         speech: {
           what: "设备健康状态总览是整个系统的首页仪表盘。它通过一个10×10的彩色矩阵，实时展示100台CNC数控机床的健康评分——每个格子代表一台设备，颜色从绿色（健康）渐变到红色（危急），让运维人员一眼就能发现哪些设备需要关注。",
           why: "对于工厂来说，一台关键机床的非计划停机可能导致整条产线停摆，每小时损失高达数千美元。这个模块的价值在于：把复杂的传感器数据转化为直观的视觉信号，让不擅长数据分析的运维工程师也能秒级感知全局健康状态。",
-          effect: "当前系统监控100台设备，其中健康率约92%，约3台处于危急状态。系统已经自动为这些高危设备生成了维护工单，包含故障根因、所需备件、推荐技师和预估成本——从发现问题到生成可执行方案，全程自动化。",
+          effect: "当前系统监控100台设备，平均健康分${meanScore}分（满分100）。其中危急(Critical)${criticalCount}台（${criticalPct}%）、退化(Degrading)${degradingCount}台（${degradingPct}%）、警告(Warning)${warningCount}台、健康(Healthy)${healthyCount}台。健康分最低的5台设备是：${top5Lowest}。系统已经自动为这些高危设备生成了维护工单，包含故障根因、所需备件、推荐技师和预估成本——从发现问题到生成可执行方案，全程自动化。",
           relation: "这是整个预测性维护系统的'入口页面'——所有AI分析、策略决策、工单执行最终都反馈到这个矩阵。评委可以看到，我们不是在做一个单纯的数据看板，而是一套从数据采集→异常检测→根因诊断→维护决策→工单执行的完整闭环方案。"
         },
         keywords: ["健康", "矩阵", "设备", "总览", "首页", "CNC", "状态", "颜色", "停机", "健康率"]
@@ -109,7 +109,7 @@
         speech: {
           what: "这里展示100台设备的健康评分分布（0-100分）和传感器升级的投资回报分析。健康分是基于8个维度加权计算的综合指标；升级ROI基于三阶段传感器路线图（振动→电流谱→红外热成像）的工程估算。",
           why: "健康评分告诉管理者'当前有多健康'，传感器升级告诉管理者'花多少钱能变得多健康'。两者结合，就是完整的运维投资决策依据。",
-          effect: "当前10台设备健康分<40（危险），88台处于劣化状态。传感器方案B（振动+电流谱，投资$639k）预计5年ROI达1136%，是性价比最高的方案。",
+          effect: "当前${scoreUnder30}台设备健康分<30（危急），${score30to40}台在30-40之间（退化），${score40to60}台在40-60之间。健康分>60的仅${scoreAbove60}台，>80的${scoreAbove80}台。传感器方案B（振动+电流谱，投资$639k）预计5年ROI达1136%，是性价比最高的方案。",
           relation: "这个Tab连接'现状评估'和'未来投资'两个决策维度，是整个仪表盘中最面向管理层汇报的页面。"
         },
         keywords: ["健康", "评分", "分布", "传感器", "升级", "ROI", "投资"]
@@ -291,16 +291,139 @@
         },
         keywords: ["矩阵", "网格", "设备", "健康", "大屏", "监控"]
       }
+    },
+
+    /* ── reports.html ── */
+    "reports.html": {
+      "__default__": {
+        title: "报告中心",
+        summary: "6种报告类型自动生成：健康报告、故障分析、成本审计、RCA根因、备件需求、热漂移分析",
+        speech: {
+          what: "报告中心支持6种专业报告的一键生成：设备健康报告、故障分析报告、成本审计报告、根因分析RCA报告、备件需求汇总、热漂移分析报告。每份报告基于最新流水线数据实时生成，支持HTML预览和导出。",
+          why: "工业运维需要文档化——维修记录、成本核算、合规审计都需要正式报告。传统方式需要人工整理数据、编写报告，耗时数小时。系统自动从分析CSV中提取数据，3-5秒生成专业报告，效率提升上百倍。",
+          effect: "6种报告类型全部通过验证，基于统一报告数据模型（report_models.py 6个dataclass）和配置驱动架构（report_config.json），确保数据一致性。Apple风格UI渲染，支持打印和导出。",
+          relation: "报告中心是系统'数据→文档'的输出环节。仪表盘的分析结果、工单跟踪的执行记录、AI Copilot的诊断结论，最终都可以通过报告中心输出为正式文档。"
+        },
+        keywords: ["报告", "报表", "导出", "文档", "打印", "健康报告", "故障分析"]
+      }
+    },
+
+    /* ── knowledge-base.html ── */
+    "knowledge-base.html": {
+      "__default__": {
+        title: "知识库管理",
+        summary: "三层知识库（系统文档/运维知识/故障案例）+ BGE向量检索 + ChromaDB存储",
+        speech: {
+          what: "知识库管理页面展示AI Copilot背后RAG系统的三层知识库：系统文档层（项目架构和算法原理）、运维知识层（设备维护步骤和安全规范）、故障案例层（历史故障及修复记录）。支持文档上传、分块、向量化和检索。",
+          why: "通用AI不了解特定项目的架构、算法和业务逻辑。RAG知识库相当于给AI配备了'项目专属记忆'——确保AI的回答基于真实系统文档而非模糊训练数据。这是AI专业性的保障。",
+          effect: "使用BGE-small-zh-v1.5本地嵌入模型（~15ms检索）和DeepSeek API嵌入（~300ms）双层回退。ChromaDB向量数据库存储，支持增量更新和版本管理。",
+          relation: "知识库是AI Copilot的'大脑'。所有页面中AI助手给出的专业回答，都依赖这个知识库提供准确的上下文信息。"
+        },
+        keywords: ["知识库", "RAG", "向量", "检索", "ChromaDB", "嵌入", "文档"]
+      }
+    },
+
+    /* ── workflows.html ── */
+    "workflows.html": {
+      "__default__": {
+        title: "工作流管理",
+        summary: "DAG流水线可视化：数据预处理→统计推断→ML推断→诊断→决策",
+        speech: {
+          what: "工作流管理页面展示系统的DAG（有向无环图）流水线引擎。五层分析管线（数据预处理→统计推断→ML推断→诊断→决策）的每个节点状态、耗时、输入输出关系都可以在这里监控和管理。",
+          why: "复杂的多步骤分析流程需要统一调度——哪些步骤可以并行执行、哪些存在依赖关系、某个步骤失败后如何处理。DAG编排引擎通过配置驱动的方式解决了这些问题，确保分析流程的高效和可靠。",
+          effect: "完整流水线耗时约9-15秒（取决于是否启用ML和诊断）。支持断点续跑、按需降级、输出版本管理。ThreadPool并行执行无依赖节点，最大化利用计算资源。",
+          relation: "工作流是系统'数据流'的骨架。仪表盘展示的所有分析结果，都是通过这个流水线从原始传感器数据一步步加工而来的。"
+        },
+        keywords: ["工作流", "流水线", "DAG", "编排", "节点", "并行"]
+      }
+    },
+
+    /* ── inventory.html ── */
+    "inventory.html": {
+      "__default__": {
+        title: "库存管理",
+        summary: "17种备件(s,S)最优库存策略 + 采购建议 + 供应商管理",
+        speech: {
+          what: "库存管理页面展示17种备件的(s,S)库存策略——当库存低于s（补货点）时自动建议补货到S（目标库存）。包含当前库存量、需求量、缺口量、建议采购数量、供应商信息和预估到货日期。",
+          why: "备件库存是运维成本控制的关键环节——库存太多占用资金，库存太少维修时缺件导致设备停等。(s,S)策略在库存持有成本和缺货风险之间找到数学最优解。",
+          effect: "实时对比当前库存与维护工单需求，自动计算每种备件的缺口。支持一键生成采购申请单，包含供应商、数量、金额和预计到货日期。",
+          relation: "库存数据与工单计划直接关联——策略切换导致工单数变化时，备件需求自动重新计算。属于'决策→执行'闭环中的物资保障环节。"
+        },
+        keywords: ["库存", "备件", "采购", "s,S", "策略", "供应商", "零件"]
+      }
+    },
+
+    /* ── work-order-tracking.html ── */
+    "work-order-tracking.html": {
+      "__default__": {
+        title: "工单跟踪",
+        summary: "工单6状态机：待处理→已分配→进行中→待验收→已完成→已关闭",
+        speech: {
+          what: "工单跟踪页面管理所有维护工单的完整生命周期——从创建、分配技师、开始维修、等待验收、确认完成到最终关闭，六个状态的流转都有实时跟踪和审计日志。",
+          why: "维护执行需要闭环管理——工单发出去了，有没有人处理？处理到哪一步了？卡在哪个环节？这些问题直接影响设备可用率。工单状态机确保每张工单都有明确的责任人和可追踪的进度。",
+          effect: "支持工单筛选（按状态/设备/技师/优先级）、批量操作、状态流转审计。与技师调度、备件库存、停机窗口三者联动——一个环节的变更会触发其他环节的更新。",
+          relation: "工单跟踪是系统'决策→执行'闭环的最后一公里。策略分析生成了工单，但只有真正执行并跟踪完成，预测性维护的价值才能落地。"
+        },
+        keywords: ["工单", "跟踪", "状态机", "维修", "执行", "审计"]
+      }
+    },
+
+    /* ── technicians.html ── */
+    "technicians.html": {
+      "__default__": {
+        title: "技师管理",
+        summary: "技师技能档案 + 负载均衡 + 成本感知降级 + 排班甘特图",
+        speech: {
+          what: "技师管理页面维护所有运维技师的技能档案——包括技能类型（电气/热力/机械）、等级（专家/高级/标准/初级）、当前负载、历史绩效。支持自动排班和技能匹配。",
+          why: "技师是企业最宝贵的运维资源。派错人（让电气专家去修热力故障）既浪费技能又可能修不好。系统根据故障模式自动匹配技师技能，同时考虑负载均衡和成本优化。",
+          effect: "成本感知降级机制可降低人工成本15%-25%——非关键设备由标准技师执行，仅在ALARM级别且特定故障模式时才分配专家。甘特图直观展示排班时间线和负载分布。",
+          relation: "技师管理与工单分配、备件库存、停机窗口四者联动。策略切换或工单变化时，技师排班自动重新计算。"
+        },
+        keywords: ["技师", "排班", "技能", "负载", "甘特图", "人力资源"]
+      }
+    },
+
+    /* ── sphere-demo.html ── */
+    "sphere-demo.html": {
+      "__default__": {
+        title: "鹰眼·3D设备球体",
+        summary: "Three.js手势交互3D球体——100台设备空间化展示 + 手势识别操控",
+        speech: {
+          what: "鹰眼3D球体是一个基于Three.js的交互式工业数字孪生演示。100台CNC设备以节点形式分布在3D球体表面，支持手势识别（握拳旋转、张手缩放、双指平移）和语音控制。实时映射设备健康状态到颜色和大小。",
+          why: "传统的2D矩阵虽然实用，但在演示场景中缺乏视觉冲击力。3D球体将设备监控升维为空间化交互体验——评委可以直观感受到'站在球体内部俯瞰全局'的沉浸感，是项目技术展示的亮点模块。",
+          effect: "基于MediaPipe手势识别（21关键点），支持5种手势。Three.js渲染管线优化至60fps。手势识别延迟<50ms，交互流畅自然。",
+          relation: "3D球体是项目的'演示层'——底层仍然是同一套健康评分和分析数据，但用更震撼的视觉形式呈现。适合展厅大屏、路演演示、投资人展示等场景。"
+        },
+        keywords: ["3D", "球体", "手势", "Three.js", "数字孪生", "交互", "演示"]
+      }
     }
   };
 
   /* ═══════════════════════════════════════════════════════════════════
      Context Extractor
      ═══════════════════════════════════════════════════════════════════ */
+  /* ── URL route → page filename mapping ── */
+  const PAGE_MAP = {
+    '': 'home.html',
+    'home': 'home.html',
+    'dashboard': 'index.html',
+    'chat': 'chat.html',
+    'device-grid': 'device-grid.html',
+    'technical-overview': 'technical-overview.html',
+    'reports': 'reports.html',
+    'knowledge-base': 'knowledge-base.html',
+    'workflows': 'workflows.html',
+    'inventory': 'inventory.html',
+    'work-order-tracking': 'work-order-tracking.html',
+    'technicians': 'technicians.html',
+    'sphere-demo': 'sphere-demo.html',
+  };
+
   function extractContext() {
     const path = window.location.pathname;
-    const page = path.split('/').pop() || 'home.html';
-    const ctx = { page, sections: [], viewportHeading: null, hashTarget: null };
+    const route = path.split('/').pop() || '';
+    const page = PAGE_MAP[route] || 'home.html';
+    const ctx = { page, route, sections: [], viewportHeading: null, hashTarget: null };
 
     // 1. URL hash
     const hash = window.location.hash;
@@ -413,6 +536,8 @@
       this.currentSpeech = null;
       this.currentContext = null;
       this.aiTextBuffer = '';
+      this._healthData = null;       // cached health summary from /api/health-summary
+      this._healthDataPromise = null; // inflight fetch promise
       this._dragging = false;
       this._dragStartX = 0;
       this._dragStartY = 0;
@@ -421,6 +546,7 @@
       this._buildDOM();
       this._restorePosition();
       this._bindEvents();
+      this._fetchHealthData();       // pre-fetch real health data on init
     }
 
     /* ── Build DOM ── */
@@ -588,8 +714,20 @@
       try {
         const left = localStorage.getItem('assistant-orb-left');
         const top = localStorage.getItem('assistant-orb-top');
-        if (left) this.orbContainer.style.left = left;
-        if (top) this.orbContainer.style.top = top;
+        if (left) {
+          const px = parseFloat(left);
+          if (!isNaN(px)) {
+            const clamped = Math.max(8, Math.min(window.innerWidth - 64, px));
+            this.orbContainer.style.left = clamped + 'px';
+          }
+        }
+        if (top) {
+          const py = parseFloat(top);
+          if (!isNaN(py)) {
+            const clamped = Math.max(8, Math.min(window.innerHeight - 64, py));
+            this.orbContainer.style.top = clamped + 'px';
+          }
+        }
       } catch (e) { /* ignore */ }
     }
 
@@ -619,7 +757,7 @@
         // User asked a question with no direct match → AI fallback
         await this._renderAIFallback(question);
       } else if (this.currentSpeech) {
-        this._renderSpeech(this.currentSpeech);
+        await this._renderSpeech(this.currentSpeech);
       } else {
         this._renderEmpty();
       }
@@ -657,13 +795,73 @@
         'index.html': '仪表盘',
         'chat.html': 'AI Copilot',
         'technical-overview.html': '技术架构',
-        'device-grid.html': '设备矩阵'
+        'device-grid.html': '设备矩阵',
+        'reports.html': '报告中心',
+        'knowledge-base.html': '知识库',
+        'workflows.html': '工作流',
+        'inventory.html': '库存管理',
+        'work-order-tracking.html': '工单跟踪',
+        'technicians.html': '技师管理',
+        'sphere-demo.html': '鹰眼球体'
       };
       return map[page] || page || '当前页面';
     }
 
+    /* ── Fetch real health data from backend ── */
+    async _fetchHealthData() {
+      if (this._healthDataPromise) return this._healthDataPromise;
+      this._healthDataPromise = fetch('/api/health-summary')
+        .then(r => r.json())
+        .then(data => {
+          if (data && !data.error) {
+            this._healthData = data;
+          }
+          return data;
+        })
+        .catch(e => {
+          console.warn('[Assistant] Failed to fetch health summary, using fallback', e);
+          return null;
+        });
+      return this._healthDataPromise;
+    }
+
+    /* ── Apply health data template substitution ── */
+    _applyHealthData(text) {
+      if (!this._healthData || !text) return text;
+      const d = this._healthData;
+      let result = text;
+      // Health distribution
+      result = result.replace(/\$\{meanScore\}/g, d.mean_score);
+      result = result.replace(/\$\{criticalCount\}/g, d.critical_count);
+      result = result.replace(/\$\{criticalPct\}/g, d.critical_pct);
+      result = result.replace(/\$\{degradingCount\}/g, d.degrading_count);
+      result = result.replace(/\$\{degradingPct\}/g, d.degrading_pct);
+      result = result.replace(/\$\{warningCount\}/g, d.warning_count);
+      result = result.replace(/\$\{healthyCount\}/g, d.healthy_count);
+      // Score bins
+      if (d.score_bins) {
+        result = result.replace(/\$\{scoreUnder30\}/g, d.score_bins['<30']);
+        result = result.replace(/\$\{score30to40\}/g, d.score_bins['30-40']);
+        result = result.replace(/\$\{score40to60\}/g, d.score_bins['40-60']);
+        result = result.replace(/\$\{score60to80\}/g, d.score_bins['60-80']);
+        result = result.replace(/\$\{score80to100\}/g, d.score_bins['80-100']);
+        result = result.replace(/\$\{scoreAbove60\}/g, (d.score_bins['60-80'] || 0) + (d.score_bins['80-100'] || 0));
+        result = result.replace(/\$\{scoreAbove80\}/g, d.score_bins['80-100'] || 0);
+      }
+      // Top 5 lowest devices
+      if (d.top5_lowest) {
+        const top5 = d.top5_lowest.map(dev => dev.id + '(' + dev.score + ')').join('、');
+        result = result.replace(/\$\{top5Lowest\}/g, top5);
+      }
+      return result;
+    }
+
     /* ── Render matched speech ── */
-    _renderSpeech(speech) {
+    async _renderSpeech(speech) {
+      // Ensure health data is loaded before rendering templates
+      if (!this._healthData) {
+        await this._fetchHealthData();
+      }
       const sections = [
         { label: '📌 这个模块做什么？', key: 'what' },
         { label: '🎯 为什么重要？', key: 'why' },
@@ -682,9 +880,10 @@
       for (const sec of sections) {
         const text = speech.speech?.[sec.key];
         if (text) {
+          const resolved = this._applyHealthData(text);
           html += `<div class="assistant-speech-section">
             <div class="assistant-speech-label">${sec.label}</div>
-            <div class="assistant-speech-text">${text}</div>
+            <div class="assistant-speech-text">${resolved}</div>
           </div>`;
         }
       }
@@ -947,8 +1146,8 @@
       const submit = document.getElementById('assistant-ask-submit');
       const cancel = document.getElementById('assistant-ask-cancel');
 
-      cancel.addEventListener('click', () => {
-        if (this.currentSpeech) this._renderSpeech(this.currentSpeech);
+      cancel.addEventListener('click', async () => {
+        if (this.currentSpeech) await this._renderSpeech(this.currentSpeech);
         else this._renderEmpty();
       });
 
@@ -957,7 +1156,7 @@
         if (!q) return;
         this.currentSpeech = matchSpeech(this.currentContext, q);
         if (this.currentSpeech && this.currentSpeech.matchType !== 'default') {
-          this._renderSpeech(this.currentSpeech);
+          await this._renderSpeech(this.currentSpeech);
           this._showFooter('matched');
         } else {
           await this._renderAIFallback(q);
@@ -979,7 +1178,7 @@
       const q = '请解释当前页面模块';
       this.currentSpeech = matchSpeech(this.currentContext, q);
       if (this.currentSpeech && this.currentSpeech.matchType !== 'default') {
-        this._renderSpeech(this.currentSpeech);
+        await this._renderSpeech(this.currentSpeech);
         this._showFooter('matched');
       } else {
         await this._renderAIFallback(q);
