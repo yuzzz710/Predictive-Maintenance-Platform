@@ -1,11 +1,17 @@
-# CLAUDE.md — 智能设备预测性维护系统
+# CLAUDE.md
 
-> 苗圃杯·半决赛作品 v2.2 | 最后更新：2026-06-14
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+---
+
+> 苗圃杯·半决赛作品 v2.3 | 最后更新：2026-06-14
 >
 > 参考文档（按需 Read 加载）：
 > `CLAUDE_REF_架构.md`（项目概述·目录·前端·CSS·JS） |
 > `CLAUDE_REF_后端.md`（Gateway·Skills·数据文件） |
 > `CLAUDE_REF_算法.md`（算法·角色·降级·RAG·业务）
+>
+> **注意**：参考文档版本为 v2.1（2026-06-04），部分最新功能（如评委讲解助手、3D球体演示）仅在本文档中描述。
 
 ---
 
@@ -14,7 +20,7 @@
 工业智能运维解决方案 — 100台 CNC 数控机床（CNC_001~100），4传感器参数（V/A/T/Rotor），9种故障类型。
 3个系统角色（运维/管理/开发），3种维护策略（成本效率/生产效率/质量优先）。
 
-技术栈：Python数据分析 + FastAPI后端（8765端口）+ Vanilla JS/ECharts前端 + DeepSeek API。
+技术栈：Python 3.10+ + FastAPI后端（8765端口）+ Vanilla JS/ECharts前端 + DeepSeek API。
 
 ---
 
@@ -42,9 +48,9 @@
 | 流水线调度 | `agent-mcp架构/agent_orchestrator.py`（DAG + ThreadPool） |
 | 原始数据 | `原始数据集/`（4个脱敏CSV：LOG/SUMMARY/ASSEMBLY/TESTS） |
 | 仪表盘数据 | `web-dashboard/data/`（60+CSV/JSON，从Pipeline同步） |
-| 环境变量 | `.env`（DEEPSEEK_API_KEY/BASE_URL/MODEL） |
-| 前端页面 | `web-dashboard/*.html`（home/index/chat/technical-overview/reports/role-gate 等12个页面） |
-| 共享模块 | `web-dashboard/shared/`（navbar/role-check/theme-init/role-switcher/demo-mode/assistant 等） |
+| 环境变量 | `.env`（DEEPSEEK_API_KEY / DEEPSEEK_BASE_URL / DEEPSEEK_MODEL；SMTP_HOST/PORT/USER/PASSWORD/FROM/NOTIFY_ESCALATION_EMAIL） |
+| 前端页面 | `web-dashboard/*.html`（home/index/chat/technical-overview/reports/role-gate/knowledge-base/work-order-tracking/workflows/inventory/technicians/device-grid/sphere-demo 共13个页面） |
+| 共享模块 | `web-dashboard/shared/`（navbar/role-check/theme-init/role-switcher/demo-mode/assistant/design-tokens/sidebar/device-grid-component 共10个） |
 | Gateway后端 | `web-dashboard/gateway/`（tools/prompts/deepseek_client/routes/kb_routes 等） |
 | Skills | `skills/`（5个技能包：data_prep→stat_inference/ml_inference→diagnosis→decision） |
 
@@ -53,6 +59,11 @@
 ## 常用命令
 
 ```bash
+# 安装依赖
+pip install -r requirements.txt              # 完整生产环境
+pip install -r requirements-dev.txt          # + pytest/jupyter（开发用）
+pip install -r requirements-minimal.txt      # 无torch/xgboost/fastapi
+
 # 启动Web平台
 cd web-dashboard; python app.py
 
@@ -71,8 +82,13 @@ cd web-dashboard; python scripts/benchmark_algorithms.py
 # KDE分布参数计算（~2秒）
 cd web-dashboard; python scripts/compute_kde_params.py
 
-# 运行测试
+# 运行测试（需先运行流水线到 outputs_test/）
 pytest tests/ -v
+pytest tests/test_data_integrity.py -v       # 单文件
+pytest tests/ -k "shap" -v                   # 按关键词筛选
+
+# 独立报告流测试（无需pytest）
+python test_report_pipeline.py
 ```
 
 ---

@@ -1795,9 +1795,12 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- METHODOLOGY: 时序回测技术原理与数据解析 -->
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <div class="chart-card stagger-in full-width" style="background:var(--bg-card-alt);border-left:2px solid var(--accent-purple);margin-bottom:14px;">
-      <div class="chart-title" style="display:flex;align-items:center;gap:8px;">🔬 技术原理与数据解析 <span style="font-size:10px;color:var(--text-muted);font-weight:400;">Methodology &amp; Interpretation Guide</span></div>
+    <div class="chart-card stagger-in full-width" style="background:var(--bg-card-alt);border-left:2px solid var(--accent-purple);margin-bottom:0;">
+      <div class="chart-title" style="cursor:pointer;display:flex;align-items:center;gap:8px;" onclick="var b=document.getElementById('s5-methodology');var a=this.querySelector('.arrow');var e=b.style.display==='none';b.style.display=e?'block':'none';a.textContent=e?'▼':'▶';if(e){setTimeout(function(){['chart-youdens','chart-fault-overlap'].forEach(function(id){var c=CHARTS[id];if(c)c.resize();});},100);}">
+        <span class="arrow" style="font-size:10px;">▶</span> 🔬 技术原理与数据解析 <span style="font-size:10px;color:var(--text-muted);font-weight:400;">Methodology &amp; Interpretation Guide（点击展开）</span>
+      </div>
     </div>
+    <div id="s5-methodology" style="display:none;">
 
     <!-- 三层架构说明 -->
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px;">
@@ -1832,23 +1835,24 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
     </div>
 
     <!-- 核心指标解读 -->
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:18px;">
+    <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:14px;margin-bottom:18px;">
       <div style="padding:14px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);">
-        <div style="font-weight:700;color:var(--text-primary);font-size:12px;margin-bottom:10px;">📐 关键指标定义</div>
+        <div style="font-weight:700;color:var(--text-primary);font-size:12px;margin-bottom:10px;">📐 关键指标定义 <span style="font-size:10px;color:var(--text-muted);font-weight:400;">对应上方6项KPI</span></div>
         <div style="font-size:11px;color:var(--text-secondary);line-height:2.0;">
-          <div><b style="color:var(--accent-cyan)">平均预警提前时间</b> = Σ(故障发作步 − 首次告警步) / 检出事件数 × 14 分钟</div>
-          <div style="margin-top:4px;"><b style="color:var(--accent-red)">漏报率</b> = 回溯窗口内完全无告警的故障发作数 / 总故障发作数</div>
-          <div style="margin-top:4px;"><b style="color:var(--accent-green)">检出率</b> = 1 − 漏报率 = 被成功预警的事件占比</div>
-          <div style="margin-top:4px;"><b style="color:var(--accent-amber)">步进收敛步</b> = 滚动 F1 标准差 &lt; 0.05 的最早步数（基线μ/σ 估计稳定）</div>
-          <div style="margin-top:4px;"><b style="color:var(--accent-blue)">故障发作事件</b> = 每台设备从正常→故障的每一次转换（≥2步正常前置）</div>
+          <div>① <b style="color:var(--accent-cyan)">平均预警提前</b> = Σ(故障发作步 − 首次告警步) / 检出事件数 × 14min</div>
+          <div style="margin-top:2px;">② <b style="color:var(--accent-blue)">中位预警提前</b> = 所有检出事件提前量的中位数</div>
+          <div style="margin-top:2px;">③ <b style="color:var(--accent-red)">漏报率</b> = 回溯窗口内完全无告警的故障事件 / 总故障事件</div>
+          <div style="margin-top:2px;">④ <b style="color:var(--accent-green)">检出率</b> = 1 − 漏报率</div>
+          <div style="margin-top:2px;">⑤ <b style="color:var(--accent-amber)">总故障事件</b> = 每台设备"正常→故障"的转换次数（≥2步正常前置）</div>
+          <div style="margin-top:2px;">⑥ <b style="color:var(--text-primary)">步进收敛步</b> = 滚动 F1 标准差 &lt; 0.05 的最早步数</div>
         </div>
       </div>
       <div style="padding:14px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);">
-        <div style="font-weight:700;color:var(--text-primary);font-size:12px;margin-bottom:10px;">🔍 三个告警阈值的含义</div>
-        <div style="font-size:11px;color:var(--text-secondary);line-height:2.0;">
-          <div><b style="color:var(--accent-green)">Watch (z &gt; 1.5)</b>：最敏感 — 几乎能检出所有可检测事件，但大量"预警"实际是同期伴随现象，平均提前量仅 24 分钟</div>
-          <div style="margin-top:6px;"><b style="color:var(--accent-amber)">Warning (z &gt; 2.0)</b>：平衡点 — 推荐运行阈值。检出率 43%，检出的事件平均提前 37 分钟</div>
-          <div style="margin-top:6px;"><b style="color:var(--accent-red)">Alarm (z &gt; 2.5)</b>：最保守 — 仅检出 17% 事件，但检出的事件平均提前 49 分钟。极端异常是"脉冲型"的，一旦出现通常离故障较远</div>
+        <div style="font-weight:700;color:var(--text-primary);font-size:12px;margin-bottom:10px;">🔍 三层告警阈值 &amp; 检出率-提前量权衡</div>
+        <div style="font-size:11px;color:var(--text-secondary);line-height:1.9;">
+          <div><b style="color:var(--accent-green)">Watch (z&gt;1.5)</b> · 检出率 80% · 平均提前 24min · FPR 58.6%<br><span style="color:var(--text-muted);">最敏感，但大量告警紧邻故障，提前量被短距离检出拉低</span></div>
+          <div style="margin-top:8px;"><b style="color:var(--accent-amber)">Warning (z&gt;2.0)</b> · 检出率 43% · 平均提前 37min · FPR 19.7%<br><span style="color:var(--text-muted);">⭐ 推荐运行阈值，灵敏与误报的最佳平衡</span></div>
+          <div style="margin-top:8px;"><b style="color:var(--accent-red)">Alarm (z&gt;2.5)</b> · 检出率 17% · 平均提前 49min · FPR 2.7%<br><span style="color:var(--text-muted);">最保守，仅命中"脉冲型"极端异常——稀少但离故障远</span></div>
         </div>
       </div>
     </div>
@@ -1857,16 +1861,8 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
     <div style="padding:16px 20px;background:var(--bg-card);border:1px solid var(--border-accent);border-radius:var(--radius);border-left:3px solid var(--accent-cyan);">
       <div style="font-weight:700;color:var(--text-primary);font-size:13px;margin-bottom:10px;">💡 核心发现：检出率与提前量的不可兼得 (Sensitivity–Lead Time Tradeoff)</div>
       <div style="font-size:11px;color:var(--text-secondary);line-height:1.9;">
-        <p style="margin:0 0 8px 0;">回测数据揭示了一个<b style="color:var(--text-primary);">反直觉但符合统计原理</b>的规律：<b>告警阈值越严格，检出事件的平均预警提前量反而越长。</b></p>
-        <p style="margin:0 0 8px 0;">这不是算法缺陷，而是<b style="color:var(--text-primary);">幸存者偏差在时序检测中的体现</b>：</p>
-        <div style="padding-left:16px;border-left:1px solid var(--border-accent);margin:8px 0;">
-          <div>• Alarm (z &gt; 2.5) 太稀少——仅 17.2% 的读数达到此级别。大多数故障发作的回溯窗口里完全没有 Alarm。</div>
-          <div>• 但 Alarm 是"脉冲型"极端异常——当它出现时，往往位于参数剧烈波动的起始阶段，距故障发作较远。</div>
-          <div>• 结果：<b>少数被检出的事件有长 lead time</b> → 均值被拉高。大量事件被漏报 → 检出率很低。</div>
-          <div>• Watch (z &gt; 1.5) 非常常见——58.6% 读数触发。几乎每个窗口都有 Watch。</div>
-          <div>• 但 Watch 均匀分布在窗口各处，包括紧邻故障的位置。大量「0-1 步」检出拉低了均值。</div>
-        </div>
-        <p style="margin:8px 0 0 0;">这直接支撑了项目的核心论点：<b style="color:var(--accent-cyan);">4 个电气参数无法同时实现高检出率和高提前量。要突破这个瓶颈，必须引入振动、电流频谱等真正有预测能力的传感器。</b></p>
+        <p style="margin:0 0 8px 0;"><b style="color:var(--text-primary);">告警阈值越严格，检出事件的平均预警提前量反而越长。</b>这不是算法缺陷，而是<b style="color:var(--text-primary);">幸存者偏差</b>：阈值越严 → 触发越少 → 但触发的基本都是"脉冲型极端异常" → 恰好出现在参数剧烈波动的起始阶段、距故障较远 → 均值被拉高。反之，宽松阈值几乎每个窗口都触发，大量紧邻故障的短距离检出拉低了均值。</p>
+        <p style="margin:0 0 0 0;">这直接支撑项目的核心论点：<b style="color:var(--accent-cyan);">4 个电气参数无法同时做到高检出率 + 高提前量。要突破这个瓶颈，必须引入振动、电流频谱等真正有预测能力的传感器。</b></p>
       </div>
     </div>
 
@@ -1874,16 +1870,17 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
     <div style="margin-top:14px;padding:14px 18px;background:var(--bg-card-alt);border:1px solid var(--border);border-radius:var(--radius);">
       <div style="font-weight:700;color:var(--accent-amber);font-size:11px;margin-bottom:8px;">⚙ 工程部署建议</div>
       <div style="font-size:11px;color:var(--text-secondary);line-height:1.8;">
-        <b>生产环境推荐</b>：使用 <b style="color:var(--accent-amber);">Warning (z &gt; 2.0)</b> 作为默认阈值 —— 检出率 43%、平均提前 37 分钟、FPR 19.7%，在灵敏度和误报率之间取得最佳平衡。<br>
-        <b>高价值设备</b>：可切换到 <b style="color:var(--accent-green);">Watch (z &gt; 1.5)</b> —— 检出率 80%，宁可多查不可漏过。<br>
-        <b>数据需求</b>：步进回测证明基线在第 14-18 步收敛，即需要至少 ~4 小时（18 步 × 14 分钟）的正常运行数据才能建立可靠的逐设备基线。
+        <b>默认阈值</b>：<b style="color:var(--accent-amber);">Warning (z&gt;2.0)</b> — 检出43% · 提前37min · FPR 19.7%，灵敏与误报的最佳平衡，需≥4小时正常数据建基线<br>
+        <b>高价值设备</b>：切 <b style="color:var(--accent-green);">Watch (z&gt;1.5)</b> — 检出80%，宁可多查不可漏过
       </div>
+    </div>
     </div>
   </div>
 
 
   <!-- ============ SECTION 6: 智能维护决策中心 ============ -->
   <div class="section" id="sec6">
+    <!-- ① 决策入口 -->
     <div class="role-manager">
     <div class="chart-row">
       <div class="chart-card stagger-in full-width" style="background:var(--bg-card-alt);border-left:2px solid var(--accent-cyan);">
@@ -1936,6 +1933,8 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
       </div>
     </div>
 
+    </div>
+
     <!-- AI 快速解读 -->
     <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;
       background:var(--bg-card);border:1px solid var(--border);
@@ -1953,9 +1952,14 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
       </a>
     </div>
 
+
+    <!-- ② 全局概览 -->
     <!-- ★ 预算与ROI概览 -->
     <div class="chart-card stagger-in" style="margin-bottom:14px;">
-      <div class="chart-title" style="font-weight:700;">预算与ROI概览 · 多目标运筹优化</div>
+      <div class="chart-title" style="cursor:pointer;font-weight:700;" onclick="var b=document.getElementById('s7-roi-body');var a=this.querySelector('.arrow');var e=b.style.display==='none';b.style.display=e?'block':'none';a.textContent=e?'▼':'▶';if(e){setTimeout(function(){['chart-roi-efficiency','chart-roi-strategy'].forEach(function(id){var c=CHARTS[id];if(c)c.resize();});},100);}">
+        <span class="arrow" style="font-size:10px;">▼</span> 预算与ROI概览 · 多目标运筹优化
+      </div>
+      <div id="s7-roi-body">
       <div id="s7-roi-stats" style="display:flex;gap:14px;margin:10px 0 14px 0;flex-wrap:wrap;">
         <div class="s7-roi-card" style="flex:1;min-width:130px;padding:10px 14px;background:var(--bg-card-alt);border-radius:var(--radius);text-align:center;"><div style="font-size:20px;font-weight:700;color:var(--accent-green);" id="s7-roi-savings">--</div><div style="font-size:10px;color:var(--text-muted);">预期节省总额</div></div>
         <div class="s7-roi-card" style="flex:1;min-width:130px;padding:10px 14px;background:var(--bg-card-alt);border-radius:var(--radius);text-align:center;"><div style="font-size:20px;font-weight:700;color:var(--accent-cyan);" id="s7-roi-cost">--</div><div style="font-size:10px;color:var(--text-muted);">预防性维护总成本</div></div>
@@ -1966,8 +1970,24 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
         <div class="chart-card stagger-in"><div class="chart-title">工单ROI排序 · 节省/投入比</div><div class="chart-box" id="chart-roi-efficiency"></div></div>
         <div class="chart-card stagger-in"><div class="chart-title">策略ROI对比 · 总成本与工单数</div><div class="chart-box" id="chart-roi-strategy"></div></div>
       </div>
+      </div>
     </div>
 
+
+    <div class="stats-row" id="s7-stats"></div>
+
+    <!-- ③ 执行清单 -->
+    <div class="chart-card stagger-in" style="margin-bottom:14px;">
+      <div class="chart-title">重点关注工单 · P1 紧急</div>
+      <div class="work-order-grid" id="s7-p1-cards"></div>
+    </div>
+
+    <div class="chart-row">
+      <div class="chart-card stagger-in full-width"><div class="chart-title">工业级维护工单 · 优先队列 (Top 15)</div><div id="s7-order-table"></div></div>
+    </div>
+
+    <!-- ④ 运筹优化 -->
+    <div class="role-manager">
     <!-- ★ 运筹优化：工单选择背包模型对比（NEW - OR Optimization） -->
     <div class="chart-card stagger-in role-manager" style="margin-bottom:14px;border-left:3px solid var(--accent-purple);">
       <div class="chart-title" style="display:flex;align-items:center;gap:8px;">
@@ -2029,6 +2049,7 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
       </div>
     </div>
 
+
     <!-- ★ 运筹优化：优化前后四维对比柱状图 -->
     <div class="chart-card stagger-in role-manager" style="margin-bottom:14px;border-left:3px solid var(--accent-green);">
       <div class="chart-title" style="display:flex;align-items:center;gap:8px;">
@@ -2042,6 +2063,7 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
         <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--accent-cyan);margin-right:4px;"></span>运筹优化（优化后）</span>
       </div>
     </div>
+
 
     <!-- ★ 运筹优化：维护排程甘特图（NEW - OR Scheduling） -->
     <div class="chart-card stagger-in role-manager" style="margin-bottom:14px;border-left:3px solid var(--accent-cyan);">
@@ -2097,79 +2119,51 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
       <div class="chart-box" id="chart-sched-load" style="height:220px;"></div>
     </div>
 
-    <!-- ★ 方法论依据（可折叠） -->
-    <div class="chart-card stagger-in" style="margin-bottom:14px;">
-      <div class="chart-title" style="cursor:pointer;display:flex;align-items:center;gap:8px;" onclick="var b=document.getElementById('s7-methodology');var a=this.querySelector('.arrow');var expanding=b.style.display==='none';b.style.display=expanding?'block':'none';a.textContent=expanding?'▼':'▶';if(expanding){setTimeout(function(){['chart-youdens','chart-fault-overlap'].forEach(function(id){var c=CHARTS[id];if(c)c.resize();});},100);}">
-        <span class="arrow" style="font-size:10px;">▶</span> 决策引擎方法论依据 · 传感器信息瓶颈证据（点击展开）
+
+<!-- ★ 运筹优化：三策略帕累托前沿三维散点图（NEW - Pareto Frontier） -->
+    <div class="chart-card stagger-in role-manager" style="margin-bottom:14px;border-left:3px solid var(--accent-purple);">
+      <div class="chart-title" style="display:flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;"><circle cx="4" cy="11" r="2.5" stroke="var(--accent-green)" stroke-width="1.2" fill="none"/><circle cx="11" cy="5" r="2.5" stroke="var(--accent-blue)" stroke-width="1.2" fill="none"/><circle cx="8" cy="9" r="2.5" stroke="var(--accent-purple)" stroke-width="1.2" fill="none"/></svg>
+        帕累托前沿 · 三目标多策略优化
+        <span style="font-size:10px;color:var(--accent-purple);font-weight:400;">ε-约束法 — 成本 vs 停机 vs 质量风险 三维帕累托前沿</span>
       </div>
-      <div id="s7-methodology" style="display:none;padding-top:10px;">
-        <div class="chart-row">
-          <div class="chart-card stagger-in"><div class="chart-title">Youden's J · 单参数判别力</div><div class="chart-box short" id="chart-youdens"></div></div>
-          <div class="chart-card stagger-in"><div class="chart-title">故障嵌入正常范围 · 传感器信息缺口证据</div><div class="chart-box short" id="chart-fault-overlap"></div></div>
-        </div>
-        <div style="padding:8px 0;font-size:12px;line-height:1.9;color:var(--text-secondary);margin-top:10px;">
-          <div style="margin-bottom:14px;padding:10px 14px;background:var(--bg-card-alt);border-left:3px solid var(--accent-purple);border-radius:0 var(--radius) var(--radius) 0;">
-            <div style="font-weight:600;color:var(--accent-purple);margin-bottom:8px;">四层决策引擎架构</div>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:11px;">
-              <div><span style="color:var(--text-primary);font-weight:600;">Layer 1 · 融合层</span><br>多信号加权融合<br>统计 40% + ML 25%<br>+ 成本风险 25% + 趋势 10%</div>
-              <div><span style="color:var(--text-primary);font-weight:600;">Layer 2 · 诊断层</span><br>异常模式识别<br>电压漂移 / 热累积<br>功率异常 / 综合退化</div>
-              <div><span style="color:var(--text-primary);font-weight:600;">Layer 3 · 决策层</span><br>告警等级 → 行动类型<br>策略可配置阈值</div>
-              <div><span style="color:var(--text-primary);font-weight:600;">Layer 4 · 工业输出层</span><br>技术员指派 + 备件规划<br>+ 停机优化 + 验收标准</div>
-            </div>
-          </div>
-          <div style="padding:10px 14px;background:var(--bg-card-alt);border-left:3px solid var(--accent-amber);border-radius:0 var(--radius) var(--radius) 0;">
-            <div style="font-weight:600;color:var(--accent-amber);margin-bottom:6px;">排名核心公式（可通过策略选择器调整权重）</div>
-            <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-primary);margin-bottom:6px;">
-              风险分数 = <span style="color:var(--accent-purple);">w₁ × z_composite_score</span> + <span style="color:var(--accent-blue);">w₂ × ml_fault_density</span> + <span style="color:var(--accent-amber);">w₃ × cost_at_risk_score</span> + <span style="color:var(--accent-green);">w₄ × trend_drift</span>
-            </div>
-            <div style="font-size:10px;color:var(--text-muted);">
-              权重依据：统计基线（z-score）为当前数据下最有区分力信号（P=84%, FPR=20%），获最高权重；ML信号受限于4参数信息瓶颈（Youden's J < 0.08），权重受限；成本风险稳定可靠；趋势信号最弱但保留用于捕捉长期渐变。具体权重值因所选策略而异。
-            </div>
-          </div>
-        </div>
-        <div class="gallery-section" id="gallery-sec6-method">
-          <div class="gallery-toggle" onclick="toggleGallery('sec6-method-gal')"><span class="arrow">▶</span> 展开方法论证据图库 (7张)</div>
-          <div id="sec6-method-gal" style="display:none"></div>
-        </div>
+      <div class="chart-box" id="chart-pareto-3d" style="height:800px;min-height:620px;"></div>
+      <div id="s7-pareto-legend" style="display:flex;gap:24px;padding:8px 0;font-size:10px;color:var(--text-secondary);border-top:1px solid var(--border);">
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3fb950;margin-right:4px;"></span>成本效率</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#4d94ff;margin-right:4px;"></span>生产效率</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#a371f7;margin-right:4px;"></span>质量优先</span>
+        <span style="margin-left:auto;color:var(--text-muted);">灰色点 = 帕累托前沿采样 | 彩色球 = 三个策略三维定位 | 自动旋转</span>
       </div>
+  </div>
+
+
+    <!-- ★ 运筹优化：帕累托边际成本分析面板 -->
+  <div class="chart-card stagger-in role-manager" style="margin-bottom:14px;border-left:3px solid var(--accent-purple);">
+    <div class="chart-title" style="display:flex;align-items:center;gap:8px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-purple)" stroke-width="1.8"><line x1="3" y1="3" x2="21" y2="21"/><polyline points="9 3 21 3 21 15"/><polyline points="3 9 3 21 15 21"/></svg>
+      边际成本路径分析 &middot; 策略切换的代价
+      <span style="font-size:10px;color:var(--accent-purple);font-weight:400;">成本&rarr;效率&rarr;质量，每步多花多少换多少停机减少</span>
+    </div>
+    <div class="chart-box" id="chart-pareto-marginal" style="height:240px;"></div>
+    <div id="s7-marginal-annotation" style="font-size:11px;color:var(--text-secondary);padding:6px 0;border-top:1px solid var(--border);text-align:center;line-height:1.6;">
+      成本效率 &rarr; 生产效率: <b style="color:var(--accent-amber);">+5K</b> 换 <b style="color:var(--accent-green);">-30h</b> 停机 (<b>.8K/h</b>) &emsp;|&emsp;
+      生产效率 &rarr; 质量优先: <b style="color:var(--accent-amber);">+0K</b> 换 <b style="color:var(--accent-green);">-25h</b> 停机 (<b>.8K/h</b>)
+    </div>
+  </div>
+
     </div>
 
-    <!-- ★ 质量-成本传导量化分析（可折叠） -->
-    <div class="chart-card stagger-in" style="margin-bottom:14px;">
-      <div class="chart-title" style="cursor:pointer;display:flex;align-items:center;gap:8px;" onclick="var b=document.getElementById('s7-quality-cost');var a=this.querySelector('.arrow');var expanding=b.style.display==='none';b.style.display=expanding?'block':'none';a.textContent=expanding?'▼':'▶';if(expanding){setTimeout(function(){['chart-qual-corr','chart-qual-gradient','chart-qual-top10'].forEach(function(id){var c=CHARTS[id];if(c)c.resize();});},100);}">
-        <span class="arrow" style="font-size:10px;">▶</span> 质量-成本传导量化 · 参数异常→质量缺陷→成本损失（点击展开）
-      </div>
-      <div id="s7-quality-cost" style="display:none;padding-top:10px;">
-        <div class="stats-row" id="s7-qual-stats"></div>
-        <div class="chart-row">
-          <div class="chart-card stagger-in"><div class="chart-title">参数异常→质量缺陷 · Spearman 相关系数（15台实测）</div><div class="chart-box short" id="chart-qual-corr"></div></div>
-          <div class="chart-card stagger-in"><div class="chart-title">异常程度→成本风险梯度（100台分档）</div><div class="chart-box short" id="chart-qual-gradient"></div></div>
-        </div>
-        <div class="chart-row cols-1">
-          <div class="chart-card stagger-in"><div class="chart-title">年化质量成本风险 Top 10 · 实测 / 估算</div><div class="chart-box short" id="chart-qual-top10"></div></div>
-        </div>
-        <div id="s7-qual-footnote" style="padding:8px 12px;margin-top:10px;background:var(--bg-card-alt);border-left:3px solid var(--accent-amber);border-radius:0 var(--radius) var(--radius) 0;font-size:10px;color:var(--text-muted);line-height:1.7;">
-          质量缺陷率基于15台有产品数据的设备实测，85台为基于z-score的工程估算（±30%）。成本风险 = 日产量 × 单件成本 × 故障概率，覆盖全部100台设备。关联参数排序见上方统计卡，最弱参数为转速（ρ≈0），与"转速零诊断价值"的基线结论一致。
-        </div>
-      </div>
-    </div>
-
-    <div class="chart-card stagger-in" style="margin-bottom:14px;">
-      <div class="chart-title">重点关注工单 · P1 紧急</div>
-      <div class="work-order-grid" id="s7-p1-cards"></div>
-    </div>
-    <div class="stats-row" id="s7-stats"></div>
-    <div class="chart-row">
-      <div class="chart-card stagger-in full-width"><div class="chart-title">工业级维护工单 · 优先队列 (Top 15)</div><div id="s7-order-table"></div></div>
-    </div>
+    <!-- ⑤ 支撑分析 -->
     <div class="chart-row">
       <div class="chart-card stagger-in"><div class="chart-title">异常模式分布</div><div class="chart-box short" id="chart-anomaly-donut"></div></div>
       <div class="chart-card stagger-in"><div class="chart-title">三策略对比 · 工单数量 &amp; 平均成本</div><div class="chart-box short" id="chart-strategy-comp"></div></div>
     </div>
+
     <div class="chart-row">
       <div class="chart-card stagger-in"><div class="chart-title">技术员类型分布</div><div class="chart-box short" id="chart-tech-dist"></div></div>
       <div class="chart-card stagger-in"><div class="chart-title">工单分布 · SLA 窗口利用率</div><div class="chart-box short" id="chart-sla-gauge"></div></div>
     </div>
+
     <div class="chart-row cols-1">
       <div class="chart-card stagger-in"><div class="chart-title">备件需求热力图 · 故障类型 × 零件</div><div id="s7-parts-heatmap"></div></div>
     </div>
@@ -2241,7 +2235,7 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
           价格基准：2025年工业MRO市场参考价（CNC设备适用）。主轴转子总成已从 $1,200 修正为 $2,800（市场均价 $2,500-$4,500）。所有价格含标准包装，不含关税及运费。
         </div>
       </div>
-    </div></div><!-- end role-manager (strategy/ROI) -->
+    </div><!-- end role-manager (strategy/ROI) -->
 
       <!-- 单设备告警归因卡片 -->
       <div class="chart-card stagger-in" id="shap-attribution-card" style="margin-top:14px;display:none">
@@ -2260,37 +2254,68 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
         <div id="shap-machine-checklist" style="padding:10px 14px;background:var(--bg-card-alt);border-radius:8px;margin-top:4px;font-size:12px;line-height:1.6;color:var(--text-muted);"></div>
       </div>
     
-<!-- ★ 运筹优化：三策略帕累托前沿三维散点图（NEW - Pareto Frontier） -->
-    <div class="chart-card stagger-in role-manager" style="margin-bottom:14px;border-left:3px solid var(--accent-purple);">
-      <div class="chart-title" style="display:flex;align-items:center;gap:8px;">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;"><circle cx="4" cy="11" r="2.5" stroke="var(--accent-green)" stroke-width="1.2" fill="none"/><circle cx="11" cy="5" r="2.5" stroke="var(--accent-blue)" stroke-width="1.2" fill="none"/><circle cx="8" cy="9" r="2.5" stroke="var(--accent-purple)" stroke-width="1.2" fill="none"/></svg>
-        帕累托前沿 · 三目标多策略优化
-        <span style="font-size:10px;color:var(--accent-purple);font-weight:400;">ε-约束法 — 成本 vs 停机 vs 质量风险 三维帕累托前沿</span>
+
+    <!-- ⑥ 方法论证据 -->
+    <!-- ★ 方法论依据（可折叠） -->
+    <div class="chart-card stagger-in" style="margin-bottom:14px;">
+      <div class="chart-title" style="cursor:pointer;display:flex;align-items:center;gap:8px;" onclick="var b=document.getElementById('s7-methodology');var a=this.querySelector('.arrow');var expanding=b.style.display==='none';b.style.display=expanding?'block':'none';a.textContent=expanding?'▼':'▶';if(expanding){setTimeout(function(){['chart-youdens','chart-fault-overlap'].forEach(function(id){var c=CHARTS[id];if(c)c.resize();});},100);}">
+        <span class="arrow" style="font-size:10px;">▶</span> 决策引擎方法论依据 · 传感器信息瓶颈证据（点击展开）
       </div>
-      <div class="chart-box" id="chart-pareto-3d" style="height:800px;min-height:620px;"></div>
-      <div id="s7-pareto-legend" style="display:flex;gap:24px;padding:8px 0;font-size:10px;color:var(--text-secondary);border-top:1px solid var(--border);">
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3fb950;margin-right:4px;"></span>成本效率</span>
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#4d94ff;margin-right:4px;"></span>生产效率</span>
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#a371f7;margin-right:4px;"></span>质量优先</span>
-        <span style="margin-left:auto;color:var(--text-muted);">灰色点 = 帕累托前沿采样 | 彩色球 = 三个策略三维定位 | 自动旋转</span>
+      <div id="s7-methodology" style="display:none;padding-top:10px;">
+        <div class="chart-row">
+          <div class="chart-card stagger-in"><div class="chart-title">Youden's J · 单参数判别力</div><div class="chart-box short" id="chart-youdens"></div></div>
+          <div class="chart-card stagger-in"><div class="chart-title">故障嵌入正常范围 · 传感器信息缺口证据</div><div class="chart-box short" id="chart-fault-overlap"></div></div>
+        </div>
+        <div style="padding:8px 0;font-size:12px;line-height:1.9;color:var(--text-secondary);margin-top:10px;">
+          <div style="margin-bottom:14px;padding:10px 14px;background:var(--bg-card-alt);border-left:3px solid var(--accent-purple);border-radius:0 var(--radius) var(--radius) 0;">
+            <div style="font-weight:600;color:var(--accent-purple);margin-bottom:8px;">四层决策引擎架构</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:11px;">
+              <div><span style="color:var(--text-primary);font-weight:600;">Layer 1 · 融合层</span><br>多信号加权融合<br>统计 40% + ML 25%<br>+ 成本风险 25% + 趋势 10%</div>
+              <div><span style="color:var(--text-primary);font-weight:600;">Layer 2 · 诊断层</span><br>异常模式识别<br>电压漂移 / 热累积<br>功率异常 / 综合退化</div>
+              <div><span style="color:var(--text-primary);font-weight:600;">Layer 3 · 决策层</span><br>告警等级 → 行动类型<br>策略可配置阈值</div>
+              <div><span style="color:var(--text-primary);font-weight:600;">Layer 4 · 工业输出层</span><br>技术员指派 + 备件规划<br>+ 停机优化 + 验收标准</div>
+            </div>
+          </div>
+          <div style="padding:10px 14px;background:var(--bg-card-alt);border-left:3px solid var(--accent-amber);border-radius:0 var(--radius) var(--radius) 0;">
+            <div style="font-weight:600;color:var(--accent-amber);margin-bottom:6px;">排名核心公式（可通过策略选择器调整权重）</div>
+            <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-primary);margin-bottom:6px;">
+              风险分数 = <span style="color:var(--accent-purple);">w₁ × z_composite_score</span> + <span style="color:var(--accent-blue);">w₂ × ml_fault_density</span> + <span style="color:var(--accent-amber);">w₃ × cost_at_risk_score</span> + <span style="color:var(--accent-green);">w₄ × trend_drift</span>
+            </div>
+            <div style="font-size:10px;color:var(--text-muted);">
+              权重依据：统计基线（z-score）为当前数据下最有区分力信号（P=84%, FPR=20%），获最高权重；ML信号受限于4参数信息瓶颈（Youden's J < 0.08），权重受限；成本风险稳定可靠；趋势信号最弱但保留用于捕捉长期渐变。具体权重值因所选策略而异。
+            </div>
+          </div>
+        </div>
+        <div class="gallery-section" id="gallery-sec6-method">
+          <div class="gallery-toggle" onclick="toggleGallery('sec6-method-gal')"><span class="arrow">▶</span> 展开方法论证据图库 (7张)</div>
+          <div id="sec6-method-gal" style="display:none"></div>
+        </div>
       </div>
+    </div>
+
+
+    <!-- ★ 质量-成本传导量化分析（可折叠） -->
+    <div class="chart-card stagger-in" style="margin-bottom:14px;">
+      <div class="chart-title" style="cursor:pointer;display:flex;align-items:center;gap:8px;" onclick="var b=document.getElementById('s7-quality-cost');var a=this.querySelector('.arrow');var expanding=b.style.display==='none';b.style.display=expanding?'block':'none';a.textContent=expanding?'▼':'▶';if(expanding){setTimeout(function(){['chart-qual-corr','chart-qual-gradient','chart-qual-top10'].forEach(function(id){var c=CHARTS[id];if(c)c.resize();});},100);}">
+        <span class="arrow" style="font-size:10px;">▶</span> 质量-成本传导量化 · 参数异常→质量缺陷→成本损失（点击展开）
+      </div>
+      <div id="s7-quality-cost" style="display:none;padding-top:10px;">
+        <div class="stats-row" id="s7-qual-stats"></div>
+        <div class="chart-row">
+          <div class="chart-card stagger-in"><div class="chart-title">参数异常→质量缺陷 · Spearman 相关系数（15台实测）</div><div class="chart-box short" id="chart-qual-corr"></div></div>
+          <div class="chart-card stagger-in"><div class="chart-title">异常程度→成本风险梯度（100台分档）</div><div class="chart-box short" id="chart-qual-gradient"></div></div>
+        </div>
+        <div class="chart-row cols-1">
+          <div class="chart-card stagger-in"><div class="chart-title">年化质量成本风险 Top 10 · 实测 / 估算</div><div class="chart-box short" id="chart-qual-top10"></div></div>
+        </div>
+        <div id="s7-qual-footnote" style="padding:8px 12px;margin-top:10px;background:var(--bg-card-alt);border-left:3px solid var(--accent-amber);border-radius:0 var(--radius) var(--radius) 0;font-size:10px;color:var(--text-muted);line-height:1.7;">
+          质量缺陷率基于15台有产品数据的设备实测，85台为基于z-score的工程估算（±30%）。成本风险 = 日产量 × 单件成本 × 故障概率，覆盖全部100台设备。关联参数排序见上方统计卡，最弱参数为转速（ρ≈0），与"转速零诊断价值"的基线结论一致。
+        </div>
+      </div>
+    </div>
+
   </div>
 
-    <!-- ★ 运筹优化：帕累托边际成本分析面板 -->
-  <div class="chart-card stagger-in role-manager" style="margin-bottom:14px;border-left:3px solid var(--accent-purple);">
-    <div class="chart-title" style="display:flex;align-items:center;gap:8px;">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-purple)" stroke-width="1.8"><line x1="3" y1="3" x2="21" y2="21"/><polyline points="9 3 21 3 21 15"/><polyline points="3 9 3 21 15 21"/></svg>
-      边际成本路径分析 &middot; 策略切换的代价
-      <span style="font-size:10px;color:var(--accent-purple);font-weight:400;">成本&rarr;效率&rarr;质量，每步多花多少换多少停机减少</span>
-    </div>
-    <div class="chart-box" id="chart-pareto-marginal" style="height:240px;"></div>
-    <div id="s7-marginal-annotation" style="font-size:11px;color:var(--text-secondary);padding:6px 0;border-top:1px solid var(--border);text-align:center;line-height:1.6;">
-      成本效率 &rarr; 生产效率: <b style="color:var(--accent-amber);">+5K</b> 换 <b style="color:var(--accent-green);">-30h</b> 停机 (<b>.8K/h</b>) &emsp;|&emsp;
-      生产效率 &rarr; 质量优先: <b style="color:var(--accent-amber);">+0K</b> 换 <b style="color:var(--accent-green);">-25h</b> 停机 (<b>.8K/h</b>)
-    </div>
-  </div>
-
-</div>
     <!-- ============ SECTION 7: 设备健康与感知升级 ============ -->
   <div class="section role-manager" id="sec7">
 
@@ -7044,7 +7069,9 @@ function showAlarmModal() {
     '<tbody>' + rows + '</tbody>' +
     '</table>';
 
-  document.getElementById('alarm-modal').classList.add('active');
+  var modal = document.getElementById('alarm-modal');
+  modal.classList.add('active');
+  modal.style.display = 'flex';
 }
 
 function showShutdownModal() {
@@ -7084,11 +7111,15 @@ function showShutdownModal() {
     '<tbody>' + rows + '</tbody>' +
     '</table>';
 
-  document.getElementById('alarm-modal').classList.add('active');
+  var modal2 = document.getElementById('alarm-modal');
+  modal2.classList.add('active');
+  modal2.style.display = 'flex';
 }
 
 function closeAlarmModal() {
-  document.getElementById('alarm-modal').classList.remove('active');
+  var modal3 = document.getElementById('alarm-modal');
+  modal3.classList.remove('active');
+  modal3.style.display = 'none';
 }
 
 // ── Work Order Detail Report Generation ──
