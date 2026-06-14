@@ -1,0 +1,182 @@
+<h2>设计系统：导航栏 &amp; 页面布局</h2>
+<p class="subtitle">第三节 — 侧边栏、页面骨架、弹窗。左浅色 / 右深色。</p>
+
+<div class="split">
+
+<!-- ===== LIGHT MODE LAYOUT ===== -->
+<div class="mockup">
+<div class="mockup-header">浅色 — 侧边栏 + 页面骨架</div>
+<div class="mockup-body" style="background:#f5f5f7;padding:0;border-radius:10px;overflow:hidden;font-family:-apple-system,system-ui,sans-serif;">
+
+  <!-- Sidebar mock -->
+  <div style="display:flex;min-height:420px;">
+    <!-- Sidebar -->
+    <div style="width:180px;background:rgba(250,250,250,0.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-right:0.5px solid rgba(0,0,0,0.06);padding:16px 10px;display:flex;flex-direction:column;gap:2px;flex-shrink:0;">
+      <!-- Logo -->
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px 14px;border-bottom:0.5px solid rgba(0,0,0,0.05);margin-bottom:6px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:#5ac8b8;box-shadow:0 0 6px rgba(90,200,184,0.3);"></div>
+        <span style="font-size:11px;font-weight:700;color:#1d1d1f;">智能运维</span>
+      </div>
+      <!-- Nav links -->
+      <a style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px;color:#6e6e73;text-decoration:none;font-weight:500;">● 首页</a>
+      <a style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px;color:#1d1d1f;text-decoration:none;font-weight:600;background:rgba(90,200,184,0.06);border-left:3px solid #5ac8b8;">■ 仪表盘</a>
+      <a style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px;color:#6e6e73;text-decoration:none;font-weight:500;">⚙ AI Copilot</a>
+      <a style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px;color:#6e6e73;text-decoration:none;font-weight:500;">📚 知识库</a>
+      <a style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px;color:#6e6e73;text-decoration:none;font-weight:500;">☰ 技术架构</a>
+      <a style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px;color:#6e6e73;text-decoration:none;font-weight:500;">📄 报告</a>
+
+      <div style="flex:1;"></div>
+      <!-- Bottom bar -->
+      <div style="border-top:0.5px solid rgba(0,0,0,0.05);padding-top:8px;display:flex;flex-direction:column;gap:4px;">
+        <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;font-size:10px;color:#6e6e73;border:0.5px solid rgba(0,0,0,0.06);cursor:pointer;">
+          <span style="width:5px;height:5px;border-radius:50%;background:#5ac8b8;"></span> 运维工程师
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;font-size:10px;color:#6e6e73;cursor:pointer;">
+          <span>☀</span> 浅色
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:9px;color:#aeaeb2;padding:4px 10px;">
+          <span style="width:5px;height:5px;border-radius:50%;background:#4cd964;"></span> v2.1
+        </div>
+      </div>
+    </div>
+
+    <!-- Main content area -->
+    <div style="flex:1;padding:16px;">
+      <!-- Header -->
+      <div style="background:rgba(255,255,255,0.6);backdrop-filter:blur(12px);border:0.5px solid rgba(0,0,0,0.05);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#1d1d1f;">◆ 设备健康状态总览</div>
+        </div>
+        <span style="background:rgba(90,200,184,0.08);color:#5ac8b8;padding:4px 10px;border-radius:8px;font-size:10px;font-weight:600;">执行视图</span>
+      </div>
+      <!-- Content cards -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="background:rgba(255,255,255,0.6);backdrop-filter:blur(12px);border:0.5px solid rgba(0,0,0,0.05);border-radius:12px;padding:12px;">
+          <div style="font-size:10px;color:#aeaeb2;">KPI 卡片</div>
+          <div style="font-size:20px;font-weight:700;color:#1d1d1f;">32</div>
+          <div style="font-size:10px;color:#6e6e73;">活跃工单</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.6);backdrop-filter:blur(12px);border:0.5px solid rgba(0,0,0,0.05);border-radius:12px;padding:12px;">
+          <div style="font-size:10px;color:#aeaeb2;">KPI 卡片</div>
+          <div style="font-size:20px;font-weight:700;color:#1d1d1f;">83.9%</div>
+          <div style="font-size:10px;color:#6e6e73;">告警精确率</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.6);backdrop-filter:blur(12px);border:0.5px solid rgba(0,0,0,0.05);border-radius:12px;padding:12px;">
+          <div style="font-size:10px;color:#aeaeb2;">KPI 卡片</div>
+          <div style="font-size:20px;font-weight:700;color:#1d1d1f;">10</div>
+          <div style="font-size:10px;color:#6e6e73;">高危设备</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.6);backdrop-filter:blur(12px);border:0.5px solid rgba(0,0,0,0.05);border-radius:12px;padding:12px;">
+          <div style="font-size:10px;color:#aeaeb2;">KPI 卡片</div>
+          <div style="font-size:20px;font-weight:700;color:#1d1d1f;">¥42K</div>
+          <div style="font-size:10px;color:#6e6e73;">预期月度节省</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===== DARK MODE LAYOUT ===== -->
+<div class="mockup">
+<div class="mockup-header">深色 — 侧边栏 + 页面骨架 + 弹窗</div>
+<div class="mockup-body" style="background:#1c1c1e;padding:0;border-radius:10px;overflow:hidden;font-family:-apple-system,system-ui,sans-serif;">
+
+  <!-- Sidebar mock -->
+  <div style="display:flex;min-height:420px;">
+    <!-- Sidebar -->
+    <div style="width:180px;background:rgba(28,28,30,0.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-right:0.5px solid rgba(255,255,255,0.08);padding:16px 10px;display:flex;flex-direction:column;gap:2px;flex-shrink:0;">
+      <!-- Logo -->
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px 14px;border-bottom:0.5px solid rgba(255,255,255,0.06);margin-bottom:6px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:#66d9c8;box-shadow:0 0 10px rgba(102,217,200,0.4);"></div>
+        <span style="font-size:11px;font-weight:700;color:#f5f5f7;">智能运维</span>
+      </div>
+      <!-- Nav links -->
+      <a style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px;color:#98989d;text-decoration:none;font-weight:500;">● 首页</a>
+      <a style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px;color:#f5f5f7;text-decoration:none;font-weight:600;background:rgba(102,217,200,0.06);border-left:3px solid #66d9c8;">■ 仪表盘</a>
+      <a style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px;color:#98989d;text-decoration:none;font-weight:500;">⚙ AI Copilot</a>
+      <a style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px;color:#98989d;text-decoration:none;font-weight:500;">📚 知识库</a>
+      <a style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px;color:#98989d;text-decoration:none;font-weight:500;">☰ 技术架构</a>
+      <a style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px;color:#98989d;text-decoration:none;font-weight:500;">📄 报告</a>
+
+      <div style="flex:1;"></div>
+      <!-- Bottom bar -->
+      <div style="border-top:0.5px solid rgba(255,255,255,0.06);padding-top:8px;display:flex;flex-direction:column;gap:4px;">
+        <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;font-size:10px;color:#98989d;border:0.5px solid rgba(255,255,255,0.08);cursor:pointer;">
+          <span style="width:5px;height:5px;border-radius:50%;background:#66d9c8;"></span> 运维工程师
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;font-size:10px;color:#98989d;cursor:pointer;">
+          <span>☾</span> 深色
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:9px;color:#636366;padding:4px 10px;">
+          <span style="width:5px;height:5px;border-radius:50%;background:#30d158;"></span> v2.1
+        </div>
+      </div>
+    </div>
+
+    <!-- Main content area -->
+    <div style="flex:1;padding:16px;position:relative;">
+      <!-- Header -->
+      <div style="background:rgba(44,44,46,0.5);backdrop-filter:blur(16px);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#f5f5f7;">◆ 设备健康状态总览</div>
+        </div>
+        <span style="background:rgba(102,217,200,0.10);color:#66d9c8;padding:4px 10px;border-radius:8px;font-size:10px;font-weight:600;">执行视图</span>
+      </div>
+      <!-- Content cards -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="background:rgba(44,44,46,0.5);backdrop-filter:blur(12px);border:0.5px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px;">
+          <div style="font-size:10px;color:#636366;">KPI 卡片</div>
+          <div style="font-size:20px;font-weight:700;color:#f5f5f7;">32</div>
+          <div style="font-size:10px;color:#98989d;">活跃工单</div>
+        </div>
+        <div style="background:rgba(44,44,46,0.5);backdrop-filter:blur(12px);border:0.5px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px;">
+          <div style="font-size:10px;color:#636366;">KPI 卡片</div>
+          <div style="font-size:20px;font-weight:700;color:#f5f5f7;">83.9%</div>
+          <div style="font-size:10px;color:#98989d;">告警精确率</div>
+        </div>
+        <div style="background:rgba(44,44,46,0.5);backdrop-filter:blur(12px);border:0.5px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px;">
+          <div style="font-size:10px;color:#636366;">KPI 卡片</div>
+          <div style="font-size:20px;font-weight:700;color:#f5f5f7;">10</div>
+          <div style="font-size:10px;color:#98989d;">高危设备</div>
+        </div>
+        <div style="background:rgba(44,44,46,0.5);backdrop-filter:blur(12px);border:0.5px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px;">
+          <div style="font-size:10px;color:#636366;">KPI 卡片</div>
+          <div style="font-size:20px;font-weight:700;color:#f5f5f7;">¥42K</div>
+          <div style="font-size:10px;color:#98989d;">预期月度节省</div>
+        </div>
+      </div>
+
+      <!-- Floating modal -->
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(44,44,46,0.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:0.5px solid rgba(255,255,255,0.10);border-radius:14px;padding:20px;width:240px;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="font-size:14px;font-weight:700;color:#f5f5f7;">SHAP 归因分析</div>
+          <span style="color:#636366;cursor:pointer;font-size:16px;">✕</span>
+        </div>
+        <div style="font-size:11px;color:#98989d;line-height:1.6;margin-bottom:10px;">
+          CNC_042 风险评分 0.78<br>
+          主要由温度漂移驱动
+        </div>
+        <div style="display:flex;gap:6px;">
+          <div style="flex:1;text-align:center;padding:8px;background:rgba(255,255,255,0.04);border-radius:8px;">
+            <div style="font-size:10px;color:#636366;">温度</div>
+            <div style="font-size:14px;font-weight:600;color:#ff453a;">+0.32</div>
+          </div>
+          <div style="flex:1;text-align:center;padding:8px;background:rgba(255,255,255,0.04);border-radius:8px;">
+            <div style="font-size:10px;color:#636366;">电流</div>
+            <div style="font-size:14px;font-weight:600;color:#ffb340;">+0.18</div>
+          </div>
+          <div style="flex:1;text-align:center;padding:8px;background:rgba(255,255,255,0.04);border-radius:8px;">
+            <div style="font-size:10px;color:#636366;">电压</div>
+            <div style="font-size:14px;font-weight:600;color:#30d158;">-0.05</div>
+          </div>
+        </div>
+        <button style="margin-top:12px;width:100%;background:#66d9c8;border:none;color:#000;padding:8px;border-radius:10px;font-size:12px;font-weight:500;cursor:pointer;">查看完整分析</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+
+</div>

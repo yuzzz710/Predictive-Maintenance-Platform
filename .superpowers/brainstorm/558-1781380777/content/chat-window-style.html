@@ -1,0 +1,106 @@
+<h2>聊天窗口形态对比</h2>
+<p class="subtitle">点击胶囊后，聊天窗如何出现？需要展示话术内容，支持收起/展开，不遮挡主内容</p>
+
+<div class="section">
+  <h3>方案 X：右下角弹出浮层卡片</h3>
+  <p class="subtitle">固定定位的玻璃卡片，从胶囊位置向上弹出。宽度 380-420px，高度约 50-60vh。类似 Intercom/Zendesk 客服窗。</p>
+  <div class="mockup">
+    <div class="mockup-header">方案 X — 浮层弹出卡片（推荐）</div>
+    <div class="mockup-body" style="position:relative;min-height:340px;background:rgba(28,28,30,0.4);border-radius:14px;padding:12px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <div class="mock-nav" style="margin:0;">首页 | 仪表盘 | AI Copilot</div>
+      </div>
+      <div class="mock-content" style="height:180px;display:flex;align-items:center;justify-content:center;">主内容区域</div>
+      <!-- Popup chat window -->
+      <div style="position:absolute;bottom:56px;right:16px;width:390px;height:280px;background:rgba(28,28,30,0.92);backdrop-filter:blur(40px);border:1px solid rgba(255,255,255,0.12);border-radius:18px;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.5);overflow:hidden;">
+        <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:13px;font-weight:600;color:#f5f5f7;">💬 评委讲解 · 设备健康总览</span>
+          <span style="font-size:11px;color:#98989d;cursor:pointer;">✕</span>
+        </div>
+        <div style="flex:1;padding:14px 16px;overflow-y:auto;font-size:13px;color:#e5e5ea;line-height:1.8;">
+          <p style="margin:0 0 8px;">📌 <strong style="color:#66d9c8;">这个模块做什么？</strong></p>
+          <p style="margin:0 0 12px;">设备健康总览通过10×10矩阵实时展示100台CNC机床的健康状态，颜色从绿到红代表从健康到危急的梯度变化。</p>
+          <p style="margin:0 0 8px;">🎯 <strong style="color:#66d9c8;">为什么重要？</strong></p>
+          <p style="margin:0 0 12px;">一台机床意外停机可能导致整条产线停摆，提前发现隐患可减少60-80%非计划停机。</p>
+        </div>
+        <div style="padding:8px 12px;border-top:1px solid rgba(255,255,255,0.06);display:flex;gap:6px;">
+          <button style="background:rgba(102,217,200,0.15);border:1px solid rgba(102,217,200,0.25);color:#66d9c8;border-radius:8px;padding:5px 10px;font-size:11px;">📋 复制</button>
+          <button style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:#98989d;border-radius:8px;padding:5px 10px;font-size:11px;">📝 展开讲细</button>
+          <button style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:#98989d;border-radius:8px;padding:5px 10px;font-size:11px;">🔄 简化</button>
+        </div>
+      </div>
+      <!-- Capsule -->
+      <div style="position:absolute;bottom:16px;right:16px;background:linear-gradient(135deg, rgba(102,217,200,0.25), rgba(109,181,249,0.25));backdrop-filter:blur(20px);border:1px solid rgba(102,217,200,0.35);border-radius:24px;padding:8px 16px;display:flex;align-items:center;gap:8px;font-size:13px;color:#66d9c8;box-shadow:0 4px 20px rgba(102,217,200,0.15);">
+        <span>💬</span>
+        <span>评委讲解</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>方案 Y：侧边滑出面板</h3>
+  <p class="subtitle">从右侧滑入的窄面板（420px宽），高度铺满。类似现有 detail-panel 的模式，复用已有动画。</p>
+  <div class="mockup">
+    <div class="mockup-header">方案 Y — 右侧滑入面板</div>
+    <div class="mockup-body" style="position:relative;min-height:280px;background:rgba(28,28,30,0.4);border-radius:14px;padding:12px;overflow:hidden;">
+      <div style="width:60%">
+        <div class="mock-nav" style="margin:0;">首页 | 仪表盘 | AI Copilot</div>
+        <div class="mock-content" style="height:160px;margin-top:8px;">主内容区域</div>
+      </div>
+      <div style="position:absolute;right:0;top:0;bottom:0;width:170px;background:rgba(28,28,30,0.92);backdrop-filter:blur(40px);border-left:1px solid rgba(255,255,255,0.10);padding:14px;display:flex;flex-direction:column;">
+        <span style="font-size:13px;font-weight:600;color:#f5f5f7;margin-bottom:8px;">💬 评委讲解</span>
+        <p style="font-size:11px;color:#e5e5ea;line-height:1.7;flex:1;">设备健康总览通过10×10矩阵实时展示...</p>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <button style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:#98989d;border-radius:6px;padding:4px 8px;font-size:10px;">📋 复制</button>
+          <button style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:#98989d;border-radius:6px;padding:4px 8px;font-size:10px;">📝 展开</button>
+        </div>
+      </div>
+      <div style="position:absolute;bottom:16px;right:16px;background:linear-gradient(135deg, rgba(102,217,200,0.25), rgba(109,181,249,0.25));backdrop-filter:blur(20px);border:1px solid rgba(102,217,200,0.35);border-radius:24px;padding:8px 16px;font-size:13px;color:#66d9c8;">💬 评委讲解</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>方案 Z：居中对话框弹窗</h3>
+  <p class="subtitle">全屏遮罩 + 居中浮层（500px宽），最正式但也最遮挡。适合需要全神贯注的场景。</p>
+  <div class="mockup">
+    <div class="mockup-header">方案 Z — 居中对话框</div>
+    <div class="mockup-body" style="position:relative;min-height:280px;background:rgba(28,28,30,0.4);border-radius:14px;padding:12px;">
+      <div class="mock-content" style="height:200px;">主内容区域（被遮罩覆盖）</div>
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;border-radius:14px;">
+        <div style="width:300px;background:rgba(28,28,30,0.95);backdrop-filter:blur(40px);border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:20px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+            <span style="font-size:14px;font-weight:600;color:#f5f5f7;">💬 评委讲解</span>
+            <span style="color:#98989d;">✕</span>
+          </div>
+          <p style="font-size:12px;color:#e5e5ea;line-height:1.7;">设备健康总览通过10×10矩阵实时展示100台CNC机床的健康状态...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="x" onclick="toggleSelect(this)">
+    <div class="letter">X</div>
+    <div class="content">
+      <h3>右下角浮层卡片（推荐）</h3>
+      <p>380-420px宽浮层，从胶囊位置弹出。不遮挡主内容，可收起展开，与现有 glass 风格统一。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="y" onclick="toggleSelect(this)">
+    <div class="letter">Y</div>
+    <div class="content">
+      <h3>右侧滑入面板</h3>
+      <p>复用现有 detail-panel 动画模式。占用空间大，适合需要展示大量内容的场景。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="z" onclick="toggleSelect(this)">
+    <div class="letter">Z</div>
+    <div class="content">
+      <h3>居中对话框</h3>
+      <p>最正式，但遮挡最多内容。不适合答辩演示中随时查看页面的场景。</p>
+    </div>
+  </div>
+</div>

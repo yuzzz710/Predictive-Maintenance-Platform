@@ -1,0 +1,113 @@
+<h2>Siri 风格圆形动效入口 — 两种交互方案</h2>
+<p class="subtitle">圆形发光球体 + 点击后页面变身为讲解模式</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">方案 A：全屏沉浸式（推荐）</div>
+    <div class="mockup-body" style="position:relative;min-height:320px;background:rgba(28,28,30,0.4);border-radius:14px;overflow:hidden;">
+      <!-- Normal page -->
+      <div style="padding:12px;display:flex;flex-direction:column;gap:8px;">
+        <div class="mock-nav" style="margin:0;">首页 | 仪表盘 | AI Copilot</div>
+        <div class="mock-content" style="height:100px;">主内容</div>
+        <div style="display:flex;gap:8px;">
+          <div class="placeholder" style="flex:1;height:80px;">设备矩阵</div>
+          <div class="placeholder" style="flex:1;height:80px;">KPI卡片</div>
+        </div>
+      </div>
+      <!-- Orb -->
+      <div style="position:absolute;bottom:20px;right:20px;">
+        <!-- outer glow ring -->
+        <div style="width:56px;height:56px;border-radius:50%;background:conic-gradient(from 0deg, #66d9c8, #6db5f9, #bf5af2, #66d9c8);animation:spin 3s linear infinite;padding:2px;">
+          <div style="width:52px;height:52px;border-radius:50%;background:rgba(28,28,30,0.9);display:flex;align-items:center;justify-content:center;">
+            <span style="font-size:22px;">💬</span>
+          </div>
+        </div>
+        <!-- pulse rings -->
+        <div style="position:absolute;inset:-8px;border-radius:50%;border:1.5px solid rgba(102,217,200,0.25);animation:pulse 2s ease-out infinite;"></div>
+        <div style="position:absolute;inset:-18px;border-radius:50%;border:1px solid rgba(102,217,200,0.12);animation:pulse 2s ease-out 0.6s infinite;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">点击后 — 全屏讲解面板</div>
+    <div class="mockup-body" style="position:relative;min-height:320px;background:rgba(0,0,0,0.85);backdrop-filter:blur(60px);border-radius:14px;display:flex;flex-direction:column;padding:20px;">
+      <!-- Top bar -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <span style="font-size:15px;font-weight:600;color:#f5f5f7;">💬 评委讲解 · 设备健康总览</span>
+        <div style="width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;color:#98989d;font-size:14px;">✕</div>
+      </div>
+      <!-- Content area -->
+      <div style="flex:1;display:flex;gap:16px;">
+        <!-- Left: context preview (page visible behind) -->
+        <div style="flex:1;background:rgba(28,28,30,0.4);border-radius:14px;padding:12px;border:1px solid rgba(255,255,255,0.06);">
+          <div style="font-size:10px;color:#636366;margin-bottom:8px;">当前页面</div>
+          <div class="placeholder" style="height:60px;">设备矩阵内容...</div>
+          <div class="placeholder" style="height:60px;margin-top:6px;">KPI卡片...</div>
+        </div>
+        <!-- Right: speech content -->
+        <div style="flex:2;display:flex;flex-direction:column;">
+          <div style="flex:1;overflow-y:auto;font-size:14px;line-height:1.9;color:#e5e5ea;">
+            <p>📌 <strong style="color:#66d9c8;">这个模块做什么？</strong></p>
+            <p style="margin-bottom:12px;">设备健康总览通过10×10矩阵实时展示100台CNC机床的健康状态，颜色从绿色到红色代表从健康到危急的梯度变化。每个格子代表一台设备，点击可查看详细传感器参数和AI诊断结果。</p>
+            <p>🎯 <strong style="color:#66d9c8;">为什么重要？</strong></p>
+            <p style="margin-bottom:12px;">一台关键机床意外停机可能导致整条产线停摆，提前发现隐患可减少60-80%非计划停机，每年节省数百万维护成本。</p>
+          </div>
+          <!-- Quick actions -->
+          <div style="display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);">
+            <button style="background:rgba(102,217,200,0.15);border:1px solid rgba(102,217,200,0.25);color:#66d9c8;border-radius:10px;padding:8px 14px;font-size:12px;">📋 复制</button>
+            <button style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:#98989d;border-radius:10px;padding:8px 14px;font-size:12px;">🔄 简化一点</button>
+            <button style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:#98989d;border-radius:10px;padding:8px 14px;font-size:12px;">📝 展开讲细</button>
+            <button style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:#98989d;border-radius:10px;padding:8px 14px;font-size:12px;margin-left:auto;">✏️ 追问</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Orb 动画规格</h3>
+  <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:48px;height:48px;border-radius:50%;background:conic-gradient(from 0deg, #66d9c8, #6db5f9, #bf5af2, #66d9c8);display:flex;align-items:center;justify-content:center;font-size:20px;">💬</div>
+      <span style="font-size:12px;color:#98989d;">默认态：渐变环旋转</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <!-- idle state with pulse -->
+      <div style="position:relative;width:48px;height:48px;">
+        <div style="position:absolute;inset:-4px;border-radius:50%;border:2px solid rgba(102,217,200,0.3);animation:pulse 2s infinite;"></div>
+        <div style="width:48px;height:48px;border-radius:50%;background:conic-gradient(from 0deg, #66d9c8, #6db5f9, #bf5af2, #66d9c8);display:flex;align-items:center;justify-content:center;font-size:20px;">💬</div>
+      </div>
+      <span style="font-size:12px;color:#98989d;">空闲态：呼吸脉冲</span>
+    </div>
+  </div>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>全屏沉浸式面板（推荐）</h3>
+      <p>点击orb → 页面整体覆盖半透明玻璃面板，左侧预览原页面、右侧显示讲解话术。答辩时最有视觉冲击力。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>全屏覆盖 + 居中聚焦</h3>
+      <p>纯黑遮罩 + 居中显示讲解内容，更专注于文字。但没有左侧页面预览。</p>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+</style>

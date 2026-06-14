@@ -1,0 +1,57 @@
+<h2>设计系统：Design Tokens</h2>
+<p class="subtitle">第一节 — 全局变量。这是所有页面和组件的基础。确认后进入组件设计。</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">浅色模式 :root 变量</div>
+    <div class="mockup-body" style="background:#f5f5f7;padding:16px;border-radius:10px;font-family:system-ui;font-size:12px;line-height:1.6;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        <div style="padding:6px 8px;background:#fff;border-radius:8px;"><span style="color:#aeaeb2;">bg-root</span><br><span style="font-weight:600;">#f2f2f7</span></div>
+        <div style="padding:6px 8px;background:#fff;border-radius:8px;"><span style="color:#aeaeb2;">bg-surface</span><br><span style="font-weight:600;">#fafafa</span></div>
+        <div style="padding:6px 8px;background:#fff;border-radius:8px;"><span style="color:#aeaeb2;">bg-card</span><br><span style="font-weight:600;">rgba(255,255,255,0.72)</span></div>
+        <div style="padding:6px 8px;background:#fff;border-radius:8px;"><span style="color:#aeaeb2;">bg-card-alt</span><br><span style="font-weight:600;">rgba(245,245,247,0.6)</span></div>
+        <div style="padding:6px 8px;background:#fff;border-radius:8px;"><span style="color:#aeaeb2;">text-primary</span><br><span style="font-weight:600;">#1d1d1f</span></div>
+        <div style="padding:6px 8px;background:#fff;border-radius:8px;"><span style="color:#aeaeb2;">text-secondary</span><br><span style="font-weight:600;">#6e6e73</span></div>
+        <div style="padding:6px 8px;background:#fff;border-radius:8px;"><span style="color:#aeaeb2;">text-muted</span><br><span style="font-weight:600;">#aeaeb2</span></div>
+        <div style="padding:6px 8px;background:#fff;border-radius:8px;"><span style="color:#aeaeb2;">border</span><br><span style="font-weight:600;">rgba(0,0,0,0.06)</span></div>
+        <div style="padding:6px 8px;background:#fff;border-radius:8px;"><span style="color:#aeaeb2;">border-accent</span><br><span style="font-weight:600;">rgba(0,0,0,0.10)</span></div>
+        <div style="padding:6px 8px;background:#fff;border-radius:8px;"><span style="color:#aeaeb2;">shadow-sm</span><br><span style="font-weight:600;">0 1px 3px rgba(0,0,0,0.04)</span></div>
+        <div style="padding:6px 8px;background:#fff;border-radius:8px;"><span style="color:#aeaeb2;">shadow-md</span><br><span style="font-weight:600;">0 4px 12px rgba(0,0,0,0.06)</span></div>
+        <div style="padding:6px 8px;background:#fff;border-radius:8px;"><span style="color:#aeaeb2;">shadow-lg</span><br><span style="font-weight:600;">0 8px 30px rgba(0,0,0,0.10)</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="mockup">
+    <div class="mockup-header">深色模式 :root 变量</div>
+    <div class="mockup-body" style="background:#1c1c1e;padding:16px;border-radius:10px;font-family:system-ui;font-size:12px;line-height:1.6;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        <div style="padding:6px 8px;background:#2c2c2e;border-radius:8px;"><span style="color:#636366;">bg-root</span><br><span style="font-weight:600;color:#f5f5f7;">#000000</span></div>
+        <div style="padding:6px 8px;background:#2c2c2e;border-radius:8px;"><span style="color:#636366;">bg-surface</span><br><span style="font-weight:600;color:#f5f5f7;">#1c1c1e</span></div>
+        <div style="padding:6px 8px;background:#2c2c2e;border-radius:8px;"><span style="color:#636366;">bg-card</span><br><span style="font-weight:600;color:#f5f5f7;">rgba(44,44,46,0.7)</span></div>
+        <div style="padding:6px 8px;background:#2c2c2e;border-radius:8px;"><span style="color:#636366;">bg-card-alt</span><br><span style="font-weight:600;color:#f5f5f7;">rgba(58,58,60,0.5)</span></div>
+        <div style="padding:6px 8px;background:#2c2c2e;border-radius:8px;"><span style="color:#636366;">text-primary</span><br><span style="font-weight:600;color:#f5f5f7;">#f5f5f7</span></div>
+        <div style="padding:6px 8px;background:#2c2c2e;border-radius:8px;"><span style="color:#636366;">text-secondary</span><br><span style="font-weight:600;color:#f5f5f7;">#98989d</span></div>
+        <div style="padding:6px 8px;background:#2c2c2e;border-radius:8px;"><span style="color:#636366;">text-muted</span><br><span style="font-weight:600;color:#f5f5f7;">#636366</span></div>
+        <div style="padding:6px 8px;background:#2c2c2e;border-radius:8px;"><span style="color:#636366;">border</span><br><span style="font-weight:600;color:#f5f5f7;">rgba(255,255,255,0.08)</span></div>
+        <div style="padding:6px 8px;background:#2c2c2e;border-radius:8px;"><span style="color:#636366;">border-accent</span><br><span style="font-weight:600;color:#f5f5f7;">rgba(255,255,255,0.12)</span></div>
+        <div style="padding:6px 8px;background:#2c2c2e;border-radius:8px;"><span style="color:#636366;">shadow-sm</span><br><span style="font-weight:600;color:#f5f5f7;">0 1px 3px rgba(0,0,0,0.3)</span></div>
+        <div style="padding:6px 8px;background:#2c2c2e;border-radius:8px;"><span style="color:#636366;">shadow-md</span><br><span style="font-weight:600;color:#f5f5f7;">0 4px 16px rgba(0,0,0,0.4)</span></div>
+        <div style="padding:6px 8px;background:#2c2c2e;border-radius:8px;"><span style="color:#636366;">shadow-lg</span><br><span style="font-weight:600;color:#f5f5f7;">0 12px 40px rgba(0,0,0,0.5)</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mockup" style="margin-top:16px;">
+  <div class="mockup-header">核心变化 vs 当前</div>
+  <div class="mockup-body" style="padding:12px;font-size:13px;line-height:1.8;">
+    <table style="width:100%;border-collapse:collapse;">
+      <tr style="border-bottom:1px solid rgba(0,0,0,0.05);"><td style="padding:8px;font-weight:600;">圆角</td><td style="padding:8px;color:#f04444;text-decoration:line-through;">3px / 6px</td><td style="padding:8px;">→</td><td style="padding:8px;color:#3fb950;">8px / 12px / 16px（大圆角）</td></tr>
+      <tr style="border-bottom:1px solid rgba(0,0,0,0.05);"><td style="padding:8px;font-weight:600;">阴影</td><td style="padding:8px;color:#f04444;text-decoration:line-through;">硬阴影 rgba(0,0,0,0.5)</td><td style="padding:8px;">→</td><td style="padding:8px;color:#3fb950;">柔和多层阴影</td></tr>
+      <tr style="border-bottom:1px solid rgba(0,0,0,0.05);"><td style="padding:8px;font-weight:600;">毛玻璃</td><td style="padding:8px;color:#f0a030;">仅导航栏</td><td style="padding:8px;">→</td><td style="padding:8px;color:#3fb950;">全局：卡片、弹窗、侧边栏、header</td></tr>
+      <tr style="border-bottom:1px solid rgba(0,0,0,0.05);"><td style="padding:8px;font-weight:600;">边框</td><td style="padding:8px;color:#f04444;text-decoration:line-through;">粗 1px 实色</td><td style="padding:8px;">→</td><td style="padding:8px;color:#3fb950;">0.5px 半透明细边框</td></tr>
+      <tr style="border-bottom:1px solid rgba(0,0,0,0.05);"><td style="padding:8px;font-weight:600;">字体</td><td style="padding:8px;color:#f04444;text-decoration:line-through;">微软雅黑 + 等宽混合</td><td style="padding:8px;">→</td><td style="padding:8px;color:#3fb950;">SF风格：-apple-system, 统一字重层级</td></tr>
+      <tr><td style="padding:8px;font-weight:600;">间距</td><td style="padding:8px;color:#f04444;text-decoration:line-through;">紧凑，8-12px</td><td style="padding:8px;">→</td><td style="padding:8px;color:#3fb950;">呼吸感，16-24-32px 三级间距</td></tr>
+    </table>
+  </div>
+</div>

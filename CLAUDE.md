@@ -1,6 +1,6 @@
 # CLAUDE.md — 智能设备预测性维护系统
 
-> 苗圃杯·半决赛作品 v2.1 | 最后更新：2026-06-04
+> 苗圃杯·半决赛作品 v2.2 | 最后更新：2026-06-14
 >
 > 参考文档（按需 Read 加载）：
 > `CLAUDE_REF_架构.md`（项目概述·目录·前端·CSS·JS） |
@@ -30,6 +30,7 @@
 8. **故障注入纯内存计算** — `POST /api/fault-injection` 不修改任何数据文件，演示完成后前端自动回滚
 9. **算法对比用实际训练数据** — `benchmark_algorithms.py` 在真实2999行数据上训练，不使用虚拟/合成数据
 10. **数据天花板可视化** — `kde_params.json` 提供4参数×200点KDE分布，前端交互式演示 Youden's J 从 0.075→0.90
+11. **评委讲解助手** — `shared/assistant.js` + `shared/assistant.css` 在5个核心页面注入3D球体入口。话术库优先命中（40+板块预生成话术），未命中则调用 `/api/assistant/explain` SSE流式AI生成。球体可拖拽移动，位置记忆到 localStorage。弹窗白磨砂玻璃风格。
 
 ---
 
@@ -42,8 +43,9 @@
 | 原始数据 | `原始数据集/`（4个脱敏CSV：LOG/SUMMARY/ASSEMBLY/TESTS） |
 | 仪表盘数据 | `web-dashboard/data/`（60+CSV/JSON，从Pipeline同步） |
 | 环境变量 | `.env`（DEEPSEEK_API_KEY/BASE_URL/MODEL） |
-| 前端页面 | `web-dashboard/*.html`（home/index/chat/technical-overview/reports/role-gate 等10个页面） |
-| Gateway后端 | `web-dashboard/gateway/`（tools/prompts/deepseek_client/routes 等20文件） |
+| 前端页面 | `web-dashboard/*.html`（home/index/chat/technical-overview/reports/role-gate 等12个页面） |
+| 共享模块 | `web-dashboard/shared/`（navbar/role-check/theme-init/role-switcher/demo-mode/assistant 等） |
+| Gateway后端 | `web-dashboard/gateway/`（tools/prompts/deepseek_client/routes/kb_routes 等） |
 | Skills | `skills/`（5个技能包：data_prep→stat_inference/ml_inference→diagnosis→decision） |
 
 ---
@@ -93,3 +95,4 @@ pytest tests/ -v
 | 降级架构 | `CLAUDE_REF_算法.md` §十一 | 四级降级/状态指示器 |
 | RAG智能客服 | `CLAUDE_REF_算法.md` §十二 | 三层知识库/技术选型/文档分块/问题分类 |
 | 业务流程自动化 | `CLAUDE_REF_算法.md` §十三 | 工单6状态机/定时任务/库存管理/员工管理 |
+| 评委讲解助手 | `shared/assistant.js` | 话术库结构/上下文提取/匹配引擎/SSE AI回退/快捷操作 |

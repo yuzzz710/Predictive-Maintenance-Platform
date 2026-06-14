@@ -1,0 +1,101 @@
+<h2>评委讲解助手 — 胶囊入口位置方案</h2>
+<p class="subtitle">入口需要够醒目但不遮挡主内容，移动端和桌面端都能用</p>
+
+<div class="section">
+  <h3>方案 A：页面右下角悬浮胶囊</h3>
+  <p class="subtitle">固定定位，始终可见，类似客服按钮。最醒目，但可能遮挡部分内容。</p>
+  <div class="mockup">
+    <div class="mockup-header">方案 A — 右下角固定悬浮</div>
+    <div class="mockup-body" style="position:relative;min-height:220px;background:rgba(28,28,30,0.4);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div class="mock-nav" style="margin:0;">首页 | 仪表盘 | AI Copilot | 工单</div>
+        <div style="display:flex;gap:6px;">
+          <div style="width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,0.1);"></div>
+          <div style="width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,0.1);"></div>
+        </div>
+      </div>
+      <div class="mock-content" style="flex:1;display:flex;gap:8px;">
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+          <div class="placeholder" style="height:48px;">KPI 卡片行</div>
+          <div class="placeholder" style="flex:1;">设备健康矩阵 10×10</div>
+        </div>
+        <div style="width:200px;display:flex;flex-direction:column;gap:6px;">
+          <div class="placeholder" style="flex:1;">详情面板</div>
+        </div>
+      </div>
+      <!-- The capsule -->
+      <div style="position:absolute;bottom:16px;right:16px;background:linear-gradient(135deg, rgba(102,217,200,0.25), rgba(109,181,249,0.25));backdrop-filter:blur(20px);border:1px solid rgba(102,217,200,0.35);border-radius:24px;padding:8px 16px;display:flex;align-items:center;gap:8px;font-size:13px;color:#66d9c8;box-shadow:0 4px 20px rgba(102,217,200,0.15);">
+        <span style="font-size:16px;">💬</span>
+        <span>评委讲解</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>方案 B：每个板块标题旁的小 Pill 按钮</h3>
+  <p class="subtitle">上下文关联最强——每个板块都有自己的入口，点击自动带入当前板块上下文。但需要改动更多页面元素。</p>
+  <div class="mockup">
+    <div class="mockup-header">方案 B — 板块标题旁 inline pill</div>
+    <div class="mockup-body" style="background:rgba(28,28,30,0.4);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(44,44,46,0.35);border-radius:12px;border:1px solid rgba(255,255,255,0.08);">
+        <h4 style="margin:0;color:#f5f5f7;font-size:14px;">📊 设备健康总览</h4>
+        <span style="background:rgba(102,217,200,0.12);border:1px solid rgba(102,217,200,0.25);border-radius:12px;padding:3px 10px;font-size:11px;color:#66d9c8;cursor:pointer;">💬 讲解</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(44,44,46,0.35);border-radius:12px;border:1px solid rgba(255,255,255,0.08);">
+        <h4 style="margin:0;color:#f5f5f7;font-size:14px;">⚙️ 维护策略对比</h4>
+        <span style="background:rgba(102,217,200,0.12);border:1px solid rgba(102,217,200,0.25);border-radius:12px;padding:3px 10px;font-size:11px;color:#66d9c8;cursor:pointer;">💬 讲解</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(44,44,46,0.35);border-radius:12px;border:1px solid rgba(255,255,255,0.08);">
+        <h4 style="margin:0;color:#f5f5f7;font-size:14px;">🔧 工单看板</h4>
+        <span style="background:rgba(102,217,200,0.12);border:1px solid rgba(102,217,200,0.25);border-radius:12px;padding:3px 10px;font-size:11px;color:#66d9c8;cursor:pointer;">💬 讲解</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>方案 C：混合方案 — 右下角主入口 + 板块内联 Pill</h3>
+  <p class="subtitle">两者兼有。右下角悬浮球作为全局入口（不区分上下文），板块旁 Pill 作为上下文入口（自动带入板块信息）。最灵活但最多代码。</p>
+  <div class="mockup">
+    <div class="mockup-header">方案 C — 全局胶囊 + 板块 Pill 同时存在</div>
+    <div class="mockup-body" style="position:relative;min-height:220px;background:rgba(28,28,30,0.4);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div class="mock-nav" style="margin:0;">首页 | 仪表盘 | AI Copilot | 工单</div>
+      </div>
+      <div style="display:flex;gap:10px;padding:10px 14px;background:rgba(44,44,46,0.35);border-radius:12px;border:1px solid rgba(255,255,255,0.08);align-items:center;">
+        <h4 style="margin:0;color:#f5f5f7;font-size:14px;">📊 设备健康总览</h4>
+        <span style="background:rgba(102,217,200,0.12);border:1px solid rgba(102,217,200,0.25);border-radius:12px;padding:3px 10px;font-size:11px;color:#66d9c8;">💬 讲解</span>
+      </div>
+      <div class="mock-content" style="flex:1;">内容区域</div>
+      <div style="position:absolute;bottom:12px;right:12px;background:linear-gradient(135deg, rgba(102,217,200,0.25), rgba(109,181,249,0.25));backdrop-filter:blur(20px);border:1px solid rgba(102,217,200,0.35);border-radius:24px;padding:8px 16px;display:flex;align-items:center;gap:8px;font-size:13px;color:#66d9c8;box-shadow:0 4px 20px rgba(102,217,200,0.15);">
+        <span>💬</span>
+        <span>评委讲解</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>混合方案（推荐）</h3>
+      <p>全局胶囊 + 板块 Pill，最灵活。答辩时可以随时讲解任何板块，全局入口做兜底。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>仅右下角悬浮</h3>
+      <p>改动最少，不影响现有页面结构。但缺少上下文关联，每次需要手动说明在看哪个板块。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>仅板块内联 Pill</h3>
+      <p>上下文关联最强。但需在每个页面的每个板块标题旁插入按钮，改动量大。</p>
+    </div>
+  </div>
+</div>

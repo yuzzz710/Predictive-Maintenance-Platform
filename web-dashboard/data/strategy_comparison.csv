@@ -1,4 +1,4 @@
-strategy,n_alarms,n_warnings,n_watch,n_normal,n_work_orders,avg_risk_score,total_estimated_cost,avg_sla_hours,alarm_threshold,warning_threshold,max_orders,merge_downtime,avg_cost_per_order
-cost_efficiency,4,38,14,0,56,0.6575,251822.13,91.4,0.8,0.6,12,True,4496.82
-production_efficiency,17,38,1,0,56,0.6575,226639.92,36.9,0.7,0.5,20,False,4047.14
-quality_first,42,14,0,0,56,0.6575,302186.56,12.0,0.6,0.4,30,False,5396.19
+strategy,n_alarms,n_warnings,n_watch,n_normal,n_work_orders,avg_risk_score,total_estimated_cost,avg_sla_hours,alarm_threshold,warning_threshold,max_orders,merge_downtime
+cost_efficiency,3,29,24,0,56,0.6262,268171.93,91.5,0.8,0.6,12,True
+production_efficiency,10,39,7,0,56,0.6228,243666.36,40.7,0.7,0.5,20,False
+quality_first,30,26,0,0,56,0.6304,321730.6,15.4,0.6,0.4,30,False

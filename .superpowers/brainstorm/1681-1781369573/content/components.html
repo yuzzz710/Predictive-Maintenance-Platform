@@ -1,0 +1,184 @@
+<h2>设计系统：组件库</h2>
+<p class="subtitle">第二节 — 卡片、按钮、输入框、标签、进度条。两列对比：浅色 / 深色。</p>
+
+<div class="split">
+
+<!-- ===== LIGHT MODE COMPONENTS ===== -->
+<div class="mockup">
+<div class="mockup-header">浅色模式组件</div>
+<div class="mockup-body" style="background:#f5f5f7;padding:20px;border-radius:10px;font-family:-apple-system,system-ui,sans-serif;">
+
+  <!-- Cards -->
+  <div style="font-size:10px;font-weight:600;color:#aeaeb2;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">卡片</div>
+
+  <!-- Stat card -->
+  <div style="background:rgba(255,255,255,0.72);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:0.5px solid rgba(0,0,0,0.06);border-radius:14px;padding:16px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,0.03),0 4px 12px rgba(0,0,0,0.04);">
+    <div style="font-size:11px;color:#aeaeb2;margin-bottom:4px;font-weight:500;">设备健康率</div>
+    <div style="font-size:28px;font-weight:700;color:#1d1d1f;letter-spacing:-0.5px;line-height:1;">73.5%</div>
+    <div style="font-size:11px;color:#e06060;margin-top:4px;">▼2.1% vs 上周</div>
+  </div>
+
+  <!-- Row cards -->
+  <div style="display:flex;gap:6px;margin-bottom:12px;">
+    <div style="flex:1;background:rgba(255,255,255,0.65);backdrop-filter:blur(12px);border:0.5px solid rgba(0,0,0,0.05);border-radius:12px;padding:10px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,0.02);">
+      <div style="font-size:10px;color:#aeaeb2;">健康</div>
+      <div style="font-size:20px;font-weight:600;color:#4cd964;">73</div>
+    </div>
+    <div style="flex:1;background:rgba(255,255,255,0.65);backdrop-filter:blur(12px);border:0.5px solid rgba(0,0,0,0.05);border-radius:12px;padding:10px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,0.02);">
+      <div style="font-size:10px;color:#aeaeb2;">退化</div>
+      <div style="font-size:20px;font-weight:600;color:#f0a840;">17</div>
+    </div>
+    <div style="flex:1;background:rgba(255,255,255,0.65);backdrop-filter:blur(12px);border:0.5px solid rgba(0,0,0,0.05);border-radius:12px;padding:10px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,0.02);">
+      <div style="font-size:10px;color:#aeaeb2;">危险</div>
+      <div style="font-size:20px;font-weight:600;color:#e06060;">10</div>
+    </div>
+  </div>
+
+  <!-- Alert card with left border -->
+  <div style="background:rgba(255,255,255,0.72);backdrop-filter:blur(16px);border:0.5px solid rgba(0,0,0,0.06);border-left:3px solid #e06060;border-radius:0 12px 12px 0;padding:12px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:12px;font-weight:600;color:#1d1d1f;">CNC_023 紧急维护</div>
+        <div style="font-size:11px;color:#6e6e73;">轴承更换 · 停机窗口3天</div>
+      </div>
+      <div style="background:rgba(224,96,96,0.08);color:#e06060;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:600;">P1</div>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div style="font-size:10px;font-weight:600;color:#aeaeb2;text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 8px;">按钮</div>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+    <button style="background:#5ac8b8;border:none;color:#fff;padding:10px 20px;border-radius:10px;font-weight:500;font-size:13px;cursor:pointer;">主要操作</button>
+    <button style="background:rgba(90,200,184,0.08);border:0.5px solid rgba(90,200,184,0.3);color:#5ac8b8;padding:10px 20px;border-radius:10px;font-weight:500;font-size:13px;cursor:pointer;">次要操作</button>
+    <button style="background:rgba(0,0,0,0.03);border:0.5px solid rgba(0,0,0,0.08);color:#1d1d1f;padding:10px 20px;border-radius:10px;font-weight:500;font-size:13px;cursor:pointer;">取消</button>
+  </div>
+
+  <!-- Inputs -->
+  <div style="font-size:10px;font-weight:600;color:#aeaeb2;text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 8px;">输入框</div>
+  <input placeholder="搜索设备..." style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.65);backdrop-filter:blur(8px);border:0.5px solid rgba(0,0,0,0.08);border-radius:10px;padding:10px 14px;font-size:13px;color:#1d1d1f;outline:none;margin-bottom:12px;">
+  <select style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.65);backdrop-filter:blur(8px);border:0.5px solid rgba(0,0,0,0.08);border-radius:10px;padding:10px 14px;font-size:13px;color:#1d1d1f;outline:none;margin-bottom:12px;">
+    <option>成本效率策略</option>
+    <option>生产效率策略</option>
+    <option>质量优先策略</option>
+  </select>
+
+  <!-- Tags -->
+  <div style="font-size:10px;font-weight:600;color:#aeaeb2;text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 8px;">标签 / 徽章</div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+    <span style="background:rgba(76,217,100,0.08);color:#4cd964;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:500;">健康 x73</span>
+    <span style="background:rgba(240,168,64,0.08);color:#f0a840;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:500;">退化 x17</span>
+    <span style="background:rgba(224,96,96,0.08);color:#e06060;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:500;">危险 x10</span>
+    <span style="background:rgba(179,136,235,0.08);color:#b388eb;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:500;">SHAP</span>
+  </div>
+
+  <!-- Progress bar -->
+  <div style="font-size:10px;font-weight:600;color:#aeaeb2;text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 8px;">进度条</div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+    <span style="font-size:11px;color:#1d1d1f;width:100px;">CNC_001</span>
+    <div style="flex:1;height:6px;background:rgba(0,0,0,0.04);border-radius:3px;overflow:hidden;">
+      <div style="width:85%;height:100%;background:#4cd964;border-radius:3px;"></div>
+    </div>
+    <span style="font-size:11px;font-weight:600;color:#1d1d1f;">85</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+    <span style="font-size:11px;color:#1d1d1f;width:100px;">CNC_042</span>
+    <div style="flex:1;height:6px;background:rgba(0,0,0,0.04);border-radius:3px;overflow:hidden;">
+      <div style="width:42%;height:100%;background:#e06060;border-radius:3px;"></div>
+    </div>
+    <span style="font-size:11px;font-weight:600;color:#1d1d1f;">42</span>
+  </div>
+
+</div>
+</div>
+
+<!-- ===== DARK MODE COMPONENTS ===== -->
+<div class="mockup">
+<div class="mockup-header">深色模式组件</div>
+<div class="mockup-body" style="background:#1c1c1e;padding:20px;border-radius:10px;font-family:-apple-system,system-ui,sans-serif;">
+
+  <!-- Cards -->
+  <div style="font-size:10px;font-weight:600;color:#636366;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">卡片</div>
+
+  <!-- Stat card -->
+  <div style="background:rgba(44,44,46,0.7);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,0.2),0 4px 12px rgba(0,0,0,0.2);">
+    <div style="font-size:11px;color:#98989d;margin-bottom:4px;font-weight:500;">设备健康率</div>
+    <div style="font-size:28px;font-weight:700;color:#f5f5f7;letter-spacing:-0.5px;line-height:1;">73.5%</div>
+    <div style="font-size:11px;color:#ff453a;margin-top:4px;">▼2.1% vs 上周</div>
+  </div>
+
+  <!-- Row cards -->
+  <div style="display:flex;gap:6px;margin-bottom:12px;">
+    <div style="flex:1;background:rgba(44,44,46,0.6);backdrop-filter:blur(12px);border:0.5px solid rgba(255,255,255,0.06);border-radius:12px;padding:10px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,0.2);">
+      <div style="font-size:10px;color:#98989d;">健康</div>
+      <div style="font-size:20px;font-weight:600;color:#30d158;">73</div>
+    </div>
+    <div style="flex:1;background:rgba(44,44,46,0.6);backdrop-filter:blur(12px);border:0.5px solid rgba(255,255,255,0.06);border-radius:12px;padding:10px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,0.2);">
+      <div style="font-size:10px;color:#98989d;">退化</div>
+      <div style="font-size:20px;font-weight:600;color:#ffb340;">17</div>
+    </div>
+    <div style="flex:1;background:rgba(44,44,46,0.6);backdrop-filter:blur(12px);border:0.5px solid rgba(255,255,255,0.06);border-radius:12px;padding:10px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,0.2);">
+      <div style="font-size:10px;color:#98989d;">危险</div>
+      <div style="font-size:20px;font-weight:600;color:#ff453a;">10</div>
+    </div>
+  </div>
+
+  <!-- Alert card with left border -->
+  <div style="background:rgba(44,44,46,0.7);backdrop-filter:blur(16px);border:0.5px solid rgba(255,255,255,0.08);border-left:3px solid #ff453a;border-radius:0 12px 12px 0;padding:12px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.2);">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:12px;font-weight:600;color:#f5f5f7;">CNC_023 紧急维护</div>
+        <div style="font-size:11px;color:#98989d;">轴承更换 · 停机窗口3天</div>
+      </div>
+      <div style="background:rgba(255,69,58,0.10);color:#ff453a;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:600;">P1</div>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div style="font-size:10px;font-weight:600;color:#636366;text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 8px;">按钮</div>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+    <button style="background:#66d9c8;border:none;color:#000;padding:10px 20px;border-radius:10px;font-weight:500;font-size:13px;cursor:pointer;">主要操作</button>
+    <button style="background:rgba(102,217,200,0.08);border:0.5px solid rgba(102,217,200,0.25);color:#66d9c8;padding:10px 20px;border-radius:10px;font-weight:500;font-size:13px;cursor:pointer;">次要操作</button>
+    <button style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.08);color:#f5f5f7;padding:10px 20px;border-radius:10px;font-weight:500;font-size:13px;cursor:pointer;">取消</button>
+  </div>
+
+  <!-- Inputs -->
+  <div style="font-size:10px;font-weight:600;color:#636366;text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 8px;">输入框</div>
+  <input placeholder="搜索设备..." style="width:100%;box-sizing:border-box;background:rgba(44,44,46,0.6);backdrop-filter:blur(8px);border:0.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 14px;font-size:13px;color:#f5f5f7;outline:none;margin-bottom:12px;">
+  <select style="width:100%;box-sizing:border-box;background:rgba(44,44,46,0.6);backdrop-filter:blur(8px);border:0.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 14px;font-size:13px;color:#f5f5f7;outline:none;margin-bottom:12px;">
+    <option>成本效率策略</option>
+    <option>生产效率策略</option>
+    <option>质量优先策略</option>
+  </select>
+
+  <!-- Tags -->
+  <div style="font-size:10px;font-weight:600;color:#636366;text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 8px;">标签 / 徽章</div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+    <span style="background:rgba(48,209,88,0.08);color:#30d158;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:500;">健康 x73</span>
+    <span style="background:rgba(255,179,64,0.08);color:#ffb340;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:500;">退化 x17</span>
+    <span style="background:rgba(255,69,58,0.08);color:#ff453a;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:500;">危险 x10</span>
+    <span style="background:rgba(191,90,242,0.08);color:#bf5af2;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:500;">SHAP</span>
+  </div>
+
+  <!-- Progress bar -->
+  <div style="font-size:10px;font-weight:600;color:#636366;text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 8px;">进度条</div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+    <span style="font-size:11px;color:#f5f5f7;width:100px;">CNC_001</span>
+    <div style="flex:1;height:6px;background:rgba(255,255,255,0.04);border-radius:3px;overflow:hidden;">
+      <div style="width:85%;height:100%;background:#30d158;border-radius:3px;"></div>
+    </div>
+    <span style="font-size:11px;font-weight:600;color:#f5f5f7;">85</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+    <span style="font-size:11px;color:#f5f5f7;width:100px;">CNC_042</span>
+    <div style="flex:1;height:6px;background:rgba(255,255,255,0.04);border-radius:3px;overflow:hidden;">
+      <div style="width:42%;height:100%;background:#ff453a;border-radius:3px;"></div>
+    </div>
+    <span style="font-size:11px;font-weight:600;color:#f5f5f7;">42</span>
+  </div>
+
+</div>
+</div>
+
+</div>

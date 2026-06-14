@@ -6,10 +6,10 @@
     "WATCH": 40,
     "NORMAL": 0
   },
-  "n_work_orders": 62,
-  "n_industrial_orders": 30,
+  "n_work_orders": 20,
+  "n_industrial_orders": 56,
   "strategy": "quality_first",
-  "n_spare_parts_rows": 93,
-  "n_technician_assignments": 30,
-  "n_downtime_slots": 30
+  "n_spare_parts_rows": 104,
+  "n_technician_assignments": 56,
+  "n_downtime_slots": 56
 }
