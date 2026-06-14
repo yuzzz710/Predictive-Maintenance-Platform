@@ -144,10 +144,14 @@ def _resolve_targets(
             return [str(mid) for mid in plan["machine_id"].head(_top_n * 2).tolist()]
 
     if report_type == "thermal":
-        return alarms.get("thermal_drift_devices", [])[:_top_n]
+        targets = alarms.get("thermal_drift_devices", [])[:_top_n]
+        if targets:
+            return targets
+        # fall through to default
 
     # weekly / risk / default
-    return [d["machine_id"] for d in all_devices[:_top_n]]
+    targets = [d["machine_id"] for d in all_devices[:_top_n]]
+    return targets
 
 
 # ══════════════════════════════════════════════════════════════════════════

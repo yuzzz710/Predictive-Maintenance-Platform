@@ -89,25 +89,85 @@ def _build_legacy_dict(spec: ReportSpec) -> dict:
 
     Old templates reference {{ report.report_type }}, {{ report.alerts_summary }},
     {{ report.root_cause }}, etc.  This bridge keeps them working without modification.
+
+    Critical: nested structures must include safe defaults for Jinja2 dot-access.
+    When a data source was not collected (e.g. thermal skips faults), the template
+    still expects fault_statistics.highest_fault_rate.rate — an empty {} will cause
+    Jinja2 UndefinedError.  We pre-populate the known access paths.
     """
     ctx = spec.context
     if ctx is None:
         return {}
 
+    faults_raw = ctx.fault_statistics or {}
+    faults = {
+        "machines_analyzed": faults_raw.get("machines_analyzed", 0),
+        "total_faults": faults_raw.get("total_faults", 0),
+        "fault_type_distribution": faults_raw.get("fault_type_distribution", {}),
+        "fault_group_distribution": faults_raw.get("fault_group_distribution", {}),
+        "highest_fault_rate": faults_raw.get("highest_fault_rate", {"machine_id": "", "rate": 0}),
+    }
+
+    cost_raw = spec.cost_analysis or {}
+    cost = {
+        "total_cost_at_risk": cost_raw.get("total_cost_at_risk", 0),
+        "cost_by_action": cost_raw.get("cost_by_action", {}),
+        "device_count": cost_raw.get("device_count", 0),
+        "average_cost_per_device": cost_raw.get("average_cost_per_device", 0),
+    }
+
+    rca_raw = ctx.root_cause or {}
+    rca = {
+        "machine_id": rca_raw.get("machine_id", ""),
+        "root_causes": rca_raw.get("root_causes", []),
+        "cascade_chains": rca_raw.get("cascade_chains", []),
+        "overall_confidence": rca_raw.get("overall_confidence", 0),
+        "diagnosis": rca_raw.get("diagnosis", {}),
+    }
+
+    health_raw = ctx.health_analysis or {}
+    health = {
+        "scores": health_raw.get("scores", []),
+        "lowest": health_raw.get("lowest"),
+        "average": health_raw.get("average", 0),
+        "critical_count": health_raw.get("critical_count", 0),
+        "degrading_count": health_raw.get("degrading_count", 0),
+    }
+
+    parts_raw = ctx.parts_summary or {}
+    parts = {
+        "total_part_types": parts_raw.get("total_part_types", 0),
+        "total_parts_needed": parts_raw.get("total_parts_needed", 0),
+        "top_parts": parts_raw.get("top_parts", []),
+        "all_parts": parts_raw.get("all_parts", []),
+    }
+
+    alerts_raw = ctx.alerts_summary or {}
+    alerts = {
+        "total": alerts_raw.get("total", 0),
+        "alarm_count": alerts_raw.get("alarm_count", 0),
+        "warning_count": alerts_raw.get("warning_count", 0),
+        "thermal_drift_count": alerts_raw.get("thermal_drift_count", 0),
+        "immediate_shutdown_count": alerts_raw.get("immediate_shutdown_count", 0),
+        "thermal_drift_devices": alerts_raw.get("thermal_drift_devices", []),
+        "immediate_shutdown_devices": alerts_raw.get("immediate_shutdown_devices", []),
+        "all_devices": alerts_raw.get("all_devices", []),
+    }
+
     legacy = {
         "report_type": spec.report_type,
-        "generated_at": spec.export_meta.generated_at or spec.context.generated_at if spec.context else "",
+        "generated_at": spec.export_meta.generated_at or (ctx.generated_at if ctx else ""),
         "summary": spec.summary,
         "sections": {s.key: {"title": s.title, "order": s.order} for s in spec.sections},
         "charts": [],
-        "alerts_summary": ctx.alerts_summary or {},
+        "alerts_summary": alerts,
         "device_details": ctx.device_details,
         "sensor_charts": ctx.sensor_charts,
-        "fault_statistics": ctx.fault_statistics or {},
-        "root_cause": ctx.root_cause or {},
-        "cost_analysis": spec.cost_analysis or {},
-        "health_analysis": ctx.health_analysis or {},
-        "parts_summary": ctx.parts_summary or {},
+        "fault_statistics": faults,
+        "root_cause": rca,
+        "cost_analysis": cost,
+        "health_analysis": health,
+        "parts_summary": parts,
         "predictability_context": ctx.predictability_context or {},
         "recommendations": spec.recommendations,
     }
