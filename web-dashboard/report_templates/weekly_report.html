@@ -4,59 +4,185 @@
 <meta charset="UTF-8">
 <title>预测性维护报告 — {{ report.report_type | title }}</title>
 <style>
-  @page {
-    size: A4;
-    margin: 18mm 16mm 20mm 16mm;
-    @top-center { content: "Industrial AI Copilot — 预测性维护报告"; font-size: 8px; color: #5a6474; font-family: "Cascadia Code", "Fira Code", monospace; }
-    @bottom-center { content: "第 " counter(page) " 页 / 共 " counter(pages) " 页"; font-size: 7px; color: #5a6474; }
-    @bottom-left { content: "机密 — 仅限内部使用"; font-size: 6px; color: #3a4454; }
+/* ═══════════════════════════════════════════════════════════════
+   iOS 26 Design Tokens + Glass Card System
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  --bg-root: #000000;
+  --glass-bg-card: rgba(44,44,46,0.35);
+  --glass-bg-card-alt: rgba(58,58,60,0.25);
+  --glass-blur: blur(45px) saturate(220%);
+  --glass-blur-light: blur(30px) saturate(200%);
+  --glass-border: rgba(255,255,255,0.10);
+  --glass-highlight: inset 0 0.5px 0 rgba(255,255,255,0.08);
+  --glass-highlight-strong: inset 0 0.5px 0 rgba(255,255,255,0.14);
+  --text-primary: #f5f5f7;
+  --text-secondary: #c8c8cc;
+  --text-muted: #9a9a9f;
+  --accent-cyan: #66d9c8;
+  --accent-amber: #ffb340;
+  --accent-red: #ff453a;
+  --accent-green: #30d158;
+  --accent-purple: #bf5af2;
+  --radius-sm: 10px; --radius-md: 18px; --radius-lg: 22px; --radius-xl: 28px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+  --font-sans: -apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
+  --font-mono: 'SF Mono','Cascadia Code','Fira Code','Consolas',monospace;
+  --transition: 0.25s cubic-bezier(0.25,0.1,0.25,1);
+}
+
+@page {
+  size: A4; margin: 18mm 16mm 20mm 16mm;
+  @top-center { content: "Industrial AI Copilot — 预测性维护报告"; font-size:8px; color:#636366; font-family:"SF Mono","Cascadia Code",monospace; }
+  @bottom-center { content: "第 " counter(page) " 页 / 共 " counter(pages) " 页"; font-size:7px; color:#636366; }
+  @bottom-left { content: "机密 — 仅限内部使用"; font-size:6px; color:#3a3a3c; }
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: var(--font-sans); font-size:12px; color:var(--text-primary);
+  background: var(--bg-root); line-height:1.7; padding:32px 40px;
+  -webkit-font-smoothing:antialiased;
+}
+body::before {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 30% 20%, rgba(102,217,200,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 70% 60%, rgba(109,181,249,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 80%, rgba(191,90,242,0.03) 0%, transparent 60%);
+}
+
+/* ── Cover ── */
+.cover {
+  page-break-after:always; display:flex; flex-direction:column; justify-content:center;
+  min-height:100vh; text-align:center; padding:40px; position:relative; z-index:1;
+  background: radial-gradient(ellipse 60% 50% at 50% 40%, rgba(102,217,200,0.08) 0%, transparent 70%),
+              linear-gradient(180deg, #000 0%, #0a0a0c 100%);
+}
+.cover-dot {
+  width:20px; height:20px; border-radius:50%; background:var(--accent-cyan);
+  margin:0 auto 28px;
+  box-shadow: 0 0 16px rgba(102,217,200,0.3), 0 0 32px rgba(102,217,200,0.1);
+  animation: coverPulse 2.5s ease-in-out infinite;
+}
+@keyframes coverPulse {
+  0%,100% { box-shadow:0 0 12px rgba(102,217,200,0.3),0 0 24px rgba(102,217,200,0.08); }
+  50% { box-shadow:0 0 20px rgba(102,217,200,0.5),0 0 40px rgba(102,217,200,0.2); }
+}
+.cover h1 {
+  font-family: var(--font-sans); font-size:30px; font-weight:700; letter-spacing:-0.5px;
+  background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  margin-bottom:8px;
+}
+.cover h2 { font-size:17px; font-weight:400; color:var(--text-secondary); margin-bottom:40px; }
+.cover-line { width:100px; height:1px; background:rgba(255,255,255,0.10); margin:0 auto 32px; }
+.cover-meta { font-size:12px; color:var(--text-muted); line-height:2.2; }
+.cover-meta span { color:var(--text-secondary); }
+
+/* ── Section (glass card) ── */
+.section {
+  page-break-inside:avoid; margin-bottom:20px; padding:22px 24px; position:relative; z-index:1;
+  background: var(--glass-bg-card);
+  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  border: 0.5px solid var(--glass-border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm), var(--glass-highlight);
+}
+.section-title {
+  font-family: var(--font-sans); font-size:16px; font-weight:600; color:var(--accent-cyan);
+  border-bottom: 0.5px solid rgba(255,255,255,0.06); padding-bottom:10px; margin-bottom:16px;
+  display:flex; align-items:center; gap:10px;
+}
+.section-number {
+  display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px;
+  border-radius:8px; background:rgba(102,217,200,0.10); color:var(--accent-cyan);
+  font-size:12px; font-weight:700; font-family:var(--font-mono);
+}
+
+/* ── Metric cards ── */
+.metrics { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+.metric-card {
+  flex:1; min-width:110px; padding:14px 16px; text-align:center;
+  background: var(--glass-bg-card-alt);
+  backdrop-filter: var(--glass-blur-light); -webkit-backdrop-filter: var(--glass-blur-light);
+  border: 0.5px solid var(--glass-border); border-radius: var(--radius-md);
+  box-shadow: var(--glass-highlight);
+}
+.metric-value {
+  font-family:var(--font-mono); font-size:22px; font-weight:700; color:var(--accent-cyan);
+}
+.metric-value.danger { color:var(--accent-red); }
+.metric-value.warning { color:var(--accent-amber); }
+.metric-label { font-size:10px; color:var(--text-muted); margin-top:4px; font-weight:500; }
+
+/* ── Table ── */
+table { width:100%; border-collapse:separate; border-spacing:0; font-size:10px; margin:8px 0 14px; }
+th {
+  background:var(--glass-bg-card-alt); color:var(--text-secondary); font-weight:600;
+  padding:9px 12px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.06);
+  font-size:9px; text-transform:uppercase; letter-spacing:0.05em;
+}
+td { padding:8px 12px; border-bottom:0.5px solid rgba(255,255,255,0.04); }
+tr:hover td { background:var(--glass-bg-card-alt); }
+
+/* ── Badges ── */
+.badge { display:inline-block; padding:2px 10px; border-radius:10px; font-size:9px; font-weight:600; }
+.badge-alarm { background:rgba(255,69,58,0.10); color:var(--accent-red); }
+.badge-warning { background:rgba(255,179,64,0.10); color:var(--accent-amber); }
+.badge-ok { background:rgba(48,209,88,0.10); color:var(--accent-green); }
+
+/* ── Charts ── */
+.chart-container { margin:14px 0; text-align:center; }
+.chart-container img { max-width:100%; height:auto; border-radius:var(--radius-sm); }
+.chart-caption { font-size:9px; color:var(--text-muted); margin-top:6px; font-family:var(--font-mono); }
+
+/* ── Alert boxes ── */
+.alert-box { padding:14px 18px; border-radius:var(--radius-sm); border-left:3px solid; margin:12px 0; font-size:11px; line-height:1.7; }
+.alert-critical { background:rgba(255,69,58,0.06); border-color:var(--accent-red); color:#ff8a80; }
+.alert-warning-box { background:rgba(255,179,64,0.06); border-color:var(--accent-amber); color:#ffd080; }
+.alert-info { background:rgba(102,217,200,0.04); border-color:var(--accent-cyan); color:#80d8c8; }
+
+/* ── Cause cards ── */
+.cause-card {
+  padding:12px 16px; margin:8px 0; border-radius:var(--radius-sm);
+  background:var(--glass-bg-card-alt);
+  border:0.5px solid var(--glass-border);
+  box-shadow:var(--glass-highlight);
+}
+.cause-title { font-size:12px; font-weight:600; color:var(--accent-amber); }
+.cause-confidence { font-size:10px; color:var(--text-muted); }
+.cause-evidence { font-size:10px; color:var(--text-secondary); margin-top:4px; }
+
+/* ── Footer ── */
+.report-footer {
+  margin-top:32px; padding:18px 0; border-top:0.5px solid rgba(255,255,255,0.06);
+  font-size:9px; color:var(--text-muted); text-align:center; position:relative; z-index:1;
+}
+
+/* ── Print ── */
+@media print {
+  body { background:#fff; color:#000; padding:0; }
+  body::before { display:none; }
+  .section {
+    background:#fff; backdrop-filter:none; -webkit-backdrop-filter:none;
+    border:1px solid #ddd; box-shadow:none; border-radius:4px;
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", system-ui, sans-serif; font-size: 10px; color: #e6ebf2; background: #080a0d; line-height: 1.6; }
-
-  .cover { page-break-after: always; display: flex; flex-direction: column; justify-content: center; min-height: 100vh; background: linear-gradient(160deg, #080a0d 0%, #0e1117 40%, #141820 100%); text-align: center; padding: 40px; }
-  .cover-dot { width: 18px; height: 18px; border-radius: 50%; background: #00c9a0; margin: 0 auto 24px; box-shadow: 0 0 20px rgba(0,201,160,0.4), 0 0 40px rgba(0,201,160,0.15); }
-  .cover h1 { font-family: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace; font-size: 28px; font-weight: 700; color: #00c9a0; letter-spacing: 2px; margin-bottom: 8px; }
-  .cover h2 { font-size: 18px; font-weight: 400; color: #8e9aab; margin-bottom: 40px; }
-  .cover-line { width: 120px; height: 2px; background: #1c2230; margin: 0 auto 32px; }
-  .cover-meta { font-size: 11px; color: #5a6474; line-height: 2; }
-  .cover-meta span { color: #8e9aab; }
-
-  .section { page-break-inside: avoid; margin-bottom: 24px; padding: 20px; background: #0e1117; border: 1px solid #1c2230; border-radius: 6px; }
-  .section-title { font-family: "Cascadia Code", "Fira Code", monospace; font-size: 14px; font-weight: 700; color: #00c9a0; border-bottom: 1px solid #1c2230; padding-bottom: 10px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-  .section-number { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 4px; background: rgba(0,201,160,0.1); color: #00c9a0; font-size: 11px; font-weight: 700; }
-
-  .metrics { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
-  .metric-card { flex: 1; min-width: 120px; padding: 12px 16px; background: #141820; border: 1px solid #1c2230; border-radius: 6px; text-align: center; }
-  .metric-value { font-family: "Cascadia Code", "Fira Code", monospace; font-size: 22px; font-weight: 700; color: #00c9a0; }
-  .metric-value.danger { color: #f04040; }
-  .metric-value.warning { color: #f0a030; }
-  .metric-label { font-size: 9px; color: #5a6474; margin-top: 4px; }
-
-  table { width: 100%; border-collapse: collapse; font-size: 9px; margin: 8px 0 16px; }
-  th { background: #141820; color: #8e9aab; font-weight: 600; padding: 8px 10px; text-align: left; border-bottom: 2px solid #1c2230; }
-  td { padding: 7px 10px; border-bottom: 1px solid rgba(28,34,48,0.5); }
-  tr:nth-child(even) td { background: rgba(255,255,255,0.01); }
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 8px; font-weight: 600; }
-  .badge-alarm { background: rgba(240,64,64,0.15); color: #f04040; }
-  .badge-warning { background: rgba(240,160,48,0.15); color: #f0a030; }
-  .badge-ok { background: rgba(63,185,80,0.15); color: #3fb950; }
-
-  .chart-container { margin: 16px 0; text-align: center; }
-  .chart-container img { max-width: 100%; height: auto; border-radius: 4px; }
-  .chart-caption { font-size: 8px; color: #5a6474; margin-top: 6px; font-family: "Cascadia Code", "Fira Code", monospace; }
-
-  .alert-box { padding: 12px 16px; border-radius: 4px; border-left: 3px solid; margin: 12px 0; font-size: 10px; }
-  .alert-critical { background: rgba(240,64,64,0.08); border-color: #f04040; color: #f0a0a0; }
-  .alert-warning-box { background: rgba(240,160,48,0.08); border-color: #f0a030; color: #f0c060; }
-  .alert-info { background: rgba(0,201,160,0.05); border-color: #00c9a0; color: #80d8c8; }
-
-  .cause-card { padding: 10px 14px; margin: 8px 0; background: #141820; border: 1px solid #1c2230; border-radius: 4px; }
-  .cause-title { font-size: 11px; font-weight: 600; color: #f0a030; }
-  .cause-confidence { font-size: 9px; color: #5a6474; }
-  .cause-evidence { font-size: 9px; color: #8e9aab; margin-top: 4px; }
-
-  .report-footer { margin-top: 32px; padding: 16px 0; border-top: 1px solid #1c2230; font-size: 7px; color: #3a4454; text-align: center; }
+  .section-title { color:#006b5e; border-bottom-color:#ccc; }
+  .metric-card { background:#f9f9f9; border:1px solid #ddd; box-shadow:none; }
+  .metric-value { color:#006b5e; }
+  .metric-value.danger { color:#c00; }
+  .metric-value.warning { color:#c60; }
+  .cover { background:#fff; }
+  .cover h1 { color:#006b5e; -webkit-text-fill-color:#006b5e; }
+  .cover h2 { color:#666; }
+  .cover-meta { color:#999; }
+  .cover-meta span { color:#666; }
+  .cause-card { background:#f9f9f9; border:1px solid #ddd; box-shadow:none; }
+  .report-footer { color:#999; }
+}
 </style>
 </head>
 <body>
@@ -129,7 +255,7 @@
   </div>
   {% endif %}
 
-  <p style="color: #8e9aab; font-size: 10px; margin-top: 12px;">
+  <p style="color:var(--text-secondary); font-size:11px; margin-top:12px;">
     {{ report.predictability_context.conclusion }}
     {{ report.predictability_context.best_next_action }}
   </p>
@@ -155,7 +281,7 @@
       {% set wo = d.work_order or {} %}
       {% set zs = d.z_scores or {} %}
       <tr>
-        <td style="font-family: 'Cascadia Code', monospace;">{{ d.machine_id }}</td>
+        <td style="font-family:var(--font-mono);">{{ d.machine_id }}</td>
         <td>#{{ wo.priority if wo.priority else '-' }}</td>
         <td>
           {% set lvl = wo.alert_level if wo.alert_level else (zs.alert_level if zs.alert_level else 'N/A') %}
@@ -199,7 +325,7 @@
     {% endif %}
     {% endfor %}
   {% else %}
-    <p style="color: #5a6474;">暂无传感器趋势数据可用于绘图。</p>
+    <p style="color:var(--text-muted);">暂无传感器趋势数据可用于绘图。</p>
   {% endif %}
 </div>
 
@@ -260,7 +386,7 @@
 <div class="section">
   <div class="section-title"><span class="section-number">5</span> 根因分析</div>
 
-  <p style="color: #8e9aab; margin-bottom: 8px;">
+  <p style="color:var(--text-secondary); margin-bottom:8px;">
     主要分析对象：<strong>{{ report.root_cause.machine_id }}</strong>
     （综合诊断置信度：{{ report.root_cause.overall_confidence | pct }}）
   </p>
@@ -283,14 +409,14 @@
   {% endfor %}
 
   {% if report.root_cause.cascade_chains %}
-  <div class="alert-box alert-warning-box" style="margin-top: 12px;">
+  <div class="alert-box alert-warning-box" style="margin-top:12px;">
     <strong>⚠ 级联故障链检测：</strong><br>
     {% for chain in report.root_cause.cascade_chains %}{{ chain }}<br>{% endfor %}
   </div>
   {% endif %}
 
   {% if report.root_cause.diagnosis %}
-  <table style="margin-top: 12px;">
+  <table style="margin-top:12px;">
     <thead><tr><th>证据类型</th><th>强度</th></tr></thead>
     <tbody>
       {% for key, val in report.root_cause.diagnosis.items() if key.startswith('evidence_') %}
@@ -322,7 +448,7 @@
       {% for rec in report.recommendations[:10] %}
       <tr>
         <td>#{{ rec.priority }}</td>
-        <td style="font-family: 'Cascadia Code', monospace;">{{ rec.machine_id }}</td>
+        <td style="font-family:var(--font-mono);">{{ rec.machine_id }}</td>
         <td>
           {% if rec.action == 'immediate_shutdown' %}立即停机
           {% elif rec.action == 'preventive_repair' %}预防性维修
@@ -331,7 +457,7 @@
         </td>
         <td>{{ rec.urgency | r0 }}/100</td>
         <td>{{ rec.cost_risk | money }}</td>
-        <td style="font-size: 8px;">{{ rec.suggestion[:200] }}</td>
+        <td style="font-size:9px;">{{ rec.suggestion[:200] }}</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -369,7 +495,7 @@
 <div class="section">
   <div class="section-title"><span class="section-number">8</span> 预测性维护效益分析</div>
 
-  <p style="color: #8e9aab; font-size: 10px; margin-bottom: 12px;">
+  <p style="color:var(--text-secondary); font-size:11px; margin-bottom:12px;">
     以下估算基于多信号融合决策引擎的成本风险模型，
     该模型综合了统计异常检测（40%）、ML 密度估计（25%）、
     成本风险矩阵（25%）和趋势分析（10%）四个维度。
@@ -377,7 +503,7 @@
 
   <div class="metrics">
     <div class="metric-card">
-      <div class="metric-value" style="color: #3fb950;">${{ report.alerts_summary.total * 4500 }}</div>
+      <div class="metric-value" style="color:var(--accent-green);">${{ report.alerts_summary.total * 4500 }}</div>
       <div class="metric-label">预估年度节约（美元）</div>
     </div>
     <div class="metric-card">

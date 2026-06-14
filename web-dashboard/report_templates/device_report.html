@@ -4,117 +4,164 @@
 <meta charset="UTF-8">
 <title>设备健康报告 — {{ report.root_cause.machine_id if report.root_cause.machine_id else report.device_details[0].machine_id if report.device_details else 'Unknown' }}</title>
 <style>
-  @page {
-    size: A4;
-    margin: 16mm 14mm 18mm 14mm;
-    @top-center {
-      content: "Industrial AI Copilot — 设备健康报告";
-      font-size: 8px; color: #5a6474;
-      font-family: "Cascadia Code", "Fira Code", monospace;
-    }
-    @bottom-center {
-      content: "第 " counter(page) " 页 / 共 " counter(pages) " 页";
-      font-size: 7px; color: #5a6474;
-    }
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", system-ui, sans-serif;
-    font-size: 10px; color: #e6ebf2; background: #080a0d; line-height: 1.6;
-  }
+/* ═══════════════════════════════════════════════════════════════
+   iOS 26 Design Tokens + Glass Card System
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  --bg-root: #000000;
+  --glass-bg-card: rgba(44,44,46,0.35);
+  --glass-bg-card-alt: rgba(58,58,60,0.25);
+  --glass-blur: blur(45px) saturate(220%);
+  --glass-blur-light: blur(30px) saturate(200%);
+  --glass-border: rgba(255,255,255,0.10);
+  --glass-highlight: inset 0 0.5px 0 rgba(255,255,255,0.08);
+  --text-primary: #f5f5f7;
+  --text-secondary: #c8c8cc;
+  --text-muted: #9a9a9f;
+  --accent-cyan: #66d9c8;
+  --accent-amber: #ffb340;
+  --accent-red: #ff453a;
+  --accent-green: #30d158;
+  --accent-purple: #bf5af2;
+  --radius-sm: 10px; --radius-md: 18px; --radius-lg: 22px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --font-sans: -apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
+  --font-mono: 'SF Mono','Cascadia Code','Fira Code','Consolas',monospace;
+}
 
-  .cover {
-    page-break-after: always;
-    display: flex; flex-direction: column; justify-content: center;
-    min-height: 100vh;
-    background: linear-gradient(160deg, #080a0d 0%, #0e1117 40%, #141820 100%);
-    text-align: center; padding: 40px;
-  }
-  .cover-dot {
-    width: 18px; height: 18px; border-radius: 50%;
-    background: #00c9a0; margin: 0 auto 24px;
-    box-shadow: 0 0 20px rgba(0,201,160,0.4), 0 0 40px rgba(0,201,160,0.15);
-  }
-  .cover h1 {
-    font-family: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
-    font-size: 26px; font-weight: 700; color: #00c9a0;
-    letter-spacing: 2px; margin-bottom: 8px;
-  }
-  .cover h2 {
-    font-size: 16px; font-weight: 400; color: #8e9aab; margin-bottom: 40px;
-  }
-  .cover-line { width: 120px; height: 2px; background: #1c2230; margin: 0 auto 32px; }
-  .cover-meta { font-size: 11px; color: #5a6474; line-height: 2; }
-  .cover-meta span { color: #8e9aab; }
+@page {
+  size: A4; margin: 16mm 14mm 18mm 14mm;
+  @top-center { content:"Industrial AI Copilot — 设备健康报告"; font-size:8px; color:#636366; font-family:"SF Mono","Cascadia Code",monospace; }
+  @bottom-center { content:"第 " counter(page) " 页 / 共 " counter(pages) " 页"; font-size:7px; color:#636366; }
+}
 
-  .section {
-    page-break-inside: avoid;
-    margin-bottom: 20px; padding: 18px;
-    background: #0e1117; border: 1px solid #1c2230; border-radius: 6px;
-  }
-  .section-title {
-    font-family: "Cascadia Code", "Fira Code", monospace;
-    font-size: 13px; font-weight: 700; color: #00c9a0;
-    border-bottom: 1px solid #1c2230;
-    padding-bottom: 8px; margin-bottom: 14px;
-  }
+* { margin:0; padding:0; box-sizing:border-box; }
 
-  .metrics { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
-  .metric-card {
-    flex: 1; min-width: 100px;
-    padding: 10px 14px; background: #141820; border: 1px solid #1c2230;
-    border-radius: 6px; text-align: center;
-  }
-  .metric-value {
-    font-family: "Cascadia Code", "Fira Code", monospace;
-    font-size: 20px; font-weight: 700; color: #00c9a0;
-  }
-  .metric-value.danger { color: #f04040; }
-  .metric-value.warning { color: #f0a030; }
-  .metric-value.ok { color: #3fb950; }
-  .metric-label { font-size: 8px; color: #5a6474; margin-top: 4px; }
+body {
+  font-family:var(--font-sans); font-size:12px; color:var(--text-primary);
+  background:var(--bg-root); line-height:1.7; padding:32px 36px;
+  -webkit-font-smoothing:antialiased;
+}
+body::before {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 30% 20%, rgba(102,217,200,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 70% 60%, rgba(109,181,249,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 80%, rgba(191,90,242,0.03) 0%, transparent 60%);
+}
 
-  table {
-    width: 100%; border-collapse: collapse; font-size: 9px; margin: 8px 0 14px;
-  }
-  th {
-    background: #141820; color: #8e9aab; font-weight: 600;
-    padding: 6px 8px; text-align: left; border-bottom: 2px solid #1c2230;
-  }
-  td { padding: 6px 8px; border-bottom: 1px solid rgba(28,34,48,0.5); }
+/* ── Cover ── */
+.cover {
+  page-break-after:always; display:flex; flex-direction:column; justify-content:center;
+  min-height:100vh; text-align:center; padding:40px; position:relative; z-index:1;
+  background: radial-gradient(ellipse 60% 50% at 50% 40%, rgba(102,217,200,0.08) 0%, transparent 70%),
+              linear-gradient(180deg, #000 0%, #0a0a0c 100%);
+}
+.cover-dot {
+  width:20px; height:20px; border-radius:50%; background:var(--accent-cyan);
+  margin:0 auto 28px;
+  box-shadow:0 0 16px rgba(102,217,200,0.3),0 0 32px rgba(102,217,200,0.1);
+  animation:coverPulse 2.5s ease-in-out infinite;
+}
+@keyframes coverPulse {
+  0%,100%{box-shadow:0 0 12px rgba(102,217,200,0.3),0 0 24px rgba(102,217,200,0.08);}
+  50%{box-shadow:0 0 20px rgba(102,217,200,0.5),0 0 40px rgba(102,217,200,0.2);}
+}
+.cover h1 {
+  font-family:var(--font-sans); font-size:28px; font-weight:700; letter-spacing:-0.5px;
+  background:linear-gradient(135deg,var(--accent-cyan) 0%,var(--accent-purple) 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  margin-bottom:8px;
+}
+.cover h2 { font-size:16px; font-weight:400; color:var(--text-secondary); margin-bottom:40px; }
+.cover-line { width:100px; height:1px; background:rgba(255,255,255,0.10); margin:0 auto 32px; }
+.cover-meta { font-size:12px; color:var(--text-muted); line-height:2.2; }
+.cover-meta span { color:var(--text-secondary); }
 
-  .badge {
-    display: inline-block; padding: 2px 7px; border-radius: 3px;
-    font-size: 8px; font-weight: 600;
-  }
-  .badge-alarm { background: rgba(240,64,64,0.15); color: #f04040; }
-  .badge-warning { background: rgba(240,160,48,0.15); color: #f0a030; }
-  .badge-ok { background: rgba(63,185,80,0.15); color: #3fb950; }
+/* ── Section (glass card) ── */
+.section {
+  page-break-inside:avoid; margin-bottom:18px; padding:20px 22px; position:relative; z-index:1;
+  background:var(--glass-bg-card);
+  backdrop-filter:var(--glass-blur); -webkit-backdrop-filter:var(--glass-blur);
+  border:0.5px solid var(--glass-border); border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-sm),var(--glass-highlight);
+}
+.section-title {
+  font-family:var(--font-sans); font-size:15px; font-weight:600; color:var(--accent-cyan);
+  border-bottom:0.5px solid rgba(255,255,255,0.06); padding-bottom:9px; margin-bottom:14px;
+}
 
-  .chart-container { margin: 14px 0; text-align: center; }
-  .chart-container img { max-width: 100%; height: auto; border-radius: 4px; }
-  .chart-caption { font-size: 8px; color: #5a6474; margin-top: 4px; }
+/* ── Metric cards ── */
+.metrics { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:12px; }
+.metric-card {
+  flex:1; min-width:90px; padding:12px 14px; text-align:center;
+  background:var(--glass-bg-card-alt);
+  backdrop-filter:var(--glass-blur-light); -webkit-backdrop-filter:var(--glass-blur-light);
+  border:0.5px solid var(--glass-border); border-radius:var(--radius-md);
+  box-shadow:var(--glass-highlight);
+}
+.metric-value {
+  font-family:var(--font-mono); font-size:20px; font-weight:700; color:var(--accent-cyan);
+}
+.metric-value.danger { color:var(--accent-red); }
+.metric-value.warning { color:var(--accent-amber); }
+.metric-value.ok { color:var(--accent-green); }
+.metric-label { font-size:10px; color:var(--text-muted); margin-top:4px; font-weight:500; }
 
-  .alert-box {
-    padding: 10px 14px; border-radius: 4px; border-left: 3px solid;
-    margin: 10px 0; font-size: 9px;
-  }
-  .alert-critical { background: rgba(240,64,64,0.08); border-color: #f04040; color: #f0a0a0; }
-  .alert-warning-box { background: rgba(240,160,48,0.08); border-color: #f0a030; color: #f0c060; }
-  .alert-info { background: rgba(0,201,160,0.05); border-color: #00c9a0; color: #80d8c8; }
+/* ── Table ── */
+table { width:100%; border-collapse:separate; border-spacing:0; font-size:10px; margin:8px 0 12px; }
+th {
+  background:var(--glass-bg-card-alt); color:var(--text-secondary); font-weight:600;
+  padding:8px 10px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.06);
+  font-size:9px; text-transform:uppercase; letter-spacing:0.05em;
+}
+td { padding:7px 10px; border-bottom:0.5px solid rgba(255,255,255,0.04); }
+tr:hover td { background:var(--glass-bg-card-alt); }
 
-  .cause-card {
-    padding: 10px 12px; margin: 6px 0;
-    background: #141820; border: 1px solid #1c2230; border-radius: 4px;
-  }
-  .cause-title { font-size: 11px; font-weight: 600; color: #f0a030; }
-  .cause-evidence { font-size: 9px; color: #8e9aab; margin-top: 3px; }
+/* ── Badges ── */
+.badge { display:inline-block; padding:2px 10px; border-radius:10px; font-size:9px; font-weight:600; }
+.badge-alarm { background:rgba(255,69,58,0.10); color:var(--accent-red); }
+.badge-warning { background:rgba(255,179,64,0.10); color:var(--accent-amber); }
+.badge-ok { background:rgba(48,209,88,0.10); color:var(--accent-green); }
 
-  .report-footer {
-    margin-top: 28px; padding: 14px 0;
-    border-top: 1px solid #1c2230;
-    font-size: 7px; color: #3a4454; text-align: center;
-  }
+/* ── Charts ── */
+.chart-container { margin:12px 0; text-align:center; }
+.chart-container img { max-width:100%; height:auto; border-radius:var(--radius-sm); }
+.chart-caption { font-size:9px; color:var(--text-muted); margin-top:4px; font-family:var(--font-mono); }
+
+/* ── Alert boxes ── */
+.alert-box { padding:12px 16px; border-radius:var(--radius-sm); border-left:3px solid; margin:10px 0; font-size:11px; line-height:1.7; }
+.alert-critical { background:rgba(255,69,58,0.06); border-color:var(--accent-red); color:#ff8a80; }
+.alert-warning-box { background:rgba(255,179,64,0.06); border-color:var(--accent-amber); color:#ffd080; }
+.alert-info { background:rgba(102,217,200,0.04); border-color:var(--accent-cyan); color:#80d8c8; }
+
+/* ── Cause cards ── */
+.cause-card {
+  padding:10px 14px; margin:6px 0; border-radius:var(--radius-sm);
+  background:var(--glass-bg-card-alt); border:0.5px solid var(--glass-border);
+  box-shadow:var(--glass-highlight);
+}
+.cause-title { font-size:12px; font-weight:600; color:var(--accent-amber); }
+.cause-evidence { font-size:10px; color:var(--text-secondary); margin-top:3px; }
+
+.report-footer {
+  margin-top:28px; padding:16px 0; border-top:0.5px solid rgba(255,255,255,0.06);
+  font-size:9px; color:var(--text-muted); text-align:center; position:relative; z-index:1;
+}
+
+@media print {
+  body { background:#fff; color:#000; padding:0; }
+  body::before { display:none; }
+  .section { background:#fff; backdrop-filter:none; -webkit-backdrop-filter:none; border:1px solid #ddd; box-shadow:none; border-radius:4px; }
+  .section-title { color:#006b5e; border-bottom-color:#ccc; }
+  .metric-card { background:#f9f9f9; border:1px solid #ddd; box-shadow:none; }
+  .metric-value { color:#006b5e; }
+  .metric-value.danger{color:#c00;}.metric-value.warning{color:#c60;}
+  .cover{background:#fff;}.cover h1{color:#006b5e;-webkit-text-fill-color:#006b5e;}.cover h2{color:#666;}
+  .cover-meta{color:#999;}.cover-meta span{color:#666;}
+  .cause-card{background:#f9f9f9;border:1px solid #ddd;box-shadow:none;}
+  .report-footer{color:#999;}
+}
 </style>
 </head>
 <body>
@@ -125,7 +172,6 @@
 {% set zs = device.z_scores or {} %}
 {% set diag = device.diagnosis or {} %}
 
-<!-- 封面 -->
 <div class="cover">
   <div class="cover-dot"></div>
   <h1>设备健康报告</h1>
@@ -138,16 +184,12 @@
   </div>
 </div>
 
-<!-- 1. 设备状态 -->
 <div class="section">
   <div class="section-title">1 — 设备状态概览</div>
-
   <div class="metrics">
     <div class="metric-card">
       {% set lvl = wo.alert_level if wo.alert_level else (zs.alert_level if zs.alert_level else 'N/A') %}
-      <div class="metric-value {{ 'danger' if lvl == 'ALARM' else 'warning' if lvl == 'WARNING' else 'ok' }}">
-        {{ lvl }}
-      </div>
+      <div class="metric-value {{ 'danger' if lvl == 'ALARM' else 'warning' if lvl == 'WARNING' else 'ok' }}">{{ lvl }}</div>
       <div class="metric-label">告警级别</div>
     </div>
     <div class="metric-card">
@@ -163,7 +205,6 @@
       <div class="metric-label">建议措施</div>
     </div>
   </div>
-
   {% if wo.suggestion %}
   <div class="alert-box {{ 'alert-critical' if wo.alert_level == 'ALARM' else 'alert-warning-box' if wo.alert_level == 'WARNING' else 'alert-info' }}">
     <strong>AI 建议：</strong> {{ wo.suggestion[:400] }}
@@ -171,87 +212,62 @@
   {% endif %}
 </div>
 
-<!-- 2. Z-Score 分析 -->
 <div class="section">
   <div class="section-title">2 — Z-Score 分析（单设备基线）</div>
-
   {% if zs %}
   <div class="metrics">
     <div class="metric-card">
-      <div class="metric-value {{ 'danger' if zs.z_Voltage | abs > 2 else 'warning' if zs.z_Voltage | abs > 1 else 'ok' }}">
-        {{ zs.z_Voltage | r1 }}
-      </div>
+      <div class="metric-value {{ 'danger' if zs.z_Voltage | abs > 2 else 'warning' if zs.z_Voltage | abs > 1 else 'ok' }}">{{ zs.z_Voltage | r1 }}</div>
       <div class="metric-label">Z-电压</div>
     </div>
     <div class="metric-card">
-      <div class="metric-value {{ 'danger' if zs.z_Amperage | abs > 2 else 'warning' if zs.z_Amperage | abs > 1 else 'ok' }}">
-        {{ zs.z_Amperage | r1 }}
-      </div>
+      <div class="metric-value {{ 'danger' if zs.z_Amperage | abs > 2 else 'warning' if zs.z_Amperage | abs > 1 else 'ok' }}">{{ zs.z_Amperage | r1 }}</div>
       <div class="metric-label">Z-电流</div>
     </div>
     <div class="metric-card">
-      <div class="metric-value {{ 'danger' if zs.z_Temperature | abs > 2 else 'warning' if zs.z_Temperature | abs > 1 else 'ok' }}">
-        {{ zs.z_Temperature | r1 }}
-      </div>
+      <div class="metric-value {{ 'danger' if zs.z_Temperature | abs > 2 else 'warning' if zs.z_Temperature | abs > 1 else 'ok' }}">{{ zs.z_Temperature | r1 }}</div>
       <div class="metric-label">Z-温度</div>
     </div>
     <div class="metric-card">
-      <div class="metric-value {{ 'danger' if zs.z_composite | abs > 2 else 'warning' if zs.z_composite | abs > 1 else 'ok' }}">
-        {{ zs.z_composite | r1 }}
-      </div>
+      <div class="metric-value {{ 'danger' if zs.z_composite | abs > 2 else 'warning' if zs.z_composite | abs > 1 else 'ok' }}">{{ zs.z_composite | r1 }}</div>
       <div class="metric-label">Z-综合评分</div>
     </div>
   </div>
-
   {% if zs.alert_history %}
   <table>
     <thead><tr><th>告警历史</th><th>次数</th></tr></thead>
     <tbody>
       {% for level, count in zs.alert_history.items() %}
-      <tr>
-        <td>{{ level }}</td>
-        <td><span class="badge {{ 'badge-alarm' if level == 'ALARM' else 'badge-warning' }}">{{ count }}</span></td>
-      </tr>
+      <tr><td>{{ level }}</td><td><span class="badge {{ 'badge-alarm' if level == 'ALARM' else 'badge-warning' }}">{{ count }}</span></td></tr>
       {% endfor %}
     </tbody>
   </table>
   {% endif %}
-  {% else %}
-  <p style="color: #5a6474;">该设备暂无 Z-Score 数据。</p>
-  {% endif %}
+  {% else %}<p style="color:var(--text-muted);">该设备暂无 Z-Score 数据。</p>{% endif %}
 </div>
 
-<!-- 3. 传感器趋势 -->
 <div class="section">
   <div class="section-title">3 — 传感器趋势分析</div>
-
   {% if report.sensor_charts %}
     {% for sc in report.sensor_charts[:4] %}
     {% set chart_key = "sensor_trend_" ~ loop.index0 %}
     {% if charts[chart_key] %}
     <div class="chart-container">
       <img src="data:image/png;base64,{{ charts[chart_key] }}" alt="{{ sc.machine_id }} {{ sc.sensor_label }}">
-      <div class="chart-caption">
-        图 3.{{ loop.index }} — {{ sc.machine_id }} {{ sc.sensor_label }} |
-        趋势：{{ sc.trend_direction | upper }} | 风险：{{ sc.risk_level | upper }}
-      </div>
+      <div class="chart-caption">图 3.{{ loop.index }} — {{ sc.machine_id }} {{ sc.sensor_label }} | 趋势：{{ sc.trend_direction | upper }} | 风险：{{ sc.risk_level | upper }}</div>
     </div>
     {% endif %}
     {% endfor %}
-  {% else %}
-    <p style="color: #5a6474;">暂无传感器趋势数据。</p>
-  {% endif %}
+  {% else %}<p style="color:var(--text-muted);">暂无传感器趋势数据。</p>{% endif %}
 </div>
 
-<!-- 4. 诊断分析 -->
 <div class="section">
   <div class="section-title">4 — 诊断与模式分析</div>
-
   {% if diag %}
   <table>
     <thead><tr><th>诊断参数</th><th>数值</th></tr></thead>
     <tbody>
-      <tr><td>主要异常模式</td><td style="color: #f0a030; font-weight: 600;">{{ diag.primary_pattern }}</td></tr>
+      <tr><td>主要异常模式</td><td style="color:var(--accent-amber);font-weight:600;">{{ diag.primary_pattern }}</td></tr>
       <tr><td>检测到的模式</td><td>{{ diag.patterns_detected | replace('|', ', ') }}</td></tr>
       <tr><td>诊断置信度</td><td>{{ diag.diagnosis_confidence | pct }}</td></tr>
       <tr><td>电压漂移证据</td><td>{{ diag.evidence_voltage_drift | pct }}</td></tr>
@@ -260,45 +276,33 @@
       <tr><td>综合退化证据</td><td>{{ diag.evidence_combined_degradation | pct }}</td></tr>
     </tbody>
   </table>
-  {% else %}
-  <p style="color: #5a6474;">暂无诊断数据。</p>
-  {% endif %}
+  {% else %}<p style="color:var(--text-muted);">暂无诊断数据。</p>{% endif %}
 </div>
 
-<!-- 5. 根因分析 -->
 <div class="section">
   <div class="section-title">5 — 根因分析</div>
-
   {% for cause in report.root_cause.root_causes %}
   <div class="cause-card">
     <div class="cause-title">{{ cause.cause }}（置信度：{{ cause.confidence | pct }}）</div>
-    {% for e in cause.evidence %}
-    <div class="cause-evidence">- {{ e }}</div>
-    {% endfor %}
+    {% for e in cause.evidence %}<div class="cause-evidence">- {{ e }}</div>{% endfor %}
   </div>
   {% endfor %}
-
   {% if report.root_cause.cascade_chains %}
   <div class="alert-box alert-warning-box">
     <strong>级联故障预警：</strong><br>
-    {% for chain in report.root_cause.cascade_chains %}
-    {{ chain }}<br>
-    {% endfor %}
+    {% for chain in report.root_cause.cascade_chains %}{{ chain }}<br>{% endfor %}
   </div>
   {% endif %}
 </div>
 
-<!-- 6. 成本与效益 -->
 <div class="section">
   <div class="section-title">6 — 成本风险与预测性维护效益</div>
-
   {% if charts.cost_breakdown %}
   <div class="chart-container">
     <img src="data:image/png;base64,{{ charts.cost_breakdown }}" alt="成本分析">
     <div class="chart-caption">图 6.1 — 按措施类型划分的成本风险</div>
   </div>
   {% endif %}
-
   <div class="metrics">
     <div class="metric-card">
       <div class="metric-value">{{ wo.cost_at_risk | money if wo.cost_at_risk else '$0' }}</div>

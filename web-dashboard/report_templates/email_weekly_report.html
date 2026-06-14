@@ -1,35 +1,37 @@
 <!DOCTYPE html>
 <html><head><meta charset="utf-8"></head>
-<body style="font-family:'Microsoft YaHei',sans-serif;background:#0e1117;color:#e6ebf2;padding:24px;">
-<div style="max-width:600px;margin:0 auto;background:#141820;border:1px solid #1c2230;border-radius:6px;overflow:hidden;">
-<div style="background:#1a1f2b;padding:20px 24px;border-bottom:1px solid #1c2230;">
-  <span style="color:#00c9a0;font-size:16px;font-weight:bold;">◆ 周度运维报告</span>
-  <span style="float:right;font-size:12px;color:#5a6474;">{{ generated_at[:10] }}</span>
+<body style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif;background:#000;color:#f5f5f7;padding:24px;margin:0;">
+<div style="max-width:600px;margin:0 auto;background:rgba(44,44,46,0.35);border:0.5px solid rgba(255,255,255,0.08);border-radius:22px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.3),inset 0 0.5px 0 rgba(255,255,255,0.08);">
+
+<div style="background:rgba(28,28,30,0.4);padding:20px 24px;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+  <span style="color:#66d9c8;font-size:16px;font-weight:700;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;">&#9670; 周度运维报告</span>
+  <span style="float:right;font-size:12px;color:#9a9a9f;">{{ generated_at[:10] }}</span>
 </div>
+
 <div style="padding:24px;">
-  <p style="font-size:13px;color:#8e9aab;margin-bottom:16px;">本周度报告已自动生成，共 {{ reports_ok|length }}/{{ reports_ok|length + reports_fail|length }} 份成功。</p>
-  <table width="100%" style="border-collapse:collapse;margin-bottom:20px;">
-    <tr style="background:rgba(255,255,255,0.02);">
-      <td style="padding:8px 12px;border:1px solid #1c2230;color:#5a6474;">报告类型</td>
-      <td style="padding:8px 12px;border:1px solid #1c2230;color:#5a6474;">状态</td>
-      <td style="padding:8px 12px;border:1px solid #1c2230;color:#5a6474;">大小</td>
-      <td style="padding:8px 12px;border:1px solid #1c2230;color:#5a6474;">链接</td>
+  <p style="font-size:13px;color:#c8c8cc;margin-bottom:16px;">本周度报告已自动生成，共 {{ reports_ok|length }}/{{ reports_ok|length + reports_fail|length }} 份成功。</p>
+  <table width="100%" style="border-collapse:separate;border-spacing:0;margin-bottom:20px;">
+    <tr style="background:rgba(58,58,60,0.15);">
+      <td style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);color:#9a9a9f;font-size:10px;text-transform:uppercase;">报告类型</td>
+      <td style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);color:#9a9a9f;font-size:10px;text-transform:uppercase;">状态</td>
+      <td style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);color:#9a9a9f;font-size:10px;text-transform:uppercase;">大小</td>
+      <td style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);color:#9a9a9f;font-size:10px;text-transform:uppercase;">链接</td>
     </tr>
     {% for r in reports_ok %}
     <tr>
-      <td style="padding:8px 12px;border:1px solid #1c2230;">{{ r.type }}</td>
-      <td style="padding:8px 12px;border:1px solid #1c2230;color:#3fb950;">OK</td>
-      <td style="padding:8px 12px;border:1px solid #1c2230;">{{ r.size }} KB</td>
-      <td style="padding:8px 12px;border:1px solid #1c2230;"><a href="{{ r.url }}" style="color:#4d94ff;">查看</a></td>
+      <td style="padding:8px 12px;border-bottom:0.5px solid rgba(255,255,255,0.04);color:#c8c8cc;">{{ r.type }}</td>
+      <td style="padding:8px 12px;border-bottom:0.5px solid rgba(255,255,255,0.04);color:#30d158;">OK</td>
+      <td style="padding:8px 12px;border-bottom:0.5px solid rgba(255,255,255,0.04);color:#c8c8cc;">{{ r.size }} KB</td>
+      <td style="padding:8px 12px;border-bottom:0.5px solid rgba(255,255,255,0.04);"><a href="{{ r.url }}" style="color:#6db5f9;">查看</a></td>
     </tr>
     {% endfor %}
     {% for r in reports_fail %}
     <tr>
-      <td style="padding:8px 12px;border:1px solid #1c2230;">{{ r.type }}</td>
-      <td style="padding:8px 12px;border:1px solid #1c2230;color:#f04444;">FAIL</td>
-      <td style="padding:8px 12px;border:1px solid #1c2230;" colspan="2">{{ r.error }}</td>
+      <td style="padding:8px 12px;border-bottom:0.5px solid rgba(255,255,255,0.04);color:#c8c8cc;">{{ r.type }}</td>
+      <td style="padding:8px 12px;border-bottom:0.5px solid rgba(255,255,255,0.04);color:#ff453a;">FAIL</td>
+      <td style="padding:8px 12px;border-bottom:0.5px solid rgba(255,255,255,0.04);" colspan="2">{{ r.error }}</td>
     </tr>
     {% endfor %}
   </table>
-  <p style="font-size:11px;color:#5a6474;">查看所有报告: <a href="http://localhost:8765/reports" style="color:#4d94ff;">报告管理中心</a></p>
+  <p style="font-size:11px;color:#9a9a9f;">查看所有报告: <a href="http://localhost:8765/reports" style="color:#6db5f9;">报告管理中心</a></p>
 </div></div></body></html>
