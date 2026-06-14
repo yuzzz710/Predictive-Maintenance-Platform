@@ -154,6 +154,15 @@ async def device_grid():
     return HTMLResponse("<h1>device-grid.html not found</h1>", status_code=404)
 
 
+@app.get("/sphere-demo")
+async def sphere_demo():
+    """Serve the 3D sphere gesture-controlled device visualization."""
+    html = BASE_DIR / "sphere-demo.html"
+    if html.exists():
+        return FileResponse(html)
+    return HTMLResponse("<h1>sphere-demo.html not found</h1>", status_code=404)
+
+
 @app.get("/dashboard")
 async def index():
     """Serve the main dashboard."""

@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>鹰眼 · 3D 设备球体 — 手势交互工业数字孪生</title>
+<link rel="stylesheet" href="/shared/design-tokens.css?v=1">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: var(--font-sans); background: #000; color: var(--text-primary);
+  overflow: hidden; height: 100vh; width: 100vw;
+  -webkit-font-smoothing: antialiased; user-select: none;
+}
+
+#three-canvas { display:block; position:fixed; inset:0; z-index:1; }
+
+/* Camera preview */
+#cam-preview {
+  position:fixed; bottom:24px; right:24px; z-index:10;
+  width:160px; height:120px; border-radius:14px; overflow:hidden;
+  border:1px solid rgba(255,255,255,0.12); opacity:0.6;
+  background:#000; transform:scaleX(-1);
+  transition:opacity 0.4s;
+}
+#cam-preview video { width:100%; height:100%; object-fit:cover; }
+#cam-preview:hover { opacity:1; }
+
+/* Gesture indicator */
+#gesture-indicator {
+  position:fixed; bottom:32px; left:50%; transform:translateX(-50%); z-index:10;
+  padding:8px 20px; border-radius:20px; font-size:12px; font-weight:600;
+  background:rgba(0,0,0,0.6); backdrop-filter:blur(20px);
+  border:0.5px solid rgba(255,255,255,0.10);
+  color:var(--text-secondary); letter-spacing:0.5px;
+  transition:all 0.3s;
+}
+#gesture-indicator.active { color:#66d9c8; border-color:rgba(102,217,200,0.3); }
+
+/* Info panel */
+#info-panel {
+  position:fixed; top:24px; left:24px; z-index:10; max-width:280px;
+  background:var(--glass-bg-card); backdrop-filter:var(--glass-blur);
+  -webkit-backdrop-filter:var(--glass-blur);
+  border:0.5px solid var(--glass-border); border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-sm),var(--glass-highlight);
+  padding:20px 22px; transition:all 0.3s;
+}
+#info-panel h1 {
+  font-size:22px; font-weight:800; letter-spacing:4px; margin-bottom:2px;
+  font-family:"STXingkai","华文行楷","KaiTi","楷体",var(--font-sans);
+  background:linear-gradient(135deg,#66d9c8,#bf5af2);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+#info-panel .subtitle { font-size:11px; color:var(--text-muted); margin-bottom:14px; }
+#info-panel .stat-row { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:8px; }
+#info-panel .stat {
+  flex:1; text-align:center; padding:8px;
+  background:var(--glass-bg-card-alt); border-radius:var(--radius-sm);
+  border:0.5px solid rgba(255,255,255,0.05);
+}
+#info-panel .stat-val { font-size:16px; font-weight:700; font-family:var(--font-mono); }
+#info-panel .stat-lbl { font-size:9px; color:var(--text-muted); margin-top:2px; }
+#info-panel .selected-device { font-size:11px; color:var(--text-secondary); margin-top:10px; display:none; }
+#info-panel .selected-device.show { display:block; }
+
+/* Loading overlay */
+#loading {
+  position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center;
+  background:#000; transition:opacity 0.6s; pointer-events:all;
+}
+#loading.hidden { opacity:0; pointer-events:none; }
+#loading .load-spinner {
+  width:40px; height:40px; border-radius:50%;
+  border:2px solid rgba(102,217,200,0.2); border-top-color:#66d9c8;
+  animation:spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* Camera fallback hint */
+#cam-hint {
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:20;
+  text-align:center; display:none;
+  background:var(--glass-bg-modal); backdrop-filter:var(--glass-blur-strong);
+  border:0.5px solid var(--glass-border); border-radius:var(--radius-lg);
+  padding:28px 36px; max-width:420px;
+}
+#cam-hint.show { display:block; }
+#cam-hint h3 { font-size:16px; color:#ffb340; margin-bottom:8px; }
+#cam-hint p { font-size:12px; color:var(--text-secondary); line-height:1.6; }
+#cam-hint button {
+  margin-top:14px; padding:8px 20px; border-radius:20px; border:none;
+  background:var(--accent-cyan); color:#000; font-weight:600; cursor:pointer;
+  font-size:12px; transition:all 0.2s;
+}
+#cam-hint button:hover { opacity:0.85; transform:translateY(-1px); }
+
+/* Debug panel */
+#dbg-panel {
+  position:fixed; top:24px; right:24px; z-index:50;
+  background:rgba(0,0,0,0.75); backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border:0.5px solid rgba(255,255,255,0.10); border-radius:12px;
+  padding:14px 18px; min-width:200px;
+  font-family:var(--font-mono); font-size:10px; line-height:1.7;
+  color:var(--text-secondary);
+}
+#dbg-panel .dbg-title { font-size:9px; font-weight:700; letter-spacing:1.5px; margin-bottom:6px; color:var(--accent-cyan); text-transform:uppercase; }
+#dbg-panel .dbg-row { display:flex; justify-content:space-between; gap:12px; }
+#dbg-panel .dbg-row span:last-child { color:#fff; font-weight:500; text-align:right; }
+
+/* Device detail panel — shared with device-grid */
+.panel-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:2000;
+  display:none; opacity:0; transition:opacity 0.25s ease;
+}
+.panel-overlay.open { display:block; opacity:1; }
+.detail-panel {
+  position:fixed; top:0; right:0; bottom:0;
+  width:420px; max-width:94vw;
+  background:var(--glass-bg-modal);
+  backdrop-filter:var(--glass-blur-strong); -webkit-backdrop-filter:var(--glass-blur-strong);
+  border-left:0.5px solid var(--glass-border);
+  box-shadow:var(--shadow-xl), var(--glass-highlight);
+  z-index:2001;
+  transform:translateX(100%);
+  transition:transform 0.35s var(--transition-spring);
+  overflow-y:auto; display:flex; flex-direction:column;
+}
+.detail-panel.open { transform:translateX(0); }
+.panel-header {
+  position:sticky; top:0; z-index:10;
+  background:var(--glass-bg-header);
+  backdrop-filter:var(--glass-blur); -webkit-backdrop-filter:var(--glass-blur);
+  padding:18px 20px 12px; border-bottom:0.5px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.panel-close {
+  width:32px; height:32px; border-radius:10px;
+  border:0.5px solid var(--border);
+  background:var(--bg-card-alt); color:var(--text-secondary);
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:all var(--transition);
+}
+.panel-close:hover { background:var(--accent-red); color:#fff; border-color:var(--accent-red); }
+.panel-body { padding:16px 20px; }
+.panel-section {
+  background:var(--bg-card-alt); border-radius:var(--radius);
+  padding:14px 16px; margin-bottom:12px;
+  border:0.5px solid var(--border);
+}
+.panel-section h3 {
+  font-size:13px; margin-bottom:10px; color:var(--text-primary);
+  display:flex; align-items:center; gap:6px;
+}
+.panel-section h3 .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.stat-row { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:8px; }
+.stat-item { flex:1; min-width:80px; }
+.stat-label { font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
+.stat-value { font-size:18px; font-weight:700; font-family:var(--font-mono); }
+.signal-item {
+  display:flex; align-items:flex-start; gap:8px; padding:6px 0;
+  border-bottom:0.5px solid var(--border); font-size:12px; line-height:1.6;
+}
+.signal-item:last-child { border-bottom:none; }
+.signal-badge { font-size:14px; flex-shrink:0; width:20px; text-align:center; }
+.checklist-item {
+  font-size:12px; padding:4px 0; color:var(--text-primary);
+  display:flex; gap:6px;
+}
+.checklist-item .idx { color:var(--accent-cyan); flex-shrink:0; font-weight:600; }
+.shap-explore-btn-open {
+  width:100%; padding:9px 14px; margin:8px 0 12px;
+  border-radius:var(--radius); cursor:pointer;
+  font-size:12px; font-family:var(--font-sans);
+  border:1px dashed var(--accent-purple);
+  background:rgba(191,90,242,0.06);
+  color:var(--accent-purple);
+  transition:all var(--transition); text-align:center;
+}
+.shap-explore-btn-open:hover { background:rgba(191,90,242,0.15); border-style:solid; }
+
+/* SHAP Interactive Exploration Modal */
+.shap-explore-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.55);
+  z-index:3000; display:none; opacity:0;
+  transition:opacity 0.25s ease;
+  backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+}
+.shap-explore-overlay.open { display:flex; align-items:center; justify-content:center; opacity:1; }
+.shap-explore-modal {
+  background:var(--bg-surface);
+  border:0.5px solid var(--glass-border);
+  border-radius:var(--radius-xl); width:920px; max-width:95vw; max-height:90vh;
+  overflow-y:auto; box-shadow:var(--shadow-xl);
+  display:flex; flex-direction:column;
+}
+.shap-explore-header {
+  position:sticky; top:0; z-index:10;
+  background:var(--glass-bg-header);
+  backdrop-filter:var(--glass-blur); -webkit-backdrop-filter:var(--glass-blur);
+  padding:20px 24px 14px; border-bottom:0.5px solid var(--border);
+  display:flex; align-items:flex-start; justify-content:space-between;
+}
+.shap-explore-title { font-size:18px; font-weight:700; color:var(--accent-purple); }
+.shap-explore-subtitle { font-size:12px; color:var(--text-secondary); margin-top:4px; }
+.shap-explore-close {
+  background:none; border:none; color:var(--text-secondary);
+  font-size:22px; cursor:pointer; padding:4px 8px;
+  border-radius:10px; transition:all var(--transition);
+}
+.shap-explore-close:hover { background:var(--accent-red); color:#fff; }
+.shap-explore-body { padding:16px 24px 24px; }
+.shap-explore-controls {
+  display:flex; align-items:center; gap:12px;
+  margin-bottom:14px; flex-wrap:wrap;
+}
+.shap-explore-label { font-size:13px; color:var(--text-secondary); white-space:nowrap; }
+.shap-explore-select {
+  background:var(--bg-input); color:var(--text-primary);
+  border:0.5px solid var(--border); border-radius:var(--radius);
+  padding:7px 32px 7px 12px; font-size:13px; font-family:var(--font-sans);
+  cursor:pointer; appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2398989d' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 10px center;
+}
+.shap-explore-select:focus { outline:none; border-color:var(--accent-purple); }
+.shap-explore-tagline {
+  font-size:12px; color:var(--accent-cyan); font-style:italic;
+  flex:1; min-width:200px; line-height:1.5;
+}
+.shap-explore-chart {
+  background:rgba(255,255,255,0.04); border-radius:var(--radius-md);
+  padding:8px; border:0.5px solid var(--border);
+}
+.shap-explore-stats {
+  display:flex; gap:24px; margin-top:12px;
+  font-size:11px; color:var(--text-secondary);
+  flex-wrap:wrap;
+}
+
+@media (max-width:768px) {
+  #info-panel { top:auto; bottom:80px; left:12px; max-width:calc(100vw - 24px); }
+  #cam-preview { width:100px; height:75px; bottom:12px; right:12px; }
+  .detail-panel { width:100vw; }
+}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="load-spinner"></div></div>
+
+<canvas id="three-canvas"></canvas>
+
+<div id="info-panel">
+  <h1>鹰眼</h1>
+  <div class="subtitle">3D 工业数字孪生 · 手势交互</div>
+  <div class="stat-row">
+    <div class="stat"><div class="stat-val" style="color:#30d158;" id="stat-healthy">-</div><div class="stat-lbl">健康</div></div>
+    <div class="stat"><div class="stat-val" style="color:#ffb340;" id="stat-warning">-</div><div class="stat-lbl">警告</div></div>
+    <div class="stat"><div class="stat-val" style="color:#ff8214;" id="stat-degrading">-</div><div class="stat-lbl">退化</div></div>
+    <div class="stat"><div class="stat-val" style="color:#ff453a;" id="stat-critical">-</div><div class="stat-lbl">危险</div></div>
+  </div>
+  <div class="selected-device" id="selected-info"></div>
+</div>
+
+<div id="gesture-indicator">🖱 鼠标模式 — 拖拽旋转 · 滚轮缩放</div>
+
+<div id="cam-preview"><video id="cam-video" autoplay playsinline muted></video></div>
+
+<div id="cam-hint">
+  <h3>📷 摄像头不可用</h3>
+  <p>手势交互需要摄像头权限。当前使用鼠标模式：<br>拖拽旋转 · 滚轮缩放 · 点击卡片查看详情</p>
+  <button onclick="document.getElementById('cam-hint').classList.remove('show')">知道了</button>
+</div>
+
+<!-- Device detail panel — shared with device-grid -->
+<div class="panel-overlay" id="panel-overlay"></div>
+<div class="detail-panel" id="detail-panel">
+  <div class="panel-header">
+    <div>
+      <div style="font-size:18px;font-weight:700;" id="panel-mid">--</div>
+      <div style="font-size:11px;color:var(--text-secondary);" id="panel-subtitle">--</div>
+    </div>
+    <button class="panel-close" id="panel-close">&times;</button>
+  </div>
+  <div class="panel-body" id="panel-body"></div>
+</div>
+
+<!-- debug panel: real-time gesture pipeline status -->
+<div id="dbg-panel">
+  <div class="dbg-title">GESTURE PIPELINE</div>
+  <div class="dbg-row"><span>Camera</span><span id="dbg-cam">--</span></div>
+  <div class="dbg-row"><span>Tick loop</span><span id="dbg-tick">--</span></div>
+  <div class="dbg-row"><span>send() ok/err</span><span id="dbg-send">--</span></div>
+  <div class="dbg-row"><span>onResults fire</span><span id="dbg-res">--</span></div>
+  <div class="dbg-row"><span>Hand count</span><span id="dbg-hands">--</span></div>
+  <div class="dbg-row"><span>Gesture</span><span id="dbg-gesture">--</span></div>
+  <div class="dbg-row"><span>rotY / rotX</span><span id="dbg-rot">--</span></div>
+  <div class="dbg-row"><span>scale</span><span id="dbg-scale">--</span></div>
+</div>
+
+<!-- Three.js -->
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+
+<!-- PapaParse -->
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+<!-- ECharts — needed for SHAP exploration chart -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+
+<!-- Shared device grid logic — exposes openPanel(), machineMap, etc. -->
+<script src="/shared/device-grid-component.js"></script>
+
+<script type="module">
+import * as THREE from 'three';
+
+// ═══════════════════════════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════════════════════════
+const state = {
+  sphereGroup: null,
+  cards: [],       // { instancedMesh, index, machineId, healthScore }
+  deviceData: [],  // raw CSV rows
+  cardMeshes: [],  // THREE.Mesh for raycasting
+  selectedIndex: -1,
+  camReady: false,
+  gestureActive: false,
+  prevPinchDist: null,
+  prevPalmX: 0, prevPalmY: 0,
+  prevWristAngle: null,
+  currentScale: 1,
+  targetScale: 1,
+  targetRotX: 0, targetRotY: 0,
+  smoothRotX: 0, smoothRotY: 0,
+};
+
+// ═══════════════════════════════════════════════════════════════
+// Three.js setup
+// ═══════════════════════════════════════════════════════════════
+const canvas = document.getElementById('three-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.5, 200);
+camera.position.set(0, 2, 35);
+
+// Lighting
+scene.add(new THREE.AmbientLight(0x334466, 2.5));
+const keyLight = new THREE.DirectionalLight(0x88ccff, 4);
+keyLight.position.set(10, 15, 10);
+scene.add(keyLight);
+const fillLight = new THREE.DirectionalLight(0xff8866, 1.5);
+fillLight.position.set(-10, -5, -5);
+scene.add(fillLight);
+
+// Background stars
+const starsGeo = new THREE.BufferGeometry();
+const starPositions = [];
+for (let i = 0; i < 500; i++) {
+  starPositions.push((Math.random() - 0.5) * 120, (Math.random() - 0.5) * 120, (Math.random() - 0.5) * 120);
+}
+starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
+const starsMat = new THREE.PointsMaterial({ color: 0x4488aa, size: 0.08, transparent: true, opacity: 0.6 });
+scene.add(new THREE.Points(starsGeo, starsMat));
+
+// ═══════════════════════════════════════════════════════════════
+// Golden Spiral — 100 points on sphere
+// ═══════════════════════════════════════════════════════════════
+function goldenSpiralPoints(n, radius) {
+  const points = [];
+  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+  for (let i = 0; i < n; i++) {
+    const phi = Math.acos(1 - 2 * (i + 0.5) / n);
+    const theta = goldenAngle * i;
+    points.push(new THREE.Vector3(
+      Math.cos(theta) * Math.sin(phi) * radius,
+      Math.sin(theta) * Math.sin(phi) * radius,
+      Math.cos(phi) * radius
+    ));
+  }
+  return points;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Build sphere from device data
+// ═══════════════════════════════════════════════════════════════
+// 4-level color map — matches device-grid CSS classes
+var HEALTH_COLORS = {
+  'Healthy':    '#30d158',  // green
+  'Warning':    '#ffb340',  // amber
+  'Degrading':  '#ff8214',  // orange
+  'Critical':   '#ff453a'   // red
+};
+function healthColor(level) {
+  return new THREE.Color(HEALTH_COLORS[level] || HEALTH_COLORS['Healthy']);
+}
+
+function makeCardTexture(machineId, score, colorHex) {
+  var w = 256, h = 160;
+  var canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  var ctx = canvas.getContext('2d');
+
+  // flip 180° — mesh.rotateX(Math.PI) inverts the texture
+  ctx.save();
+  ctx.translate(w / 2, h / 2);
+  ctx.rotate(Math.PI);
+  ctx.translate(-w / 2, -h / 2);
+
+  // All drawing clipped to rounded rect; outside = transparent
+  var rx = 18, ry = 18;
+  var x = 8, y = 8, rw = w - 16, rh = h - 16;
+  function roundPath() {
+    ctx.beginPath();
+    ctx.moveTo(x + rx, y);
+    ctx.lineTo(x + rw - rx, y);
+    ctx.quadraticCurveTo(x + rw, y, x + rw, y + ry);
+    ctx.lineTo(x + rw, y + rh - ry);
+    ctx.quadraticCurveTo(x + rw, y + rh, x + rw - rx, y + rh);
+    ctx.lineTo(x + rx, y + rh);
+    ctx.quadraticCurveTo(x, y + rh, x, y + rh - ry);
+    ctx.lineTo(x, y + ry);
+    ctx.quadraticCurveTo(x, y, x + rx, y);
+    ctx.closePath();
+  }
+  roundPath(); ctx.clip(); // clip everything to rounded rect
+
+  // dark glass background
+  ctx.fillStyle = '#0d0d14';
+  roundPath(); ctx.fill();
+
+  // health-color accent border
+  ctx.strokeStyle = colorHex;
+  ctx.lineWidth = 4;
+  roundPath(); ctx.stroke();
+
+  // top accent glow line
+  ctx.strokeStyle = colorHex;
+  ctx.lineWidth = 2;
+  ctx.globalAlpha = 0.4;
+  ctx.beginPath(); ctx.moveTo(28, 18); ctx.lineTo(w - 28, 18); ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // machine ID — large, bold
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 48px "SF Mono","Cascadia Code","Consolas",monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(machineId, w / 2, 68);
+
+  // health score — smaller, color-coded
+  ctx.fillStyle = colorHex;
+  ctx.font = '20px "SF Mono","Cascadia Code","Consolas",monospace';
+  ctx.fillText('HP ' + score.toFixed(0), w / 2, 120);
+
+  ctx.restore(); // end 180° flip
+
+  var tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  return tex;
+}
+
+function buildSphere(deviceData) {
+  const group = new THREE.Group();
+  const R = 15;
+  const points = goldenSpiralPoints(100, R);
+  const cardW = 1.6, cardH = 1.0;
+
+  let healthy = 0, warning = 0, degrading = 0, critical = 0;
+  const cardGeom = new THREE.PlaneGeometry(cardW, cardH);
+
+  for (let i = 0; i < 100; i++) {
+    const row = deviceData[i] || {};
+    const score = parseFloat(row.health_score) || 50;
+    const level = (row.health_level || 'Healthy').trim();
+    if (level === 'Healthy') healthy++;
+    else if (level === 'Warning') warning++;
+    else if (level === 'Degrading') degrading++;
+    else critical++;
+
+    const color = healthColor(level);
+    const colorHex = '#' + color.getHexString();
+    const machineId = row['Equipment.Id'] || row.machine_id || 'CNC_' + String(i + 1).padStart(3, '0');
+    const tex = makeCardTexture(machineId, score, colorHex);
+
+    const mat = new THREE.MeshStandardMaterial({
+      map: tex,
+      color: 0xffffff,
+      roughness: 0.4,
+      metalness: 0.15,
+      side: THREE.DoubleSide,
+      emissive: color.clone().multiplyScalar(0.08),
+      transparent: true,
+      alphaTest: 0.1,
+      depthWrite: true,
+    });
+
+    const mesh = new THREE.Mesh(cardGeom, mat);
+    const pos = points[i];
+    mesh.position.copy(pos);
+    mesh.lookAt(0, 0, 0);
+    mesh.rotateX(Math.PI);
+    mesh.userData = {
+      index: i,
+      machineId: machineId,
+      healthScore: score,
+      healthLevel: level,
+      topRisk: row.top_risk_factor || '',
+      origColor: color.clone(),
+    };
+
+    group.add(mesh);
+    state.cardMeshes.push(mesh);
+  }
+
+  // Ambient ring
+  const ringGeo = new THREE.TorusGeometry(R + 0.3, 0.04, 16, 200);
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0x66d9c8, transparent: true, opacity: 0.25 });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.rotation.x = Math.PI / 2;
+  group.add(ring);
+
+  // Second ring
+  const ring2Geo = new THREE.TorusGeometry(R + 0.35, 0.03, 16, 200);
+  const ring2Mat = new THREE.MeshBasicMaterial({ color: 0xbf5af2, transparent: true, opacity: 0.15 });
+  const ring2 = new THREE.Mesh(ring2Geo, ring2Mat);
+  ring2.rotation.x = Math.PI / 3;
+  ring2.rotation.y = Math.PI / 4;
+  group.add(ring2);
+
+  state.sphereGroup = group;
+  scene.add(group);
+
+  // Update stats
+  document.getElementById('stat-healthy').textContent = healthy;
+  document.getElementById('stat-warning').textContent = warning;
+  document.getElementById('stat-degrading').textContent = degrading;
+  document.getElementById('stat-critical').textContent = critical;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Mouse interaction (fallback + default)
+// ═══════════════════════════════════════════════════════════════
+let isDragging = false;
+let prevMouseX = 0, prevMouseY = 0;
+let mouseRotX = 0, mouseRotY = 0;
+let mouseVelX = 0, mouseVelY = 0;
+
+canvas.addEventListener('mousedown', (e) => {
+  if (state.gestureActive) return;
+  isDragging = true;
+  prevMouseX = e.clientX;
+  prevMouseY = e.clientY;
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!isDragging) return;
+  const dx = e.clientX - prevMouseX;
+  const dy = e.clientY - prevMouseY;
+  mouseVelX = dx * 0.005;
+  mouseVelY = dy * 0.005;
+  mouseRotY += mouseVelX;
+  mouseRotX += mouseVelY;
+  mouseRotX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, mouseRotX));
+  prevMouseX = e.clientX;
+  prevMouseY = e.clientY;
+});
+
+window.addEventListener('mouseup', () => { isDragging = false; });
+
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  state.targetScale *= (e.deltaY > 0) ? 0.92 : 1.08;
+  state.targetScale = THREE.MathUtils.clamp(state.targetScale, 0.4, 3.0);
+}, { passive: false });
+
+// Touch support
+canvas.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 1 && !state.gestureActive) {
+    isDragging = true;
+    prevMouseX = e.touches[0].clientX;
+    prevMouseY = e.touches[0].clientY;
+  }
+});
+canvas.addEventListener('touchmove', (e) => {
+  if (!isDragging || e.touches.length !== 1) return;
+  const dx = e.touches[0].clientX - prevMouseX;
+  const dy = e.touches[0].clientY - prevMouseY;
+  mouseRotY += dx * 0.005;
+  mouseRotX += dy * 0.005;
+  mouseRotX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, mouseRotX));
+  prevMouseX = e.touches[0].clientX;
+  prevMouseY = e.touches[0].clientY;
+});
+canvas.addEventListener('touchend', () => { isDragging = false; });
+
+// Click to select card (raycasting)
+const raycaster = new THREE.Raycaster();
+canvas.addEventListener('click', (e) => {
+  if (Math.abs(mouseVelX) > 0.001 || Math.abs(mouseVelY) > 0.001) return; // was dragging
+  const mouse = new THREE.Vector2(
+    (e.clientX / window.innerWidth) * 2 - 1,
+    -(e.clientY / window.innerHeight) * 2 + 1
+  );
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(state.cardMeshes);
+  if (intersects.length > 0) {
+    const obj = intersects[0].object;
+    selectCard(obj);
+  } else {
+    deselectCard();
+  }
+});
+
+function selectCard(mesh) {
+  deselectCard();
+  state.selectedIndex = mesh.userData.index;
+  mesh.material.emissive = new THREE.Color(0xffffff);
+  mesh.material.emissiveIntensity = 0.5;
+  var d = mesh.userData;
+  var info = document.getElementById('selected-info');
+  info.classList.add('show');
+  info.innerHTML = '<strong>' + d.machineId + '</strong> · 健康分 ' + d.healthScore + ' · ' + d.healthLevel + '<br>风险因子: ' + (d.topRisk || '无');
+
+  // Open shared device detail panel (from device-grid-component.js)
+  var mid = d.machineId;
+  var m = window.machineMap && window.machineMap[mid];
+  if (m) {
+    window.openPanel(mid, m);
+  } else {
+    // fallback: minimal data if machineMap not loaded
+    window.openPanel(mid, {
+      health: { health_score: d.healthScore, health_level: d.healthLevel, trend: '--', failure_rate: 0, maintenance_overdue_days: 0, cost_at_risk: 0 },
+      workOrder: null,
+      shap: null
+    });
+  }
+}
+
+function deselectCard() {
+  if (state.selectedIndex >= 0 && state.cardMeshes[state.selectedIndex]) {
+    var m = state.cardMeshes[state.selectedIndex];
+    m.material.emissive = m.userData.origColor.clone().multiplyScalar(0.08);
+    m.material.emissiveIntensity = 1;
+  }
+  state.selectedIndex = -1;
+  document.getElementById('selected-info').classList.remove('show');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Debug instrumentation
+// ═══════════════════════════════════════════════════════════════
+var dbg = { tick:0, sendOk:0, sendErr:0, results:0, hands:0, gesture:'--', rotY:0, rotX:0, scale:1, camOk:false };
+function dbgUpdate() {
+  var el; var v;
+  el = document.getElementById('dbg-cam');   v = dbg.camOk ? 'OK ' + dbg.camW + 'x' + dbg.camH : 'WAIT'; el.textContent = v; el.style.color = dbg.camOk ? '#30d158' : '#ffb340';
+  el = document.getElementById('dbg-tick');  el.textContent = dbg.tick;
+  el = document.getElementById('dbg-send');  el.textContent = dbg.sendOk + ' / ' + dbg.sendErr; el.style.color = dbg.sendErr > dbg.sendOk * 2 ? '#ff453a' : (dbg.sendOk > 0 ? '#30d158' : '#ffb340');
+  el = document.getElementById('dbg-res');   el.textContent = dbg.results; el.style.color = dbg.results > 0 ? '#30d158' : '#ffb340';
+  el = document.getElementById('dbg-hands'); el.textContent = dbg.hands; el.style.color = dbg.hands > 0 ? '#30d158' : '#ffb340';
+  el = document.getElementById('dbg-gesture'); el.textContent = dbg.gesture; el.style.color = dbg.gesture !== 'none' ? '#30d158' : '#ffb340';
+  el = document.getElementById('dbg-rot');   el.textContent = dbg.rotY.toFixed(2) + ' / ' + dbg.rotX.toFixed(2);
+  el = document.getElementById('dbg-scale'); el.textContent = dbg.scale.toFixed(2);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MediaPipe Tasks Vision — HandLandmarker (v0.10+, replaces deprecated Hands v0.4)
+// ═══════════════════════════════════════════════════════════════
+async function initCamera() {
+  var video = document.getElementById('cam-video');
+
+  try {
+    // 1 — get camera stream
+    var stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 640, height: 480, facingMode: 'user' }
+    });
+    video.srcObject = stream;
+    await video.play();
+    state.camReady = true;
+    dbg.camOk = true;
+    dbg.camW = video.videoWidth || 0;
+    dbg.camH = video.videoHeight || 0;
+    console.log('[gesture] Camera OK, video=' + dbg.camW + 'x' + dbg.camH);
+
+    // 2 — dynamic import MediaPipe Tasks Vision
+    console.log('[gesture] Loading MediaPipe...');
+    var MP_CDN = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+    var mp = await import(MP_CDN);
+    console.log('[gesture] MediaPipe imported, loading WASM...');
+    var vision = await mp.FilesetResolver.forVisionTasks(MP_CDN + '/wasm');
+    console.log('[gesture] WASM ready, loading model...');
+    var modelUrl = window.location.origin + '/data/hand_landmarker.task';
+    console.log('[gesture] Model URL: ' + modelUrl);
+    var handPromise = mp.HandLandmarker.createFromOptions(vision, {
+      baseOptions: { modelAssetPath: modelUrl },
+      runningMode: 'VIDEO',
+      numHands: 4,
+      minHandDetectionConfidence: 0.3,
+      minHandPresenceConfidence: 0.3,
+      minTrackingConfidence: 0.3
+    });
+    var timeout = new Promise(function (_, reject) {
+      setTimeout(function () { reject(new Error('Model loading timed out after 20s')); }, 20000);
+    });
+    var handLandmarker = await Promise.race([handPromise, timeout]);
+    console.log('[gesture] HandLandmarker ready');
+    console.log('[gesture] Config: numHands=4, detection=0.3, presence=0.3, tracking=0.3');
+
+    // 3 — frame loop
+    function tick() {
+      if (!state.camReady) return;
+      dbg.tick++;
+      dbg.sendOk++;
+      var results = handLandmarker.detectForVideo(video, performance.now());
+      onHandResults(results);
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+    console.log('[gesture] Frame loop started');
+
+    updateGestureIndicator('手势模式', true);
+  } catch (err) {
+    console.error('[gesture] Camera init FAILED:', err.message || err, err.stack || '');
+    var hint = document.getElementById('cam-hint');
+    hint.classList.add('show');
+    hint.querySelector('p').textContent = '错误: ' + (err.message || err) + ' | 当前使用鼠标模式：拖拽旋转 · 滚轮缩放 · 点击卡片查看详情';
+    updateGestureIndicator('鼠标模式', false);
+  }
+}
+
+var lastHandCount = 0;
+var lockFrames = 0; // consecutive frames with same hand count
+var LOCK_2HAND = 8;  // frames before pinch/twist activates
+var LOCK_1HAND = 3;  // frames before pan activates
+
+function onHandResults(results) {
+  dbg.results++;
+  if (!results.landmarks || results.landmarks.length === 0) {
+    state.gestureActive = false;
+    state.prevPinchDist = null; state.prevWristAngle = null;
+    state.prevPalmX = 0; state.prevPalmY = 0;
+    lastHandCount = 0; lockFrames = 0;
+    dbg.hands = 0; dbg.gesture = 'none';
+    return;
+  }
+
+  state.gestureActive = true;
+  const hands = results.landmarks;
+  dbg.hands = hands.length;
+
+  // ── Lock-in: count consecutive frames with same hand count ──
+  if (hands.length === lastHandCount) { lockFrames++; }
+  else { lockFrames = 0; lastHandCount = hands.length; }
+
+  if (dbg.results === 1) { console.log('[gesture] First onHandResults! hand count=' + hands.length); }
+  if (lockFrames === LOCK_2HAND) { console.warn('[gesture] *** 2-hand LOCKED — pinch/twist active ***'); }
+  if (lockFrames === LOCK_1HAND && hands.length === 1) { console.warn('[gesture] 1-hand LOCKED — pan active'); }
+
+  // ── 1. Pinch zoom + twist — only after 2-hand lock-in ──
+  if (hands.length === 2 && lockFrames >= LOCK_2HAND) {
+    const idx0 = hands[0][8];
+    const idx1 = hands[1][8];
+    const dx = idx0.x - idx1.x;
+    const dy = idx0.y - idx1.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    // EMA smooth — resists sudden jumps from hand removal
+    if (state.pinchDistEMA == null) state.pinchDistEMA = dist;
+    state.pinchDistEMA += (dist - state.pinchDistEMA) * 0.25;
+    const smoothDist = state.pinchDistEMA;
+
+    if (state.prevPinchDist !== null) {
+      const delta = Math.abs(smoothDist - state.prevPinchDist);
+      if (delta > 0.005) {
+        const raw = smoothDist / state.prevPinchDist;
+        var factor = 1 + (raw - 1) * 0.3;
+        factor = Math.max(0.92, Math.min(1.08, factor)); // cap ±8%/frame
+        state.targetScale *= factor;
+        state.targetScale = THREE.MathUtils.clamp(state.targetScale, 0.4, 3.0);
+        dbg.scale = state.targetScale;
+        dbg.gesture = 'pinch';
+      }
+    }
+    state.prevPinchDist = smoothDist;
+
+    // twist
+    const wrist0 = hands[0][0];
+    const wrist1 = hands[1][0];
+    const angle = Math.atan2(wrist1.y - wrist0.y, wrist1.x - wrist0.x);
+    if (state.prevWristAngle !== null) {
+      const dAngle = angle - state.prevWristAngle;
+      if (Math.abs(dAngle) > 0.02) {
+        mouseRotY += dAngle * 2.0;
+        dbg.rotY = mouseRotY;
+        if (dbg.gesture !== 'pinch') dbg.gesture = 'twist';
+      }
+    }
+    state.prevWristAngle = angle;
+  } else if (hands.length !== 2) {
+    state.prevPinchDist = null; state.prevWristAngle = null;
+    state.pinchDistEMA = null;
+  }
+
+  // ── 2. Single hand pan — only after 1-hand lock-in ──
+  if (hands.length === 1 && lockFrames >= LOCK_1HAND) {
+    const palm = hands[0][9];
+    const px = palm.x;
+    const py = palm.y;
+
+    if (state.prevPalmX !== 0 && state.prevPalmY !== 0) {
+      const dx = px - state.prevPalmX;
+      const dy = py - state.prevPalmY;
+      if (Math.abs(dx) > 0.004 || Math.abs(dy) > 0.004) {
+        mouseRotY -= dx * 3.0; // flip: camera faces user, L/R reversed
+        mouseRotX += dy * 3.0;
+        mouseRotX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, mouseRotX));
+        dbg.rotY = mouseRotY; dbg.rotX = mouseRotX;
+      }
+    }
+    state.prevPalmX = px; state.prevPalmY = py;
+    dbg.gesture = 'pan';
+  } else if (hands.length !== 1) {
+    state.prevPalmX = 0; state.prevPalmY = 0;
+  }
+}
+
+function updateGestureIndicator(text, active) {
+  const el = document.getElementById('gesture-indicator');
+  el.textContent = text;
+  el.className = active ? 'active' : '';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Animation loop
+// ═══════════════════════════════════════════════════════════════
+const clock = new THREE.Clock();
+
+var animFrame = 0;
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.1);
+
+  if (!state.sphereGroup) return;
+
+  // Smooth rotation (inertia)
+  if (!isDragging && !state.gestureActive) {
+    mouseVelX *= 0.95;
+    mouseVelY *= 0.95;
+    mouseRotY += mouseVelX;
+    mouseRotX += mouseVelY;
+  }
+
+  // Smooth interpolation
+  state.smoothRotY += (mouseRotY - state.smoothRotY) * 8 * dt;
+  state.smoothRotX += (mouseRotX - state.smoothRotX) * 8 * dt;
+  state.currentScale += (state.targetScale - state.currentScale) * 8 * dt;
+
+  state.sphereGroup.rotation.y = state.smoothRotY;
+  state.sphereGroup.rotation.x = state.smoothRotX;
+  state.sphereGroup.scale.setScalar(state.currentScale);
+
+  // Auto-rotate when idle
+  if (!isDragging && !state.gestureActive && Math.abs(mouseVelX) < 0.0001 && Math.abs(mouseVelY) < 0.0001) {
+    mouseRotY += 0.0015;
+  }
+
+  // debug — update every 30 frames
+  animFrame++;
+  if (animFrame % 30 === 0) {
+    dbg.rotY = state.sphereGroup.rotation.y;
+    dbg.rotX = state.sphereGroup.rotation.x;
+    dbg.scale = state.currentScale;
+    dbgUpdate();
+  }
+
+  // Subtle ring rotation
+  const rings = state.sphereGroup.children.filter(c => c.geometry && c.geometry.type === 'TorusGeometry');
+  rings.forEach((r, i) => {
+    r.rotation.z += 0.002 * (i === 0 ? 1 : -1);
+  });
+
+  renderer.render(scene, camera);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Load data & start
+// ═══════════════════════════════════════════════════════════════
+async function init() {
+  console.log('[init] Starting — fetching device data...');
+  try {
+    var resp = await fetch('/data/equipment_health_score.csv');
+    var text = await resp.text();
+    var result = Papa.parse(text, { header: true, dynamicTyping: true, skipEmptyLines: true });
+    state.deviceData = result.data;
+    console.log('[init] Data loaded: ' + result.data.length + ' rows');
+  } catch (e) {
+    console.warn('[init] Could not load device data, using defaults');
+    state.deviceData = [];
+  }
+
+  buildSphere(state.deviceData);
+  document.getElementById('loading').classList.add('hidden');
+  console.log('[init] Sphere built, card count=' + state.cardMeshes.length);
+
+  // Load device-grid shared data (machineMap, workOrders, SHAP) for click-to-detail
+  if (window.initDeviceGrid) {
+    window.initDeviceGrid().then(function() {
+      console.log('[init] Device grid data loaded');
+    }).catch(function(e) {
+      console.warn('[init] Device grid data failed:', e);
+    });
+  }
+
+  // Wire close button + overlay
+  var closeBtn = document.getElementById('panel-close');
+  var overlay = document.getElementById('panel-overlay');
+  if (closeBtn) closeBtn.addEventListener('click', function() { window.closePanel && window.closePanel(); });
+  if (overlay) overlay.addEventListener('click', function() { window.closePanel && window.closePanel(); });
+
+  // Wire SHAP exploration modal
+  var shapClose = document.getElementById('shap-explore-close');
+  var shapOverlay = document.getElementById('shap-explore-overlay');
+  var shapSelect = document.getElementById('shap-feature-select');
+  if (shapClose) shapClose.addEventListener('click', function() { window.closeShapExploration && window.closeShapExploration(); });
+  if (shapOverlay) shapOverlay.addEventListener('click', function(e) { if (e.target === shapOverlay) { window.closeShapExploration && window.closeShapExploration(); } });
+  if (shapSelect) shapSelect.addEventListener('change', function() { window.renderShapScatter && window.renderShapScatter(); });
+
+  // Start camera after a short delay
+  setTimeout(initCamera, 1000);
+
+  animate();
+  console.log('[init] Animation loop started');
+}
+
+// Resize handler
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+init();
+</script>
+
+<!-- SHAP Interactive Exploration Modal -->
+<div class="shap-explore-overlay" id="shap-explore-overlay">
+  <div class="shap-explore-modal">
+    <div class="shap-explore-header">
+      <div>
+        <div class="shap-explore-title">🔍 SHAP 归因交互式探索</div>
+        <div class="shap-explore-subtitle" id="shap-explore-subtitle">
+          选择一个特征，查看其对所有100台设备风险评分的影响
+        </div>
+      </div>
+      <button class="shap-explore-close" id="shap-explore-close">&times;</button>
+    </div>
+    <div class="shap-explore-body">
+      <div class="shap-explore-controls">
+        <label class="shap-explore-label">📊 选择特征:</label>
+        <select class="shap-explore-select" id="shap-feature-select"></select>
+        <div class="shap-explore-tagline" id="shap-tagline"></div>
+      </div>
+      <div class="shap-explore-chart" id="chart-shap-scatter" style="height:460px;"></div>
+      <div class="shap-explore-stats" id="shap-explore-stats"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

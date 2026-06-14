@@ -22,6 +22,7 @@
   else if (path === '/technicians' || path.startsWith('/technicians')) activeTab = 'technicians';
   else if (path === '/technical-overview' || path.startsWith('/technical-overview')) activeTab = 'tech';
   else if (path === '/knowledge-base' || path.startsWith('/knowledge-base')) activeTab = 'kb';
+  else if (path === '/sphere-demo' || path.startsWith('/sphere-demo')) activeTab = 'sphere-demo';
   else if (path === '/reports' || path.startsWith('/reports')) activeTab = 'reports';
 
   // ── CSS ──
@@ -440,6 +441,7 @@
   var links = [
     { href: '/', label: '首页', icon: '&#9679;', key: 'home' },
     { href: '/device-grid', label: '设备矩阵', icon: '&#9633;', key: 'device-grid' },
+    { href: '/sphere-demo', label: '鹰眼球体', icon: '&#9678;', key: 'sphere-demo' },
     { href: '/dashboard', label: '仪表盘', icon: '&#9632;', key: 'dashboard' },
     { href: '/chat', label: 'AI Copilot', icon: '&#9881;', key: 'chat' },
     { href: '/work-order-tracking', label: '工单跟踪', icon: '&#128203;', key: 'tracking' },
