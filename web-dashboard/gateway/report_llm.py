@@ -298,20 +298,9 @@ def generate_work_order_from_spec(spec, machine_id: str, config: dict) -> tuple[
         - Normal path: LLM-generated Markdown, validated
         - Fallback path: static template Markdown, is_valid=False
     """
-    # Load system prompt from config
+    # System prompt is injected by _load_config() in orchestrator.
+    # If missing, go straight to fallback — no on-disk re-read here.
     system_prompt = config.get("_system_prompt", "")
-    if not system_prompt:
-        # Load from report_config.json
-        try:
-            import json
-            cfg_path = BASE_DIR / "gateway" / "report_config.json"
-            if cfg_path.exists():
-                with open(cfg_path, "r", encoding="utf-8") as f:
-                    full_cfg = json.load(f)
-                prompt_key = config.get("llm_system_prompt_key", "work_order")
-                system_prompt = full_cfg.get("llm_system_prompts", {}).get(prompt_key, "")
-        except Exception:
-            pass
 
     if not system_prompt:
         return _build_fallback_markdown(spec, machine_id), False

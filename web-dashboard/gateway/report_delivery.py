@@ -15,23 +15,12 @@ from datetime import datetime
 from dataclasses import dataclass, field
 from typing import Optional
 
-from gateway.report_models import ReportSpec, ExportMeta
+from gateway.report_models import ReportSpec, ExportMeta, REPORT_CN_NAMES
 from gateway.report_renderer import RenderedReport
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 REPORTS_OUTPUT = BASE_DIR / "reports" / "generated"
 PDF_OUTPUT = BASE_DIR / "reports" / "pdfs"
-
-
-CN_NAMES = {
-    "weekly": "周度系统报告",
-    "device": "单设备报告",
-    "risk": "高风险设备报告",
-    "thermal": "热漂移分析报告",
-    "health_critical": "低健康分报告",
-    "parts_summary": "备件需求汇总",
-    "work_order": "工单执行报告",
-}
 
 
 @dataclass
@@ -76,7 +65,7 @@ def deliver_report(
     os.makedirs(REPORTS_OUTPUT, exist_ok=True)
 
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    cn = CN_NAMES.get(report_type, report_type)
+    cn = REPORT_CN_NAMES.get(report_type, report_type)
 
     if report_type == "device" and machine_id:
         base_name = f"{cn}_{machine_id}_{ts}"
@@ -153,10 +142,25 @@ def _send_report_email(spec: ReportSpec, html_url: str | None, pdf_url: str | No
         from gateway.notification_service import _send_email, _is_configured
         from gateway.config import SMTP_USER
         if _is_configured() and html_url:
+            summary_text = _strip_markdown(spec.summary[:300])
             subject = f"[{spec.title}] 报告已生成"
-            body = f"<p>{spec.summary}</p><p><a href='{html_url}'>查看HTML报告</a></p>"
+            body = (
+                f"<p style='color:#e6ebf2;'>{summary_text}</p>"
+                f"<p><a href='{html_url}' style='color:#4d94ff;'>查看HTML报告</a></p>"
+            )
             if pdf_url:
-                body += f"<p><a href='{pdf_url}'>下载PDF</a></p>"
+                body += f"<p><a href='{pdf_url}' style='color:#4d94ff;'>下载PDF</a></p>"
             _send_email(SMTP_USER, subject, body)
     except Exception:
         pass  # Email is best-effort
+
+
+def _strip_markdown(text: str) -> str:
+    """Remove basic Markdown formatting for plain-text display."""
+    import re
+    text = re.sub(r'#{1,6}\s*', '', text)      # headings
+    text = re.sub(r'\*{1,3}(.+?)\*{1,3}', r'\1', text)  # bold/italic
+    text = re.sub(r'`([^`]+)`', r'\1', text)   # inline code
+    text = text.replace('###', '').replace('**', '').replace('*', '')
+    text = text.replace('\n', '<br>')
+    return text

@@ -6,6 +6,7 @@ Also provides the Markdown→HTML converter extracted from work_order_report_gen
 """
 
 import io
+import re
 
 
 def try_convert_pdf(html: str) -> bytes | None:
@@ -114,7 +115,8 @@ def simple_markdown_to_html(md: str) -> str:
 
         # Lists
         is_ul = stripped.startswith("- ") or stripped.startswith("* ")
-        is_ol = len(stripped) > 2 and stripped[0].isdigit() and stripped[1:3] == ". "
+        # Match ordered lists: "1. " through "999. "
+        is_ol = bool(re.match(r'^\d{1,3}\.\s', stripped))
         if is_ul or is_ol:
             if not in_list:
                 list_type = "ul" if is_ul else "ol"
@@ -123,7 +125,7 @@ def simple_markdown_to_html(md: str) -> str:
             elif (is_ul and list_type == "ol") or (is_ol and list_type == "ul"):
                 out.append(f"</{list_type}><{('ul' if is_ul else 'ol')}>")
                 list_type = "ul" if is_ul else "ol"
-            content = stripped[2:] if is_ul else stripped[stripped.index(". ") + 2:]
+            content = stripped[2:] if is_ul else re.sub(r'^\d{1,3}\.\s', '', stripped)
             out.append(f"<li>{_inline_format(content)}</li>")
             i += 1; continue
         elif in_list:

@@ -203,3 +203,18 @@ class ReportSpec:
             "recommendations": self.recommendations,
             "evidence": self.evidence,
         }
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# Shared constants — single source of truth
+# ══════════════════════════════════════════════════════════════════════════
+
+REPORT_CN_NAMES: dict[str, str] = {
+    "weekly": "周度系统报告",
+    "device": "单设备报告",
+    "risk": "高风险设备报告",
+    "thermal": "热漂移分析报告",
+    "health_critical": "低健康分报告",
+    "parts_summary": "备件需求汇总",
+    "work_order": "工单执行报告",
+}

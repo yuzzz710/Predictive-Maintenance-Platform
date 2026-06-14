@@ -18,7 +18,7 @@ from typing import Optional
 
 from jinja2 import Environment, FileSystemLoader
 
-from gateway.report_models import ReportSpec
+from gateway.report_models import ReportSpec, REPORT_CN_NAMES
 from gateway.report_charts import generate_all_charts
 from gateway.report_pdf import try_convert_pdf, simple_markdown_to_html
 
@@ -84,15 +84,34 @@ def render_report(spec: ReportSpec, fmt: str = "html") -> RenderedReport:
 # HTML rendering
 # ══════════════════════════════════════════════════════════════════════════
 
-CN_NAMES = {
-    "weekly": "周度系统报告",
-    "device": "单设备报告",
-    "risk": "高风险设备报告",
-    "thermal": "热漂移分析报告",
-    "health_critical": "低健康分报告",
-    "parts_summary": "备件需求汇总",
-    "work_order": "工单执行报告",
-}
+def _build_legacy_dict(spec: ReportSpec) -> dict:
+    """Build a backward-compatible dict matching the old report_data shape.
+
+    Old templates reference {{ report.report_type }}, {{ report.alerts_summary }},
+    {{ report.root_cause }}, etc.  This bridge keeps them working without modification.
+    """
+    ctx = spec.context
+    if ctx is None:
+        return {}
+
+    legacy = {
+        "report_type": spec.report_type,
+        "generated_at": spec.export_meta.generated_at or spec.context.generated_at if spec.context else "",
+        "summary": spec.summary,
+        "sections": {s.key: {"title": s.title, "order": s.order} for s in spec.sections},
+        "charts": [],
+        "alerts_summary": ctx.alerts_summary or {},
+        "device_details": ctx.device_details,
+        "sensor_charts": ctx.sensor_charts,
+        "fault_statistics": ctx.fault_statistics or {},
+        "root_cause": ctx.root_cause or {},
+        "cost_analysis": spec.cost_analysis or {},
+        "health_analysis": ctx.health_analysis or {},
+        "parts_summary": ctx.parts_summary or {},
+        "predictability_context": ctx.predictability_context or {},
+        "recommendations": spec.recommendations,
+    }
+    return legacy
 
 
 def _render_html(spec: ReportSpec, chart_base64s: dict[str, str]) -> str:
@@ -107,8 +126,14 @@ def _render_html(spec: ReportSpec, chart_base64s: dict[str, str]) -> str:
 
     template = env.get_template(template_name)
 
+    # Build legacy dict for backward compatibility with old templates
+    # that use {{ report.xxx }} instead of {{ spec.xxx }}
+    legacy = _build_legacy_dict(spec)
+
     return template.render(
         spec=spec,
+        report=legacy,
+        report_data=legacy,
         charts=chart_base64s,
         generated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     )

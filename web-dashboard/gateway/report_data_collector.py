@@ -299,7 +299,7 @@ def _collect_health_analysis(ctx: ReportContext) -> dict | None:
                 row = match.iloc[0]
                 scores.append({
                     "machine_id": mid,
-                    "health_score": float(row["health_score"]),
+                    "health_score": float(row.get("health_score", 100) or 100),
                     "trend": str(row.get("trend", "")),
                     "top_risk": str(row.get("top_risk_factor", "")),
                 })

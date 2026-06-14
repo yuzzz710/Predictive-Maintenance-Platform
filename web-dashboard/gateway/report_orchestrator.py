@@ -20,7 +20,8 @@ from gateway.report_models import (
     ReportSpec, SectionSpec, ChartSpec, TableSpec, ExportMeta,
 )
 from gateway.report_data_collector import collect_all_context
-from gateway.report_renderer import render_report, render_email, CN_NAMES
+from gateway.report_renderer import render_report, render_email
+from gateway.report_models import REPORT_CN_NAMES
 from gateway.report_delivery import deliver_report
 from gateway.report_pdf import try_convert_pdf, simple_markdown_to_html
 
@@ -122,7 +123,7 @@ def _build_spec(ctx, config: dict, machine_id: str | None) -> ReportSpec:
 
     spec = ReportSpec(
         report_type=report_type,
-        title=config.get("title", CN_NAMES.get(report_type, report_type)),
+        title=config.get("title", REPORT_CN_NAMES.get(report_type, report_type)),
         scope=scope,
         summary=summary,
         sections=sections,
