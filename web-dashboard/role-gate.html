@@ -4,21 +4,79 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>工业智能运维平台 — 角色选择</title>
-<link rel="stylesheet" href="/shared/sidebar.css?v=3">
+<link rel="stylesheet" href="/shared/design-tokens.css?v=1">
 <script src="/shared/theme-init.js"></script>
 <style>
 /* ═══════════════════════════════════════════════════════════════════
-   iOS 26 Glass Role Cards — Design tokens from navbar.js
+   Industrial Tech Role Selection — Roadshow Edition
    ═══════════════════════════════════════════════════════════════════ */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  background: var(--bg-root); color: var(--text-primary);
-  font-family: var(--font-sans);
+  margin: 0; padding: 0;
   min-height: 100vh; display: flex; align-items: center; justify-content: center;
   padding: 40px 20px;
+  font-family: var(--font-sans);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
+  /* Industrial deep navy gradient with ambient glows */
+  background:
+    radial-gradient(ellipse 120% 80% at 20% 10%, rgba(14, 165, 233, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 100% 70% at 80% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 90% 60% at 50% 90%, rgba(245, 158, 11, 0.06) 0%, transparent 55%),
+    linear-gradient(180deg, #0F172A 0%, #0A1628 40%, #0F172A 100%);
+  position: relative;
+}
+
+/* Data grid lines — subtle tech texture */
+body::after {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.04;
+  background-image:
+    linear-gradient(rgba(14, 165, 233, 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14, 165, 233, 0.3) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 0%, transparent 70%);
+}
+
+/* Floating particles */
+.particles {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+}
+.particle {
+  position: absolute;
+  width: 2px; height: 2px;
+  background: var(--accent-cyan);
+  border-radius: 50%;
+  opacity: 0;
+  animation: floatUp linear infinite;
+}
+.particle:nth-child(1)  { left: 10%; animation-duration: 8s; animation-delay: 0s; }
+.particle:nth-child(2)  { left: 25%; animation-duration: 12s; animation-delay: 1s; width: 1px; height: 1px; }
+.particle:nth-child(3)  { left: 40%; animation-duration: 10s; animation-delay: 3s; }
+.particle:nth-child(4)  { left: 55%; animation-duration: 14s; animation-delay: 0.5s; width: 1.5px; height: 1.5px; }
+.particle:nth-child(5)  { left: 70%; animation-duration: 9s; animation-delay: 2s; }
+.particle:nth-child(6)  { left: 85%; animation-duration: 11s; animation-delay: 4s; width: 1px; height: 1px; }
+.particle:nth-child(7)  { left: 15%; animation-duration: 13s; animation-delay: 5s; }
+.particle:nth-child(8)  { left: 60%; animation-duration: 7s; animation-delay: 1.5s; }
+.particle:nth-child(9)  { left: 35%; animation-duration: 15s; animation-delay: 3.5s; width: 2.5px; height: 2.5px; }
+.particle:nth-child(10) { left: 75%; animation-duration: 10s; animation-delay: 6s; }
+
+@keyframes floatUp {
+  0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+  10%  { opacity: 0.8; }
+  90%  { opacity: 0.3; }
+  100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+}
+
+/* Override design-tokens body::before — use our own ambient orbs */
+body::before {
+  background:
+    radial-gradient(ellipse 100% 70% at 30% 15%, rgba(14, 165, 233, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 60% at 70% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 90% 50% at 50% 85%, rgba(245, 158, 11, 0.04) 0%, transparent 60%) !important;
 }
 
 .role-gate-container {
@@ -105,6 +163,19 @@ body {
 </style>
 </head>
 <body>
+
+<div class="particles">
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+</div>
 
 <div class="role-gate-container">
   <h1 class="role-gate-title">工业智能运维平台</h1>
