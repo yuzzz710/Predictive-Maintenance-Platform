@@ -150,56 +150,16 @@ def daily_health_check():
                     level = row.get("current_alert_level", "Normal")
                     alert_stats[level] = alert_stats.get(level, 0) + 1
 
-        # Step 4: Build email
+        # Step 4: Build email using Jinja2 template
         critical_devices.sort(key=lambda x: x["health_score"])
-        critical_html_rows = ""
-        for d in critical_devices[:15]:
-            hs_color = "#f04444" if d["health_score"] < 25 else "#f0a030"
-            critical_html_rows += f"""
-            <tr>
-              <td style="padding:6px 10px;border:1px solid #1c2230;font-family:monospace;">{d['machine_id']}</td>
-              <td style="padding:6px 10px;border:1px solid #1c2230;color:{hs_color};font-weight:600;">{d['health_score']:.1f}</td>
-              <td style="padding:6px 10px;border:1px solid #1c2230;">{d['health_level']}</td>
-              <td style="padding:6px 10px;border:1px solid #1c2230;">{d['top_risk_factor']}</td>
-              <td style="padding:6px 10px;border:1px solid #1c2230;color:#f04444;">${d['cost_at_risk']:.0f}</td>
-            </tr>"""
-
-        html = f"""<!DOCTYPE html>
-<html><head><meta charset="utf-8"></head>
-<body style="font-family:'Microsoft YaHei',sans-serif;background:#0e1117;color:#e6ebf2;padding:24px;">
-<div style="max-width:650px;margin:0 auto;background:#141820;border:1px solid #1c2230;border-radius:6px;overflow:hidden;">
-<div style="background:#1a1f2b;padding:20px 24px;border-bottom:1px solid #1c2230;">
-  <span style="color:#00c9a0;font-size:16px;font-weight:bold;">◆ 每日健康巡检报告</span>
-  <span style="float:right;font-size:12px;color:#5a6474;">{datetime.now().strftime('%Y-%m-%d')}</span>
-</div>
-<div style="padding:24px;">
-  <div style="display:flex;gap:12px;margin-bottom:20px;">
-    <div style="flex:1;background:rgba(255,255,255,0.02);border:1px solid #1c2230;border-radius:4px;padding:12px;text-align:center;">
-      <div style="font-size:22px;font-weight:700;color:#f04444;">{len(critical_devices)}</div>
-      <div style="font-size:11px;color:#5a6474;">高危设备 (健康分&lt;40)</div>
-    </div>
-    <div style="flex:1;background:rgba(255,255,255,0.02);border:1px solid #1c2230;border-radius:4px;padding:12px;text-align:center;">
-      <div style="font-size:22px;font-weight:700;color:#f0a030;">{alert_stats.get('Alarm',0)+alert_stats.get('Warning',0)}</div>
-      <div style="font-size:11px;color:#5a6474;">告警/警告设备</div>
-    </div>
-    <div style="flex:1;background:rgba(255,255,255,0.02);border:1px solid #1c2230;border-radius:4px;padding:12px;text-align:center;">
-      <div style="font-size:22px;font-weight:700;color:#3fb950;">{pipe_result.get('work_orders_count', 0)}</div>
-      <div style="font-size:11px;color:#5a6474;">今日工单</div>
-    </div>
-  </div>
-  <div style="font-size:13px;color:#8e9aab;margin-bottom:12px;">高危设备列表 (Top {min(15, len(critical_devices))})</div>
-  <table width="100%" style="border-collapse:collapse;margin-bottom:16px;">
-    <tr style="background:rgba(255,255,255,0.02);">
-      <td style="padding:6px 10px;border:1px solid #1c2230;color:#5a6474;font-size:11px;">设备</td>
-      <td style="padding:6px 10px;border:1px solid #1c2230;color:#5a6474;font-size:11px;">健康分</td>
-      <td style="padding:6px 10px;border:1px solid #1c2230;color:#5a6474;font-size:11px;">等级</td>
-      <td style="padding:6px 10px;border:1px solid #1c2230;color:#5a6474;font-size:11px;">风险因子</td>
-      <td style="padding:6px 10px;border:1px solid #1c2230;color:#5a6474;font-size:11px;">日成本风险</td>
-    </tr>{critical_html_rows}
-  </table>
-  <p style="font-size:11px;color:#5a6474;">策略: {strategy} | 流水线耗时: {pipe_result.get('total_duration_seconds', '?')}s</p>
-  <p style="font-size:11px;color:#5a6474;">查看详情: <a href="http://localhost:8765/dashboard" style="color:#4d94ff;">仪表盘</a> | <a href="http://localhost:8765/work-order-tracking" style="color:#4d94ff;">工单跟踪</a></p>
-</div></div></body></html>"""
+        from gateway.report_renderer import render_email
+        html = render_email("email_daily_health.html", {
+            "critical_devices": critical_devices,
+            "alert_stats": alert_stats,
+            "work_orders_count": pipe_result.get("work_orders_count", 0),
+            "strategy": strategy,
+            "pipe_duration": pipe_result.get("total_duration_seconds", "?"),
+        })
 
         # Send email
         if _is_configured():
@@ -256,38 +216,12 @@ def weekly_report_job():
                 reports_fail.append({"type": rname, "error": str(e)})
                 print(f"[scheduler]   {rname}: EXCEPTION ({e})")
 
-        # Build email
-        report_rows = ""
-        for r in reports_ok:
-            report_rows += f"""<tr><td style="padding:8px 12px;border:1px solid #1c2230;">{r['type']}</td>
-            <td style="padding:8px 12px;border:1px solid #1c2230;color:#3fb950;">OK</td>
-            <td style="padding:8px 12px;border:1px solid #1c2230;">{r['size']} KB</td>
-            <td style="padding:8px 12px;border:1px solid #1c2230;"><a href="{r['url']}" style="color:#4d94ff;">查看</a></td></tr>"""
-        for r in reports_fail:
-            report_rows += f"""<tr><td style="padding:8px 12px;border:1px solid #1c2230;">{r['type']}</td>
-            <td style="padding:8px 12px;border:1px solid #1c2230;color:#f04444;">FAIL</td>
-            <td style="padding:8px 12px;border:1px solid #1c2230;" colspan="2">{r['error']}</td></tr>"""
-
-        html = f"""<!DOCTYPE html>
-<html><head><meta charset="utf-8"></head>
-<body style="font-family:'Microsoft YaHei',sans-serif;background:#0e1117;color:#e6ebf2;padding:24px;">
-<div style="max-width:600px;margin:0 auto;background:#141820;border:1px solid #1c2230;border-radius:6px;overflow:hidden;">
-<div style="background:#1a1f2b;padding:20px 24px;border-bottom:1px solid #1c2230;">
-  <span style="color:#00c9a0;font-size:16px;font-weight:bold;">◆ 周度运维报告</span>
-  <span style="float:right;font-size:12px;color:#5a6474;">{datetime.now().strftime('%Y-%m-%d')}</span>
-</div>
-<div style="padding:24px;">
-  <p style="font-size:13px;color:#8e9aab;margin-bottom:16px;">本周度报告已自动生成，共 {len(reports_ok)}/{len(reports_ok)+len(reports_fail)} 份成功。</p>
-  <table width="100%" style="border-collapse:collapse;margin-bottom:20px;">
-    <tr style="background:rgba(255,255,255,0.02);">
-      <td style="padding:8px 12px;border:1px solid #1c2230;color:#5a6474;">报告类型</td>
-      <td style="padding:8px 12px;border:1px solid #1c2230;color:#5a6474;">状态</td>
-      <td style="padding:8px 12px;border:1px solid #1c2230;color:#5a6474;">大小</td>
-      <td style="padding:8px 12px;border:1px solid #1c2230;color:#5a6474;">链接</td>
-    </tr>{report_rows}
-  </table>
-  <p style="font-size:11px;color:#5a6474;">查看所有报告: <a href="http://localhost:8765/reports" style="color:#4d94ff;">报告管理中心</a></p>
-</div></div></body></html>"""
+        # Build email using Jinja2 template
+        from gateway.report_renderer import render_email
+        html = render_email("email_weekly_report.html", {
+            "reports_ok": reports_ok,
+            "reports_fail": reports_fail,
+        })
 
         if _is_configured():
             _send_email(SMTP_USER, f"[周报] {datetime.now().strftime('%Y-W%W')} 运维周报", html)

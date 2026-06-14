@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>维护执行单 — {{ spec.context.work_order_context.machine_id if spec.context and spec.context.work_order_context else spec.report_type }}</title>
+<style>
+  :root {
+    --bg: #0e1117; --card: #141820; --card-alt: #181d26;
+    --border: #1c2230; --text: #e6ebf2; --text2: #8e9aab; --text3: #5a6474;
+    --cyan: #00c9a0; --amber: #f0a030; --red: #f04444; --blue: #4d94ff; --green: #3fb950;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'PingFang SC','Microsoft YaHei','Segoe UI',system-ui,sans-serif;
+    line-height: 1.8; max-width: 960px; margin: 0 auto; padding: 40px 32px;
+  }
+  .report-header {
+    border-bottom: 2px solid var(--cyan); padding-bottom: 20px; margin-bottom: 32px;
+  }
+  .report-header h1 { font-size: 22px; color: var(--cyan); margin-bottom: 4px; }
+  .report-header .meta {
+    display: flex; gap: 24px; flex-wrap: wrap; font-size: 12px; color: var(--text2);
+    font-family: 'Cascadia Code','Fira Code','Consolas',monospace;
+  }
+  .report-header .meta span { color: var(--text); font-weight: 600; }
+  .meta-tags { display: flex; gap: 8px; margin-top: 8px; }
+  .meta-tag {
+    font-size: 10px; padding: 2px 10px; border-radius: 12px;
+    font-family: 'Cascadia Code','Fira Code','Consolas',monospace; font-weight: 600;
+  }
+  .tag-alarm { background: rgba(240,68,68,0.12); color: var(--red); border: 1px solid rgba(240,68,68,0.2); }
+  .tag-warning { background: rgba(240,160,48,0.12); color: var(--amber); border: 1px solid rgba(240,160,48,0.2); }
+  .tag-action { background: rgba(0,201,160,0.08); color: var(--cyan); border: 1px solid rgba(0,201,160,0.15); }
+  h2 {
+    font-size: 17px; color: var(--cyan); margin: 32px 0 14px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .sec-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 4px;
+    background: rgba(0,201,160,0.08); color: var(--cyan);
+    font-size: 13px; font-weight: 700; flex-shrink: 0;
+  }
+  h3 { font-size: 14px; color: var(--text); margin: 16px 0 8px; }
+  p { font-size: 13px; color: var(--text2); margin-bottom: 8px; }
+  ul, ol { padding-left: 22px; margin-bottom: 12px; }
+  li { font-size: 13px; color: var(--text2); margin-bottom: 6px; }
+  strong { color: var(--text); }
+  code {
+    background: var(--card-alt); color: var(--cyan);
+    padding: 1px 6px; border-radius: 3px; font-size: 12px;
+    font-family: 'Cascadia Code','Fira Code','Consolas',monospace;
+  }
+  blockquote {
+    border-left: 3px solid var(--amber); margin: 12px 0; padding: 10px 16px;
+    background: rgba(240,160,48,0.04); border-radius: 0 4px 4px 0;
+    font-size: 12px; color: var(--amber);
+  }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px; }
+  th {
+    background: var(--card-alt); text-align: left; padding: 8px 12px;
+    font-weight: 600; color: var(--text3); text-transform: uppercase;
+    font-size: 10px; letter-spacing: 0.5px; border-bottom: 2px solid var(--border);
+  }
+  td { padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--text2); }
+  .report-footer {
+    margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--text3); text-align: center;
+  }
+  .disclaimer {
+    background: rgba(240,160,48,0.05); border: 1px dashed rgba(240,160,48,0.2);
+    border-radius: 4px; padding: 12px 16px; margin-top: 24px;
+    font-size: 11px; color: var(--amber);
+  }
+  @media print {
+    body { background: #fff; color: #000; padding: 20px; }
+    h2 { color: #006b5e; border-bottom-color: #ccc; }
+    .report-header { border-bottom-color: #006b5e; }
+    .report-header h1 { color: #006b5e; }
+    .meta-tag { border-color: #999 !important; }
+    .disclaimer { background: #fff8e1; border-color: #ffc107; }
+  }
+</style>
+</head>
+<body>
+
+{% set wc = spec.context.work_order_context if spec.context else {} %}
+{% set mid = wc.get('machine_id', spec.report_type) %}
+{% set priority = wc.get('priority', '?') %}
+{% set alert_level = wc.get('alert_level', '?') %}
+{% set action_type = wc.get('action_type', '?') %}
+{% set health_score = wc.get('health_score', 'N/A') %}
+{% set cost_at_risk = wc.get('cost_at_risk', 0) %}
+
+<div class="report-header">
+  <h1>🔧 设备维护执行单</h1>
+  <div class="meta">
+    <div>设备: <span>{{ mid }}</span></div>
+    <div>优先级: <span>P{{ priority }}</span></div>
+    <div>健康评分: <span>{{ health_score }}/100</span></div>
+    <div>风险成本: <span>${{ '{:,.0f}'.format(cost_at_risk) if cost_at_risk else '0' }}</span></div>
+    <div>生成时间: <span>{{ generated_at }}</span></div>
+  </div>
+  <div class="meta-tags">
+    <span class="meta-tag tag-alarm">{{ alert_level }}</span>
+    <span class="meta-tag tag-action">{{ action_type }}</span>
+  </div>
+</div>
+
+{% if spec.llm_markdown %}
+  {{ spec.llm_markdown | safe }}
+{% else %}
+  {% for section in spec.enabled_sections %}
+    <h2><span class="sec-num">{{ loop.index }}</span>{{ section.title }}</h2>
+  {% endfor %}
+{% endif %}
+
+<div class="disclaimer">
+  ⚠ <strong>重要提示：</strong>本执行单由 Industrial AI Copilot 基于设备实时监测数据自动生成。
+  执行前请由维护班长审核确认。维修过程中如发现与执行单描述不符的情况，请以现场实际情况为准
+  并及时更新维护记录。本执行单已存档至报告系统，可在「报告」页面查看历史版本。
+</div>
+
+<div class="report-footer">
+  Industrial Predictive Maintenance System — AI-Generated Work Order Execution Sheet<br>
+  生成时间: {{ generated_at }} &nbsp;|&nbsp; 设备: {{ mid }} &nbsp;|&nbsp; 由 DeepSeek 大模型辅助生成
+</div>
+
+</body>
+</html>

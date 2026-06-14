@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
+<body style="font-family:'Microsoft YaHei',sans-serif;background:#0e1117;color:#e6ebf2;padding:24px;">
+<div style="max-width:600px;margin:0 auto;background:#141820;border:1px solid #1c2230;border-radius:6px;overflow:hidden;">
+<div style="background:#1a1f2b;padding:20px 24px;border-bottom:1px solid #1c2230;">
+  <span style="color:#00c9a0;font-size:16px;font-weight:bold;">◆ 周度运维报告</span>
+  <span style="float:right;font-size:12px;color:#5a6474;">{{ generated_at[:10] }}</span>
+</div>
+<div style="padding:24px;">
+  <p style="font-size:13px;color:#8e9aab;margin-bottom:16px;">本周度报告已自动生成，共 {{ reports_ok|length }}/{{ reports_ok|length + reports_fail|length }} 份成功。</p>
+  <table width="100%" style="border-collapse:collapse;margin-bottom:20px;">
+    <tr style="background:rgba(255,255,255,0.02);">
+      <td style="padding:8px 12px;border:1px solid #1c2230;color:#5a6474;">报告类型</td>
+      <td style="padding:8px 12px;border:1px solid #1c2230;color:#5a6474;">状态</td>
+      <td style="padding:8px 12px;border:1px solid #1c2230;color:#5a6474;">大小</td>
+      <td style="padding:8px 12px;border:1px solid #1c2230;color:#5a6474;">链接</td>
+    </tr>
+    {% for r in reports_ok %}
+    <tr>
+      <td style="padding:8px 12px;border:1px solid #1c2230;">{{ r.type }}</td>
+      <td style="padding:8px 12px;border:1px solid #1c2230;color:#3fb950;">OK</td>
+      <td style="padding:8px 12px;border:1px solid #1c2230;">{{ r.size }} KB</td>
+      <td style="padding:8px 12px;border:1px solid #1c2230;"><a href="{{ r.url }}" style="color:#4d94ff;">查看</a></td>
+    </tr>
+    {% endfor %}
+    {% for r in reports_fail %}
+    <tr>
+      <td style="padding:8px 12px;border:1px solid #1c2230;">{{ r.type }}</td>
+      <td style="padding:8px 12px;border:1px solid #1c2230;color:#f04444;">FAIL</td>
+      <td style="padding:8px 12px;border:1px solid #1c2230;" colspan="2">{{ r.error }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <p style="font-size:11px;color:#5a6474;">查看所有报告: <a href="http://localhost:8765/reports" style="color:#4d94ff;">报告管理中心</a></p>
+</div></div></body></html>
