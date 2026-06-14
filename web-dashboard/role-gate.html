@@ -116,7 +116,7 @@ body::after {
   background: linear-gradient(135deg, #0EA5E9 0%, #8B5CF6 50%, #F59E0B 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter: drop-shadow(0 2px 12px rgba(14, 165, 233, 0.3));
+  filter: drop-shadow(0 1px 6px rgba(14, 165, 233, 0.15));
 }
 
 .role-gate-subtitle {
@@ -154,9 +154,9 @@ body::after {
   border-radius: var(--radius-xl);
   opacity: 0; transition: opacity 0.5s ease;
 }
-.role-card.card-operator::after { box-shadow: inset 0 0 30px rgba(14, 165, 233, 0.12); }
-.role-card.card-manager::after   { box-shadow: inset 0 0 30px rgba(245, 158, 11, 0.12); }
-.role-card.card-developer::after { box-shadow: inset 0 0 30px rgba(139, 92, 246, 0.12); }
+.role-card.card-operator::after { box-shadow: inset 0 0 18px rgba(14, 165, 233, 0.06); }
+.role-card.card-manager::after   { box-shadow: inset 0 0 18px rgba(245, 158, 11, 0.06); }
+.role-card.card-developer::after { box-shadow: inset 0 0 18px rgba(139, 92, 246, 0.06); }
 .role-card:hover::after { opacity: 1; }
 
 /* Top glow bar */
@@ -188,22 +188,22 @@ body::after {
 }
 .role-card.card-operator .card-icon {
   background: linear-gradient(135deg, #0EA5E9, #38bdf8);
-  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.3);
+  box-shadow: 0 3px 10px rgba(14, 165, 233, 0.2);
 }
 .role-card.card-manager .card-icon {
   background: linear-gradient(135deg, #F59E0B, #fbbf24);
-  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 3px 10px rgba(245, 158, 11, 0.2);
 }
 .role-card.card-developer .card-icon {
   background: linear-gradient(135deg, #8B5CF6, #a78bfa);
-  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 3px 10px rgba(139, 92, 246, 0.2);
 }
 .role-card:hover .card-icon {
   transform: scale(1.12);
 }
-.role-card.card-operator:hover .card-icon { box-shadow: 0 10px 32px rgba(14, 165, 233, 0.5); }
-.role-card.card-manager:hover .card-icon   { box-shadow: 0 10px 32px rgba(245, 158, 11, 0.5); }
-.role-card.card-developer:hover .card-icon { box-shadow: 0 10px 32px rgba(139, 92, 246, 0.5); }
+.role-card.card-operator:hover .card-icon { box-shadow: 0 6px 18px rgba(14, 165, 233, 0.3); }
+.role-card.card-manager:hover .card-icon   { box-shadow: 0 6px 18px rgba(245, 158, 11, 0.3); }
+.role-card.card-developer:hover .card-icon { box-shadow: 0 6px 18px rgba(139, 92, 246, 0.3); }
 
 /* ── Title & subtitle ── */
 .role-card .card-title {
@@ -268,25 +268,25 @@ body::after {
 .role-card.card-operator::before {
   background: linear-gradient(90deg, transparent, var(--role-operator), var(--role-operator-glow), var(--role-operator), transparent);
   background-size: 200% 100%;
-  box-shadow: 0 1px 16px var(--role-operator-glow);
+  box-shadow: 0 1px 8px var(--role-operator-glow);
 }
 .role-card.card-manager::before {
   background: linear-gradient(90deg, transparent, var(--role-manager), var(--role-manager-glow), var(--role-manager), transparent);
   background-size: 200% 100%;
-  box-shadow: 0 1px 16px var(--role-manager-glow);
+  box-shadow: 0 1px 8px var(--role-manager-glow);
 }
 .role-card.card-developer::before {
   background: linear-gradient(90deg, transparent, var(--role-developer), var(--role-developer-glow), var(--role-developer), transparent);
   background-size: 200% 100%;
-  box-shadow: 0 1px 16px var(--role-developer-glow);
+  box-shadow: 0 1px 8px var(--role-developer-glow);
 }
 .role-card:hover::before {
   animation: lightFlow 1.5s ease-in-out infinite;
-  box-shadow: 0 1px 24px;
+  box-shadow: 0 1px 14px;
 }
-.role-card.card-operator:hover::before { box-shadow: 0 1px 24px var(--role-operator-glow); }
-.role-card.card-manager:hover::before   { box-shadow: 0 1px 24px var(--role-manager-glow); }
-.role-card.card-developer:hover::before { box-shadow: 0 1px 24px var(--role-developer-glow); }
+.role-card.card-operator:hover::before { box-shadow: 0 1px 14px var(--role-operator-glow); }
+.role-card.card-manager:hover::before   { box-shadow: 0 1px 14px var(--role-manager-glow); }
+.role-card.card-developer:hover::before { box-shadow: 0 1px 14px var(--role-developer-glow); }
 
 @keyframes lightFlow {
   0%   { background-position: 200% 0; }
