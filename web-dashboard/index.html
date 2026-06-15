@@ -1006,14 +1006,14 @@ body {
   z-index: 10000;
   align-items: center; justify-content: center;
 }
-.modal-overlay.active { display: flex; }
+.modal-overlay.active { display: flex; opacity: 1; pointer-events: auto; }
 .modal-card {
   background: var(--glass-bg-modal);
   backdrop-filter: var(--glass-blur-strong); -webkit-backdrop-filter: var(--glass-blur-strong);
   border: 0.5px solid var(--glass-border);
   border-radius: var(--radius-xl);
   width: min(1100px, 92vw);
-  max-height: 85vh;
+  max-height: 85vh; overflow: hidden;
   display: flex; flex-direction: column;
   box-shadow: var(--shadow-xl), var(--glass-highlight-strong);
   animation: modalIn 0.25s ease;
@@ -7145,10 +7145,6 @@ function showAlarmModal() {
       '</table>';
 
     modal.classList.add('active');
-    modal.style.setProperty('display', 'flex', 'important');
-    modal.style.setProperty('visibility', 'visible', 'important');
-    modal.style.setProperty('z-index', '99999', 'important');
-    modal.style.setProperty('opacity', '1', 'important');
   } catch(e) {
     console.error('[showAlarmModal] error:', e);
   }
@@ -7199,10 +7195,6 @@ function showShutdownModal() {
       '</table>';
 
     modal.classList.add('active');
-    modal.style.setProperty('display', 'flex', 'important');
-    modal.style.setProperty('visibility', 'visible', 'important');
-    modal.style.setProperty('z-index', '99999', 'important');
-    modal.style.setProperty('opacity', '1', 'important');
   } catch(e) {
     console.error('[showShutdownModal] error:', e);
   }
@@ -7212,7 +7204,6 @@ function closeAlarmModal() {
   var modal3 = document.getElementById('alarm-modal');
   if (!modal3) return;
   modal3.classList.remove('active');
-  modal3.style.setProperty('display', 'none', 'important');
 }
 
 // ── Work Order Detail Report Generation ──
