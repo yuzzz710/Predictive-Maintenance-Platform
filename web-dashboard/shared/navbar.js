@@ -298,6 +298,25 @@
     '  font-size:10px; font-weight:500; color:var(--text-muted); letter-spacing:1px; text-align:center;',
     '  font-family:var(--font-sans);',
     '}',
+    '#global-nav .gn-logo-scnu-wrap {',
+    '  display:flex; flex-direction:column; align-items:center; gap:3px; flex-shrink:0;',
+    '}',
+    '#global-nav .gn-logo-scnu-img {',
+    '  height:36px; width:auto; display:block; padding:5px 8px; border-radius:8px;',
+    '  background:rgba(255,255,255,0.35); transition:background 0.2s;',
+    '}',
+    '#global-nav .gn-logo:hover .gn-logo-scnu-img { background:rgba(255,255,255,0.42); }',
+    'html[data-theme=\"light\"] #global-nav .gn-logo-scnu-img {',
+    '  background:rgba(0,0,0,0.70);',
+    '}',
+    'html[data-theme=\"light\"] #global-nav .gn-logo:hover .gn-logo-scnu-img {',
+    '  background:rgba(0,0,0,0.78);',
+    '}',
+    '#global-nav .gn-logo-scnu-label {',
+    '  font-size:9px; font-weight:500; color:var(--text-muted);',
+    '  letter-spacing:1px; text-align:center; white-space:nowrap;',
+    '  font-family:var(--font-sans);',
+    '}',
     '#global-nav .gn-links {',
     '  display:flex; flex-direction:column; gap:1px; padding:4px 10px;',
     '  flex:1; overflow-y:auto; overflow-x:hidden;',
@@ -469,7 +488,10 @@
       '<span class="gn-logo-dot"></span>' +
       '<div style="display:flex;flex-direction:column;line-height:1.1;">' +
       '<span class="gn-logo-brand">鹰眼</span>' +
-      '<span class="gn-logo-sub">工业智能运维平台</span>' +
+      '</div>' +
+      '<div class="gn-logo-scnu-wrap">' +
+      '<img class="gn-logo-scnu-img" src="/images/scnu_logo.png" alt="华南师范大学" title="华南师范大学">' +
+      '<span class="gn-logo-scnu-label">工业预测智能维护</span>' +
       '</div>' +
       '</a>' +
       '<div class="gn-links">' + buildLinksHtml() + '</div>' +

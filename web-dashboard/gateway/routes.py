@@ -250,7 +250,8 @@ async def switch_strategy(data: dict = Body(...)):
     """
     Switch maintenance strategy and regenerate all industrial plan data.
 
-    Request:  {"strategy": "quality_first"}
+    Request:  {"strategy": "quality_first", "or_budget": 80000, "or_max_hours": 120, "or_max_orders": 15}
+    All OR params optional — omit to use strategy defaults.
     Response: { "success": true, "strategy": "quality_first",
                 "summary": {...}, "plan": [...], "strategy_comparison": [...],
                 "technician_schedule": [...], "spare_parts_plan": [...],
@@ -258,6 +259,9 @@ async def switch_strategy(data: dict = Body(...)):
     """
     strategy = data.get("strategy", "production_efficiency")
     force = data.get("force", False)
+    or_budget = data.get("or_budget", 0)
+    or_max_hours = data.get("or_max_hours", 0)
+    or_max_orders = data.get("or_max_orders", 0)
     if strategy not in _VALID_STRATEGIES:
         return JSONResponse(
             {"success": False, "error": f"Invalid strategy '{strategy}'. Valid: {sorted(_VALID_STRATEGIES)}"},
@@ -309,12 +313,25 @@ async def switch_strategy(data: dict = Body(...)):
         for part in catalog_data.get("common_parts", []):
             parts_cost_lookup[part["name"]] = part.get("unit_cost", 0)
 
+    # Build OR config override if user specified knapsack parameters
+    or_config = None
+    if or_budget > 0 or or_max_hours > 0 or or_max_orders > 0:
+        or_config = {
+            "work_order": {
+                "max_budget": or_budget if or_budget > 0 else 150000,
+                "max_orders_per_cycle": or_max_orders if or_max_orders > 0 else 20,
+            }
+        }
+        if or_max_hours > 0:
+            or_config["work_order"]["max_hours"] = or_max_hours
+
     # Create engines
     base_engine = MaintenanceDecisionEngine(cost_risk_data=cost_df)
     industrial_engine = IndustrialMaintenanceEngine(
         cost_risk_data=cost_df,
         strategy=strategy,
         health_score_df=health_df,
+        config=or_config,
     )
 
     # Generate industrial plan

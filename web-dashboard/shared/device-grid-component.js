@@ -13,6 +13,16 @@
 
 var machineMap = {};
 var shapScatterData = null;
+
+// ── Chinese labels for action_type ──
+var ACT_LABEL = {
+  immediate_shutdown: '立即停机',
+  preventive_repair: '预防维修',
+  schedule_inspection: '安排检查',
+  increase_monitoring: '加密监控',
+  routine_check: '例行检查',
+  no_action: '无需处理'
+};
 var _traceBaseline = {};
 var _traceZScores = {};
 
@@ -221,7 +231,7 @@ function openPanel(mid, m) {
     html += '<h3><span class="dot" style="background:var(--accent-red);"></span>维护工单</h3>';
     html += '<div class="stat-row">';
     html += '<div class="stat-item"><div class="stat-label">优先级</div><div class="stat-value">#'+wo.priority+'</div></div>';
-    html += '<div class="stat-item"><div class="stat-label">动作</div><div class="stat-value" style="font-size:14px;">'+wo.action_type+'</div></div>';
+    html += '<div class="stat-item"><div class="stat-label">动作</div><div class="stat-value" style="font-size:14px;">'+(ACT_LABEL[wo.action_type]||wo.action_type||'检查')+'</div></div>';
     html += '<div class="stat-item"><div class="stat-label">紧急度</div><div class="stat-value">'+wo.urgency_score+'</div></div>';
     html += '</div>';
     html += '<div style="font-size:11px;color:var(--text-secondary);margin-top:6px;">建议窗口: '+wo.window_days+'天 &nbsp;|&nbsp; 预期节省: $'+wo.expected_savings.toFixed(0)+'</div>';

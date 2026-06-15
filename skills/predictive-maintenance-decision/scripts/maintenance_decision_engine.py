@@ -1078,6 +1078,11 @@ class IndustrialMaintenanceEngine(MaintenanceDecisionEngine):
             self.strategy_selector._or_max_budget = max_budget_override
         if max_orders_override > 0 and max_orders_override != self.strategy_selector.config.max_orders:
             self.strategy_selector._or_max_orders = max_orders_override
+        max_hours_override = (
+            config.get("work_order", {}).get("max_hours", 0) if config else 0
+        )
+        if max_hours_override > 0:
+            self.strategy_selector._or_max_hours = max_hours_override
         self.tech_assigner = TechnicianAssigner()
         self.parts_planner = SparePartsPlanner()
         self.downtime_optimizer = DowntimeOptimizer(self.strategy_selector.config)

@@ -2016,6 +2016,12 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
                  border:1px solid var(--accent-purple);background:var(--bg-card);color:var(--accent-purple);white-space:nowrap;">
           🤖 自动推荐预算
         </button>
+        <button id="s7-or-apply" onclick="applyOROptimization()"
+          style="margin-left:8px;padding:7px 18px;border-radius:var(--radius);font-size:12px;font-weight:700;cursor:pointer;
+                 border:none;background:linear-gradient(135deg,var(--accent-purple),var(--accent-cyan));color:#fff;white-space:nowrap;
+                 box-shadow:0 4px 16px rgba(167,113,247,0.35);transition:all 0.25s;">
+          ⚡ 应用此优化方案
+        </button>
       </div>
       <div id="s7-or-summary" style="display:flex;gap:14px;margin:10px 0;flex-wrap:wrap;">
         <div style="flex:1;min-width:100px;padding:10px 14px;background:var(--bg-card-alt);border-radius:var(--radius);text-align:center;border:1px solid var(--border);">
@@ -4851,19 +4857,8 @@ async function renderSection6() {
     p1Grid.innerHTML = '<div style="color:var(--text-muted);padding:12px;text-align:center;">无 P1 紧急工单</div>';
   }
 
-  // Stats row — unified from industrial_maintenance_plan.csv
-  const nAlarm = plan.filter(r => r.alert_level === 'ALARM').length;
-  const nShutdown = plan.filter(r => r.action_type === 'immediate_shutdown').length;
-  const totalCost = plan.reduce((s, r) => s + (parseFloat(r.cost_at_risk) || 0), 0);
-  const totalSavings = plan.reduce((s, r) => s + (parseFloat(r.expected_savings) || 0), 0);
-  const totalTechHrs = (hasTech && Array.isArray(tech)) ? tech.reduce((s, r) => s + (parseFloat(r.estimated_hours) || 0), 0).toFixed(0) : 0;
-  const totalParts = hasParts ? parts.length : 0;
-
-  document.getElementById('s7-stats').innerHTML =
-    '<div class="stat-card accent-red clickable" onclick="showAlarmModal()" title="点击查看 ALARM 设备详细信息"><div class="label">ALARM 设备</div><div class="value">' + nAlarm + '</div><div class="sub">需要立即关注 · 点击查看详情</div></div>' +
-    '<div class="stat-card accent-amber clickable" onclick="showShutdownModal()" title="点击查看紧急停机设备详细信息"><div class="label">紧急停机</div><div class="value">' + nShutdown + '</div><div class="sub">immediate shutdown · 点击查看详情</div></div>' +
-    '<div class="stat-card accent-cyan"><div class="label">总风险成本</div><div class="value">$' + (totalCost / 1000).toFixed(0) + 'k</div><div class="sub">日暴露成本汇总 · ' + totalTechHrs + ' 工时</div></div>' +
-    '<div class="stat-card accent-green"><div class="label">预期节约</div><div class="value">$' + (totalSavings / 1000).toFixed(0) + 'k</div><div class="sub">及时维修可避免损失 · ' + totalParts + ' 备件需求</div></div>';
+  // Stats row — reads from DATA.plan for sync with modals
+  refreshStatsRow(tech, parts);
 
   // ── ROI Panel: 预算与ROI概览 ──
   (function() {
@@ -5088,6 +5083,56 @@ async function renderSection6() {
     document.getElementById('s7-or-budget-input').value = recommended;
     document.getElementById('s7-or-budget-slider').value = recommended;
     updateKnapsackUI();
+  };
+
+  window.applyOROptimization = async function() {
+    var btn = document.getElementById('s7-or-apply');
+    if (!btn || btn.disabled) return;
+    var origText = btn.textContent;
+    btn.textContent = '⏳ 优化中...';
+    btn.disabled = true;
+
+    var budget = parseFloat(document.getElementById('s7-or-budget-input').value) || 50000;
+    var maxHours = parseFloat(document.getElementById('s7-or-hours-input').value) || 80;
+    var maxOrders = parseInt(document.getElementById('s7-or-maxorders').value) || 20;
+    var strategy = sessionStorage.getItem('current_strategy') || 'production_efficiency';
+
+    try {
+      var resp = await fetch('/api/maintenance/strategy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          strategy: strategy,
+          or_budget: budget,
+          or_max_hours: maxHours,
+          or_max_orders: maxOrders,
+        }),
+      });
+      var data = await resp.json();
+      if (!data.success) { alert('优化失败: ' + (data.error || '未知错误')); return; }
+
+      // Store inline data for re-render
+      window._s7InlineData = {
+        plan: data.plan, tech: data.technician_schedule, parts: data.spare_parts_plan,
+        stratComp: data.strategy_comparison, downtime: data.downtime_schedule,
+        all_machines: data.all_machines,
+      };
+      await renderSection6();
+      updateKnapsackUI();
+      if (typeof window.updateSchedulingUI === 'function') window.updateSchedulingUI();
+
+      btn.textContent = '✅ 已应用';
+      btn.style.background = 'var(--accent-green)';
+      setTimeout(function() {
+        btn.textContent = origText;
+        btn.style.background = 'linear-gradient(135deg,var(--accent-purple),var(--accent-cyan))';
+        btn.disabled = false;
+      }, 2500);
+    } catch(e) {
+      alert('请求失败: ' + (e.message || '网络错误'));
+      btn.disabled = false;
+      btn.textContent = origText;
+    }
   };
 
   window.updateKnapsackUI = function() {
@@ -5446,9 +5491,13 @@ async function renderSection6() {
     // Weekday/weekend hours inputs
     document.getElementById('s7-sched-h-weekday').addEventListener('input', function() { updateSchedulingUI(); });
     document.getElementById('s7-sched-h-weekend').addEventListener('input', function() { updateSchedulingUI(); });
-    var defaultBudget = 40000;
-    document.getElementById('s7-or-budget-slider').value = defaultBudget;
-    document.getElementById('s7-or-budget-input').value = defaultBudget;
+    // Only init budget on first render, preserve user-set value on re-render
+    var budgetInput = document.getElementById('s7-or-budget-input');
+    if (!budgetInput.dataset.initialized) {
+      budgetInput.dataset.initialized = '1';
+      document.getElementById('s7-or-budget-slider').value = 50000;
+      budgetInput.value = 50000;
+    }
     updateKnapsackUI();
     updateSchedulingUI();
   } else {
@@ -7020,106 +7069,150 @@ function renderGallery(containerId, data) {
 }
 
 // ============================================================
+// ── Stats row refresh — reads DATA.plan for sync with modals ──
+function refreshStatsRow(tech, parts) {
+  var plan = DATA.plan;
+  if (!plan || plan.length === 0) return;
+  var nAlarm = plan.filter(function(r) { return r.alert_level === 'ALARM'; }).length;
+  var nShutdown = plan.filter(function(r) { return r.action_type === 'immediate_shutdown'; }).length;
+  var totalCost = plan.reduce(function(s, r) { return s + (parseFloat(r.cost_at_risk) || 0); }, 0);
+  var totalSavings = plan.reduce(function(s, r) { return s + (parseFloat(r.expected_savings) || 0); }, 0);
+  var totalTechHrs = (tech && Array.isArray(tech)) ? tech.reduce(function(s, r) { return s + (parseFloat(r.estimated_hours) || 0); }, 0).toFixed(0) : 0;
+  var totalParts = (parts && Array.isArray(parts)) ? parts.length : 0;
+  var el = document.getElementById('s7-stats');
+  if (!el) { console.log('[refreshStatsRow] SKIP: s7-stats not found'); return; }
+  el.innerHTML =
+    '<div class=\"stat-card accent-red clickable\" onclick=\"showAlarmModal()\" title=\"点击查看 ALARM 设备详细信息\"><div class=\"label\">ALARM 设备</div><div class=\"value\">' + nAlarm + '</div><div class=\"sub\">需要立即关注 · 点击查看详情</div></div>' +
+    '<div class=\"stat-card accent-amber clickable\" onclick=\"showShutdownModal()\" title=\"点击查看紧急停机设备详细信息\"><div class=\"label\">紧急停机</div><div class=\"value\">' + nShutdown + '</div><div class=\"sub\">immediate shutdown · 点击查看详情</div></div>' +
+    '<div class=\"stat-card accent-cyan\"><div class=\"label\">总风险成本</div><div class=\"value\">$' + (totalCost / 1000).toFixed(0) + 'k</div><div class=\"sub\">日暴露成本汇总 · ' + totalTechHrs + ' 工时</div></div>' +
+    '<div class=\"stat-card accent-green\"><div class=\"label\">预期节约</div><div class=\"value\">$' + (totalSavings / 1000).toFixed(0) + 'k</div><div class=\"sub\">及时维修可避免损失 · ' + totalParts + ' 备件需求</div></div>';
+}
+
 // ALARM DETAIL MODAL
 // ============================================================
 function showAlarmModal() {
-  const plan = DATA.plan;
-  if (!plan || plan.length === 0) return;
-  const alarms = plan.filter(r => r.alert_level === 'ALARM').sort((a, b) => (a.priority || 99) - (b.priority || 99));
-  if (alarms.length === 0) return;
+  try {
+    if (!DATA.plan || DATA.plan.length === 0) { refreshStatsRow(); }
+    var plan = DATA.plan;
+    if (!plan || plan.length === 0) return;
+    var alarms = plan.filter(function(r) { return r.alert_level === 'ALARM'; }).sort(function(a, b) { return (a.priority || 99) - (b.priority || 99); });
+    if (alarms.length === 0) return;
 
-  const actLabel = {
-    immediate_shutdown: '立即停机',
-    preventive_repair: '预防维修',
-    schedule_inspection: '安排检查',
-    increase_monitoring: '加密监控'
-  };
-  const severityColors = { critical: 'var(--accent-red)', high: 'var(--accent-amber)', medium: 'var(--accent-blue)', low: 'var(--accent-cyan)' };
+    var modal = document.getElementById('alarm-modal');
+    if (!modal) return;
 
-  const rows = alarms.map((r, i) => {
-    const severity = (r.urgency_score || 0) >= 90 ? 'critical' : (r.urgency_score || 0) >= 70 ? 'high' : (r.urgency_score || 0) >= 50 ? 'medium' : 'low';
-    const severityLabel = { critical: 'CRITICAL', high: 'HIGH', medium: 'MEDIUM', low: 'LOW' }[severity];
-    const rowClass = 'alarm-row-' + severity;
-    const actionLabel = actLabel[r.action_type] || r.action_type;
-    const actionClass = r.action_type === 'immediate_shutdown' ? 'row-action-shutdown' :
-                        r.action_type === 'preventive_repair' ? 'row-action-repair' :
-                        r.action_type === 'schedule_inspection' ? 'row-action-inspect' : '';
-    const windowDays = r.recommended_window_days || 0;
-    const windowText = windowDays === 0 ? '立即' : windowDays + ' 天';
-    const sugg = r.maintenance_suggestion || '';
-    return '<tr class="' + rowClass + '">' +
-      '<td>' + (r.priority || '?') + '</td>' +
-      '<td style="color:var(--accent-cyan);font-weight:600">' + r.machine_id + '</td>' +
-      '<td style="color:' + severityColors[severity] + ';font-weight:600">' + severityLabel + '</td>' +
-      '<td class="' + actionClass + '">' + actionLabel + '</td>' +
-      '<td>$' + ((r.cost_at_risk || 0)).toLocaleString() + '</td>' +
-      '<td>' + ((r.urgency_score || 0)).toFixed(0) + '</td>' +
-      '<td>' + windowText + '</td>' +
-      '<td style="color:var(--accent-green)">$' + ((r.expected_savings || 0)).toLocaleString() + '</td>' +
-      '<td class="sugg-cell">' + sugg.substring(0, 200) + '</td>' +
-      '</tr>';
-  }).join('');
+    const actLabel = {
+      immediate_shutdown: '立即停机',
+      preventive_repair: '预防维修',
+      schedule_inspection: '安排检查',
+      increase_monitoring: '加密监控'
+    };
+    const severityColors = { critical: 'var(--accent-red)', high: 'var(--accent-amber)', medium: 'var(--accent-blue)', low: 'var(--accent-cyan)' };
 
-  document.getElementById('alarm-modal').querySelector('.modal-header h3').textContent = 'ALARM 设备详细信息';
-  document.getElementById('alarm-modal-body').innerHTML =
-    '<table class="modal-table">' +
-    '<thead><tr>' +
-    '<th>优先级</th><th>设备 ID</th><th>严重级别</th><th>动作类型</th><th>风险成本</th><th>紧急度</th><th>处理窗口</th><th>预期节约</th><th>建议</th>' +
-    '</tr></thead>' +
-    '<tbody>' + rows + '</tbody>' +
-    '</table>';
+    var rows = alarms.map(function(r) {
+      var severity = (r.urgency_score || 0) >= 90 ? 'critical' : (r.urgency_score || 0) >= 70 ? 'high' : (r.urgency_score || 0) >= 50 ? 'medium' : 'low';
+      var severityLabel = { critical: 'CRITICAL', high: 'HIGH', medium: 'MEDIUM', low: 'LOW' }[severity];
+      var rowClass = 'alarm-row-' + severity;
+      var actionLabel = actLabel[r.action_type] || r.action_type;
+      var actionClass = r.action_type === 'immediate_shutdown' ? 'row-action-shutdown' :
+                          r.action_type === 'preventive_repair' ? 'row-action-repair' :
+                          r.action_type === 'schedule_inspection' ? 'row-action-inspect' : '';
+      var windowDays = r.recommended_window_days || 0;
+      var windowText = windowDays === 0 ? '立即' : windowDays + ' 天';
+      var sugg = r.maintenance_suggestion || '';
+      return '<tr class=\"' + rowClass + '\">' +
+        '<td>' + (r.priority || '?') + '</td>' +
+        '<td style=\"color:var(--accent-cyan);font-weight:600\">' + r.machine_id + '</td>' +
+        '<td style=\"color:' + severityColors[severity] + ';font-weight:600\">' + severityLabel + '</td>' +
+        '<td class=\"' + actionClass + '\">' + actionLabel + '</td>' +
+        '<td>$' + ((r.cost_at_risk || 0)).toLocaleString() + '</td>' +
+        '<td>' + ((r.urgency_score || 0)).toFixed(0) + '</td>' +
+        '<td>' + windowText + '</td>' +
+        '<td style=\"color:var(--accent-green)\">$' + ((r.expected_savings || 0)).toLocaleString() + '</td>' +
+        '<td class=\"sugg-cell\">' + sugg.substring(0, 200) + '</td>' +
+        '</tr>';
+    }).join('');
 
-  var modal = document.getElementById('alarm-modal');
-  modal.classList.add('active');
-  modal.style.display = 'flex';
+    var h3 = modal.querySelector('.modal-header h3');
+    if (h3) h3.textContent = 'ALARM 设备详细信息';
+    var body = document.getElementById('alarm-modal-body');
+    if (body) body.innerHTML =
+      '<table class=\"modal-table\">' +
+      '<thead><tr>' +
+      '<th>优先级</th><th>设备 ID</th><th>严重级别</th><th>动作类型</th><th>风险成本</th><th>紧急度</th><th>处理窗口</th><th>预期节约</th><th>建议</th>' +
+      '</tr></thead>' +
+      '<tbody>' + rows + '</tbody>' +
+      '</table>';
+
+    modal.classList.add('active');
+    modal.style.setProperty('display', 'flex', 'important');
+    modal.style.setProperty('visibility', 'visible', 'important');
+    modal.style.setProperty('z-index', '99999', 'important');
+    modal.style.setProperty('opacity', '1', 'important');
+  } catch(e) {
+    console.error('[showAlarmModal] error:', e);
+  }
 }
 
 function showShutdownModal() {
-  const plan = DATA.plan;
-  if (!plan || plan.length === 0) return;
-  const shutdowns = plan.filter(r => r.action_type === 'immediate_shutdown').sort((a, b) => (a.priority || 99) - (b.priority || 99));
-  if (shutdowns.length === 0) return;
+  try {
+    if (!DATA.plan || DATA.plan.length === 0) { refreshStatsRow(); }
+    var plan = DATA.plan;
+    if (!plan || plan.length === 0) return;
+    var shutdowns = plan.filter(function(r) { return r.action_type === 'immediate_shutdown'; }).sort(function(a, b) { return (a.priority || 99) - (b.priority || 99); });
+    if (shutdowns.length === 0) return;
 
-  const severityColors = { critical: 'var(--accent-red)', high: 'var(--accent-amber)', medium: 'var(--accent-blue)', low: 'var(--accent-cyan)' };
+    var modal = document.getElementById('alarm-modal');
+    if (!modal) return;
 
-  const rows = shutdowns.map((r, i) => {
-    const severity = (r.urgency_score || 0) >= 90 ? 'critical' : (r.urgency_score || 0) >= 70 ? 'high' : (r.urgency_score || 0) >= 50 ? 'medium' : 'low';
-    const severityLabel = { critical: 'CRITICAL', high: 'HIGH', medium: 'MEDIUM', low: 'LOW' }[severity];
-    const rowClass = 'alarm-row-' + severity;
-    const windowDays = r.recommended_window_days || 0;
-    const windowText = windowDays === 0 ? '立即' : windowDays + ' 天';
-    const sugg = r.maintenance_suggestion || '';
-    return '<tr class="' + rowClass + '">' +
-      '<td>' + (r.priority || '?') + '</td>' +
-      '<td style="color:var(--accent-cyan);font-weight:600">' + r.machine_id + '</td>' +
-      '<td style="color:' + severityColors[severity] + ';font-weight:600">' + severityLabel + '</td>' +
-      '<td class="row-action-shutdown">立即停机</td>' +
-      '<td>$' + ((r.cost_at_risk || 0)).toLocaleString() + '</td>' +
-      '<td>' + ((r.urgency_score || 0)).toFixed(0) + '</td>' +
-      '<td>' + windowText + '</td>' +
-      '<td style="color:var(--accent-green)">$' + ((r.expected_savings || 0)).toLocaleString() + '</td>' +
-      '<td class="sugg-cell">' + sugg.substring(0, 200) + '</td>' +
-      '</tr>';
-  }).join('');
+    var severityColors = { critical: 'var(--accent-red)', high: 'var(--accent-amber)', medium: 'var(--accent-blue)', low: 'var(--accent-cyan)' };
 
-  document.getElementById('alarm-modal').querySelector('.modal-header h3').textContent = '紧急停机设备详细信息';
-  document.getElementById('alarm-modal-body').innerHTML =
-    '<table class="modal-table">' +
-    '<thead><tr>' +
-    '<th>优先级</th><th>设备 ID</th><th>严重级别</th><th>动作类型</th><th>风险成本</th><th>紧急度</th><th>处理窗口</th><th>预期节约</th><th>建议</th>' +
-    '</tr></thead>' +
-    '<tbody>' + rows + '</tbody>' +
-    '</table>';
+    var rows = shutdowns.map(function(r) {
+      var severity = (r.urgency_score || 0) >= 90 ? 'critical' : (r.urgency_score || 0) >= 70 ? 'high' : (r.urgency_score || 0) >= 50 ? 'medium' : 'low';
+      var severityLabel = { critical: 'CRITICAL', high: 'HIGH', medium: 'MEDIUM', low: 'LOW' }[severity];
+      var rowClass = 'alarm-row-' + severity;
+      var windowDays = r.recommended_window_days || 0;
+      var windowText = windowDays === 0 ? '立即' : windowDays + ' 天';
+      var sugg = r.maintenance_suggestion || '';
+      return '<tr class=\"' + rowClass + '\">' +
+        '<td>' + (r.priority || '?') + '</td>' +
+        '<td style=\"color:var(--accent-cyan);font-weight:600\">' + r.machine_id + '</td>' +
+        '<td style=\"color:' + severityColors[severity] + ';font-weight:600\">' + severityLabel + '</td>' +
+        '<td class=\"row-action-shutdown\">立即停机</td>' +
+        '<td>$' + ((r.cost_at_risk || 0)).toLocaleString() + '</td>' +
+        '<td>' + ((r.urgency_score || 0)).toFixed(0) + '</td>' +
+        '<td>' + windowText + '</td>' +
+        '<td style=\"color:var(--accent-green)\">$' + ((r.expected_savings || 0)).toLocaleString() + '</td>' +
+        '<td class=\"sugg-cell\">' + sugg.substring(0, 200) + '</td>' +
+        '</tr>';
+    }).join('');
 
-  var modal2 = document.getElementById('alarm-modal');
-  modal2.classList.add('active');
-  modal2.style.display = 'flex';
+    var h3 = modal.querySelector('.modal-header h3');
+    if (h3) h3.textContent = '紧急停机设备详细信息';
+    var body = document.getElementById('alarm-modal-body');
+    if (body) body.innerHTML =
+      '<table class=\"modal-table\">' +
+      '<thead><tr>' +
+      '<th>优先级</th><th>设备 ID</th><th>严重级别</th><th>动作类型</th><th>风险成本</th><th>紧急度</th><th>处理窗口</th><th>预期节约</th><th>建议</th>' +
+      '</tr></thead>' +
+      '<tbody>' + rows + '</tbody>' +
+      '</table>';
+
+    modal.classList.add('active');
+    modal.style.setProperty('display', 'flex', 'important');
+    modal.style.setProperty('visibility', 'visible', 'important');
+    modal.style.setProperty('z-index', '99999', 'important');
+    modal.style.setProperty('opacity', '1', 'important');
+  } catch(e) {
+    console.error('[showShutdownModal] error:', e);
+  }
 }
 
 function closeAlarmModal() {
   var modal3 = document.getElementById('alarm-modal');
+  if (!modal3) return;
   modal3.classList.remove('active');
-  modal3.style.display = 'none';
+  modal3.style.setProperty('display', 'none', 'important');
 }
 
 // ── Work Order Detail Report Generation ──

@@ -200,8 +200,9 @@ class StrategySelector:
         # Check for OR budget override (set by IndustrialMaintenanceEngine)
         or_budget = getattr(self, '_or_max_budget', 0) or cfg.max_budget
         or_max_orders = getattr(self, '_or_max_orders', 0) or cfg.max_orders
+        or_max_hours = getattr(self, '_or_max_hours', 0)
         if or_budget > 0:
-            results = self.optimize_work_order_selection(results, or_budget, or_max_orders)
+            results = self.optimize_work_order_selection(results, or_budget, or_max_orders, max_hours=or_max_hours)
         elif len(results) > cfg.max_orders:
             results = results[:cfg.max_orders]
 
@@ -212,6 +213,7 @@ class StrategySelector:
         candidates: List[dict],
         budget_limit: float = 0,
         max_orders: int = 20,
+        max_hours: float = 0,
     ) -> List[dict]:
         """
         0-1 Knapsack DP: maximize total risk reduction under budget + labor-hour constraints.
@@ -232,8 +234,8 @@ class StrategySelector:
             return []
 
         B = int(budget_limit)
-        # Labor-hour cap: from technician schedule or fallback (14d × 8h × 2 techs)
-        H = self._calculate_available_hours(14)
+        # Labor-hour cap: user override, or technician schedule, or fallback (14d × 8h × 2 techs)
+        H = max_hours if max_hours > 0 else self._calculate_available_hours(14)
 
         # Build items array: (risk_reduction, cost, hours)
         items = []
@@ -258,49 +260,46 @@ class StrategySelector:
                 "candidate": r,
             })
 
-        # 2D 0-1 Knapsack DP: dp[budget][hours] = max risk reduction
-        # Uses backtracking (last_item + prev_state) to avoid O(k) list copies in inner loop
+        # 3D 0-1 Knapsack DP: dp[b][c] = max risk reduction with budget b, exactly c items.
+        # Third dimension c (item count) guarantees each item is selected at most once,
+        # fixing the 2D DP bug where both dims swept downward caused item reuse.
         SCALE = 200
         B_scaled = max(1, B // SCALE)
         H_max = int(H)
+        M = min(max_orders, n, 50)
 
-        dp = [[0.0] * (H_max + 1) for _ in range(B_scaled + 1)]
-        last = [[-1] * (H_max + 1) for _ in range(B_scaled + 1)]   # which item was added
-        prev = [[(-1, -1)] * (H_max + 1) for _ in range(B_scaled + 1)]  # (prev_b, prev_h)
+        dp_risk = [[-1.0] * (M + 1) for _ in range(B_scaled + 1)]
+        dp_hrs = [[0] * (M + 1) for _ in range(B_scaled + 1)]
+        trace = [[None] * (M + 1) for _ in range(B_scaled + 1)]
+        dp_risk[0][0] = 0.0
 
         for i, item in enumerate(items):
             ci = max(1, item["cost"] // SCALE)
             hi = min(item["hours"], H_max)
             ri = item["risk_reduction"]
-            for j in range(B_scaled, ci - 1, -1):
-                row_j = dp[j]
-                row_j_prev = dp[j - ci]
-                last_j = last[j]
-                prev_j = prev[j]
-                for h in range(H_max, hi - 1, -1):
-                    new_val = row_j_prev[h - hi] + ri
-                    if new_val > row_j[h]:
-                        row_j[h] = new_val
-                        last_j[h] = i
-                        prev_j[h] = (j - ci, h - hi)
+            old_risk = [row[:] for row in dp_risk]
+            old_hrs = [row[:] for row in dp_hrs]
+            for b in range(B_scaled, ci - 1, -1):
+                for c in range(M, 0, -1):
+                    prev_val = old_risk[b - ci][c - 1]
+                    if prev_val >= 0 and old_hrs[b - ci][c - 1] + hi <= H_max:
+                        nv = prev_val + ri
+                        if nv > dp_risk[b][c]:
+                            dp_risk[b][c] = nv
+                            dp_hrs[b][c] = old_hrs[b - ci][c - 1] + hi
+                            prev_trace = trace[b - ci][c - 1]
+                            trace[b][c] = (prev_trace + [i]) if prev_trace else [i]
 
-        # Find best (budget, hours) combination
-        best_val = 0.0
-        best_j, best_h = 0, 0
-        for j in range(B_scaled + 1):
-            for h in range(H_max + 1):
-                if dp[j][h] > best_val:
-                    best_val = dp[j][h]
-                    best_j = j
-                    best_h = h
+        # Find best (budget, count) combination
+        best_b, best_c, best_val = 0, 0, 0.0
+        for b in range(B_scaled + 1):
+            for c in range(M + 1):
+                if dp_risk[b][c] > best_val:
+                    best_val = dp_risk[b][c]
+                    best_b = b
+                    best_c = c
 
-        # Backtrack to reconstruct selected indices
-        selected_indices = []
-        b, h = best_j, best_h
-        while b >= 0 and h >= 0 and last[b][h] >= 0:
-            idx = last[b][h]
-            selected_indices.append(idx)
-            b, h = prev[b][h]
+        selected_indices = trace[best_b][best_c] or []
         budget_used = sum(items[i]["cost"] for i in selected_indices)
         risk_achieved = best_val
 
