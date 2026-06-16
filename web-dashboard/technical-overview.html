@@ -1345,8 +1345,8 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
           + 维护逾期10% + 成本风险10% + 质量故障5% + 规格违规5%
         </div>
         <div class="fc-metrics">
-          <div class="fc-metric"><div class="fm-val" style="color:var(--accent-red);">55台</div><div class="fm-lbl">危险设备</div></div>
-          <div class="fc-metric"><div class="fm-val" style="color:var(--accent-amber);">43台</div><div class="fm-lbl">劣化设备</div></div>
+          <div class="fc-metric"><div class="fm-val" style="color:var(--accent-red);">54台</div><div class="fm-lbl">危险设备</div></div>
+          <div class="fc-metric"><div class="fm-val" style="color:var(--accent-amber);">44台</div><div class="fm-lbl">劣化设备</div></div>
           <div class="fc-metric"><div class="fm-val" style="color:var(--accent-green);">2台</div><div class="fm-lbl">健康设备</div></div>
         </div>
       </div>
@@ -1738,7 +1738,7 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
       </div>
       <div class="info-card c-blue">
         <h4>🔧 三阶段路径</h4>
-        <p><b>P0:</b> 振动加速度计（覆盖机械故障）→ <b>P0:</b> 电流特征分析（覆盖电气故障）→ <b>P0:</b> 延长监测周期</p>
+        <p><b>Phase 1:</b> 振动监测（覆盖机械故障）→ <b>Phase 2:</b> 电流频谱分析（覆盖电气故障）→ <b>Phase 3:</b> 红外热成像（覆盖热控故障）</p>
       </div>
       <div class="info-card c-green">
         <h4>📈 ROI输出</h4>
@@ -1753,7 +1753,7 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
      ═══════════════════════════════════════════════════════════════ -->
 <div class="section" id="sec-copilot">
   <h2 class="section-title"><span class="st-num">05</span> AI Copilot · MCP + Gateway 架构<span class="highlight-badge">🌟 交互亮点</span></h2>
-  <p class="section-sub">7 MCP工具 → FastAPI Gateway (9 Tools) → DeepSeek API → SSE Streaming → Browser — 自然语言驱动的工业AI助手</p>
+  <p class="section-sub">7 MCP工具 → FastAPI Gateway (25 Tools，含3个RAG检索) → DeepSeek API → SSE Streaming → Browser — 自然语言驱动的工业AI助手</p>
 
   <div class="arch-container">
     <div class="arch-diagram tall" id="chart-aicopilot"></div>
@@ -1797,6 +1797,18 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
         </tbody>
       </table>
     </div>
+  </div>
+
+  <!-- RAG Knowledge Base -->
+  <div style="margin-top:18px;padding:16px 20px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;border-left:2px solid var(--accent-purple);">
+    <h4 style="font-size:13px;color:var(--accent-purple);margin-bottom:8px;">📚 RAG知识库增强 · 4层集合</h4>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:11px;color:var(--text-secondary);line-height:1.6;">
+      <div><b style="color:var(--text-primary);">sys_docs</b><br>系统文档 · 494块<br>CLAUDE.md + 15个技术文档</div>
+      <div><b style="color:var(--text-primary);">maint_kb</b><br>运维知识 · 28块<br>维护手册 + 安全规程</div>
+      <div><b style="color:var(--text-primary);">fault_cases</b><br>故障案例 · 833块<br>log.csv自动生成</div>
+      <div><b style="color:var(--accent-purple);">chart_docs</b><br>图表文档 · 64条<br>完整参考手册 ▌索引</div>
+    </div>
+    <div style="font-size:10px;color:var(--text-muted);margin-top:8px;">BGE-small-zh-v1.5 嵌入 → ChromaDB 检索 → Top-K 注入 LLM 上下文。三级降级：BGE → DeepSeek API → TF-IDF</div>
   </div>
 
   <!-- SSE Conversation Flow -->
@@ -2296,7 +2308,7 @@ def query_device_status(machine_id: str) -> dict:
             <h4>关键成果</h4>
             <ul>
               <li>统计基线P=83.9%确保ML信号极弱时系统依然可用</li>
-              <li>设备健康评分：55台危险 + 43台劣化 + 100台全量排序</li>
+              <li>设备健康评分：54台危险 + 44台劣化 + 2台健康 + 100台全量排序</li>
               <li>自然语言 → 工具调用 → 真实数据 → ECharts图表 → AI分析，全链路闭环</li>
               <li>5维度证据链系统性证明数据瓶颈（非盲目调参）</li>
               <li>4级降级保障：任何条件下都能产出可执行的维护建议</li>
@@ -2359,7 +2371,7 @@ def query_device_status(machine_id: str) -> dict:
     <div class="tech-card">
       <div class="tech-card-icon" style="background:rgba(102,217,200,0.12);color:var(--accent-cyan);">🔧</div>
       <h4>MCP Tool System</h4>
-      <p>7 MCP工具 · 8知识资源 · JSON-RPC · subprocess调度</p>
+      <p>7 MCP工具 · 4集合ChromaDB · JSON-RPC · subprocess调度</p>
       <div class="tech-tags">
         <span class="tech-tag">FastMCP</span><span class="tech-tag">JSON-RPC</span><span class="tech-tag">stdio</span><span class="tech-tag">subprocess</span><span class="tech-tag">重试机制</span>
       </div>
@@ -2367,7 +2379,7 @@ def query_device_status(machine_id: str) -> dict:
     <div class="tech-card">
       <div class="tech-card-icon" style="background:rgba(109,181,249,0.12);color:var(--accent-blue);">🌐</div>
       <h4>AI Gateway</h4>
-      <p>DeepSeek API · 3阶段对话 · SSE Streaming · 9 Tools</p>
+      <p>DeepSeek API · 3阶段对话 · SSE Streaming · 25 Tools (含RAG)</p>
       <div class="tech-tags">
         <span class="tech-tag">FastAPI</span><span class="tech-tag">DeepSeek V3</span><span class="tech-tag">SSE</span><span class="tech-tag">httpx</span><span class="tech-tag">Tool Calling</span>
       </div>
@@ -2375,7 +2387,7 @@ def query_device_status(machine_id: str) -> dict:
     <div class="tech-card">
       <div class="tech-card-icon" style="background:rgba(255,179,64,0.12);color:var(--accent-amber);">📱</div>
       <h4>Web Dashboard</h4>
-      <p>6标签页 · 懒加载 · Vanilla JS · ECharts 5.5 · 深色主题</p>
+      <p>8 Tab (sec0-sec7) · 懒加载 · Vanilla JS · ECharts 5.5 · 深色主题</p>
       <div class="tech-tags">
         <span class="tech-tag">ECharts 5.5</span><span class="tech-tag">PapaParse</span><span class="tech-tag">Vanilla JS</span><span class="tech-tag">Dark Theme</span>
       </div>
