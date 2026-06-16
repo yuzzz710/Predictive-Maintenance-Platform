@@ -4541,9 +4541,9 @@ async function renderSection7() {
       '<span style="color:#f0a030;">保守</span> — 低部署成熟度(0.70)·缓慢人员采纳(0.60)·基础运维(0.70)，折损系数0.294 | ' +
       '<span style="color:#4d94ff;">预期</span> — 标准工业部署(0.85)·中等操作采纳(0.80)·良好运维(0.85)，折损系数0.578 | ' +
       '<span style="color:#3fb950;">乐观</span> — 优秀部署执行(0.95)·充分团队采纳(0.90)·最佳实践运维(0.95)，折损系数0.812</p>' +
-      '<p><strong>ROI 公式:</strong> 5年ROI = ((年化节约 × 5) - 总投资) / 总投资 × 100。年化节约 = 有效停机覆盖率 × 当前停机损失 + 有效故障覆盖率 × 当前故障成本 + 劳动节约</p>' +
+      '<p><strong>ROI 公式 (未折现):</strong> 5年简单ROI = ((年化节约 × 5) - 总投资) / 总投资 × 100。年化节约 = 有效停机覆盖率 × 当前停机损失 + 有效故障覆盖率 × 当前故障成本 + 劳动节约。总投资 = 一次性CAPEX + 5年累计OPEX</p>' +
       '<p style="color:var(--accent-amber);margin-top:8px;"><strong>⚠ 工业免责声明:</strong> ' +
-      '以上ROI数值为工程估算范围，非保证财务结果。实际效果取决于部署质量、维护执行水平、运营成熟度和市场条件。保守与乐观场景之间差异可能超过±50%。本估算用于CAPEX规划和阶段排序，不用于损益表记账。建议在实际采购前进行试点部署（5-10台设备）以验证本地化折损系数。</p>';
+      '以上ROI数值为工程估算范围，非保证财务结果。实际效果取决于部署质量、维护执行水平、运营成熟度和市场条件。保守与乐观场景之间差异可能超过±50%。本估算使用简单ROI（未折现），若按8%资本成本折现计算NPV，NPV约为简单ROI名义值的60-70%。本估算用于CAPEX规划和阶段排序，不用于损益表记账或正式财务审批。建议在实际采购前进行试点部署（5-10台设备）以验证本地化折损系数。</p>';
   } else {
     ['sensor-stats', 'chart-phase-timeline', 'chart-sensor-roi', 'chart-payback', 'chart-youdens-curve', 'chart-capex-opex'].forEach(function(id) {
       renderFallback(id, '设备健康与感知升级数据未生成，请先运行决策引擎流水线。');
@@ -6551,26 +6551,28 @@ function debounce(fn, ms) {
 
 // ── Cost-Benefit Calculator (sec7) ──
 var CALC_PRESETS = {
-  small:  { machines:10,  downtimeCost:3000, failures:12,  downtimeHrs:80,  label:'小型工厂 (10台)' },
-  medium: { machines:100, downtimeCost:5000, failures:85,  downtimeHrs:420, label:'中型工厂 (100台)' },
-  large:  { machines:1000,downtimeCost:8000, failures:600, downtimeHrs:3000,label:'大型工厂 (1000台)' }
+  small:  { machines:10,  downtimeCost:3000, failures:15,  downtimeHrs:60,  label:'小型工厂 (10台)' },
+  medium: { machines:100, downtimeCost:5000, failures:130, downtimeHrs:520, label:'中型工厂 (100台)' },
+  large:  { machines:1000,downtimeCost:8000, failures:1000,downtimeHrs:4000,label:'大型工厂 (1000台)' }
 };
 var CALC_PHASES = {
-  1: { name:'Phase 1: 振动监测', capexPerMachine:3770, opexPerMachine:245, downtimeCoverage:0.35, failureCoverage:0.55, sensorCount:2 },
-  2: { name:'Phase 2: 电流频谱', capexPerMachine:2160, opexPerMachine:210, downtimeCoverage:0.23, failureCoverage:0.35, sensorCount:2 },
-  3: { name:'Phase 3: 热成像',   capexPerMachine:3450, opexPerMachine:480, downtimeCoverage:0.25, failureCoverage:0.40, sensorCount:2 }
+  1: { name:'Phase 1: 振动监测', capexPerMachine:3770, annualOpexPerMachine:245, downtimeCoverage:0.35, failureCoverage:0.55, sensorCount:2 },
+  2: { name:'Phase 2: 电流频谱', capexPerMachine:2160, annualOpexPerMachine:210, downtimeCoverage:0.23, failureCoverage:0.35, sensorCount:2 },
+  3: { name:'Phase 3: 热成像',   capexPerMachine:3450, annualOpexPerMachine:480, downtimeCoverage:0.25, failureCoverage:0.40, sensorCount:2 }
 };
 var _calcPhase = 1;
 
 function recalc() {
   var n = parseInt(document.getElementById('calc-machines').value) || 100;
   var dtCost = parseFloat(document.getElementById('calc-downtime-cost').value) || 5000;
-  var failures = parseInt(document.getElementById('calc-failures').value) || 85;
-  var dtHrs = parseInt(document.getElementById('calc-downtime-hrs').value) || 420;
+  var failures = parseInt(document.getElementById('calc-failures').value) || 130;
+  var dtHrs = parseInt(document.getElementById('calc-downtime-hrs').value) || 520;
   var phase = CALC_PHASES[_calcPhase];
   var deployFactor = 0.85, adoptFactor = 0.80, maintFactor = 0.85;
   var mult = deployFactor * adoptFactor * maintFactor;
-  var totalInvestment = (phase.capexPerMachine + phase.opexPerMachine) * n;
+  var totalCapex = phase.capexPerMachine * n;
+  var opex5yr = phase.annualOpexPerMachine * n * 5;
+  var totalInvestment = totalCapex + opex5yr;
   var currentDowntimeCost = dtHrs * dtCost;
   var currentFailureCost = failures * 15000;
   var effDowntime = phase.downtimeCoverage * mult;
@@ -6581,17 +6583,18 @@ function recalc() {
   if (paybackMonths < 1) paybackMonths = 1;
   if (paybackMonths > 60) paybackMonths = 60;
   var roi5yr = ((annualSaving * 5) - totalInvestment) / totalInvestment * 100;
-  renderCalcResults(n, totalInvestment, annualSaving, paybackMonths, roi5yr);
+  renderCalcResults(n, totalCapex, opex5yr, totalInvestment, annualSaving, paybackMonths, roi5yr);
 }
 
-function renderCalcResults(n, investment, saving, payback, roi) {
+function renderCalcResults(n, totalCapex, opex5yr, totalInvestment, saving, payback, roi) {
   var results = [
-    { val:'$'+(investment/1000).toFixed(0)+'k', lbl:'总投资 ('+n+'台)' },
+    { val:'$'+(totalCapex/1000).toFixed(0)+'k', lbl:'一次性CAPEX ('+n+'台)' },
+    { val:'$'+(opex5yr/1000).toFixed(0)+'k', lbl:'5年OPEX (维护+云)' },
+    { val:'$'+(totalInvestment/1000).toFixed(0)+'k', lbl:'5年TCO总持有成本', hl:true },
     { val:'$'+(saving/1000).toFixed(0)+'k', lbl:'年节省金额', hl:true },
     { val:payback+' 个月', lbl:'投资回收期' },
-    { val:roi.toFixed(0)+'%', lbl:'5年 ROI', hl:true },
-    { val:CALC_PHASES[_calcPhase].name, lbl:'升级方案' },
-    { val:'$'+((saving-investment/5)/1000).toFixed(0)+'k', lbl:'年均净收益' }
+    { val:roi.toFixed(0)+'%', lbl:'5年简单ROI (未折现)', hl:true },
+    { val:CALC_PHASES[_calcPhase].name, lbl:'升级方案' }
   ];
   var html = '';
   results.forEach(function(r) {
@@ -6599,7 +6602,7 @@ function renderCalcResults(n, investment, saving, payback, roi) {
   });
   var el = document.getElementById('calc-results'); if (el) el.innerHTML = html;
   var sm = document.getElementById('calc-summary');
-  if (sm) sm.innerHTML = '<b>💡 分析:</b> 为 <b>'+n+'</b> 台设备部署 <b>'+CALC_PHASES[_calcPhase].name+'</b> 传感器，总投资 <b>$'+(investment/1000).toFixed(0)+'k</b>，预计年节省 <b style="color:var(--accent-green);">$'+(saving/1000).toFixed(0)+'k</b>，投资回收期 <b style="color:var(--accent-cyan);">'+payback+' 个月</b>，5年 ROI 达 <b style="color:var(--accent-green);">'+roi.toFixed(0)+'%</b>。';
+  if (sm) sm.innerHTML = '<b>💡 分析:</b> 为 <b>'+n+'</b> 台设备部署 <b>'+CALC_PHASES[_calcPhase].name+'</b> 传感器，一次性CAPEX <b>$'+(totalCapex/1000).toFixed(0)+'k</b> + 5年OPEX <b>$'+(opex5yr/1000).toFixed(0)+'k</b> = 5年TCO <b>$'+(totalInvestment/1000).toFixed(0)+'k</b>。预计年节省 <b style="color:var(--accent-green);">$'+(saving/1000).toFixed(0)+'k</b>，投资回收期 <b style="color:var(--accent-cyan);">'+payback+' 个月</b>，5年简单ROI (未折现) 达 <b style="color:var(--accent-green);">'+roi.toFixed(0)+'%</b>。';
 }
 
 function setCalcPhase(p) {
