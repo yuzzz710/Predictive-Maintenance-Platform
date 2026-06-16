@@ -1107,7 +1107,7 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
     🎯 100台CNC → 1个决策 — 工业AI运维完整闭环方案
   </p>
   <p class="hero-sub">
-    100台CNC设备 · 4传感器参数 · 9种故障类型 · 3角色权限体系 · 7 MCP工具 · 10 Gateway Tools · 22输出文件 · 8交互式标签页<br>
+    100台CNC设备 · 4传感器参数 · 9种故障类型 · 3角色权限体系 · 8 MCP工具 · 10 Gateway Tools · 22输出文件 · 8交互式标签页<br>
     核心发现：4参数系统的可预测性理论上限（Youden's J &lt; 0.08），驱动从纯ML到多信号决策融合的架构转型
   </p>
   <div class="hero-metrics">
@@ -1753,7 +1753,7 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
      ═══════════════════════════════════════════════════════════════ -->
 <div class="section" id="sec-copilot">
   <h2 class="section-title"><span class="st-num">05</span> AI Copilot · MCP + Gateway 架构<span class="highlight-badge">🌟 交互亮点</span></h2>
-  <p class="section-sub">7 MCP工具 → FastAPI Gateway (25 Tools，含3个RAG检索) → DeepSeek API → SSE Streaming → Browser — 自然语言驱动的工业AI助手</p>
+  <p class="section-sub">8 MCP工具 → FastAPI Gateway (25 Tools，含3个RAG检索) → DeepSeek API → SSE Streaming → Browser — 自然语言驱动的工业AI助手</p>
 
   <div class="arch-container">
     <div class="arch-diagram tall" id="chart-aicopilot"></div>
@@ -1763,7 +1763,7 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px;">
     <div>
       <h4 style="font-size:13px;color:var(--accent-amber);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
-        <span style="background:rgba(255,179,64,0.12);padding:2px 8px;border-radius:8px;font-size:10px;">MCP Server</span> 7 MCP Tools (JSON-RPC over stdio)
+        <span style="background:rgba(255,179,64,0.12);padding:2px 8px;border-radius:8px;font-size:10px;">MCP Server</span> 8 MCP Tools (JSON-RPC over stdio)
       </h4>
       <table class="tool-table">
         <thead><tr><th>工具</th><th>类型</th><th>功能</th></tr></thead>
@@ -1774,6 +1774,7 @@ html[data-role="manager"] .role-developer:not(.role-manager) { display: none !im
           <tr><td class="tt-name">run_ml_analysis</td><td><span class="tt-badge" style="background:rgba(255,179,64,0.12);color:var(--accent-amber);">流水线</span></td><td>ML推理→XGBoost/MTNN预测</td></tr>
           <tr><td class="tt-name">run_diagnosis</td><td><span class="tt-badge" style="background:rgba(255,179,64,0.12);color:var(--accent-amber);">流水线</span></td><td>4模式异常诊断</td></tr>
           <tr><td class="tt-name">generate_decision</td><td><span class="tt-badge" style="background:rgba(255,179,64,0.12);color:var(--accent-amber);">流水线</span></td><td>多信号融合→工单生成</td></tr>
+          <tr><td class="tt-name">get_rul_prediction</td><td><span class="tt-badge" style="background:rgba(102,217,200,0.12);color:var(--accent-cyan);">只读</span></td><td>RUL剩余寿命预测(退化轨迹外推)</td></tr>
           <tr><td class="tt-name">run_predictive_maintenance</td><td><span class="tt-badge" style="background:rgba(191,90,242,0.12);color:var(--accent-purple);">全流程</span></td><td>一键DAG流水线（自动降级）</td></tr>
         </tbody>
       </table>
@@ -2296,7 +2297,7 @@ def query_device_status(machine_id: str) -> dict:
           <div class="phase-info-card">
             <h4>AI Copilot + 可解释性</h4>
             <ul>
-              <li>7 MCP Tools (FastMCP + JSON-RPC over stdio)</li>
+              <li>8 MCP Tools (FastMCP + JSON-RPC over stdio)</li>
               <li>FastAPI Gateway：9 Tools + DeepSeek + SSE Streaming</li>
               <li>3阶段对话循环 + 6种SSE事件类型</li>
               <li>SHAP双路径归因：直接公式分解 + TreeSHAP子层</li>
@@ -2371,7 +2372,7 @@ def query_device_status(machine_id: str) -> dict:
     <div class="tech-card">
       <div class="tech-card-icon" style="background:rgba(102,217,200,0.12);color:var(--accent-cyan);">🔧</div>
       <h4>MCP Tool System</h4>
-      <p>7 MCP工具 · 4集合ChromaDB · JSON-RPC · subprocess调度</p>
+      <p>8 MCP工具 · 4集合ChromaDB · JSON-RPC · subprocess调度</p>
       <div class="tech-tags">
         <span class="tech-tag">FastMCP</span><span class="tech-tag">JSON-RPC</span><span class="tech-tag">stdio</span><span class="tech-tag">subprocess</span><span class="tech-tag">重试机制</span>
       </div>
@@ -2416,7 +2417,7 @@ def query_device_status(machine_id: str) -> dict:
      ═══════════════════════════════════════════════════════════════ -->
 <div class="footer">
   Industrial Predictive Maintenance System — Technical Architecture Overview<br>
-  100 CNC Machines · 4 Sensor Parameters · 9 Fault Types · 5 Evolution Phases · 7 MCP Tools · 22 Output Files · AI Copilot Platform
+  100 CNC Machines · 4 Sensor Parameters · 9 Fault Types · 5 Evolution Phases · 8 MCP Tools · 22 Output Files · AI Copilot Platform
 </div>
 
 <script>
