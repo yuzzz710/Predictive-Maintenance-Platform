@@ -16,7 +16,7 @@ from fastapi.responses import JSONResponse
 from .config import DASHBOARD_DATA
 from .rag_engine import (
     ensure_initialized, get_stats, search, search_all, search_with_tier,
-    index_single_file, delete_document, rebuild_all,
+    index_single_file, delete_document, rebuild_all, index_chart_docs,
     get_retrieval_logs, KB_DIR, MAINT_KB_DIR, COLLECTION_NAMES,
 )
 
@@ -355,7 +355,27 @@ async def kb_rebuild_all():
             "success": True,
             "counts": counts,
             "total_chunks": total,
-            "message": f"已重建全部知识库：sys_docs={counts.get('sys_docs',0)}块, maint_kb={counts.get('maint_kb',0)}块, fault_cases={counts.get('fault_cases',0)}块，共{total}块。",
+            "message": f"已重建全部知识库：sys_docs={counts.get('sys_docs',0)}块, maint_kb={counts.get('maint_kb',0)}块, fault_cases={counts.get('fault_cases',0)}块, chart_docs={counts.get('chart_docs',0)}块，共{total}块。",
+        })
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+
+@router.post("/index-chart-docs")
+async def kb_index_chart_docs():
+    """Index chart/card documentation from the reference manual.
+
+    Parses the reference manual text file by '▌' markers into individual
+    chart/card entries and indexes them into the 'chart_docs' collection.
+    This enables the 球球助手 to answer specific chart/card questions via RAG.
+    """
+    try:
+        ensure_initialized()
+        n = index_chart_docs()
+        return JSONResponse({
+            "success": True,
+            "count": n,
+            "message": f"已索引图表文档：{n} 条记录写入 chart_docs 集合。",
         })
     except Exception as e:
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)

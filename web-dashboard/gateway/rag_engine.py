@@ -36,8 +36,9 @@ CHROMA_DIR = KB_DIR / "chroma"
 MAINT_KB_DIR = KB_DIR / "maintenance"
 SYS_DOC_DIR = PROJECT_ROOT   # root has all .md files
 LOG_PATH = DASHBOARD_DATA / "rag_log.jsonl"
+REFERENCE_MANUAL_PATH = PROJECT_ROOT / "参考手册_提取文本.txt"
 
-COLLECTION_NAMES = ["sys_docs", "maint_kb", "fault_cases"]
+COLLECTION_NAMES = ["sys_docs", "maint_kb", "fault_cases", "chart_docs"]
 
 # ── Embedding model config ─────────────────────────────────────────────────
 BGE_MODEL_NAME = "BAAI/bge-small-zh-v1.5"
@@ -628,12 +629,115 @@ def index_fault_cases() -> int:
     return len(cases)
 
 
+def index_chart_docs() -> int:
+    """Index chart/card documentation from the reference manual into chart_docs.
+
+    The reference manual uses '▌' as a section marker for each chart/card entry.
+    Each entry is stored as a single chunk — the entries are naturally concise
+    (150-500 chars) so no further splitting is needed.
+    """
+    if not REFERENCE_MANUAL_PATH.exists():
+        print(f"[rag_engine] Reference manual not found at {REFERENCE_MANUAL_PATH}")
+        return 0
+
+    text = _load_text_file(REFERENCE_MANUAL_PATH)
+    if not text or not text.strip():
+        print("[rag_engine] Reference manual is empty")
+        return 0
+
+    # Split by '▌' — each block is a chart/card entry
+    # First block before the first ▌ is the preamble (TOC, intro), skip it
+    blocks = text.split("▌")
+    if len(blocks) < 2:
+        print("[rag_engine] No chart entries found (no ▌ markers)")
+        return 0
+
+    # Skip preamble (blocks[0]), process chart entries (blocks[1:])
+    chunks = []
+    # Track current page context from section headers
+    current_page = ""
+    current_section = ""
+
+    for block in blocks[1:]:
+        block = block.strip()
+        if not block:
+            continue
+
+        # Extract chart title (first line of the block)
+        lines = block.split("\n")
+        chart_title = lines[0].strip() if lines else ""
+
+        # Detect page/section context from nearby headers
+        # Section headers in the manual look like "四、仪表盘..." or "4.1 Tab 0..."
+        for line in lines[:3]:
+            if line.startswith(("一、", "二、", "三、", "四、", "五、", "六、", "七、",
+                               "八、", "九、", "十、", "十一、", "十二、", "十三、",
+                               "十四、", "十五、", "附录")):
+                current_page = line.strip()[:60]
+            elif line.startswith(("4.", "3.", "5.", "6.", "7.", "8.", "9.",
+                                  "10.", "11.", "12.", "13.", "14.")):
+                current_section = line.strip()[:60]
+
+        # Make chunk — one chunk per chart entry
+        chunk = _make_chunk(
+            text="▌" + block,
+            source="鹰眼工业智能运维平台_完整参考手册.docx",
+            section=chart_title[:80],
+            chunk_idx=0,
+        )
+        # Add extra metadata
+        chunk["metadata"]["chart_title"] = chart_title[:80]
+        chunk["metadata"]["page"] = current_page
+        chunk["metadata"]["tab"] = current_section
+        chunks.append(chunk)
+
+    if not chunks:
+        return 0
+
+    collection = _get_collection("chart_docs")
+    if collection is None:
+        print("[rag_engine] Chroma not available, skipping chart_docs")
+        return 0
+
+    # Clear existing
+    try:
+        existing = collection.get()
+        if existing and existing.get("ids"):
+            collection.delete(ids=existing["ids"])
+    except Exception:
+        pass
+
+    # Batch insert
+    batch_size = 100
+    for i in range(0, len(chunks), batch_size):
+        batch = chunks[i:i + batch_size]
+        ids = [c["id"] for c in batch]
+        contents = [c["content"] for c in batch]
+        metadatas = [c["metadata"] for c in batch]
+
+        embeddings = embed(contents)
+        if not embeddings or len(embeddings) != len(contents):
+            print(f"[rag_engine] Embedding failed for chart_docs batch {i // batch_size}")
+            continue
+
+        collection.add(
+            ids=ids,
+            documents=contents,
+            embeddings=embeddings,
+            metadatas=metadatas,
+        )
+
+    print(f"[rag_engine] Indexed {len(chunks)} chart documentation entries into 'chart_docs'")
+    return len(chunks)
+
+
 def rebuild_all() -> Dict[str, int]:
-    """Rebuild all three knowledge base collections."""
+    """Rebuild all knowledge base collections."""
     counts = {}
     counts["sys_docs"] = index_system_docs()
     counts["maint_kb"] = index_maintenance_kb()
     counts["fault_cases"] = index_fault_cases()
+    counts["chart_docs"] = index_chart_docs()
     return counts
 
 

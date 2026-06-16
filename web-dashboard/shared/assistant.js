@@ -487,24 +487,39 @@
     const lib = SPEECH_LIBRARY[page] || SPEECH_LIBRARY['home.html'];
 
     // Priority order:
-    // 1. Exact match from data-speech attribute
-    // 2. Hash target match
-    // 3. Viewport heading keyword match
-    // 4. User question keyword match
+    // 1. User question keyword match (if question provided, user intent wins)
+    // 2. Exact match from data-speech attribute (context-based, no question)
+    // 3. Hash target match
+    // 4. Viewport heading keyword match
     // 5. Page default
 
-    // 1. data-speech exact match
+    // 1. User question match — highest priority when user explicitly asks
+    if (userQuestion) {
+      const qLower = userQuestion.toLowerCase();
+      let bestScore = 0;
+      let bestMatch = null;
+      for (const [key, entry] of Object.entries(lib)) {
+        if (key === '__default__') continue;
+        const score = (entry.keywords || []).filter(kw => qLower.includes(kw.toLowerCase())).length;
+        if (score > bestScore) { bestScore = score; bestMatch = { ...entry, matchKey: key }; }
+      }
+      if (bestScore >= 1) return { ...bestMatch, matchType: 'question' };
+      // User asked but no keyword match → return null so caller falls back to AI
+      return null;
+    }
+
+    // 2. data-speech exact match (context-based, no user question)
     const dataSpeechKey = context.sections[0]?.key;
     if (dataSpeechKey && lib[dataSpeechKey]) {
       return { ...lib[dataSpeechKey], matchType: 'exact', matchKey: dataSpeechKey };
     }
 
-    // 2. Hash target match
+    // 3. Hash target match
     if (context.hashTarget && lib[context.hashTarget]) {
       return { ...lib[context.hashTarget], matchType: 'hash', matchKey: context.hashTarget };
     }
 
-    // 3. Viewport heading keyword match
+    // 4. Viewport heading keyword match
     if (context.viewportHeading) {
       const headingLower = context.viewportHeading.toLowerCase();
       let bestScore = 0;
@@ -517,20 +532,7 @@
       if (bestScore >= 2) return { ...bestMatch, matchType: 'heading' };
     }
 
-    // 4. User question keyword match
-    if (userQuestion) {
-      const qLower = userQuestion.toLowerCase();
-      let bestScore = 0;
-      let bestMatch = null;
-      for (const [key, entry] of Object.entries(lib)) {
-        if (key === '__default__') continue;
-        const score = (entry.keywords || []).filter(kw => qLower.includes(kw.toLowerCase())).length;
-        if (score > bestScore) { bestScore = score; bestMatch = { ...entry, matchKey: key }; }
-      }
-      if (bestScore >= 1) return { ...bestMatch, matchType: 'question' };
-    }
-
-    // 5. Page default
+    // 4. Page default
     if (lib.__default__) {
       return { ...lib.__default__, matchType: 'default', matchKey: '__default__' };
     }
@@ -1143,7 +1145,7 @@
     _openAskInput() {
       this.body.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px;">
         <div style="font-size:12px;color:#636366;">输入你想了解的问题：</div>
-        <textarea id="assistant-ask-input" placeholder="例如：解释这个模块的设计思路..."
+        <textarea id="assistant-ask-input" placeholder="粘贴图表/卡片标题，或输入你想了解的内容…"
           style="width:100%;min-height:60px;background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.10);border-radius:10px;color:#1c1c1e;padding:10px;font-size:13px;font-family:var(--font-sans);resize:vertical;outline:none;"
           rows="2"></textarea>
         <div style="display:flex;gap:8px;">
@@ -1165,13 +1167,8 @@
       submit.addEventListener('click', async () => {
         const q = input.value.trim();
         if (!q) return;
-        this.currentSpeech = matchSpeech(this.currentContext, q);
-        if (this.currentSpeech && this.currentSpeech.matchType !== 'default') {
-          await this._renderSpeech(this.currentSpeech);
-          this._showFooter('matched');
-        } else {
-          await this._renderAIFallback(q);
-        }
+        // 追问模式：用户主动输入问题 → 直接走 AI fallback（含 RAG 检索）
+        await this._renderAIFallback(q);
       });
 
       input.addEventListener('keydown', (e) => {

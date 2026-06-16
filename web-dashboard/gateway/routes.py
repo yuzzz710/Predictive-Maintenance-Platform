@@ -658,6 +658,28 @@ async def assistant_explain(request: Request):
     # Inject real-time health data from CSV
     system_content += "\n\n" + get_health_context_text()
 
+    # Search knowledge base for relevant chart/card documentation
+    rag_context = ""
+    if question and len(question.strip()) >= 2:
+        try:
+            rag_context = search_all_as_context(question, k=5)
+        except Exception as e:
+            print(f"[assistant/explain] RAG search failed (non-fatal): {e}")
+
+    if rag_context:
+        system_content += (
+            "\n\n## 参考文档（来自平台完整参考手册，请严格基于此内容回答）\n"
+            + rag_context
+            + "\n\n请基于以上参考文档的内容，用口语化的方式向评委解释用户询问的图表或模块。"
+            "如果用户提到了具体的图表名称，请优先解释该图表：它是什么类型的图表、展示什么数据、数据从何而来、如何解读。"
+            "如果参考文档中没有直接提到用户询问的术语，请基于项目背景速查做出合理推断并明确说明。"
+        )
+    else:
+        system_content += (
+            "\n\n## 注意\n用户可能询问了某个具体的图表或模块名称，但知识库中未检索到直接匹配的文档。"
+            "请基于项目背景速查做出合理推断，并诚实地说明'参考手册中暂无该图表的独立条目'。"
+        )
+
     # Mode-specific instructions
     if mode == "simplify":
         system_content += "\n\n用户要求“简化一点”——请把之前的讲解浓缩为3-4句核心信息，去掉技术细节，只说最重要的价值主张。"
