@@ -4600,6 +4600,7 @@ async function switchStrategy(strategy) {
 
     // Re-render everything (await to keep loading state until done)
     await renderSection6();
+    setTimeout(function(){ renderShapAttributionCard(); }, 1500);
 
     // Update active card
     cards.forEach(function(c) {
@@ -6639,7 +6640,7 @@ async function renderShapAttributionCard() {
   if (card) card.style.display = 'block';
 
   var data = await loadShapDashboardData();
-  if (!data || !data.top_risk_machines || !data.top_risk_machines.length) {
+  if (!data || !data.machines || !Object.keys(data.machines).length) {
     var signals = document.getElementById('shap-machine-signals');
     if (signals) signals.innerHTML = '<span style=\"color:var(--text-muted);\">SHAP 数据未生成。请运行 Pipeline 并启用 --shap 参数。</span>';
     return;
@@ -6648,15 +6649,80 @@ async function renderShapAttributionCard() {
   var sel = document.getElementById('shap-machine-select');
   if (!sel) return;
 
-  sel.innerHTML = '<option value="">-- 选择设备 --</option>';
-  data.top_risk_machines.forEach(function(m) {
-    sel.innerHTML += '<option value="' + m.machine_id + '">' +
-      m.machine_id + ' (Risk: ' + m.final_risk_score.toFixed(2) + ', ' + m.risk_level + ')</option>';
+  // Collect device IDs from current strategy work orders
+  var woDevices = [];
+  if (window._s7InlineData && window._s7InlineData.plan) {
+    woDevices = window._s7InlineData.plan.map(function(r) { return r.machine_id; });
+  } else {
+    // First load: try to read from CSV
+    try {
+      var woRows = await loadCSV('data/maintenance_work_orders.csv');
+      if (woRows && woRows.length) {
+        woDevices = woRows.map(function(r) { return r.machine_id; });
+      }
+    } catch(e) {}
+  }
+
+  // Build a lookup: machine_id → work order priority
+  var woPriority = {};
+  if (window._s7InlineData && window._s7InlineData.plan) {
+    window._s7InlineData.plan.forEach(function(r) {
+      woPriority[r.machine_id] = parseInt(r.priority) || 99;
+    });
+  }
+
+  // Build device list: work order devices first (sorted by priority), then
+  // remaining top_risk_machines that have SHAP data (deduped)
+  var woSet = new Set(woDevices);
+  var deviceList = [];
+
+  // Work order devices — sort by priority (P1 first) then by risk score
+  woDevices.forEach(function(mid) {
+    var m = data.machines[mid];
+    if (m) {
+      deviceList.push({
+        machine_id: mid,
+        risk_score: m.final_risk_score || 0,
+        risk_level: m.risk_level || 'Unknown',
+        priority: woPriority[mid] || 99,
+        inWorkOrder: true
+      });
+    }
+  });
+  deviceList.sort(function(a, b) {
+    if (a.priority !== b.priority) return a.priority - b.priority;
+    return b.risk_score - a.risk_score;
   });
 
-  // Select first machine by default
-  if (data.top_risk_machines.length > 0) {
-    sel.value = data.top_risk_machines[0].machine_id;
+  // Remaining top_risk_machines not in work orders
+  var topRisks = data.top_risk_machines || [];
+  topRisks.forEach(function(m) {
+    if (!woSet.has(m.machine_id) && data.machines[m.machine_id]) {
+      deviceList.push({
+        machine_id: m.machine_id,
+        risk_score: m.final_risk_score || 0,
+        risk_level: m.risk_level || 'Unknown',
+        priority: 99,
+        inWorkOrder: false
+      });
+    }
+  });
+
+  // Render dropdown
+  sel.innerHTML = '<option value="">-- 选择设备 --</option>';
+  var hasWorkOrder = false;
+  deviceList.forEach(function(d) {
+    var label = d.machine_id + ' (Risk: ' + d.risk_score.toFixed(2) + ', ' + d.risk_level + ')';
+    if (d.inWorkOrder) {
+      label += ' [工单]';
+      hasWorkOrder = true;
+    }
+    sel.innerHTML += '<option value="' + d.machine_id + '">' + label + '</option>';
+  });
+
+  // Select first device by default
+  if (deviceList.length > 0) {
+    sel.value = deviceList[0].machine_id;
     renderShapWaterfall();
   }
 }
