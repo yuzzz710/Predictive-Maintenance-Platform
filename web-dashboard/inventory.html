@@ -635,7 +635,7 @@ async function loadProcurement(){
         h+='<option value="'+s+'"'+(o.status===s?' selected':'')+'>'+s+'</option>';
       });
       h+='</select>';
-      if(o.status!=='已入库')h+=' <button class="btn btn-primary small" onclick="setOrderStatus(\''+o.order_id+'\',\'已入库\')">确认入库</button>';
+      if(o.status==='已入库'){h+=' <button class="btn btn-danger small" onclick="deleteProcurementOrder(\''+o.order_id+'\')" title="删除此订单" style="padding:4px 8px;font-size:12px;line-height:1;">&times;</button>';}else{h+=' <button class="btn btn-primary small" onclick="setOrderStatus(\''+o.order_id+'\',\'已入库\')">确认入库</button>';}
       h+='</div></div>';
     });
     document.getElementById('procurement-list').innerHTML=h
@@ -675,6 +675,15 @@ async function setOrderStatus(oid,newStatus){
     if(d.success){showMsg(newStatus==='已入库'?'已入库，库存自动更新':('状态更新: '+newStatus));await loadAll();}
     else{showMsg('更新失败: '+(d.error||''))}
   }catch(e){showMsg('操作失败')}
+}
+async function deleteProcurementOrder(oid){
+  if(!confirm('确认删除采购订单 '+oid+'？'))return;
+  try{
+    var r=await fetch('/api/inventory/procurement/delete/'+oid,{method:'DELETE'});
+    var d=await r.json();
+    if(d.success){showMsg('订单已删除');await loadAll();}
+    else{showMsg('删除失败: '+(d.detail||d.error||''))}
+  }catch(e){showMsg('网络错误')}
 }
 function showMsg(m){var e=document.getElementById('error');e.style.display='block';e.textContent=m;setTimeout(function(){e.style.display='none'},4000)}
 

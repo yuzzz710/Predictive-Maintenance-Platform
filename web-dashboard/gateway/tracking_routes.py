@@ -540,6 +540,16 @@ async def update_order_status(data: dict = Body(...)):
     return update_procurement_status(order_id, new_status)
 
 
+@router4.delete("/procurement/delete/{order_id}")
+async def delete_procurement_order(order_id: str):
+    """Delete a completed procurement order."""
+    from gateway.inventory_connector import delete_procurement_order
+    result = delete_procurement_order(order_id)
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result.get("error", "Delete failed"))
+    return result
+
+
 @router4.get("/logs")
 async def inventory_logs(limit: int = 50):
     """Get inventory change logs."""

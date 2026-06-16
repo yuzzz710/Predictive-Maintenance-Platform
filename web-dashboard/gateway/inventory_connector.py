@@ -443,6 +443,25 @@ def _save_procurement(orders: List[Dict]):
         writer.writerows(orders)
 
 
+def delete_procurement_order(order_id: str) -> Dict:
+    """Delete a procurement order. Only completed (已入库) orders can be deleted."""
+    orders = get_procurement_orders()
+    target = None
+    for o in orders:
+        if o["order_id"] == order_id:
+            target = o
+            break
+
+    if target is None:
+        return {"success": False, "error": f"Order not found: {order_id}"}
+    if target["status"] != "已入库":
+        return {"success": False, "error": "仅已入库订单可删除"}
+
+    orders = [o for o in orders if o["order_id"] != order_id]
+    _save_procurement(orders)
+    return {"success": True, "deleted": order_id}
+
+
 def get_inventory_logs(limit: int = 50) -> List[Dict]:
     """Get inventory change logs."""
     try:

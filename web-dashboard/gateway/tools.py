@@ -686,13 +686,25 @@ def _query_device_status(machine_id: str) -> dict:
                 "unit_cost": float(row.get("Unit Cost of Production", 0)),
             }
 
-    # 6. Build human-readable text summary
+    # 6. Health score confidence (from equipment_health_score.csv)
+    health_conf = None
+    health_path = DASHBOARD_DATA / "equipment_health_score.csv"
+    if health_path.exists():
+        hs = pd.read_csv(health_path)
+        match = hs[hs["Equipment.Id"] == machine_id]
+        if len(match) > 0:
+            result["found"] = True
+            health_conf = float(match.iloc[0]["confidence"])
+            result["health_confidence"] = health_conf
+
+    # 7. Build human-readable text summary
     wo = result.get("work_order")
     plan = result.get("industrial_plan")
     diag = result.get("diagnosis")
     zs = result.get("z_scores")
     cost = result.get("cost_risk")
     sm = result.get("summary")
+    hc = result.get("health_confidence")
 
     parts = [f"设备 {machine_id} 当前状态："]
 
@@ -740,6 +752,10 @@ def _query_device_status(machine_id: str) -> dict:
             patterns = diag['patterns_detected'].replace('|', ', ')
             parts.append(f"- 检测到的模式：{patterns}")
         parts.append(f"- 诊断置信度：{diag['diagnosis_confidence']:.0%}")
+        if diag['diagnosis_confidence'] == 0:
+            parts.append(f"  （设备当前无异常故障模式，诊断引擎未检测到已知故障特征，故模式检测置信度为0%）")
+        if hc is not None:
+            parts.append(f"- 健康评估置信度：{hc:.0%}（来自健康评分模型，基于多信号融合的评估可信度）")
 
     if cost:
         parts.append(f"- 风险等级：{cost.get('risk_tier', 'N/A')}")
