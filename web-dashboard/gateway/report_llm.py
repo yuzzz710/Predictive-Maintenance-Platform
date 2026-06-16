@@ -181,7 +181,7 @@ def _build_work_order_prompt(spec, machine_id: str) -> str:
 ```
 
 ## 故障诊断模式专业知识
-{rules_text if rules_text else "（该诊断模式暂无预置专家规则，请基于通用CNC维护经验生成，但必须在证据中标注为"通用经验"而非"系统数据"）"}
+{rules_text if rules_text else "（该诊断模式暂无预置专家规则，请基于通用CNC维护经验生成，但必须在证据中标注为'通用经验'而非'系统数据'）"}
 
 ## 生成要求
 请严格按照系统提示词中的7章节格式输出。确保：
