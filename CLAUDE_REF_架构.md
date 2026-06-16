@@ -1,6 +1,6 @@
 # CLAUDE_REF_架构 — 项目概述 · 目录结构 · Web前端 · CSS · JS
 
-> 从 CLAUDE.md 拆分 | 苗圃杯·半决赛 v2.1 | 2026-06-04
+> 从 CLAUDE.md 拆分 | 苗圃杯·半决赛 v2.3 | 2026-06-16
 
 ---
 
@@ -106,18 +106,20 @@
 │   ├── technical-overview.html        # 技术架构文档
 │   ├── reports.html                   # 报告管理中心
 │   ├── role-gate.html                 # 角色选择门
-│   ├── knowledge-base.html            # 知识库管理页面（NEW）
+│   ├── knowledge-base.html            # 知识库管理页面
 │   ├── work-order-tracking.html       # 工单跟踪看板
 │   ├── workflows.html                 # 工作流管理
 │   ├── inventory.html                 # 库存管理
 │   ├── technicians.html               # 员工管理
+│   ├── device-grid.html               # 独立设备健康矩阵（10×10）
+│   ├── sphere-demo.html               # 鹰眼3D球体数字孪生（NEW）
 │   ├── gateway/                       # 后端模块（20文件）
 │   │   ├── tools.py                   # 25个Gateway Tools（含3个RAG工具）
 │   │   ├── prompts.py                 # 系统提示词（含RAG FAQ映射）
 │   │   ├── deepseek_client.py         # DeepSeek SSE流式客户端（支持RAG上下文注入）
-│   │   ├── routes.py                  # 核心路由（chat + RAG预检索）
-│   │   ├── kb_routes.py               # 知识库管理API（8端点）
-│   │   ├── rag_engine.py              # RAG核心引擎（BGE+Chroma）
+│   │   ├── routes.py                  # 核心路由（chat + 策略切换 + assistant/explain RAG增强）
+│   │   ├── kb_routes.py               # 知识库管理API（9端点，含chart_docs索引）
+│   │   ├── rag_engine.py              # RAG核心引擎（BGE+Chroma，4集合含chart_docs）
 │   │   ├── question_classifier.py     # 问题分类器（中英文）
 │   │   ├── fault_injection.py         # 故障注入演示API（6步闭环模拟）（NEW）
 │   │   ├── workflow_engine.py         # 工作流状态机（SQLite）
@@ -135,11 +137,12 @@
 │   ├── scripts/                       # 数据生成脚本（2个）（NEW）
 │   │   ├── benchmark_algorithms.py    # 7种算法对比训练脚本
 │   │   └── compute_kde_params.py      # KDE分布参数计算脚本
-│   ├── shared/                        # 前端共享JS（4文件）
+│   ├── shared/                        # 前端共享模块（7 JS + 3 CSS = 10个）
 │   ├── data/                          # 仪表盘数据（60+CSV）+ 知识库存储
-│   │   ├── algorithm_comparison.csv   # 7种算法对比实验数据（NEW）
-│   │   ├── kde_params.json            # KDE分布参数（4参数×200点）（NEW）
+│   │   ├── algorithm_comparison.csv   # 7种算法对比实验数据
+│   │   ├── kde_params.json            # KDE分布参数（4参数×200点）
 │   │   └── knowledge_base/            # 知识库文档+Chroma向量DB
+│   ├── 参考手册_提取文本.txt             # 完整参考手册文本（RAG chart_docs索引源）
 │   ├── images/                        # ECharts导出图片
 │   ├── report_templates/              # Jinja2报告模板
 │   └── reports/                       # 生成的报告
@@ -495,6 +498,16 @@
 | parts_summary | 备件需求汇总 | 运维 |
 | work_order | 工单执行单 | 运维 |
 | sensor_advisory | 传感器投资建议 | 管理 |
+
+### 3.6 设备健康矩阵（device-grid.html）
+
+**路由**: `/device-grid`
+**用途**: 独立的10×10设备健康矩阵视图，与首页共享 device-grid-component.js 组件。去掉管理层KPI卡片和策略选择器，聚焦运维工程师的设备状态监控。支持缩放、排序、筛选，适合大屏投屏监控。
+
+### 3.7 鹰眼3D球体（sphere-demo.html）
+
+**路由**: `/sphere-demo`
+**用途**: 基于Three.js的交互式3D数字孪生演示。100台CNC设备以节点分布在3D球体表面，健康评分映射为颜色和大小。支持MediaPipe手势识别（握拳旋转/张手缩放/双指平移）和鼠标回退方案。60fps渲染管线，适合展厅大屏和路演演示。
 
 ---
 

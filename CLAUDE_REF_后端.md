@@ -1,6 +1,6 @@
 # CLAUDE_REF_后端 — Gateway后端 · Skills技能 · 数据文件详解
 
-> 从 CLAUDE.md 拆分 | 苗圃杯·半决赛 v2.1 | 2026-06-04
+> 从 CLAUDE.md 拆分 | 苗圃杯·半决赛 v2.3 | 2026-06-16
 
 ---
 
@@ -16,13 +16,13 @@
 
 | Router来源 | 前缀 | 主要端点 |
 |------|------|------|
-| `gateway.routes` | — | `POST /api/chat`, `POST /api/maintenance/strategy`, `GET /api/tools`, `GET /health` |
+| `gateway.routes` | — | `POST /api/chat`, `POST /api/maintenance/strategy`, `POST /api/assistant/explain`, `GET /api/tools`, `GET /health`, `GET /api/health-summary` |
 | `gateway.tracking_routes` | — | 工单跟踪CRUD + 技师管理API |
 | `gateway.tracking_routes.router2` | — | 工单操作API |
 | `gateway.tracking_routes.router3` | — | 工作流管理API |
 | `gateway.tracking_routes.router4` | — | 库存管理API |
 | `gateway.tracking_routes.router5` | — | 技师管理API |
-| `gateway.kb_routes` | — | 知识库管理8端点（上传/索引/检索/删除/日志） |
+| `gateway.kb_routes` | — | 知识库管理9端点（上传/索引/检索/删除/日志/chart_docs索引） |
 | `gateway.fault_injection` | `/api` | `POST /api/fault-injection`（NEW） |
 
 **页面路由**:
@@ -39,6 +39,8 @@
 | GET | `/workflows` | workflows.html |
 | GET | `/inventory` | inventory.html |
 | GET | `/technicians` | technicians.html |
+| GET | `/device-grid` | device-grid.html |
+| GET | `/sphere-demo` | sphere-demo.html |
 | GET | `/reports` | reports.html（no-cache） |
 | GET | `/api/reports` | JSON报告列表 |
 | POST | `/api/reports/generate-pdf` | Playwright PDF生成 |
@@ -52,7 +54,7 @@
 - 路径常量: `BASE_DIR`, `PROJECT_ROOT`, `MCP_DIR`, `DATA_DIR`, `V3_OUTPUTS`, `DASHBOARD_DATA`
 - 服务器绑定: `HOST`（默认0.0.0.0）, `PORT`（默认8765）
 
-### 6.3 路由（routes.py, 324行）
+### 6.3 路由（routes.py, 771行）
 
 | 端点 | 功能 |
 |------|------|
@@ -81,7 +83,7 @@
 
 ### 6.5 工具定义（tools.py, 2500+行）
 
-**25个 Gateway Tools**（OpenAI function-calling 格式），其中 3 个为 RAG 文档检索工具:
+**25个 Gateway Tools**（OpenAI function-calling 格式），其中 3 个为 RAG 文档检索工具（覆盖4个知识库集合：sys_docs/maint_kb/fault_cases/chart_docs）:
 
 | # | 工具名 | 类型 | 功能 |
 |---|--------|------|------|

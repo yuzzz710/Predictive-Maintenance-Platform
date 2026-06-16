@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 > `CLAUDE_REF_后端.md`（Gateway·Skills·数据文件） |
 > `CLAUDE_REF_算法.md`（算法·角色·降级·RAG·业务）
 >
-> **注意**：参考文档版本为 v2.1（2026-06-04），部分最新功能（如评委讲解助手、3D球体演示）仅在本文档中描述。
+> 参考文档已同步至 v2.3（2026-06-16），与本文档版本一致。
 
 ---
 
