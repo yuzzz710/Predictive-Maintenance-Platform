@@ -702,7 +702,7 @@ var ACTION_LABELS = {
 };
 var WINDOW_LABELS = {
   'immediate': '立即', 'night': '夜间', 'weekend': '周末',
-  'next_gap': '下个间隙', 'scheduled': '计划窗口'
+  'next_gap': '下个间隙', 'scheduled': '计划窗口', 'standard': '标准'
 };
 var TECH_LABELS = {
   'junior_technician': '初级技师', 'senior_technician': '高级技师',
@@ -714,7 +714,7 @@ var TECH_LABELS = {
 var COLUMNS = ['pending', 'assigned', 'in_progress', 'pending_acceptance', 'completed', 'archived'];
 
 function t(raw, map) {
-  if (!raw) return '?';
+  if (!raw) return '--';
   return map[raw] || raw.replace(/_/g, ' ');
 }
 
@@ -795,7 +795,7 @@ function renderKanban(workOrders) {
       var pClass = priority.toLowerCase();
       var pattern = t(plan.primary_pattern, PATTERN_LABELS);
       var action = t(plan.recommended_action, ACTION_LABELS);
-      var windowLabel = t(plan.downtime_window, WINDOW_LABELS);
+      var windowLabel = t(plan.downtime_window || plan.recommended_downtime_window, WINDOW_LABELS);
       var escalated = wo.escalated;
       var escCount = wo.escalation_count || 0;
 
@@ -922,7 +922,7 @@ async function openPanel(machineId) {
     techDisplay = t(plan.technician_type || detail.technician_type, TECH_LABELS) + ' × ' + (plan.technician_count || detail.technician_count || 1) + '人';
   }
   html += '<div class="dp-row"><span class="dp-label">技师</span><span class="dp-value">' + techDisplay + '</span></div>';
-  html += '<div class="dp-row"><span class="dp-label">停机窗口</span><span class="dp-value">' + t(plan.downtime_window, WINDOW_LABELS) + '</span></div>';
+  html += '<div class="dp-row"><span class="dp-label">停机窗口</span><span class="dp-value">' + t(plan.downtime_window || plan.recommended_downtime_window, WINDOW_LABELS) + '</span></div>';
   html += '<div class="dp-row"><span class="dp-label">健康评分</span><span class="dp-value">' + (plan.health_score || '?') + '</span></div>';
   html += '<div class="dp-row"><span class="dp-label">成本风险</span><span class="dp-value" style="color:var(--red);">$' + (plan.cost_at_risk || '?') + '</span></div>';
   if (plan.estimated_cost) {

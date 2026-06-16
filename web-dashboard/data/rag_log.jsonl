@@ -297,3 +297,56 @@
 {"timestamp": "2026-06-13T20:36:55.972863", "query": "如何切换维护策略", "collection": "sys_docs", "n_results": 0, "elapsed_ms": 633.4}
 {"timestamp": "2026-06-13T20:36:56.564538", "query": "如何切换维护策略", "collection": "maint_kb", "n_results": 0, "elapsed_ms": 589.7}
 {"timestamp": "2026-06-13T20:36:57.220592", "query": "如何切换维护策略", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 654.0}
+{"timestamp": "2026-06-16T13:23:42.284880", "query": "三种维护策略有什么区别？我应该怎么选？", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 174.9}
+{"timestamp": "2026-06-16T13:23:42.302251", "query": "三种维护策略有什么区别？我应该怎么选？", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 16.4}
+{"timestamp": "2026-06-16T13:23:42.322297", "query": "三种维护策略有什么区别？我应该怎么选？", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 18.0}
+{"timestamp": "2026-06-16T13:23:42.340515", "query": "三种维护策略有什么区别？我应该怎么选？", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 18.2}
+{"timestamp": "2026-06-16T13:23:42.358965", "query": "三种维护策略有什么区别？我应该怎么选？", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 16.4}
+{"timestamp": "2026-06-16T13:23:42.380811", "query": "三种维护策略有什么区别？我应该怎么选？", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 19.8}
+{"timestamp": "2026-06-16T13:23:44.439025", "query": "三种维护策略区别对比", "collection": "sys_docs", "n_results": 5, "elapsed_ms": 38.2}
+{"timestamp": "2026-06-16T13:24:07.435071", "query": "设备基线溯源有哪三种类型？怎么查看？", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 52.8}
+{"timestamp": "2026-06-16T13:24:07.457808", "query": "设备基线溯源有哪三种类型？怎么查看？", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 21.7}
+{"timestamp": "2026-06-16T13:24:07.477767", "query": "设备基线溯源有哪三种类型？怎么查看？", "collection": "fault_cases", "n_results": 2, "elapsed_ms": 19.0}
+{"timestamp": "2026-06-16T13:24:07.500019", "query": "设备基线溯源有哪三种类型？怎么查看？", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 20.4}
+{"timestamp": "2026-06-16T13:24:07.522062", "query": "设备基线溯源有哪三种类型？怎么查看？", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 22.0}
+{"timestamp": "2026-06-16T13:24:07.540937", "query": "设备基线溯源有哪三种类型？怎么查看？", "collection": "fault_cases", "n_results": 2, "elapsed_ms": 17.9}
+{"timestamp": "2026-06-16T13:24:09.546111", "query": "基线溯源三种类型", "collection": "sys_docs", "n_results": 5, "elapsed_ms": 37.6}
+{"timestamp": "2026-06-16T13:24:11.723408", "query": "基线回退策略 三层 逐设备基线", "collection": "sys_docs", "n_results": 5, "elapsed_ms": 49.8}
+{"timestamp": "2026-06-16T14:43:22.219798", "query": "当前工单是怎么排优先级的？4个融合信号（统计0.40+成本0.25+ML0.25+趋势0.10）分别贡献了什么？三种维护策略各自适合什么场景？", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 301.5}
+{"timestamp": "2026-06-16T14:43:22.333541", "query": "当前工单是怎么排优先级的？4个融合信号（统计0.40+成本0.25+ML0.25+趋势0.10）分别贡献了什么？三种维护策略各自适合什么场景？", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 109.2}
+{"timestamp": "2026-06-16T14:43:22.496794", "query": "当前工单是怎么排优先级的？4个融合信号（统计0.40+成本0.25+ML0.25+趋势0.10）分别贡献了什么？三种维护策略各自适合什么场景？", "collection": "fault_cases", "n_results": 2, "elapsed_ms": 160.2}
+{"timestamp": "2026-06-16T14:43:22.585522", "query": "当前工单是怎么排优先级的？4个融合信号（统计0.40+成本0.25+ML0.25+趋势0.10）分别贡献了什么？三种维护策略各自适合什么场景？", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 84.7}
+{"timestamp": "2026-06-16T14:43:22.654689", "query": "当前工单是怎么排优先级的？4个融合信号（统计0.40+成本0.25+ML0.25+趋势0.10）分别贡献了什么？三种维护策略各自适合什么场景？", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 65.2}
+{"timestamp": "2026-06-16T14:43:22.725067", "query": "当前工单是怎么排优先级的？4个融合信号（统计0.40+成本0.25+ML0.25+趋势0.10）分别贡献了什么？三种维护策略各自适合什么场景？", "collection": "fault_cases", "n_results": 2, "elapsed_ms": 67.4}
+{"timestamp": "2026-06-16T14:43:27.659453", "query": "工单优先级排序 4个融合信号权重 统计0.40 成本0.25 ML0.25 趋势0.10", "collection": "sys_docs", "n_results": 5, "elapsed_ms": 69.4}
+{"timestamp": "2026-06-16T14:43:27.723888", "query": "三种维护策略 cost_efficiency production_efficiency quality_first 适用场景", "collection": "sys_docs", "n_results": 5, "elapsed_ms": 59.4}
+{"timestamp": "2026-06-16T14:45:46.184498", "query": "为什么4个传感器参数不够用？系统的预测瓶颈是什么？", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 67.8}
+{"timestamp": "2026-06-16T14:45:46.236554", "query": "为什么4个传感器参数不够用？系统的预测瓶颈是什么？", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 49.1}
+{"timestamp": "2026-06-16T14:45:46.288348", "query": "为什么4个传感器参数不够用？系统的预测瓶颈是什么？", "collection": "fault_cases", "n_results": 2, "elapsed_ms": 49.8}
+{"timestamp": "2026-06-16T14:45:46.337826", "query": "为什么4个传感器参数不够用？系统的预测瓶颈是什么？", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 46.6}
+{"timestamp": "2026-06-16T14:45:46.386508", "query": "为什么4个传感器参数不够用？系统的预测瓶颈是什么？", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 44.8}
+{"timestamp": "2026-06-16T14:45:46.439316", "query": "为什么4个传感器参数不够用？系统的预测瓶颈是什么？", "collection": "fault_cases", "n_results": 2, "elapsed_ms": 49.8}
+{"timestamp": "2026-06-16T14:46:39.545913", "query": "Type 4高压型故障怎么处理？有什么历史案例？", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 70.6}
+{"timestamp": "2026-06-16T14:46:39.595133", "query": "Type 4高压型故障怎么处理？有什么历史案例？", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 46.0}
+{"timestamp": "2026-06-16T14:46:39.643662", "query": "Type 4高压型故障怎么处理？有什么历史案例？", "collection": "fault_cases", "n_results": 2, "elapsed_ms": 45.5}
+{"timestamp": "2026-06-16T14:46:39.690299", "query": "Type 4高压型故障怎么处理？有什么历史案例？", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 43.7}
+{"timestamp": "2026-06-16T14:46:39.738746", "query": "Type 4高压型故障怎么处理？有什么历史案例？", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 45.4}
+{"timestamp": "2026-06-16T14:46:39.786744", "query": "Type 4高压型故障怎么处理？有什么历史案例？", "collection": "fault_cases", "n_results": 2, "elapsed_ms": 45.1}
+{"timestamp": "2026-06-16T14:46:43.801722", "query": "Type 4故障处理", "collection": "fault_cases", "n_results": 5, "elapsed_ms": 49.3}
+{"timestamp": "2026-06-16T14:46:43.853562", "query": "高压故障处理 电压异常 CNC维修", "collection": "maint_kb", "n_results": 5, "elapsed_ms": 48.8}
+{"timestamp": "2026-06-16T14:47:13.984507", "query": "CNC机床轴承更换步骤是什么？需要什么工具？", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 75.6}
+{"timestamp": "2026-06-16T14:47:14.034069", "query": "CNC机床轴承更换步骤是什么？需要什么工具？", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 47.6}
+{"timestamp": "2026-06-16T14:47:14.085607", "query": "CNC机床轴承更换步骤是什么？需要什么工具？", "collection": "fault_cases", "n_results": 2, "elapsed_ms": 48.5}
+{"timestamp": "2026-06-16T14:47:14.136012", "query": "CNC机床轴承更换步骤是什么？需要什么工具？", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 48.4}
+{"timestamp": "2026-06-16T14:47:14.193543", "query": "CNC机床轴承更换步骤是什么？需要什么工具？", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 54.5}
+{"timestamp": "2026-06-16T14:47:14.245588", "query": "CNC机床轴承更换步骤是什么？需要什么工具？", "collection": "fault_cases", "n_results": 2, "elapsed_ms": 49.1}
+{"timestamp": "2026-06-16T14:47:31.501548", "query": "健康分是怎么计算的？8个维度分别是什么？", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 57.2}
+{"timestamp": "2026-06-16T14:47:31.548095", "query": "健康分是怎么计算的？8个维度分别是什么？", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 43.5}
+{"timestamp": "2026-06-16T14:47:31.601208", "query": "健康分是怎么计算的？8个维度分别是什么？", "collection": "fault_cases", "n_results": 2, "elapsed_ms": 50.1}
+{"timestamp": "2026-06-16T14:47:31.656480", "query": "健康分是怎么计算的？8个维度分别是什么？", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 51.9}
+{"timestamp": "2026-06-16T14:47:31.707460", "query": "健康分是怎么计算的？8个维度分别是什么？", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 49.0}
+{"timestamp": "2026-06-16T14:47:31.763470", "query": "健康分是怎么计算的？8个维度分别是什么？", "collection": "fault_cases", "n_results": 2, "elapsed_ms": 52.0}
+{"timestamp": "2026-06-16T14:47:35.469877", "query": "健康分计算公式 8维度权重", "collection": "sys_docs", "n_results": 5, "elapsed_ms": 52.8}
+{"timestamp": "2026-06-16T14:47:38.651302", "query": "健康评分8维度加权 计算公式", "collection": "sys_docs", "n_results": 5, "elapsed_ms": 50.2}
+{"timestamp": "2026-06-16T15:04:48.984222", "query": "时序回测三层架构 点级回测 事件级回测 步进回测", "collection": "sys_docs", "n_results": 5, "elapsed_ms": 69.5}
+{"timestamp": "2026-06-16T15:04:52.766839", "query": "三层回测体系 点级回测 事件级回测 步进回测 expanding window 预警提前量", "collection": "sys_docs", "n_results": 10, "elapsed_ms": 59.9}

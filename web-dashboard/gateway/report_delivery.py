@@ -144,12 +144,24 @@ def _send_report_email(spec: ReportSpec, html_url: str | None, pdf_url: str | No
         if _is_configured() and html_url:
             summary_text = _strip_markdown(spec.summary[:300])
             subject = f"[{spec.title}] 报告已生成"
-            body = (
-                f"<p style='color:#e6ebf2;'>{summary_text}</p>"
-                f"<p><a href='{html_url}' style='color:#4d94ff;'>查看HTML报告</a></p>"
-            )
+            links = f"<p><a href='{html_url}' style='color:#2980b9;text-decoration:none;font-weight:600;'>查看HTML报告</a></p>"
             if pdf_url:
-                body += f"<p><a href='{pdf_url}' style='color:#4d94ff;'>下载PDF</a></p>"
+                links += f"<p><a href='{pdf_url}' style='color:#2980b9;text-decoration:none;font-weight:600;'>下载PDF</a></p>"
+            body = f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
+<body style="font-family:'Helvetica Neue',Arial,'PingFang SC','Microsoft YaHei',sans-serif;background:#f5f7fa;color:#2c3e50;padding:20px;margin:0;">
+<div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e8ecf1;border-radius:8px;overflow:hidden;">
+  <div style="background:#2c3e50;padding:18px 24px;">
+    <span style="color:#66d9c8;font-size:15px;font-weight:700;">&#9670; {spec.title}</span>
+  </div>
+  <div style="padding:24px;">
+    <p style="font-size:14px;color:#2c3e50;line-height:1.7;margin:0 0 16px;">{summary_text}</p>
+    {links}
+  </div>
+  <div style="padding:0 24px 20px;font-size:11px;color:#7f8c9b;text-align:center;">
+    此邮件由预测性维护系统自动生成 &middot; 请勿直接回复
+  </div>
+</div></body></html>"""
             _send_email(SMTP_USER, subject, body)
     except Exception:
         pass  # Email is best-effort

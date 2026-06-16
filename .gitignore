@@ -36,5 +36,15 @@ web-dashboard/data/maintenance_decision_report.csv
 web-dashboard/data/work_orders.json
 web-dashboard/data/health_state.json
 
+# Generated reports
+web-dashboard/reports/generated/
+web-dashboard/reports/pdfs/
+
+# Runtime data files (frequently changing)
+web-dashboard/data/*.csv
+web-dashboard/data/*.db
+web-dashboard/data/*.sqlite3
+web-dashboard/data/*.jsonl
+
 # Test cache
 .pytest_cache/

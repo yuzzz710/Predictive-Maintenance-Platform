@@ -83,6 +83,21 @@ def _is_configured() -> bool:
     return bool(SMTP_HOST and SMTP_USER and SMTP_PASSWORD)
 
 
+def _strip_html(text: str) -> str:
+    """Strip HTML tags to produce a plain-text fallback for email clients."""
+    import re
+    # Remove style blocks entirely
+    text = re.sub(r'<style[^<]*</style>', '', text, flags=re.DOTALL | re.IGNORECASE)
+    # Replace block-level tags with newlines
+    text = re.sub(r'</?(?:div|p|table|tr|h[1-6]|br|hr)[^>]*>', '\n', text, flags=re.IGNORECASE)
+    # Remove all remaining tags
+    text = re.sub(r'<[^>]+>', '', text)
+    # Collapse whitespace
+    text = re.sub(r'\n\s*\n', '\n', text)
+    text = re.sub(r'[ \t]{2,}', ' ', text)
+    return text.strip()
+
+
 def _build_work_order_html(machine_id: str, detail: Dict, title: str,
                            extra_sections: Optional[str] = None) -> str:
     """Build a consistent HTML email template for work order notifications."""
@@ -117,85 +132,85 @@ def _build_work_order_html(machine_id: str, detail: Dict, title: str,
     html = f"""
 <!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"></head>
-<body style="font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif; background: #0e1117; color: #e6ebf2; padding: 24px;">
-<div style="max-width: 600px; margin: 0 auto; background: #141820; border: 1px solid #1c2230; border-radius: 6px; overflow: hidden;">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="font-family:'Helvetica Neue',Arial,'PingFang SC','Microsoft YaHei',sans-serif;background:#f5f7fa;color:#2c3e50;padding:20px;margin:0;">
+<div style="max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e8ecf1;border-radius:8px;overflow:hidden;">
 
   <!-- Header -->
-  <div style="background: #1a1f2b; padding: 20px 24px; border-bottom: 1px solid #1c2230;">
-    <table width="100%" cellspacing="0"><tr>
+  <div style="background:#2c3e50;padding:18px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td>
-        <span style="color: #00c9a0; font-size: 16px; font-weight: bold;">◆ {title}</span>
+        <span style="color:#66d9c8;font-size:15px;font-weight:700;">&#9670; {title}</span>
       </td>
       <td align="right">
-        <span style="display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 13px; font-weight: 600; color: #fff; background: {priority_color};">{priority}</span>
-        <span style="display: inline-block; margin-left: 8px; padding: 4px 10px; border-radius: 4px; font-size: 12px; color: #8e9aab; background: rgba(255,255,255,0.05);">{status_label}</span>
+        <span style="display:inline-block;padding:4px 12px;border-radius:3px;font-size:12px;font-weight:600;color:#ffffff;background:{priority_color};">{priority}</span>
+        <span style="display:inline-block;margin-left:6px;padding:4px 10px;border-radius:3px;font-size:11px;color:#7f8c9b;background:#f0f2f5;">{status_label}</span>
       </td>
     </tr></table>
   </div>
 
   <!-- Body -->
-  <div style="padding: 24px;">
+  <div style="padding:24px;">
 
     <!-- Key Info Grid -->
-    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
       <tr>
-        <td style="padding: 8px 12px; width: 50%; background: rgba(255,255,255,0.02); border: 1px solid #1c2230;">
-          <div style="font-size: 11px; color: #5a6474; margin-bottom: 2px;">设备编号</div>
-          <div style="font-size: 16px; font-weight: 600; color: #e6ebf2; font-family: 'Cascadia Code', monospace;">{machine_id}</div>
+        <td style="padding:10px 14px;width:50%;background:#fafbfc;border:1px solid #e8ecf1;">
+          <div style="font-size:10px;color:#7f8c9b;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.5px;">设备编号</div>
+          <div style="font-size:16px;font-weight:600;color:#2c3e50;font-family:'Courier New',monospace;">{machine_id}</div>
         </td>
-        <td style="padding: 8px 12px; background: rgba(255,255,255,0.02); border: 1px solid #1c2230;">
-          <div style="font-size: 11px; color: #5a6474; margin-bottom: 2px;">健康评分</div>
-          <div style="font-size: 16px; font-weight: 600; color: #f0a030;">{health_score}</div>
+        <td style="padding:10px 14px;background:#fafbfc;border:1px solid #e8ecf1;">
+          <div style="font-size:10px;color:#7f8c9b;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.5px;">健康评分</div>
+          <div style="font-size:16px;font-weight:600;color:#e67e22;">{health_score}</div>
         </td>
       </tr>
       <tr>
-        <td style="padding: 8px 12px; background: rgba(255,255,255,0.02); border: 1px solid #1c2230;">
-          <div style="font-size: 11px; color: #5a6474; margin-bottom: 2px;">故障模式</div>
-          <div style="font-size: 14px; color: #e6ebf2;">{pattern}</div>
+        <td style="padding:10px 14px;background:#fafbfc;border:1px solid #e8ecf1;">
+          <div style="font-size:10px;color:#7f8c9b;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.5px;">故障模式</div>
+          <div style="font-size:14px;color:#2c3e50;">{pattern}</div>
         </td>
-        <td style="padding: 8px 12px; background: rgba(255,255,255,0.02); border: 1px solid #1c2230;">
-          <div style="font-size: 11px; color: #5a6474; margin-bottom: 2px;">日成本风险</div>
-          <div style="font-size: 14px; color: #f04444; font-weight: 600;">${cost_risk}</div>
+        <td style="padding:10px 14px;background:#fafbfc;border:1px solid #e8ecf1;">
+          <div style="font-size:10px;color:#7f8c9b;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.5px;">日成本风险</div>
+          <div style="font-size:14px;color:#e74c3c;font-weight:600;">${cost_risk}</div>
         </td>
       </tr>
     </table>
 
     <!-- Details -->
-    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
-      <tr><td colspan="2" style="padding: 8px 0; font-size: 13px; color: #8e9aab; border-bottom: 1px solid #1c2230; margin-bottom: 8px;">📋 工单详情</td></tr>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+      <tr><td colspan="2" style="padding:8px 0 10px;font-size:13px;font-weight:600;color:#2c3e50;border-bottom:2px solid #e8ecf1;">&#128203; 工单详情</td></tr>
       <tr>
-        <td style="padding: 6px 8px; font-size: 12px; color: #5a6474; width: 100px;">维护动作</td>
-        <td style="padding: 6px 8px; font-size: 13px; color: #e6ebf2;">{action}</td>
+        <td style="padding:7px 10px;font-size:12px;color:#7f8c9b;width:95px;">维护动作</td>
+        <td style="padding:7px 10px;font-size:13px;color:#2c3e50;">{action}</td>
       </tr>
       <tr>
-        <td style="padding: 6px 8px; font-size: 12px; color: #5a6474;">分配技师</td>
-        <td style="padding: 6px 8px; font-size: 13px; color: #e6ebf2;">{tech_type} × {tech_count}人</td>
+        <td style="padding:7px 10px;font-size:12px;color:#7f8c9b;">分配技师</td>
+        <td style="padding:7px 10px;font-size:13px;color:#2c3e50;">{tech_type} &times; {tech_count}&#20154;</td>
       </tr>
       <tr>
-        <td style="padding: 6px 8px; font-size: 12px; color: #5a6474;">停机窗口</td>
-        <td style="padding: 6px 8px; font-size: 13px; color: #e6ebf2;">{window}</td>
+        <td style="padding:7px 10px;font-size:12px;color:#7f8c9b;">停机窗口</td>
+        <td style="padding:7px 10px;font-size:13px;color:#2c3e50;">{window}</td>
       </tr>
       <tr>
-        <td style="padding: 6px 8px; font-size: 12px; color: #5a6474;">备件清单</td>
-        <td style="padding: 6px 8px; font-size: 13px; color: #e6ebf2;">{parts_str}</td>
+        <td style="padding:7px 10px;font-size:12px;color:#7f8c9b;">备件清单</td>
+        <td style="padding:7px 10px;font-size:13px;color:#2c3e50;">{parts_str}</td>
       </tr>
       <tr>
-        <td style="padding: 6px 8px; font-size: 12px; color: #5a6474;">SLA目标</td>
-        <td style="padding: 6px 8px; font-size: 13px; color: #e6ebf2;">{sla}h 内完成</td>
+        <td style="padding:7px 10px;font-size:12px;color:#7f8c9b;">SLA目标</td>
+        <td style="padding:7px 10px;font-size:13px;color:#2c3e50;">{sla}h &#20869;完成</td>
       </tr>
     </table>
 
     <!-- Root Cause -->
-    <div style="margin-bottom: 20px; padding: 12px 16px; background: rgba(240,160,48,0.05); border-left: 3px solid #f0a030; border-radius: 3px;">
-      <div style="font-size: 12px; color: #f0a030; margin-bottom: 4px;">🔍 根因分析</div>
-      <div style="font-size: 12px; color: #8e9aab; line-height: 1.7;">{reasoning}</div>
+    <div style="margin-bottom:20px;padding:14px 16px;background:#fef9f0;border-left:3px solid #e67e22;">
+      <div style="font-size:13px;color:#e67e22;font-weight:600;margin-bottom:6px;">&#128269; 根因分析</div>
+      <div style="font-size:12px;color:#5a6474;line-height:1.7;">{reasoning}</div>
     </div>
 
     <!-- Acceptance Criteria -->
-    <div style="margin-bottom: 20px; padding: 12px 16px; background: rgba(0,201,160,0.03); border-left: 3px solid #00c9a0; border-radius: 3px;">
-      <div style="font-size: 12px; color: #00c9a0; margin-bottom: 4px;">✅ 验收标准</div>
-      <div style="font-size: 11px; color: #5a6474; line-height: 1.6;">{acceptance}</div>
+    <div style="margin-bottom:20px;padding:14px 16px;background:#f0faf6;border-left:3px solid #27ae60;">
+      <div style="font-size:13px;color:#27ae60;font-weight:600;margin-bottom:6px;">&#10004; 验收标准</div>
+      <div style="font-size:11px;color:#5a6474;line-height:1.6;">{acceptance}</div>
     </div>
 """
 
@@ -204,9 +219,9 @@ def _build_work_order_html(machine_id: str, detail: Dict, title: str,
 
     html += """
     <!-- Footer -->
-    <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #1c2230; font-size: 11px; color: #5a6474;">
-      <p>此邮件由预测性维护系统自动生成 · 请勿直接回复</p>
-      <p>登录 <a href="http://localhost:8765/work-order-tracking" style="color: #4d94ff;">工单跟踪看板</a> 查看详情</p>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e8ecf1;font-size:11px;color:#7f8c9b;text-align:center;">
+      <p style="margin:0 0 6px;">此邮件由预测性维护系统自动生成 &middot; 请勿直接回复</p>
+      <p style="margin:0;">登录 <a href="http://localhost:8765/work-order-tracking" style="color:#2980b9;text-decoration:none;">工单跟踪看板</a> 查看详情</p>
     </div>
 
   </div>
@@ -228,6 +243,9 @@ def _send_email(to_email: str, subject: str, html_body: str) -> bool:
         msg["Subject"] = Header(subject, "utf-8")
         msg["From"] = SMTP_FROM
         msg["To"] = to_email
+        # Plain-text fallback first (RFC: multipart/alternative lists least-preferred first)
+        text_body = _strip_html(html_body)
+        msg.attach(MIMEText(text_body, "plain", "utf-8"))
         msg.attach(MIMEText(html_body, "html", "utf-8"))
 
         if SMTP_PORT == 465:
@@ -269,8 +287,8 @@ def send_work_order_assignment(machine_id: str, detail: Dict,
     if state_history:
         extra = """
     <!-- Timeline -->
-    <div style="margin-bottom: 20px;">
-      <div style="font-size: 12px; color: #8e9aab; margin-bottom: 8px;">📅 状态时间线</div>
+    <div style="margin-bottom:20px;">
+      <div style="font-size:13px;color:#2c3e50;font-weight:600;margin-bottom:8px;">&#128197; 状态时间线</div>
       <table width="100%" cellspacing="0" cellpadding="0">"""
         for h in state_history[-5:]:
             from_s = STATUS_LABELS_CN.get(h.get("from_status"), h.get("from_status", "—"))
@@ -278,8 +296,8 @@ def send_work_order_assignment(machine_id: str, detail: Dict,
             t = h.get("created_at", "")[:19]
             extra += f"""
         <tr>
-          <td style="padding: 4px 8px; font-size: 11px; color: #5a6474; width: 130px;">{t}</td>
-          <td style="padding: 4px 8px; font-size: 11px; color: #8e9aab;">{from_s} → {to_s}</td>
+          <td style="padding:4px 8px;font-size:11px;color:#7f8c9b;width:130px;">{t}</td>
+          <td style="padding:4px 8px;font-size:11px;color:#2c3e50;">{from_s} &#8594; {to_s}</td>
         </tr>"""
         extra += """
       </table>
@@ -307,12 +325,12 @@ def send_status_change(machine_id: str, old_status: str, new_status: str,
 
     extra = f"""
     <!-- Status Change Highlight -->
-    <div style="margin-bottom: 20px; padding: 12px 16px; background: rgba(77,148,255,0.05); border-left: 3px solid #4d94ff; border-radius: 3px;">
-      <div style="font-size: 12px; color: #4d94ff; margin-bottom: 4px;">🔄 状态变更</div>
-      <div style="font-size: 14px; color: #e6ebf2; font-weight: 600;">{old_label} → {new_label}</div>"""
+    <div style="margin-bottom:20px;padding:14px 16px;background:#eef4ff;border-left:3px solid #2980b9;">
+      <div style="font-size:13px;color:#2980b9;font-weight:600;margin-bottom:6px;">&#128260; 状态变更</div>
+      <div style="font-size:14px;color:#2c3e50;font-weight:600;">{old_label} &#8594; {new_label}</div>"""
     if notes:
         extra += f"""
-      <div style="font-size: 11px; color: #5a6474; margin-top: 4px;">备注: {notes}</div>"""
+      <div style="font-size:11px;color:#7f8c9b;margin-top:4px;">备注: {notes}</div>"""
     extra += """
     </div>"""
 
@@ -330,15 +348,15 @@ def send_escalation(machine_id: str, assigned_at: str,
                     detail: Optional[Dict] = None) -> bool:
     """Send escalation notification to supervisor."""
     extra = f"""
-    <div style="margin-bottom: 20px; padding: 12px 16px; background: rgba(240,68,68,0.08); border-left: 3px solid #f04444; border-radius: 3px;">
-      <div style="font-size: 12px; color: #f04444; margin-bottom: 4px;">🚨 超时升级告警</div>
-      <div style="font-size: 13px; color: #e6ebf2;">工单 <b>{machine_id}</b> 分配已超过 <b>24小时</b> 未响应</div>
-      <div style="font-size: 11px; color: #5a6474; margin-top: 4px;">分配时间: {assigned_at}</div>
-      <div style="font-size: 11px; color: #5a6474;">当前时间: {__import__('datetime').datetime.now().isoformat()}</div>
+    <div style="margin-bottom:20px;padding:14px 16px;background:#fef5f5;border-left:3px solid #e74c3c;">
+      <div style="font-size:13px;color:#e74c3c;font-weight:600;margin-bottom:6px;">&#128680; 超时升级告警</div>
+      <div style="font-size:13px;color:#2c3e50;">工单 <b>{machine_id}</b> 分配已超过 <b>24小时</b> 未响应</div>
+      <div style="font-size:11px;color:#7f8c9b;margin-top:4px;">分配时间: {assigned_at}</div>
+      <div style="font-size:11px;color:#7f8c9b;">当前时间: {__import__('datetime').datetime.now().isoformat()}</div>
     </div>
-    <div style="margin-bottom: 20px; padding: 12px 16px; background: rgba(240,160,48,0.05); border-left: 3px solid #f0a030; border-radius: 3px;">
-      <div style="font-size: 12px; color: #f0a030; margin-bottom: 4px;">⚠ 需要立即处理</div>
-      <div style="font-size: 12px; color: #8e9aab;">请登录工单跟踪看板确认技师状态，必要时重新分配或升级处理。</div>
+    <div style="margin-bottom:20px;padding:14px 16px;background:#fef9f0;border-left:3px solid #e67e22;">
+      <div style="font-size:13px;color:#e67e22;font-weight:600;margin-bottom:6px;">&#9888; 需要立即处理</div>
+      <div style="font-size:12px;color:#5a6474;">请登录工单跟踪看板确认技师状态，必要时重新分配或升级处理。</div>
     </div>"""
 
     html = ""
@@ -352,14 +370,18 @@ def send_escalation(machine_id: str, assigned_at: str,
         html = f"""
 <!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"></head>
-<body style="font-family: 'Microsoft YaHei', sans-serif; background: #0e1117; color: #e6ebf2; padding: 24px;">
-<div style="max-width: 600px; margin: 0 auto; background: #141820; border: 1px solid #1c2230; border-radius: 6px; padding: 24px;">
-  <h2 style="color: #f04444;">🚨 工单超时升级 — {machine_id}</h2>
-  {extra}
-  <p style="font-size: 11px; color: #5a6474; margin-top: 20px; border-top: 1px solid #1c2230; padding-top: 16px;">
-    此邮件由预测性维护系统自动生成 · 请勿直接回复
-  </p>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="font-family:'Helvetica Neue',Arial,'PingFang SC','Microsoft YaHei',sans-serif;background:#f5f7fa;color:#2c3e50;padding:20px;margin:0;">
+<div style="max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e8ecf1;border-radius:8px;overflow:hidden;">
+  <div style="background:#2c3e50;padding:18px 24px;">
+    <span style="color:#e74c3c;font-size:15px;font-weight:700;">&#128680; 工单超时升级 — {machine_id}</span>
+  </div>
+  <div style="padding:24px;">
+    {extra}
+    <p style="font-size:11px;color:#7f8c9b;margin-top:20px;padding-top:16px;border-top:1px solid #e8ecf1;text-align:center;">
+      此邮件由预测性维护系统自动生成 &middot; 请勿直接回复
+    </p>
+  </div>
 </div>
 </body>
 </html>"""

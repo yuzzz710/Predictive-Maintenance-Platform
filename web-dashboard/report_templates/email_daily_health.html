@@ -1,51 +1,83 @@
 <!DOCTYPE html>
-<html><head><meta charset="utf-8"></head>
-<body style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif;background:#000;color:#f5f5f7;padding:24px;margin:0;">
-<!-- Ambient orbs (email-safe: solid bg with subtle gradient) -->
-<div style="max-width:650px;margin:0 auto;background:rgba(44,44,46,0.35);border:0.5px solid rgba(255,255,255,0.08);border-radius:22px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.3),inset 0 0.5px 0 rgba(255,255,255,0.08);">
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="font-family:'Helvetica Neue',Arial,'PingFang SC','Microsoft YaHei',sans-serif;background:#f5f7fa;color:#2c3e50;padding:20px;margin:0;">
+<div style="max-width:650px;margin:0 auto;background:#ffffff;border:1px solid #e8ecf1;border-radius:8px;overflow:hidden;">
 
-<div style="background:rgba(28,28,30,0.4);padding:20px 24px;border-bottom:0.5px solid rgba(255,255,255,0.06);">
-  <span style="color:#66d9c8;font-size:16px;font-weight:700;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;">&#9670; 每日健康巡检报告</span>
-  <span style="float:right;font-size:12px;color:#9a9a9f;">{{ generated_at[:10] }}</span>
+<!-- Header -->
+<div style="background:#2c3e50;padding:18px 24px;">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td><span style="color:#66d9c8;font-size:15px;font-weight:700;">&#9670; 每日健康巡检报告</span></td>
+    <td align="right"><span style="font-size:11px;color:#9a9a9f;">{{ generated_at[:10] }}</span></td>
+  </tr></table>
 </div>
 
 <div style="padding:24px;">
-  <div style="display:flex;gap:12px;margin-bottom:20px;">
-    <div style="flex:1;background:rgba(58,58,60,0.25);border:0.5px solid rgba(255,255,255,0.05);border-radius:18px;padding:14px;text-align:center;box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.06);">
-      <div style="font-size:24px;font-weight:700;font-family:'SF Mono','Cascadia Code',monospace;color:#ff453a;">{{ critical_devices|length }}</div>
-      <div style="font-size:11px;color:#9a9a9f;margin-top:4px;">高危设备 (&lt;40)</div>
-    </div>
-    <div style="flex:1;background:rgba(58,58,60,0.25);border:0.5px solid rgba(255,255,255,0.05);border-radius:18px;padding:14px;text-align:center;box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.06);">
-      <div style="font-size:24px;font-weight:700;font-family:'SF Mono','Cascadia Code',monospace;color:#ffb340;">{{ alert_stats.get('Alarm',0) + alert_stats.get('Warning',0) }}</div>
-      <div style="font-size:11px;color:#9a9a9f;margin-top:4px;">告警/警告设备</div>
-    </div>
-    <div style="flex:1;background:rgba(58,58,60,0.25);border:0.5px solid rgba(255,255,255,0.05);border-radius:18px;padding:14px;text-align:center;box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.06);">
-      <div style="font-size:24px;font-weight:700;font-family:'SF Mono','Cascadia Code',monospace;color:#30d158;">{{ work_orders_count }}</div>
-      <div style="font-size:11px;color:#9a9a9f;margin-top:4px;">今日工单</div>
-    </div>
-  </div>
 
-  <div style="font-size:13px;color:#c8c8cc;margin-bottom:12px;">高危设备列表 (Top {{ [15, critical_devices|length] | min }})</div>
-  <table width="100%" style="border-collapse:separate;border-spacing:0;margin-bottom:16px;">
-    <tr style="background:rgba(58,58,60,0.15);">
-      <td style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);color:#9a9a9f;font-size:10px;text-transform:uppercase;letter-spacing:0.05em;">设备</td>
-      <td style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);color:#9a9a9f;font-size:10px;text-transform:uppercase;">健康分</td>
-      <td style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);color:#9a9a9f;font-size:10px;text-transform:uppercase;">等级</td>
-      <td style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);color:#9a9a9f;font-size:10px;text-transform:uppercase;">风险因子</td>
-      <td style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);color:#9a9a9f;font-size:10px;text-transform:uppercase;">日成本风险</td>
+  <!-- Stat Cards — table layout for email compatibility -->
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+    <tr>
+      <td width="33%" style="padding:6px 4px;" valign="top">
+        <div style="background:#fafbfc;border:1px solid #e8ecf1;border-radius:6px;padding:14px;text-align:center;">
+          <div style="font-size:24px;font-weight:700;font-family:'Courier New',monospace;color:#e74c3c;">{{ critical_devices|length }}</div>
+          <div style="font-size:10px;color:#7f8c9b;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px;">高危设备 (&lt;40)</div>
+        </div>
+      </td>
+      <td width="33%" style="padding:6px 4px;" valign="top">
+        <div style="background:#fafbfc;border:1px solid #e8ecf1;border-radius:6px;padding:14px;text-align:center;">
+          <div style="font-size:24px;font-weight:700;font-family:'Courier New',monospace;color:#e67e22;">{{ alert_stats.get('Alarm',0) + alert_stats.get('Warning',0) }}</div>
+          <div style="font-size:10px;color:#7f8c9b;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px;">告警/警告设备</div>
+        </div>
+      </td>
+      <td width="33%" style="padding:6px 4px;" valign="top">
+        <div style="background:#fafbfc;border:1px solid #e8ecf1;border-radius:6px;padding:14px;text-align:center;">
+          <div style="font-size:24px;font-weight:700;font-family:'Courier New',monospace;color:#27ae60;">{{ work_orders_count }}</div>
+          <div style="font-size:10px;color:#7f8c9b;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px;">今日工单</div>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Critical Devices Table -->
+  <div style="font-size:13px;font-weight:600;color:#2c3e50;margin-bottom:10px;">高危设备列表 (Top {{ [15, critical_devices|length] | min }})</div>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:16px;">
+    <tr style="background:#f0f2f5;">
+      <td style="padding:8px 10px;font-size:10px;color:#7f8c9b;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf1;">设备</td>
+      <td style="padding:8px 10px;font-size:10px;color:#7f8c9b;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf1;">健康分</td>
+      <td style="padding:8px 10px;font-size:10px;color:#7f8c9b;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf1;">等级</td>
+      <td style="padding:8px 10px;font-size:10px;color:#7f8c9b;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf1;">风险因子</td>
+      <td style="padding:8px 10px;font-size:10px;color:#7f8c9b;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf1;">日成本风险</td>
     </tr>
     {% for d in critical_devices[:15] %}
     {% set hs = d.health_score|float %}
-    {% set hs_color = '#ff453a' if hs < 25 else '#ffb340' %}
+    {% set hs_color = '#e74c3c' if hs < 25 else '#e67e22' %}
     <tr>
-      <td style="padding:8px 12px;border-bottom:0.5px solid rgba(255,255,255,0.04);font-family:'SF Mono','Cascadia Code',monospace;font-size:11px;">{{ d.machine_id }}</td>
-      <td style="padding:8px 12px;border-bottom:0.5px solid rgba(255,255,255,0.04);color:{{ hs_color }};font-weight:600;">{{ '%.1f'|format(hs) }}</td>
-      <td style="padding:8px 12px;border-bottom:0.5px solid rgba(255,255,255,0.04);color:#c8c8cc;">{{ d.health_level }}</td>
-      <td style="padding:8px 12px;border-bottom:0.5px solid rgba(255,255,255,0.04);color:#c8c8cc;">{{ d.top_risk_factor }}</td>
-      <td style="padding:8px 12px;border-bottom:0.5px solid rgba(255,255,255,0.04);color:#ff453a;font-family:'SF Mono','Cascadia Code',monospace;">${{ '%.0f'|format(d.cost_at_risk|float) }}</td>
+      <td style="padding:8px 10px;font-family:'Courier New',monospace;font-size:11px;color:#2c3e50;border-bottom:1px solid #f0f2f5;">{{ d.machine_id }}</td>
+      <td style="padding:8px 10px;color:{{ hs_color }};font-weight:600;border-bottom:1px solid #f0f2f5;">{{ '%.1f'|format(hs) }}</td>
+      <td style="padding:8px 10px;color:#5a6474;border-bottom:1px solid #f0f2f5;">{{ d.health_level }}</td>
+      <td style="padding:8px 10px;color:#5a6474;border-bottom:1px solid #f0f2f5;">{{ d.top_risk_factor }}</td>
+      <td style="padding:8px 10px;color:#e74c3c;font-family:'Courier New',monospace;border-bottom:1px solid #f0f2f5;">${{ '%.0f'|format(d.cost_at_risk|float) }}</td>
     </tr>
     {% endfor %}
   </table>
-  <p style="font-size:11px;color:#9a9a9f;">策略: {{ strategy }} | 流水线耗时: {{ pipe_duration }}s</p>
-  <p style="font-size:11px;color:#9a9a9f;">查看详情: <a href="http://localhost:8765/dashboard" style="color:#6db5f9;">仪表盘</a> | <a href="http://localhost:8765/work-order-tracking" style="color:#6db5f9;">工单跟踪</a></p>
-</div></div></body></html>
+
+  <!-- Footer info -->
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+    <tr>
+      <td style="font-size:11px;color:#7f8c9b;">策略: {{ strategy }} &middot; 流水线耗时: {{ pipe_duration }}s</td>
+    </tr>
+    <tr>
+      <td style="font-size:11px;padding-top:4px;">
+        查看详情:
+        <a href="http://localhost:8765/dashboard" style="color:#2980b9;text-decoration:none;">仪表盘</a> &middot;
+        <a href="http://localhost:8765/work-order-tracking" style="color:#2980b9;text-decoration:none;">工单跟踪</a>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<!-- Footer border -->
+<div style="border-top:1px solid #e8ecf1;padding:12px 24px;font-size:10px;color:#7f8c9b;text-align:center;">
+  此邮件由预测性维护系统自动生成 &middot; 请勿直接回复
+</div>
+
+</div></body></html>
