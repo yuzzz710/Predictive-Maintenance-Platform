@@ -1258,6 +1258,15 @@ function restoreChatUI(savedMessages) {
 // DOM refs
 // ═══════════════════════════════════════════════════════════════
 const msgContainer = document.getElementById('messages');
+let shouldAutoScroll = true;
+
+// Detect user scroll intent — pause auto-scroll when user scrolls up,
+// resume when user scrolls back to bottom
+msgContainer.addEventListener('scroll', () => {
+  const atBottom = msgContainer.scrollHeight - msgContainer.scrollTop - msgContainer.clientHeight < 50;
+  shouldAutoScroll = atBottom;
+});
+
 const chatInput = document.getElementById('chatInput');
 const sendBtn = document.getElementById('sendBtn');
 const statusDot = document.getElementById('statusDot');
@@ -1596,6 +1605,7 @@ function addUserMessage(text) {
   div.className = 'message user';
   div.innerHTML = `<div class="msg-avatar">U</div><div class="msg-content">${escapeHtml(text)}</div>`;
   msgContainer.appendChild(div);
+  shouldAutoScroll = true;
   scrollToBottom();
 }
 
@@ -1612,6 +1622,7 @@ function addAssistantPlaceholder() {
       <div class="typing-dots"><span></span><span></span><span></span></div>
     </div>`;
   msgContainer.appendChild(div);
+  shouldAutoScroll = true;
   scrollToBottom();
   return div;
 }
@@ -1949,6 +1960,7 @@ function setAssistantError(msgDiv, errMsg) {
 }
 
 function scrollToBottom() {
+  if (!shouldAutoScroll) return;
   msgContainer.scrollTop = msgContainer.scrollHeight;
 }
 
