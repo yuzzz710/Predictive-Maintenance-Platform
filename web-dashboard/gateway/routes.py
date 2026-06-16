@@ -392,6 +392,25 @@ async def switch_strategy(data: dict = Body(...)):
     downtime_df = pd.DataFrame(downtime_rows)
     downtime_df.to_csv(os.path.join(output_dir, "downtime_schedule.csv"), index=False, encoding="utf-8")
 
+    # Maintenance work orders (for homepage emergency grid + work order cards)
+    wo_rows = []
+    for _, row in plan_df.iterrows():
+        priority_str = row.get("maintenance_priority", "P3")
+        priority_num = int(priority_str.replace("P", "")) if isinstance(priority_str, str) and priority_str.startswith("P") else 99
+        wo_rows.append({
+            "machine_id": row["machine_id"],
+            "priority": priority_num,
+            "alert_level": row.get("alert_level", ""),
+            "action_type": row.get("action_type", ""),
+            "cost_at_risk": row.get("cost_at_risk", 0.0),
+            "urgency_score": row.get("urgency_score", 0.0),
+            "window_days": row.get("recommended_window_days", 0),
+            "expected_savings": row.get("expected_savings", 0.0),
+            "suggestion": row.get("maintenance_suggestion", ""),
+        })
+    wo_df = pd.DataFrame(wo_rows)
+    wo_df.to_csv(os.path.join(output_dir, "maintenance_work_orders.csv"), index=False, encoding="utf-8")
+
     # Strategy comparison (all 3) — cached unless force refresh
     comp_path = os.path.join(output_dir, "strategy_comparison.csv")
     if force or not os.path.exists(comp_path):

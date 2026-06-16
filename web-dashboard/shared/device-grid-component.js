@@ -29,7 +29,7 @@ var _traceZScores = {};
 // ── CSV loader ──
 async function loadCSV(path) {
   try {
-    var r = await fetch(path);
+    var r = await fetch(path, { cache: 'no-cache' });
     if (!r.ok) return [];
     var t = await r.text();
     return Papa.parse(t, { header: true, dynamicTyping: true, skipEmptyLines: true }).data;
