@@ -350,3 +350,39 @@
 {"timestamp": "2026-06-16T14:47:38.651302", "query": "健康评分8维度加权 计算公式", "collection": "sys_docs", "n_results": 5, "elapsed_ms": 50.2}
 {"timestamp": "2026-06-16T15:04:48.984222", "query": "时序回测三层架构 点级回测 事件级回测 步进回测", "collection": "sys_docs", "n_results": 5, "elapsed_ms": 69.5}
 {"timestamp": "2026-06-16T15:04:52.766839", "query": "三层回测体系 点级回测 事件级回测 步进回测 expanding window 预警提前量", "collection": "sys_docs", "n_results": 10, "elapsed_ms": 59.9}
+{"timestamp": "2026-06-16T16:13:37.722775", "query": "三种维护策略有什么区别？我应该怎么选？", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 155.8}
+{"timestamp": "2026-06-16T16:13:37.734726", "query": "三种维护策略有什么区别？我应该怎么选？", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 12.0}
+{"timestamp": "2026-06-16T16:13:37.747809", "query": "三种维护策略有什么区别？我应该怎么选？", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 12.1}
+{"timestamp": "2026-06-16T16:13:37.757604", "query": "三种维护策略有什么区别？我应该怎么选？", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 9.8}
+{"timestamp": "2026-06-16T16:13:37.767603", "query": "三种维护策略有什么区别？我应该怎么选？", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 8.8}
+{"timestamp": "2026-06-16T16:13:37.777280", "query": "三种维护策略有什么区别？我应该怎么选？", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 9.7}
+{"timestamp": "2026-06-16T16:13:40.166240", "query": "三种维护策略区别对比", "collection": "sys_docs", "n_results": 5, "elapsed_ms": 14.1}
+{"timestamp": "2026-06-16T18:16:05.067542", "query": "网页中贪心 vs 背包优化 · 风险削减对比这个图怎么解读，有什么用", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 193.5}
+{"timestamp": "2026-06-16T18:16:05.079839", "query": "网页中贪心 vs 背包优化 · 风险削减对比这个图怎么解读，有什么用", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 10.9}
+{"timestamp": "2026-06-16T18:16:05.091930", "query": "网页中贪心 vs 背包优化 · 风险削减对比这个图怎么解读，有什么用", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 11.0}
+{"timestamp": "2026-06-16T18:16:05.101483", "query": "网页中贪心 vs 背包优化 · 风险削减对比这个图怎么解读，有什么用", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 8.6}
+{"timestamp": "2026-06-16T18:16:05.112438", "query": "网页中贪心 vs 背包优化 · 风险削减对比这个图怎么解读，有什么用", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 8.9}
+{"timestamp": "2026-06-16T18:16:05.123729", "query": "网页中贪心 vs 背包优化 · 风险削减对比这个图怎么解读，有什么用", "collection": "fault_cases", "n_results": 0, "elapsed_ms": 10.3}
+{"timestamp": "2026-06-16T18:16:07.184983", "query": "贪心 vs 背包优化 风险削减对比 图表解读", "collection": "sys_docs", "n_results": 5, "elapsed_ms": 12.1}
+{"timestamp": "2026-06-16T18:16:08.968481", "query": "贪心算法 背包优化 工单排序 风险削减 仪表盘", "collection": "sys_docs", "n_results": 5, "elapsed_ms": 16.2}
+{"timestamp": "2026-06-16T18:16:10.721569", "query": "贪心 greedy 背包 knapsack 工单优化 算法对比 风险削减曲线", "collection": "sys_docs", "n_results": 5, "elapsed_ms": 18.9}
+{"timestamp": "2026-06-16T18:16:12.727573", "query": "贪心背包 风险削减曲线 工单排序优化 算法 benchmark", "collection": "sys_docs", "n_results": 5, "elapsed_ms": 12.5}
+{"timestamp": "2026-06-16T18:22:00.286504", "query": "基线来源分布 集群回退覆盖", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 18.7}
+{"timestamp": "2026-06-16T18:22:00.295504", "query": "基线来源分布 集群回退覆盖", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 9.0}
+{"timestamp": "2026-06-16T18:22:00.306469", "query": "基线来源分布 集群回退覆盖", "collection": "fault_cases", "n_results": 2, "elapsed_ms": 9.5}
+{"timestamp": "2026-06-16T18:22:00.315993", "query": "基线来源分布 集群回退覆盖", "collection": "chart_docs", "n_results": 2, "elapsed_ms": 9.5}
+{"timestamp": "2026-06-16T18:22:09.049039", "query": "基线来源分布", "collection": "chart_docs", "n_results": 5, "elapsed_ms": 10.4}
+{"timestamp": "2026-06-16T18:22:14.559833", "query": "基线来源分布", "collection": "chart_docs", "n_results": 5, "elapsed_ms": 10.7}
+{"timestamp": "2026-06-16T18:22:19.023742", "query": "基线来源分布", "collection": "chart_docs", "n_results": 5, "elapsed_ms": 12.0}
+{"timestamp": "2026-06-16T18:30:26.562937", "query": "解释这个图：运筹优化 vs 规则驱动 · 四维效果对比\n100台设备，生产效率策略，50K预算，14天滚动窗口", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 15.6}
+{"timestamp": "2026-06-16T18:30:26.572840", "query": "解释这个图：运筹优化 vs 规则驱动 · 四维效果对比\n100台设备，生产效率策略，50K预算，14天滚动窗口", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 9.9}
+{"timestamp": "2026-06-16T18:30:26.585043", "query": "解释这个图：运筹优化 vs 规则驱动 · 四维效果对比\n100台设备，生产效率策略，50K预算，14天滚动窗口", "collection": "fault_cases", "n_results": 2, "elapsed_ms": 9.8}
+{"timestamp": "2026-06-16T18:30:26.595108", "query": "解释这个图：运筹优化 vs 规则驱动 · 四维效果对比\n100台设备，生产效率策略，50K预算，14天滚动窗口", "collection": "chart_docs", "n_results": 2, "elapsed_ms": 10.1}
+{"timestamp": "2026-06-16T18:31:19.852225", "query": "解释边际成本路径分析 · 策略切换的代价\n成本→效率→质量，每步多花多少换多少停机减少", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 11.0}
+{"timestamp": "2026-06-16T18:31:19.865226", "query": "解释边际成本路径分析 · 策略切换的代价\n成本→效率→质量，每步多花多少换多少停机减少", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 12.0}
+{"timestamp": "2026-06-16T18:31:19.876224", "query": "解释边际成本路径分析 · 策略切换的代价\n成本→效率→质量，每步多花多少换多少停机减少", "collection": "fault_cases", "n_results": 2, "elapsed_ms": 9.0}
+{"timestamp": "2026-06-16T18:31:19.887225", "query": "解释边际成本路径分析 · 策略切换的代价\n成本→效率→质量，每步多花多少换多少停机减少", "collection": "chart_docs", "n_results": 2, "elapsed_ms": 11.0}
+{"timestamp": "2026-06-16T18:53:01.466282", "query": "▼\n预算与ROI概览 · 多目标运筹优化\n$128k\n预期节省总额。这里的节省金额怎么得出的", "collection": "sys_docs", "n_results": 2, "elapsed_ms": 19.1}
+{"timestamp": "2026-06-16T18:53:01.477280", "query": "▼\n预算与ROI概览 · 多目标运筹优化\n$128k\n预期节省总额。这里的节省金额怎么得出的", "collection": "maint_kb", "n_results": 2, "elapsed_ms": 9.0}
+{"timestamp": "2026-06-16T18:53:01.490250", "query": "▼\n预算与ROI概览 · 多目标运筹优化\n$128k\n预期节省总额。这里的节省金额怎么得出的", "collection": "fault_cases", "n_results": 2, "elapsed_ms": 12.0}
+{"timestamp": "2026-06-16T18:53:01.502088", "query": "▼\n预算与ROI概览 · 多目标运筹优化\n$128k\n预期节省总额。这里的节省金额怎么得出的", "collection": "chart_docs", "n_results": 2, "elapsed_ms": 11.8}
